@@ -1,4 +1,4 @@
-microservice-template/.gradle
+dces-drc-integration/.gradle
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
