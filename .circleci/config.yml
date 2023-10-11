@@ -74,7 +74,7 @@ jobs:
       GRADLE_OPTS: "-Dorg.gradle.daemon=true -Dorg.gradle.workers.max=2"
     docker:
       - image: cimg/openjdk:17.0.4
-    working_directory: ~/laa-dces-drc-integration/dces-report-service
+    working_directory: ~/laa-dces-drc-integration/dces-drc-integration
     steps:
       - checkout:
           path: ~/laa-dces-drc-integration
