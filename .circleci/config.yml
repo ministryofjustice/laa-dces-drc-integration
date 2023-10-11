@@ -52,15 +52,15 @@ commands:
             echo -n ${K8S_CLUSTER_CERT} | base64 -d > ./ca.crt
             kubectl config set-cluster ${K8S_CLUSTER_NAME} --certificate-authority=./ca.crt --server=https://${K8S_CLUSTER_NAME}
             kubectl config set-credentials circleci --token=<< parameters.token >>
-            kubectl config set-context ${K8S_CLUSTER_NAME} --cluster=${K8S_CLUSTER_NAME} --user=circleci --namespace=laa-dces-report-service-<< parameters.environment >>
+            kubectl config set-context ${K8S_CLUSTER_NAME} --cluster=${K8S_CLUSTER_NAME} --user=circleci --namespace=laa-dces-drc-integration-<< parameters.environment >>
             kubectl config use-context ${K8S_CLUSTER_NAME}
-            kubectl --namespace=laa-dces-report-service-<< parameters.environment >> get pods
+            kubectl --namespace=laa-dces-drc-integration-<< parameters.environment >> get pods
       - helm/upgrade-helm-chart:
-          namespace: laa-dces-report-service-<< parameters.environment >>
+          namespace: laa-dces-drc-integration-<< parameters.environment >>
           update-repositories: false
-          chart: ./helm_deploy/laa-dces-report-service/
-          release-name: laa-dces-report-service
-          values: ./helm_deploy/laa-dces-report-service/values-<< parameters.environment >>.yaml
+          chart: ./helm_deploy/laa-dces-drc-integration/
+          release-name: laa-dces-drc-integration
+          values: ./helm_deploy/laa-dces-drc-integration/values-<< parameters.environment >>.yaml
           values-to-override: image.tag=${CIRCLE_SHA1}
 
 # ------------------
@@ -74,10 +74,10 @@ jobs:
       GRADLE_OPTS: "-Dorg.gradle.daemon=true -Dorg.gradle.workers.max=2"
     docker:
       - image: cimg/openjdk:17.0.4
-    working_directory: ~/laa-dces-report-service/dces-report-service
+    working_directory: ~/laa-dces-drc-integration/dces-drc-integration
     steps:
       - checkout:
-          path: ~/laa-dces-report-service
+          path: ~/laa-dces-drc-integration
       - restore_cache:
           key: v1-gradle-wrapper-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
       - restore_cache:
@@ -104,10 +104,10 @@ jobs:
   scan_app:
     docker:
       - image: cimg/openjdk:17.0.4
-    working_directory: ~/laa-dces-report-service/dces-report-service
+    working_directory: ~/laa-dces-drc-integration/dces-report-service
     steps:
       - checkout:
-          path: ~/laa-dces-report-service
+          path: ~/laa-dces-drc-integration
       - attach_workspace:
           at: .
       - snyk/scan:
@@ -119,10 +119,10 @@ jobs:
       GRADLE_OPTS: "-Dorg.gradle.daemon=true -Dorg.gradle.workers.max=2"
     docker:
       - image: cimg/openjdk:17.0.4
-    working_directory: ~/laa-dces-report-service/dces-report-service
+    working_directory: ~/laa-dces-drc-integration/dces-report-service
     steps:
       - checkout:
-          path: ~/laa-dces-report-service
+          path: ~/laa-dces-drc-integration
       - attach_workspace:
           at: .
       - restore_cache:
@@ -150,10 +150,10 @@ jobs:
   build_and_scan_image:
     docker:
       - image: cimg/openjdk:17.0.4
-    working_directory: ~/laa-dces-report-service/dces-report-service
+    working_directory: ~/laa-dces-drc-integration/dces-report-service
     steps:
       - checkout:
-          path: ~/laa-dces-report-service
+          path: ~/laa-dces-drc-integration
       - attach_workspace:
           at: .
       - setup_remote_docker:
@@ -169,16 +169,16 @@ jobs:
           region: $ECR_REGION
           repo: $ECR_REPOSITORY
       - snyk/scan:
-          docker-image-name: "$AWS_ECR_ACCOUNT_URL/laa-crime-apps-team/laa-dces-report-service-dev-ecr:${CIRCLE_SHA1}"
+          docker-image-name: "$AWS_ECR_ACCOUNT_URL/laa-crime-apps-team/laa-dces-drc-integration-dev-ecr:${CIRCLE_SHA1}"
           <<: *snyk_options
 
   build_and_push_image:
     docker:
       - image: cimg/openjdk:17.0.4
-    working_directory: ~/laa-dces-report-service/dces-report-service
+    working_directory: ~/laa-dces-drc-integration/dces-report-service
     steps:
       - checkout:
-          path: ~/laa-dces-report-service
+          path: ~/laa-dces-drc-integration
       - attach_workspace:
           at: .
       - setup_remote_docker:
