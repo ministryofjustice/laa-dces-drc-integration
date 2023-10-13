@@ -2,12 +2,12 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ include "laa-dces-report-service.fullname" .  }}-monitoring
+  name: {{ include "laa-dces-drc-integration.fullname" .  }}-monitoring
   namespace: {{ .Release.Namespace }}
 spec:
   selector:
     matchLabels:
-      {{- include "laa-dces-report-service.selectorLabels" . | nindent 6 }}
+      {{- include "laa-dces-drc-integration.selectorLabels" . | nindent 6 }}
   endpoints:
     {{- if not (eq (toString .Values.actuator.port) "http") }}
     - port: actuator
