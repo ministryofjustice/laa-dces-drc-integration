@@ -130,7 +130,7 @@ jacocoTestReport {
 sonar {
 	properties {
 
-		property "sonar.projectName", "laa-dces-report-service"
+		property "sonar.projectName", "laa-dces-drc-integration"
 		property "sonar.host.url", "https://sonarcloud.io"
 		property "sonar.organization", "ministryofjustice"
 		property "sonar.projectKey", "ministryofjustice_laa-dces-drc-integration"
