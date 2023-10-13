@@ -2,13 +2,13 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ include "laa-dces-report-service.fullname" . }}-monitoring
+  name: {{ include "laa-dces-drc-integration.fullname" . }}-monitoring
   labels:
-    {{- include "laa-dces-report-service.labels" . | nindent 4 }}
+    {{- include "laa-dces-drc-integration.labels" . | nindent 4 }}
 spec:
   podSelector:
     matchLabels:
-      {{- include "laa-dces-report-service.selectorLabels" . | nindent 6 }}
+      {{- include "laa-dces-drc-integration.selectorLabels" . | nindent 6 }}
   policyTypes:
     - Ingress
   ingress:

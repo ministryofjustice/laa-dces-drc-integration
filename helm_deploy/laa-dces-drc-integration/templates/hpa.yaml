@@ -2,14 +2,14 @@
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "laa-dces-report-service.fullname" . }}
+  name: {{ include "laa-dces-drc-integration.fullname" . }}
   labels:
-    {{- include "laa-dces-report-service.labels" . | nindent 4 }}
+    {{- include "laa-dces-drc-integration.labels" . | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "laa-dces-report-service.fullname" . }}
+    name: {{ include "laa-dces-drc-integration.fullname" . }}
   minReplicas: {{ .Values.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.autoscaling.maxReplicas }}
   metrics:
