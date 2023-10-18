@@ -1,3 +1,14 @@
+server:
+  port: 8089
+
+management:
+  server:
+    port: 8188
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+
 sentry:
   debug: off
   dsn: https://73c8b29cf60925dfb51ff991af098c8f@o345774.ingest.sentry.io/4506031610462208
