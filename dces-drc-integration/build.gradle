@@ -20,9 +20,9 @@ def versions = [
 		springOAuthResource    : '3.1.1',
 		springauthserverVersion: '1.0.1',
 		jjwtVersion            : '0.11.5',
-		jaxbXjc                : '4.0.0',
-		jaxbImpl               : '4.0.0',
-		jaxbCore               : '4.0.0',
+		jaxbXjc                : '4.0.2',
+		jaxbImpl               : '4.0.2',
+		jaxbCore               : '4.0.2',
 		jakartaActivation      : '2.0.1',
 		jakartaXmlBindApi      : '4.0.0',
 		glassfishJaxb          : '4.0.2',
@@ -58,6 +58,7 @@ configurations {
 	compileOnly {
 		extendsFrom annotationProcessor
 	}
+	xsd2java
 }
 
 
@@ -88,6 +89,14 @@ dependencies {
 	implementation "org.springdoc:springdoc-openapi-ui:$versions.springdocVersion"
 	implementation "io.github.resilience4j:resilience4j-spring-boot3:$versions.resilience4jVersion"
 
+	// XML Conversion
+	implementation "org.glassfish.jaxb:jaxb-runtime:$versions.glassfishJaxb"
+	implementation "com.sun.xml.bind:jaxb-core:$versions.jaxbCore"
+	xsd2java "com.sun.xml.bind:jaxb-xjc:$versions.jaxbXjc"
+	xsd2java "com.sun.xml.bind:jaxb-impl:$versions.jaxbImpl"
+	xsd2java "com.sun.xml.bind:jaxb-core:$versions.jaxbCore"
+	xsd2java "com.sun.activation:jakarta.activation:$versions.jakartaActivation"
+	xsd2java "jakarta.xml.bind:jakarta.xml.bind-api:$versions.jakartaXmlBindApi"
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
@@ -141,3 +150,26 @@ sonar {
 				"${project.buildDir}/reports/jacoco/test/jacocoTestReport.xml"
 	}
 }
+
+task xsd2java() {
+	doLast {
+		jaxbTargetDir.mkdirs()
+
+		ant.taskdef(name: 'xjc', classname: 'com.sun.tools.xjc.XJCTask', classpath: configurations.xsd2java.asPath)
+		ant.jaxbTargetDir = jaxbTargetDir
+
+		ant.xjc(
+				destdir: '${jaxbTargetDir}',
+				package: 'uk.gov.justice.laa.crime.dces.integration.model.generated',
+				schema: 'src/main/resources/schemas/contributions.xsd'
+		)
+
+		ant.xjc(
+				destdir: '${jaxbTargetDir}',
+				package: 'uk.gov.justice.laa.crime.dces.integration.model.generated',
+				schema: 'src/main/resources/schemas/fdc.xsd'
+		)
+	}
+}
+
+compileJava.dependsOn xsd2java
