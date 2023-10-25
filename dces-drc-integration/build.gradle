@@ -91,7 +91,7 @@ dependencies {
 
 	// XML Conversion
 	implementation "org.glassfish.jaxb:jaxb-runtime:$versions.glassfishJaxb"
-	implementation "com.sun.xml.bind:jaxb-core:$versions.jaxbCore"
+
 	xsd2java "com.sun.xml.bind:jaxb-xjc:$versions.jaxbXjc"
 	xsd2java "com.sun.xml.bind:jaxb-impl:$versions.jaxbImpl"
 	xsd2java "com.sun.xml.bind:jaxb-core:$versions.jaxbCore"
@@ -108,6 +108,7 @@ dependencies {
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'io.projectreactor:reactor-test'
+
 }
 
 jacoco {
@@ -160,14 +161,14 @@ task xsd2java() {
 
 		ant.xjc(
 				destdir: '${jaxbTargetDir}',
-				package: 'uk.gov.justice.laa.crime.dces.integration.model.generated',
-				schema: 'src/main/resources/schemas/contributions.xsd'
+				package: 'uk.gov.justice.laa.crime.dces.integration.model.generated.fdc',
+				schema: 'src/main/resources/schemas/fdc.xsd'
 		)
 
 		ant.xjc(
 				destdir: '${jaxbTargetDir}',
-				package: 'uk.gov.justice.laa.crime.dces.integration.model.generated',
-				schema: 'src/main/resources/schemas/fdc.xsd'
+				package: 'uk.gov.justice.laa.crime.dces.integration.model.generated.contributions',
+				schema: 'src/main/resources/schemas/contributions.xsd'
 		)
 	}
 }
