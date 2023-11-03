@@ -61,8 +61,18 @@ public class ContributionService {
         boolean fileSentSuccess = false;
         if ( Objects.nonNull(successfulContributions) && !successfulContributions.isEmpty() ) {
             String xmlFile = mapperUtils.generateFileXML(successfulContributions);
+            // TODO: Construct other parameters for the "ATOMIC UPDATE" call.
             // populate the list of successful IDS from the successful contributions.
-            List<BigInteger> successfulIdList = successfulContributions.stream().map(CONTRIBUTIONS::getId).toList();
+            List<BigInteger> successfulIdList = successfulContributions.stream()
+                    .filter(Objects::nonNull)  // null safety.
+                    .map(CONTRIBUTIONS::getId) // we only care for the id
+                    .toList();
+            // Failed XML lines to be logged. Need to use this to set the ATOMIC UPDATE's ack field.
+            if(!failedContributions.isEmpty()){
+                log.info("Contributions failed to send: {}", failedContributions.size());
+            }
+
+
 
             // TODO: Setup and make MAAT API "ATOMIC UPDATE" REST call below:
             fileSentSuccess = Objects.nonNull(xmlFile);
@@ -70,10 +80,7 @@ public class ContributionService {
             // TODO: If failed, we want to handle this. As it will mean the whole process failed for current day.
 
         }
-        // handle/note the failed XML Lines
-        if(!failedContributions.isEmpty()){
-            log.info("Contributions failed to send: {}", failedContributions.size());
-        }
+        // TODO: Need to figure how we're going to log a failed call to the ATOMIC UPDATE.
 
         return fileSentSuccess;
     }
