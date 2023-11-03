@@ -73,8 +73,12 @@ public class MapperUtils {
         header.setFilename("file.name");
         header.setId(BigInteger.valueOf(123));
         header.setFormatVersion("5");
-        header.setRecordCount(BigInteger.valueOf(contributionsList.size()));
+        header.setRecordCount(getRecordCount(contributionsList));
         return header;
+    }
+
+    private static BigInteger getRecordCount(List<CONTRIBUTIONS> contributionsList) {
+        return BigInteger.valueOf(Objects.nonNull(contributionsList) ? contributionsList.size(): 0 );
     }
 
     private ContributionFile.CONTRIBUTIONSLIST generateContributionsList(ObjectFactory of, List<CONTRIBUTIONS> contributionsList){

@@ -1,6 +1,5 @@
 package uk.gov.justice.laa.crime.dces.integration.service;
 
-import io.sentry.util.FileUtils;
 import jakarta.xml.bind.JAXBException;
 import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
@@ -8,22 +7,15 @@ import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
-import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
-import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.ContributionFile;
 import uk.gov.justice.laa.crime.dces.integration.utils.MapperUtils;
 
-import java.io.File;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
@@ -33,8 +25,11 @@ class ContributionServiceTest {
 	@InjectSoftAssertions
 	private SoftAssertions softly;
 
-	@Autowired
+	@InjectMocks
 	private ContributionService contributionService;
+
+	@Mock
+	MapperUtils mapperUtilsMock;
 
 	@AfterEach
 	void afterTestAssertAll(){
@@ -42,16 +37,30 @@ class ContributionServiceTest {
 	}
 
 	@Test
-	void testXMLValid() throws IOException {
-
-		MapperUtils mapperUtilsMock = mock(MapperUtils.class);
-		when(mapperUtilsMock.generateFileXML(any())).thenReturn("true");
+	void testXMLValid() throws JAXBException {
+		when(mapperUtilsMock.generateFileXML(any())).thenReturn("ValidXML");
 		contributionService.processDailyFiles();
-
-
-
-//		softly.assertThat(reMappedXMLString).contains("filename>CONTRIBUTIONS_202102122031.xml</filename");
+		verify(mapperUtilsMock).mapLineXMLToObject(any());
+		verify(mapperUtilsMock).generateFileXML(any());
 	}
 
+	@Test
+	void testFileXMLInvalid() throws JAXBException {
+		when(mapperUtilsMock.mapFileObjectToXML(any())).thenThrow(JAXBException.class);
+		contributionService.processDailyFiles();
+		verify(mapperUtilsMock).mapLineXMLToObject(any());
+		verify(mapperUtilsMock).mapFileObjectToXML(any());
+		// with no successful xml, should not run the file generation.
+		verify(mapperUtilsMock, Mockito.times(0)).generateFileXML(any());
+	}
+
+	@Test
+	void testLineXMLInvalid() throws JAXBException {
+		when(mapperUtilsMock.mapLineXMLToObject(any())).thenThrow(JAXBException.class);
+		contributionService.processDailyFiles();
+		verify(mapperUtilsMock).mapLineXMLToObject(any());
+		// with no successful xml, should not run the file generation.
+		verify(mapperUtilsMock, Mockito.times(0)).generateFileXML(any());
+	}
 
 }
