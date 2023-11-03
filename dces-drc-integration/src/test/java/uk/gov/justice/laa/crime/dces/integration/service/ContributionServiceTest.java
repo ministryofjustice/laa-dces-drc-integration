@@ -46,12 +46,13 @@ class ContributionServiceTest {
 
 	@Test
 	void testFileXMLInvalid() throws JAXBException {
-		when(mapperUtilsMock.mapFileObjectToXML(any())).thenThrow(JAXBException.class);
-		contributionService.processDailyFiles();
+		when(mapperUtilsMock.generateFileXML(any())).thenReturn(null);
+		boolean result = contributionService.processDailyFiles();
 		verify(mapperUtilsMock).mapLineXMLToObject(any());
-		verify(mapperUtilsMock).mapFileObjectToXML(any());
-		// with no successful xml, should not run the file generation.
-		verify(mapperUtilsMock, Mockito.times(0)).generateFileXML(any());
+		// failure to generate the xml should return a null xmlString.
+		verify(mapperUtilsMock).generateFileXML(any());
+		// failure should be the result of file generation
+		softly.assertThat(result).isFalse();
 	}
 
 	@Test
