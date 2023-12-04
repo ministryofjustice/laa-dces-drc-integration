@@ -5,7 +5,6 @@ import uk.gov.justice.laa.crime.dces.integration.model.ContributionGetResponse;
 
 
 public interface MaatApiClient {
-    String DEFAULT_DATE_FORMAT = "dd.MM.yyyy";
 
     @GetExchange("/get")
     ContributionGetResponse sendRequest();

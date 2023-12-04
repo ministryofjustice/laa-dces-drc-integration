@@ -108,6 +108,8 @@ dependencies {
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'io.projectreactor:reactor-test'
+	testImplementation "com.github.tomakehurst:wiremock-jre8-standalone:$versions.wiremockVersion"
+	testImplementation "com.squareup.okhttp3:mockwebserver:$versions.mockwebserverVersion"
 
 }
 
