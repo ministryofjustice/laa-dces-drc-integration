@@ -63,7 +63,7 @@ class ConcurContribEntryTest {
     @Test
     void givenMaatApiResponse_whenToStringInvoked_thenAStringIsReturned() {
         String expectedEstring = String.format("ConcurContribEntry(" +
-                "id=%s, totalFiles=%s)", DEFAULT_ID, DEFAULT_XML);
+                "concorContributionId=%s, xmlContent=%s)", DEFAULT_ID, DEFAULT_XML);
         ConcurContribEntry response = new ConcurContribEntry(
                 DEFAULT_ID, DEFAULT_XML
         );
