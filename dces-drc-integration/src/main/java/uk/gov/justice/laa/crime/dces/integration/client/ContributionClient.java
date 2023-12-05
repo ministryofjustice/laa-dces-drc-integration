@@ -19,6 +19,7 @@ public interface ContributionClient extends MaatApiClient {
     @GetExchange("/concor-contribution-files?status={status}")
     List<ConcurContribEntry> getContributions(@PathVariable String status);
 
+    // TODO: Placeholder for POST.
     @PostExchange("/contributions")
     Object updateContributions();
 
