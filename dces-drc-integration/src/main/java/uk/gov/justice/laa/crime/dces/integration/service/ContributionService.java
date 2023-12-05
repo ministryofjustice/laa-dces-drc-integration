@@ -25,7 +25,7 @@ public class ContributionService {
         List<CONTRIBUTIONS> successfulContributions = new ArrayList<>();
         Map<Integer,String> failedContributions = new HashMap<>();
         // get all the values to process via maat call
-        contributionsList = contributionClient.getContributions();
+        contributionsList = contributionClient.getContributions("ACTIVE");
 
         // for each contribution sent by MAAT API
         for ( ConcurContribEntry contribEntry : contributionsList) {
