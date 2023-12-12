@@ -1,17 +1,11 @@
 package uk.gov.justice.laa.crime.dces.integration.service;
 
-import jakarta.xml.bind.JAXBException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcEntry;
-import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
-import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.ObjectFactory;
-import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
