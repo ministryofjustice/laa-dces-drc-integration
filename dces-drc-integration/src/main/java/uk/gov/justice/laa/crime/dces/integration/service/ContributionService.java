@@ -18,10 +18,7 @@ import java.util.*;
 public class ContributionService implements FileService{
 
     private final ContributionsMapperUtils contributionsMapperUtils;
-
-    public ContributionService(ContributionsMapperUtils contributionsMapperUtils) {
-        this.contributionsMapperUtils = contributionsMapperUtils;
-    }
+    private final ContributionClient contributionClient;
 
     public boolean processDailyFiles() {
         List<ConcurContribEntry> contributionsList = null;
@@ -35,7 +32,7 @@ public class ContributionService implements FileService{
             // convert string into objects
             CONTRIBUTIONS currentContribution = null;
             try {
-                 currentContribution = contributionsMapperUtils.mapLineXMLToObject(xmlString);
+                 currentContribution = contributionsMapperUtils.mapLineXMLToObject(contribEntry.getXmlContent());
             } catch (JAXBException e) {
                 log.error("Invalid line XML encountered");
                 failedContributions.put(contribEntry.getConcorContributionId(), "Invalid format.");

@@ -11,6 +11,8 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.ActiveProfiles;
 import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -26,10 +28,7 @@ class ContributionServiceTest {
 	@InjectSoftAssertions
 	private SoftAssertions softly;
 
-	@InjectMocks
-	private ContributionService contributionService;
-
-	@Mock
+	@MockBean
 	ContributionsMapperUtils contributionsMapperUtilsMock;
 
 	@Autowired
@@ -44,7 +43,7 @@ class ContributionServiceTest {
 	void testXMLValid() throws JAXBException {
 		when(contributionsMapperUtilsMock.generateFileXML(any())).thenReturn("ValidXML");
 		contributionService.processDailyFiles();
-		verify(contributionsMapperUtilsMock).mapLineXMLToObject(any());
+		verify(contributionsMapperUtilsMock,times(2)).mapLineXMLToObject(any());
 		verify(contributionsMapperUtilsMock).generateFileXML(any());
 	}
 
@@ -52,7 +51,7 @@ class ContributionServiceTest {
 	void testFileXMLInvalid() throws JAXBException {
 		when(contributionsMapperUtilsMock.generateFileXML(any())).thenReturn(null);
 		boolean result = contributionService.processDailyFiles();
-		verify(contributionsMapperUtilsMock).mapLineXMLToObject(any());
+		verify(contributionsMapperUtilsMock,times(2)).mapLineXMLToObject(any());
 		// failure to generate the xml should return a null xmlString.
 		verify(contributionsMapperUtilsMock).generateFileXML(any());
 		// failure should be the result of file generation
@@ -63,9 +62,9 @@ class ContributionServiceTest {
 	void testLineXMLInvalid() throws JAXBException {
 		when(contributionsMapperUtilsMock.mapLineXMLToObject(any())).thenThrow(JAXBException.class);
 		contributionService.processDailyFiles();
-		verify(contributionsMapperUtilsMock).mapLineXMLToObject(any());
+		verify(contributionsMapperUtilsMock,times(2)).mapLineXMLToObject(any());
 		// with no successful xml, should not run the file generation.
-		verify(contributionsMapperUtilsMock, Mockito.times(0)).generateFileXML(any());
+		verify(contributionsMapperUtilsMock, times(0)).generateFileXML(any());
 	}
 
 }
