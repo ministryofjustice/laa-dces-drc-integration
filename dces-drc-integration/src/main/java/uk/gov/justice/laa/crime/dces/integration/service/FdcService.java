@@ -3,8 +3,13 @@ package uk.gov.justice.laa.crime.dces.integration.service;
 import jakarta.xml.bind.JAXBException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
+import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile;
+import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
+import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.ObjectFactory;
 import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
+import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -17,27 +22,28 @@ import java.util.Objects;
 @Slf4j
 public class FdcService implements FileService{
 
-//    private final FdcMapperUtils fdcMapperUtils;
+    private final FdcMapperUtils fdcMapperUtils;
 
-//    public FdcService(FdcMapperUtils fdcMapperUtils) {
-//        this.fdcMapperUtils = fdcMapperUtils;
-//    }
+    public FdcService(FdcMapperUtils fdcMapperUtils) {
+        this.fdcMapperUtils = fdcMapperUtils;
+    }
     // TODO Change all Objects to the actual object type.
 
     public boolean processDailyFiles() {
         // TODO: Call FDC global update
 
-        List<Object> fdcList = null;
-        List<Object> successfulFdcs = new ArrayList<>();
+        List<Fdc> fdcList = null;
+        List<Fdc> successfulFdcs = new ArrayList<>();
         Map<String,String> failedContributions = new HashMap<>();
         // get all the potential values via maat call
         // TODO: MAAT API "Get Active Fdc" REST call on line below:
         fdcList = new ArrayList<>();
-        fdcList.add("TODO");
+        ObjectFactory of = new ObjectFactory();
+        fdcList.add(of.createFdcFileFdcListFdc());
         //
 
         // for each contribution sent by MAAT API
-        for ( Object currentFdc : fdcList) {
+        for ( Fdc currentFdc : fdcList) {
 
             // TODO: Send Contribution to DRC on line below:
             boolean updateSuccessful = true; // hook in drc call here.
@@ -59,7 +65,7 @@ public class FdcService implements FileService{
         boolean fileSentSuccess = false;
         if ( Objects.nonNull(successfulFdcs) && !successfulFdcs.isEmpty() ) {
             // TODO Create FDC xml File.
-            String xmlFile = null;//fdcMapperUtils.generateFileXML(successfulFdcs);
+            String xmlFile = fdcMapperUtils.generateFileXML(successfulFdcs);
             // TODO: Construct other parameters for the "ATOMIC UPDATE" call.
             // populate the list of successful IDS from the successful contributions.
 //            List<BigInteger> successfulIdList = successfulFdcs.stream()
