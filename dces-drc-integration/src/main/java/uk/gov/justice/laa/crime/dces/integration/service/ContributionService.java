@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
+import uk.gov.justice.laa.crime.dces.integration.model.ContributionPutRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.utils.MapperUtils;
 
@@ -40,6 +41,9 @@ public class ContributionService {
             }
 
             // TODO: Send Contribution to DRC on line below:
+
+
+
             boolean updateSuccessful = true; // hook in drc call here.
             // handle response
             // if successful/failure track accordingly.
@@ -61,10 +65,12 @@ public class ContributionService {
             String xmlFile = mapperUtils.generateFileXML(successfulContributions);
             // TODO: Construct other parameters for the "ATOMIC UPDATE" call.
             // populate the list of successful IDS from the successful contributions.
-            List<BigInteger> successfulIdList = successfulContributions.stream()
+            List<String> successfulIdList = successfulContributions.stream()
                     .filter(Objects::nonNull)  // null safety.
-                    .map(CONTRIBUTIONS::getId) // we only care for the id
+                    .map(contribution -> contribution.getId().toString())// we only care for the id
                     .toList();
+
+            ContributionPutRequest(xmlFile, successfulIdList, successfulIdList.size());
             // Failed XML lines to be logged. Need to use this to set the ATOMIC UPDATE's ack field.
             if(!failedContributions.isEmpty()){
                 log.info("Contributions failed to send: {}", failedContributions.size());
@@ -83,5 +89,7 @@ public class ContributionService {
         return fileSentSuccess;
     }
 
-
+    private Boolean ContributionPutRequest(String xmlContent, List<String> concurContributionIdList, int numberOfRecords){
+        return contributionClient.updateContributions(new ContributionPutRequest("xmlContent",concurContributionIdList,numberOfRecords));
+    }
 }
