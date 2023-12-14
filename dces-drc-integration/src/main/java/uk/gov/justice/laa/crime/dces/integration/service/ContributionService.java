@@ -60,7 +60,6 @@ public class ContributionService implements FileService{
         boolean fileSentSuccess = false;
         if ( Objects.nonNull(successfulContributions) && !successfulContributions.isEmpty() ) {
             String xmlFile = contributionsMapperUtils.generateFileXML(successfulContributions);
-            // TODO: Construct other parameters for the "ATOMIC UPDATE" call.
             // populate the list of successful IDS from the successful contributions.
             List<String> successfulIdList = successfulContributions.stream()
                     .filter(Objects::nonNull)  // null safety.
