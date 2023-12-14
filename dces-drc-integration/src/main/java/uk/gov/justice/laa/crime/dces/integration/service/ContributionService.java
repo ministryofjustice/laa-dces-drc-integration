@@ -63,7 +63,6 @@ public class ContributionService {
         boolean fileSentSuccess = false;
         if ( Objects.nonNull(successfulContributions) && !successfulContributions.isEmpty() ) {
             String xmlFile = mapperUtils.generateFileXML(successfulContributions);
-            // TODO: Construct other parameters for the "ATOMIC UPDATE" call.
             // populate the list of successful IDS from the successful contributions.
             List<String> successfulIdList = successfulContributions.stream()
                     .filter(Objects::nonNull)  // null safety.
@@ -90,6 +89,6 @@ public class ContributionService {
     }
 
     private Boolean ContributionPutRequest(String xmlContent, List<String> concurContributionIdList, int numberOfRecords){
-        return contributionClient.updateContributions(new ContributionPutRequest("xmlContent",concurContributionIdList,numberOfRecords));
+        return contributionClient.updateContributions(new ContributionPutRequest(xmlContent,concurContributionIdList,numberOfRecords));
     }
 }

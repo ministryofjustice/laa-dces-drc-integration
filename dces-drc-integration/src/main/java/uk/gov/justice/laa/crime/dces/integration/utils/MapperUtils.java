@@ -8,6 +8,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.C
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.ObjectFactory;
 
 import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeConstants;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.transform.stream.StreamSource;
@@ -53,7 +54,7 @@ public class MapperUtils {
         } catch ( JAXBException e){
             log.error("Error marshalling file to XML. ID: {}", contributionFile.getHeader().getId());
         }
-        return sw.getBuffer().toString();
+        return sw.getBuffer().toString().replace("\"", "\\\"");
     }
 
     public String generateFileXML(List<CONTRIBUTIONS> contributionsList) {
@@ -93,6 +94,7 @@ public class MapperUtils {
         XMLGregorianCalendar calendarDate = null;
         try {
             calendarDate = DatatypeFactory.newInstance().newXMLGregorianCalendar(c);
+            calendarDate.setTimezone(DatatypeConstants.FIELD_UNDEFINED);
         } catch (DatatypeConfigurationException e) {
             log.error("Error in generating the generated date for the header");
         }
