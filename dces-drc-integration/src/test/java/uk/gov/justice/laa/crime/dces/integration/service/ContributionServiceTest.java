@@ -13,8 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
-import uk.gov.justice.laa.crime.dces.integration.utils.MapperUtils;
-
+import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -30,7 +29,7 @@ class ContributionServiceTest {
 	private SoftAssertions softly;
 
 	@MockBean
-	MapperUtils mapperUtilsMock;
+	ContributionsMapperUtils contributionsMapperUtilsMock;
 
 	@Autowired
 	private ContributionService contributionService;
@@ -42,30 +41,30 @@ class ContributionServiceTest {
 
 	@Test
 	void testXMLValid() throws JAXBException {
-		when(mapperUtilsMock.generateFileXML(any())).thenReturn("ValidXML");
+		when(contributionsMapperUtilsMock.generateFileXML(any())).thenReturn("ValidXML");
 		contributionService.processDailyFiles();
-		verify(mapperUtilsMock,times(2)).mapLineXMLToObject(any());
-		verify(mapperUtilsMock).generateFileXML(any());
+		verify(contributionsMapperUtilsMock,times(2)).mapLineXMLToObject(any());
+		verify(contributionsMapperUtilsMock).generateFileXML(any());
 	}
 
 	@Test
 	void testFileXMLInvalid() throws JAXBException {
-		when(mapperUtilsMock.generateFileXML(any())).thenReturn(null);
+		when(contributionsMapperUtilsMock.generateFileXML(any())).thenReturn(null);
 		boolean result = contributionService.processDailyFiles();
-		verify(mapperUtilsMock,times(2)).mapLineXMLToObject(any());
+		verify(contributionsMapperUtilsMock,times(2)).mapLineXMLToObject(any());
 		// failure to generate the xml should return a null xmlString.
-		verify(mapperUtilsMock).generateFileXML(any());
+		verify(contributionsMapperUtilsMock).generateFileXML(any());
 		// failure should be the result of file generation
 		softly.assertThat(result).isFalse();
 	}
 
 	@Test
 	void testLineXMLInvalid() throws JAXBException {
-		when(mapperUtilsMock.mapLineXMLToObject(any())).thenThrow(JAXBException.class);
+		when(contributionsMapperUtilsMock.mapLineXMLToObject(any())).thenThrow(JAXBException.class);
 		contributionService.processDailyFiles();
-		verify(mapperUtilsMock,times(2)).mapLineXMLToObject(any());
+		verify(contributionsMapperUtilsMock,times(2)).mapLineXMLToObject(any());
 		// with no successful xml, should not run the file generation.
-		verify(mapperUtilsMock, times(0)).generateFileXML(any());
+		verify(contributionsMapperUtilsMock, times(0)).generateFileXML(any());
 	}
 
 }

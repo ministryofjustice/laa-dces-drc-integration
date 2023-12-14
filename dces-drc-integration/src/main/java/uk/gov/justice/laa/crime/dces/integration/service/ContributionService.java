@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
-import uk.gov.justice.laa.crime.dces.integration.utils.MapperUtils;
+import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -15,9 +15,9 @@ import java.util.*;
 @Service
 @AllArgsConstructor
 @Slf4j
-public class ContributionService {
+public class ContributionService implements FileService{
 
-    private final MapperUtils mapperUtils;
+    private final ContributionsMapperUtils contributionsMapperUtils;
     private final ContributionClient contributionClient;
 
     public boolean processDailyFiles() {
@@ -32,7 +32,7 @@ public class ContributionService {
             // convert string into objects
             CONTRIBUTIONS currentContribution = null;
             try {
-                 currentContribution = mapperUtils.mapLineXMLToObject(contribEntry.getXmlContent());
+                 currentContribution = contributionsMapperUtils.mapLineXMLToObject(contribEntry.getXmlContent());
             } catch (JAXBException e) {
                 log.error("Invalid line XML encountered");
                 failedContributions.put(contribEntry.getConcorContributionId(), "Invalid format.");
@@ -58,7 +58,7 @@ public class ContributionService {
         // create xml file
         boolean fileSentSuccess = false;
         if ( Objects.nonNull(successfulContributions) && !successfulContributions.isEmpty() ) {
-            String xmlFile = mapperUtils.generateFileXML(successfulContributions);
+            String xmlFile = contributionsMapperUtils.generateFileXML(successfulContributions);
             // TODO: Construct other parameters for the "ATOMIC UPDATE" call.
             // populate the list of successful IDS from the successful contributions.
             List<BigInteger> successfulIdList = successfulContributions.stream()

@@ -23,14 +23,14 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 @SpringBootTest
 @ExtendWith(SoftAssertionsExtension.class)
-class MapperUtilsTests {
+class ContributionsMapperUtilsTest {
 
 	public static final java.lang.String UPDATE = "update";
 	@InjectSoftAssertions
 	private SoftAssertions softly;
 
 	@Autowired
-	private MapperUtils mapperUtils;
+	private ContributionsMapperUtils contributionsMapperUtils;
 
 	@AfterEach
 	void afterTestAssertAll(){
@@ -41,14 +41,13 @@ class MapperUtilsTests {
 	void testXMLValid() throws IOException {
 		File f = new File(getClass().getClassLoader().getResource("contributions/singleContribution.xml").getFile());
 		ContributionFile contributionsFile = null;
-		String reMappedXMLString = "";
 		String originalXMLString = FileUtils.readText(f);
 		try {
-			contributionsFile = mapperUtils.mapFileXMLToObject(originalXMLString);
+			contributionsFile = contributionsMapperUtils.mapFileXMLToObject(originalXMLString);
 		} catch (JAXBException e) {
 			fail("Exception occurred in mapping from XML to Object:" + e.getMessage());
 		}
-		reMappedXMLString = mapperUtils.mapFileObjectToXML(contributionsFile);
+		String reMappedXMLString = contributionsMapperUtils.mapFileObjectToXML(contributionsFile);
 		softly.assertThat(contributionsFile).isNotNull();
 		var contributions = contributionsFile.getCONTRIBUTIONSLIST().getCONTRIBUTIONS().get(0);
 		softly.assertThat(contributions.getFlag()).isEqualTo(UPDATE);
@@ -67,7 +66,7 @@ class MapperUtilsTests {
 		String originalXMLString = FileUtils.readText(f);
 
 		try {
-			contribution = mapperUtils.mapLineXMLToObject(originalXMLString);
+			contribution = contributionsMapperUtils.mapLineXMLToObject(originalXMLString);
 		} catch (JAXBException e) {
 			fail("Exception occurred in mapping from object to XML:" + e.getMessage());
 		}
@@ -83,15 +82,14 @@ class MapperUtilsTests {
 		String originalXMLString = FileUtils.readText(f);
 
 		try {
-			contribution = mapperUtils.mapLineXMLToObject(originalXMLString);
+			contribution = contributionsMapperUtils.mapLineXMLToObject(originalXMLString);
 		} catch (JAXBException e) {
 			fail("Exception occurred in mapping from object to XML:" + e.getMessage());
 		}
 
 		List<CONTRIBUTIONS> cl = new ArrayList<>();
 		cl.add(contribution);
-		String generatedXML = "";
-		generatedXML = mapperUtils.generateFileXML(cl);
+		String generatedXML = contributionsMapperUtils.generateFileXML(cl);
 
 		softly.assertThat(contribution).isNotNull();
 		softly.assertThat(contribution.getId()).isEqualTo(BigInteger.valueOf(222769650));

@@ -5,8 +5,11 @@
                 <xs:element name="header">
                     <xs:complexType>
                         <xs:sequence>
+                            <xs:element name="filename" type="xs:string" />
                             <xs:element name="dateGenerated" type="xs:date" />
+                            <xs:element name="recordCount" type="xs:integer" />
                         </xs:sequence>
+                        <xs:attribute name="file_id" type="xs:integer" use="required" />
                     </xs:complexType>
                 </xs:element>
                 <xs:element name="fdc_list">
@@ -15,14 +18,14 @@
                             <xs:element maxOccurs="unbounded" name="fdc">
                                 <xs:complexType>
                                     <xs:sequence>
-                                        <xs:element name="maat_id" type="xs:unsignedInt" />
+                                        <xs:element name="maat_id" type="xs:integer" />
                                         <xs:element name="sentenceDate" type="xs:date" />
                                         <xs:element minOccurs="0" name="calculationDate" type="xs:date" />
                                         <xs:element name="final_cost" type="xs:decimal" />
                                         <xs:element name="lgfs_total" type="xs:decimal" />
                                         <xs:element name="agfs_total" type="xs:decimal" />
                                     </xs:sequence>
-                                    <xs:attribute name="id" type="xs:unsignedInt" use="required" />
+                                    <xs:attribute name="id" type="xs:integer" use="required" />
                                 </xs:complexType>
                             </xs:element>
                         </xs:sequence>
