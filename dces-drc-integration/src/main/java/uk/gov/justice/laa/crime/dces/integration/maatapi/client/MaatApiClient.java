@@ -7,5 +7,5 @@ import uk.gov.justice.laa.crime.dces.integration.model.ContributionGetResponse;
 public interface MaatApiClient {
 
     @GetExchange("/get")
-    ContributionGetResponse sendRequest();
+    Boolean sendRequest();
 }
