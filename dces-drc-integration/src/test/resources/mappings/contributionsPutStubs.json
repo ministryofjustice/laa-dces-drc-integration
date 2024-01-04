@@ -5,16 +5,18 @@
       "request": {
         "urlPath": "/debt-collection-enforcement/create-contribution-file",
         "method": "POST",
-        "bodyPatterns" : [ {
-          "matches": ".*ValidXML.*"
-        } ]
+        "bodyPatterns": [
+          {
+            "matches": ".*ValidXML.*"
+          }
+        ]
       },
       "response": {
         "status": 200,
         "headers": {
           "Content-Type": "application/json"
         },
-        "jsonBody":  true
+        "jsonBody": true
       }
     },
     {
@@ -22,9 +24,11 @@
       "request": {
         "urlPath": "/debt-collection-enforcement/create-contribution-file",
         "method": "POST",
-        "bodyPatterns" : [ {
-          "matches": ".*InvalidXML.*"
-        } ]
+        "bodyPatterns": [
+          {
+            "matches": ".*InvalidXML.*"
+          }
+        ]
       },
       "response": {
         "status": 500,
