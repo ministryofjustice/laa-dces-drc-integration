@@ -9,8 +9,10 @@ import java.util.List;
 @AllArgsConstructor
 public class ContributionPutRequest {
 
+    private int recordsSent;
     private String xmlContent;
     private List<String> concorContributionIds;
-    private int recordsSent;
+    private String xmlFileName;
+    private String ackXmlContent;
 
 }

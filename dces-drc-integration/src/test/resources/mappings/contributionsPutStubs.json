@@ -4,7 +4,10 @@
       "scenarioName": "successBasicRequest",
       "request": {
         "urlPath": "/debt-collection-enforcement/create-contribution-file",
-        "method": "POST"
+        "method": "POST",
+        "bodyPatterns" : [ {
+          "matches": ".*ValidXML.*"
+        } ]
       },
       "response": {
         "status": 200,
@@ -18,12 +21,10 @@
       "scenarioName": "FailedBasicRequest",
       "request": {
         "urlPath": "/debt-collection-enforcement/create-contribution-file",
-        "queryParameters": {
-          "status": {
-            "equalTo": "500ERROR"
-          }
-        },
-        "method": "GET"
+        "method": "POST",
+        "bodyPatterns" : [ {
+          "matches": ".*InvalidXML.*"
+        } ]
       },
       "response": {
         "status": 500,
