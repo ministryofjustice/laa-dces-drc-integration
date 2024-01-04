@@ -172,6 +172,12 @@ task xsd2java() {
 				package: 'uk.gov.justice.laa.crime.dces.integration.model.generated.contributions',
 				schema: 'src/main/resources/schemas/contributions.xsd'
 		)
+
+		ant.xjc(
+				destdir: '${jaxbTargetDir}',
+				package: 'uk.gov.justice.laa.crime.dces.integration.model.generated.ack',
+				schema: 'src/main/resources/schemas/fileACK.xsd'
+		)
 	}
 }
 

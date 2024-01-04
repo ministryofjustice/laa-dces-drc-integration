@@ -1,0 +1,44 @@
+{
+  "mappings": [
+    {
+      "scenarioName": "successBasicRequest",
+      "request": {
+        "urlPath": "/debt-collection-enforcement/create-contribution-file",
+        "method": "POST",
+        "bodyPatterns": [
+          {
+            "matches": ".*ValidXML.*"
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": true
+      }
+    },
+    {
+      "scenarioName": "FailedBasicRequest",
+      "request": {
+        "urlPath": "/debt-collection-enforcement/create-contribution-file",
+        "method": "POST",
+        "bodyPatterns": [
+          {
+            "matches": ".*InvalidXML.*"
+          }
+        ]
+      },
+      "response": {
+        "status": 500,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "files": []
+        }
+      }
+    }
+  ]
+}

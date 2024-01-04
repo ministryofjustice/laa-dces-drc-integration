@@ -12,6 +12,8 @@ import javax.xml.transform.stream.StreamSource;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.math.BigInteger;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -23,7 +25,10 @@ public class ContributionsMapperUtils extends MapperUtils{
     private final Unmarshaller unmarshaller;
     private final Marshaller marshaller;
 
+    private final DateTimeFormatter filenameFormat = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
+
     private ContributionsMapperUtils() throws JAXBException {
+        super();
         JAXBContext jaxbContext = JAXBContext.newInstance(ObjectFactory.class);
         unmarshaller = jaxbContext.createUnmarshaller();
         marshaller = jaxbContext.createMarshaller();
@@ -53,17 +58,17 @@ public class ContributionsMapperUtils extends MapperUtils{
         return sw.getBuffer().toString();
     }
 
-    public String generateFileXML(List<CONTRIBUTIONS> contributionsList) {
+    public String generateFileXML(List<CONTRIBUTIONS> contributionsList, String filename) {
         ObjectFactory objectFactory = new ObjectFactory();
 
         ContributionFile cf = objectFactory.createContributionFile();
-        cf.setHeader(generateHeader(objectFactory, contributionsList));
+        cf.setHeader(generateHeader(objectFactory, contributionsList, filename));
         cf.setCONTRIBUTIONSLIST(generateContributionsList(objectFactory, contributionsList));
 
         return mapFileObjectToXML(cf);
     }
 
-    private ContributionFile.Header generateHeader (ObjectFactory of, List<CONTRIBUTIONS> contributionsList){
+    private ContributionFile.Header generateHeader (ObjectFactory of, List<CONTRIBUTIONS> contributionsList, String fileName){
         ContributionFile.Header header = of.createContributionFileHeader();
         try {
             header.setDateGenerated(generateDate(new Date()));
@@ -71,7 +76,7 @@ public class ContributionsMapperUtils extends MapperUtils{
             log.error("Error in generating the generated date for the header");
         }
         // TODO: Get generation method for the headers resolved.
-        header.setFilename("file.name");
+        header.setFilename(fileName);
         header.setId(BigInteger.valueOf(123));
         header.setFormatVersion("5");
         header.setRecordCount(getRecordCount(contributionsList));
@@ -86,6 +91,10 @@ public class ContributionsMapperUtils extends MapperUtils{
         ContributionFile.CONTRIBUTIONSLIST cl = of.createContributionFileCONTRIBUTIONSLIST();
         cl.getCONTRIBUTIONS().addAll(contributionsList);
         return cl;
+    }
+
+    public String generateFileName(LocalDateTime dateTime){
+        return "CONTRIBUTIONS_"+dateTime.format(filenameFormat);
     }
 
 }
