@@ -24,6 +24,7 @@ public class FdcMapperUtils extends MapperUtils{
     private final Marshaller marshaller;
 
     private FdcMapperUtils() throws JAXBException {
+        super();
         JAXBContext jaxbContext = JAXBContext.newInstance(ObjectFactory.class);
         marshaller = jaxbContext.createMarshaller();
     }
@@ -75,5 +76,6 @@ public class FdcMapperUtils extends MapperUtils{
         cl.getFdc().addAll(fdcFileList);
         return cl;
     }
+
 
 }
