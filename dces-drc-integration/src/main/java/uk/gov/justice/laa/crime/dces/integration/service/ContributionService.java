@@ -28,13 +28,13 @@ public class ContributionService implements FileService{
         Map<Integer,String> failedContributions = new HashMap<>();
         // get all the values to process via maat call
         contributionsList = contributionClient.getContributions("ACTIVE");
-
+        List<String> successfulIdList = new ArrayList<>();
         // for each contribution sent by MAAT API
         for ( ConcurContribEntry contribEntry : contributionsList) {
             // convert string into objects
             CONTRIBUTIONS currentContribution = null;
             try {
-                 currentContribution = contributionsMapperUtils.mapLineXMLToObject(contribEntry.getXmlContent());
+                currentContribution = contributionsMapperUtils.mapLineXMLToObject(contribEntry.getXmlContent());
             } catch (JAXBException e) {
                 log.error("Invalid line XML encountered");
                 failedContributions.put(contribEntry.getConcorContributionId(), "Invalid format.");
@@ -49,6 +49,8 @@ public class ContributionService implements FileService{
                 // If successful, we need to track that we have sent this, as it will form part of the XMLFile, and
                 // needs it's status to "sent" in MAAT.
                 successfulContributions.add(currentContribution);
+                // populate the list of successful IDS from the successful contributions.
+                successfulIdList.add(String.valueOf(contribEntry.getConcorContributionId()));
             }
             else{
                 // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
@@ -65,16 +67,10 @@ public class ContributionService implements FileService{
             String xmlFile = contributionsMapperUtils.generateFileXML(successfulContributions, fileName);
             String ackXml = contributionsMapperUtils.generateAckXML(fileName, dateGenerated.toLocalDate(), failedContributions.size(), successfulContributions.size());
 
-            // populate the list of successful IDS from the successful contributions.
-            List<String> successfulIdList = successfulContributions.stream()
-                    .filter(Objects::nonNull)  // null safety.
-                    .map(contribution -> contribution.getId().toString())// we only care for the id
-                    .toList();
             // Failed XML lines to be logged. Need to use this to set the ATOMIC UPDATE's ack field.
             if(!failedContributions.isEmpty()){
                 log.info("Contributions failed to send: {}", failedContributions.size());
             }
-
             // Setup and make MAAT API "ATOMIC UPDATE" REST call below:
             try {
                 fileSentSuccess = contributionPutRequest(xmlFile, successfulIdList, successfulIdList.size(),fileName,ackXml);
