@@ -1,0 +1,12 @@
+<xs:schema elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="CONTRIBUTIONS_FILE_ACK">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element type="xs:string" name="FILENAME"/>
+                <xs:element type="xs:string" name="DATE_LOADED"/>
+                <xs:element type="xs:integer" name="NO_OF_RECORDS_ACCEPTED"/>
+                <xs:element type="xs:integer" name="NO_OF_RECORDS_REJECTED"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

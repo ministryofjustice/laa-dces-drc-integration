@@ -16,6 +16,9 @@ import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.C
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,14 +26,14 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 @SpringBootTest
 @ExtendWith(SoftAssertionsExtension.class)
-class MapperUtilsTests {
+class ContributionsMapperUtilsTest {
 
 	public static final java.lang.String UPDATE = "update";
 	@InjectSoftAssertions
 	private SoftAssertions softly;
 
 	@Autowired
-	private MapperUtils mapperUtils;
+	private ContributionsMapperUtils contributionsMapperUtils;
 
 	@AfterEach
 	void afterTestAssertAll(){
@@ -41,14 +44,13 @@ class MapperUtilsTests {
 	void testXMLValid() throws IOException {
 		File f = new File(getClass().getClassLoader().getResource("contributions/singleContribution.xml").getFile());
 		ContributionFile contributionsFile = null;
-		String reMappedXMLString = "";
 		String originalXMLString = FileUtils.readText(f);
 		try {
-			contributionsFile = mapperUtils.mapFileXMLToObject(originalXMLString);
+			contributionsFile = contributionsMapperUtils.mapFileXMLToObject(originalXMLString);
 		} catch (JAXBException e) {
 			fail("Exception occurred in mapping from XML to Object:" + e.getMessage());
 		}
-		reMappedXMLString = mapperUtils.mapFileObjectToXML(contributionsFile);
+		String reMappedXMLString = contributionsMapperUtils.mapFileObjectToXML(contributionsFile);
 		softly.assertThat(contributionsFile).isNotNull();
 		var contributions = contributionsFile.getCONTRIBUTIONSLIST().getCONTRIBUTIONS().get(0);
 		softly.assertThat(contributions.getFlag()).isEqualTo(UPDATE);
@@ -67,7 +69,7 @@ class MapperUtilsTests {
 		String originalXMLString = FileUtils.readText(f);
 
 		try {
-			contribution = mapperUtils.mapLineXMLToObject(originalXMLString);
+			contribution = contributionsMapperUtils.mapLineXMLToObject(originalXMLString);
 		} catch (JAXBException e) {
 			fail("Exception occurred in mapping from object to XML:" + e.getMessage());
 		}
@@ -83,15 +85,14 @@ class MapperUtilsTests {
 		String originalXMLString = FileUtils.readText(f);
 
 		try {
-			contribution = mapperUtils.mapLineXMLToObject(originalXMLString);
+			contribution = contributionsMapperUtils.mapLineXMLToObject(originalXMLString);
 		} catch (JAXBException e) {
 			fail("Exception occurred in mapping from object to XML:" + e.getMessage());
 		}
 
 		List<CONTRIBUTIONS> cl = new ArrayList<>();
 		cl.add(contribution);
-		String generatedXML = "";
-		generatedXML = mapperUtils.generateFileXML(cl);
+		String generatedXML = contributionsMapperUtils.generateFileXML(cl,"filename");
 
 		softly.assertThat(contribution).isNotNull();
 		softly.assertThat(contribution.getId()).isEqualTo(BigInteger.valueOf(222769650));
@@ -100,6 +101,27 @@ class MapperUtilsTests {
 		softly.assertThat(generatedXML.length()>0).isTrue();
 		softly.assertThat(generatedXML).contains("222769650");
 		softly.assertThat(generatedXML).contains(UPDATE);
+	}
+
+	@Test
+	void TestFileNameGeneration(){
+		LocalDateTime ldNow = LocalDateTime.now();
+		String fileName = contributionsMapperUtils.generateFileName(ldNow);
+		softly.assertThat(fileName.contains(ldNow.format(DateTimeFormatter.ofPattern("yyyyMMdd")))).isTrue();
+	}
+
+	@Test
+	void TestAckGeneration(){
+		LocalDate expected_ld = LocalDate.now();
+		Integer expectedSuccessful = 9999;
+		Integer expectedFailed = 1111;
+		String filename = "filename";
+		String result = contributionsMapperUtils.generateAckXML(filename, expected_ld, expectedFailed, expectedSuccessful);
+		softly.assertThat(result.contains(expectedFailed.toString())).isTrue();
+		softly.assertThat(result.contains(expectedSuccessful.toString())).isTrue();
+		softly.assertThat(result.contains(filename)).isTrue();
+		softly.assertThat(result.contains(expected_ld.format(DateTimeFormatter.ofPattern("dd-MM-yyyy")))).isTrue();
+
 	}
 
 }

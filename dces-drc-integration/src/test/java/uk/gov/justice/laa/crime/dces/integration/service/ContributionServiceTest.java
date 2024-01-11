@@ -13,9 +13,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
-import uk.gov.justice.laa.crime.dces.integration.utils.MapperUtils;
+import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
+import org.springframework.web.client.HttpServerErrorException;
 
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -30,7 +32,7 @@ class ContributionServiceTest {
 	private SoftAssertions softly;
 
 	@MockBean
-	MapperUtils mapperUtilsMock;
+	ContributionsMapperUtils contributionsMapperUtilsMock;
 
 	@Autowired
 	private ContributionService contributionService;
@@ -42,30 +44,41 @@ class ContributionServiceTest {
 
 	@Test
 	void testXMLValid() throws JAXBException {
-		when(mapperUtilsMock.generateFileXML(any())).thenReturn("ValidXML");
+		when(contributionsMapperUtilsMock.generateFileXML(any(), any())).thenReturn("ValidXML");
 		contributionService.processDailyFiles();
-		verify(mapperUtilsMock,times(2)).mapLineXMLToObject(any());
-		verify(mapperUtilsMock).generateFileXML(any());
+		verify(contributionsMapperUtilsMock,times(2)).mapLineXMLToObject(any());
+		verify(contributionsMapperUtilsMock).generateFileXML(any(), any());
 	}
 
 	@Test
 	void testFileXMLInvalid() throws JAXBException {
-		when(mapperUtilsMock.generateFileXML(any())).thenReturn(null);
-		boolean result = contributionService.processDailyFiles();
-		verify(mapperUtilsMock,times(2)).mapLineXMLToObject(any());
+		when(contributionsMapperUtilsMock.generateFileXML(any(), any())).thenReturn("InvalidXML");
+//		boolean result = contributionService.processDailyFiles();
+		Exception exception = assertThrows(HttpServerErrorException.class, () -> {
+			contributionService.processDailyFiles();
+		});
+		verify(contributionsMapperUtilsMock,times(2)).mapLineXMLToObject(any());
 		// failure to generate the xml should return a null xmlString.
-		verify(mapperUtilsMock).generateFileXML(any());
+		verify(contributionsMapperUtilsMock).generateFileXML(any(), any());
 		// failure should be the result of file generation
-		softly.assertThat(result).isFalse();
+//		softly.assertThat(result).isFalse();
+
+
+
+		String expectedMessage = "500 Received error 500 INTERNAL_SERVER_ERROR due to Internal Server Error";
+		String actualMessage = exception.getMessage();
+
+		softly.assertThat(actualMessage.contains(expectedMessage)).isTrue();
+
 	}
 
 	@Test
 	void testLineXMLInvalid() throws JAXBException {
-		when(mapperUtilsMock.mapLineXMLToObject(any())).thenThrow(JAXBException.class);
+		when(contributionsMapperUtilsMock.mapLineXMLToObject(any())).thenThrow(JAXBException.class);
 		contributionService.processDailyFiles();
-		verify(mapperUtilsMock,times(2)).mapLineXMLToObject(any());
+		verify(contributionsMapperUtilsMock,times(2)).mapLineXMLToObject(any());
 		// with no successful xml, should not run the file generation.
-		verify(mapperUtilsMock, times(0)).generateFileXML(any());
+		verify(contributionsMapperUtilsMock, times(0)).generateFileXML(any(), any());
 	}
 
 }
