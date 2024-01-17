@@ -45,9 +45,12 @@ class ContributionServiceTest {
 	@Test
 	void testXMLValid() throws JAXBException {
 		when(contributionsMapperUtilsMock.generateFileXML(any(), any())).thenReturn("ValidXML");
-		contributionService.processDailyFiles();
+		when(contributionsMapperUtilsMock.generateFileName(any())).thenReturn("TestFilename.xml");
+		when(contributionsMapperUtilsMock.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
+		boolean result = contributionService.processDailyFiles();
 		verify(contributionsMapperUtilsMock,times(2)).mapLineXMLToObject(any());
 		verify(contributionsMapperUtilsMock).generateFileXML(any(), any());
+		softly.assertThat(result).isTrue();
 	}
 
 	@Test
@@ -61,7 +64,6 @@ class ContributionServiceTest {
 		// failure to generate the xml should return a null xmlString.
 		verify(contributionsMapperUtilsMock).generateFileXML(any(), any());
 		// failure should be the result of file generation
-//		softly.assertThat(result).isFalse();
 
 
 
