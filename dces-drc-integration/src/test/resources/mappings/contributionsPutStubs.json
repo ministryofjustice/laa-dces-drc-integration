@@ -7,7 +7,7 @@
         "method": "POST",
         "bodyPatterns": [
           {
-            "matches": ".*ValidXML.*"
+            "contains": "{\"recordsSent\":2,\"xmlContent\":\"ValidXML\",\"concorContributionIds\":[\"1234\",\"9876\"],\"xmlFileName\":\"TestFilename.xml\",\"ackXmlContent\":\"ValidAckXML\"}"
           }
         ]
       },
