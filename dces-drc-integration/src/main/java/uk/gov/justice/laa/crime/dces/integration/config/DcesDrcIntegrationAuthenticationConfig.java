@@ -13,7 +13,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class DcesDrcIntegrationAuthenticationConfig {
     // TODO: Set path below.
-    public static final String API_REQUEST_PATH = "/api/internal/v1/**";
+    public static final String API_REQUEST_PATH = "/api/internal/v1/dece-drc-integ/**";
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
