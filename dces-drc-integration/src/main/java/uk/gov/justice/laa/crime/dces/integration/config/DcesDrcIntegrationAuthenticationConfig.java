@@ -12,8 +12,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 public class DcesDrcIntegrationAuthenticationConfig {
-    // TODO: Set path below.
-    public static final String API_REQUEST_PATH = "/api/internal/v1/dece-drc-integ/**";
+    public static final String API_REQUEST_PATH = "/api/internal/v1/dces-drc-integration/**";
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {

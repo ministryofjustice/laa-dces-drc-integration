@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/internal/v1/dece-drc-integ")
+@RequestMapping("/api/internal/v1/dces-drc-integration")
 @RequiredArgsConstructor
 @Tag(name = "Readiness Probe", description = "Readiness probe and health check API")
 
