@@ -1,0 +1,26 @@
+services:
+  maat-api:
+    baseUrl: http://localhost:1111
+    registrationId: MATT_API_REG_ID
+    oAuthEnabled: false
+
+sentry:
+  environment: test
+
+spring:
+  security:
+    oauth2:
+      client:
+        provider:
+          maatapi:
+            token-uri: 34
+        registration:
+          maatapi:
+            client-id: 34
+            client-secret: 343
+            authorization-grant-type: client_credentials
+            scope:
+              - 12
+      resource-server:
+        jwt:
+          issuer-uri: http://testurl

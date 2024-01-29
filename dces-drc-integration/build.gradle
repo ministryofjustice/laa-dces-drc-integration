@@ -107,6 +107,7 @@ dependencies {
 	implementation "io.micrometer:micrometer-registry-prometheus:$versions.prometheus"
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation "org.springframework.security:spring-security-test"
 	testImplementation 'io.projectreactor:reactor-test'
 	testImplementation "com.github.tomakehurst:wiremock-jre8-standalone:$versions.wiremockVersion"
 	testImplementation "com.squareup.okhttp3:mockwebserver:$versions.mockwebserverVersion"

@@ -28,4 +28,6 @@ env:
             key: MAAT_API_OAUTH_CLIENT_SECRET
   - name: MAAT_API_OAUTH_SCOPE
     value: {{ .Values.maatApi.oauthScope }}
+  - name: LAA_DCES_DRC_INTEGRATION_RESOURCE_SERVER_ISSUER_URI
+    value: {{ .Values.resource_server }}
 {{- end -}}
