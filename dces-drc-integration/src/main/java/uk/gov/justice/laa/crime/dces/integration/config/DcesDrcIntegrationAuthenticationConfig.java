@@ -12,7 +12,6 @@ import org.springframework.security.config.Customizer;
 @Configuration
 @EnableWebSecurity
 public class DcesDrcIntegrationAuthenticationConfig {
-    public static final String API_REQUEST_PATH = "/api/internal/v1/dces-drc-integration/**";
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -23,7 +22,6 @@ public class DcesDrcIntegrationAuthenticationConfig {
                                 .requestMatchers("/swagger-ui/**").permitAll()
                                 .requestMatchers("/api-docs/**").permitAll()
                                 .requestMatchers("/actuator/**").permitAll()
-                                //.requestMatchers(HttpMethod.GET, API_REQUEST_PATH).permitAll()
                                 .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
