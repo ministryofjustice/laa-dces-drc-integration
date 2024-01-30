@@ -12,7 +12,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.ActiveProfiles;
 import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
 import org.springframework.web.client.HttpServerErrorException;
 
@@ -23,7 +22,6 @@ import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @ExtendWith(SoftAssertionsExtension.class)
-@ActiveProfiles("test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @WireMockTest(httpPort = 1111)
 class ContributionServiceTest {
