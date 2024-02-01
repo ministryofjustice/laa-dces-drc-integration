@@ -19,6 +19,7 @@ public class DcesDrcIntegrationAuthenticationConfig {
                 .authorizeHttpRequests(
                         authorizeHttpRequests -> authorizeHttpRequests
                                 .requestMatchers("/token/**").permitAll()
+                                .requestMatchers("/swagger-ui-custom.html").permitAll()
                                 .requestMatchers("/swagger-ui/**").permitAll()
                                 .requestMatchers("/api-docs/**").permitAll()
                                 .requestMatchers("/actuator/**").permitAll()
