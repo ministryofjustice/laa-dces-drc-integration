@@ -9,7 +9,7 @@ plugins {
 def versions = [
 		pitestVersion          : '1.4.10',
 		sentryVersion          : '6.15.0',
-		springdocVersion       : '1.6.15',
+		springdocVersion       : '2.3.0',
 		okhttpVersion          : '4.9.3',
 		mockwebserverVersion   : '4.9.3',
 		reactorTestVersion     : '3.2.3',
@@ -86,7 +86,7 @@ dependencies {
 	implementation "org.springframework.boot:spring-boot-starter-oauth2-client:$versions.springOAuthClient"
 	implementation "org.springframework.security:spring-security-oauth2-jose:$versions.springOAuthJose"
 
-	implementation "org.springdoc:springdoc-openapi-ui:$versions.springdocVersion"
+	implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:$versions.springdocVersion"
 	implementation "io.github.resilience4j:resilience4j-spring-boot3:$versions.resilience4jVersion"
 
 	// XML Conversion

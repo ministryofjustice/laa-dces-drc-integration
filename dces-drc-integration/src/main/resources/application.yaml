@@ -8,6 +8,9 @@ management:
     web:
       exposure:
         include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
 
 sentry:
   debug: off
@@ -50,3 +53,23 @@ spring:
       resource-server:
         jwt:
           issuer-uri: ${LAA_DCES_DRC_INTEGRATION_RESOURCE_SERVER_ISSUER_URI}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui-custom.html
+    enabled: true
+    operations-sorter: method
+  api-docs:
+    path: "/api-docs"
+    enabled: true
+  writer-with-order-by-keys: true
+  writer-with-default-pretty-printer: true
+  packages-to-scan: uk.gov.justice.laa.crime.dces.integration.rest.api.controller
+
+api:
+  title: DCES DRC Integration RestAPIs
+  description: DCES DRC Integration Services.
+  version: 1.0
+  contactName: DCES Support Team
+  contactEmail: laa-dces@digital.justice.gov.uk
+  contactUrl: justice.gov.uk/laa
