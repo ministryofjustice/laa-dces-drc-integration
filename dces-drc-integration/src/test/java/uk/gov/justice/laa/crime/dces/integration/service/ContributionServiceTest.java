@@ -54,6 +54,10 @@ class ContributionServiceTest {
 	@Test
 	void testFileXMLInvalid() throws JAXBException {
 		when(contributionsMapperUtilsMock.generateFileXML(any(), any())).thenReturn("InvalidXML");
+		when(contributionsMapperUtilsMock.generateAckXML(any(),any(),any(),any())).thenReturn("AckXML");
+		when(contributionsMapperUtilsMock.generateFileName(any())).thenReturn("FileName");
+
+
 		Exception exception = assertThrows(HttpServerErrorException.class, () -> {
 			contributionService.processDailyFiles();
 		});

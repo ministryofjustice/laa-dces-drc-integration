@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.crime.dces.integration.client;
 
+import jakarta.validation.Valid;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,6 +27,7 @@ public interface ContributionClient extends MaatApiClient {
     FdcContributionsResponse getFdcContributions(@RequestParam String status);
 
     @PostExchange("/create-contribution-file")
+    @Valid
     Boolean updateContributions(@RequestBody ContributionPutRequest contributionPutRequest);
 
     @Configuration
