@@ -16,8 +16,7 @@
         "headers": {
           "Content-Type": "application/json"
         },
-        "jsonBody":
-        {
+        "jsonBody": {
           "fdcContributions": [
             {
               "id": 1000,
@@ -129,7 +128,6 @@
             }
           ]
         }
-
       }
     },
     {
