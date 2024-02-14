@@ -1,0 +1,20 @@
+<configuration>
+    <springProperty scope="context" name="springAppName" source="spring.application.name"/>
+    <!-- default configuration: use jsonConsoleAppender -->
+    <appender name="jsonConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <includeMdcKeyName>traceId</includeMdcKeyName>
+            <includeMdcKeyName>spanId</includeMdcKeyName>
+            <includeMdcKeyName>correlationId</includeMdcKeyName>
+            <includeMdcKeyName>client</includeMdcKeyName>
+            <includeMdcKeyName>status</includeMdcKeyName>
+            <includeMdcKeyName>headers</includeMdcKeyName>
+            <includeMdcKeyName>body</includeMdcKeyName>
+            <includeMdcKeyName>responseTime</includeMdcKeyName>
+        </encoder>
+    </appender>
+    <root level="INFO">
+        <appender-ref ref="jsonConsoleAppender"/>
+    </root>
+
+</configuration>
