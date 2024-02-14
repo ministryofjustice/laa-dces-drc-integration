@@ -1,11 +1,15 @@
 package uk.gov.justice.laa.crime.dces.integration.service;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
+import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionEntry;
+import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsResponse;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
-import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.ObjectFactory;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,28 +17,21 @@ import java.util.Map;
 import java.util.Objects;
 
 @Service
+@AllArgsConstructor
 @Slf4j
 public class FdcService implements FileService{
 
     private final FdcMapperUtils fdcMapperUtils;
+    private final ContributionClient contributionClient;
 
-    public FdcService(FdcMapperUtils fdcMapperUtils) {
-        this.fdcMapperUtils = fdcMapperUtils;
-    }
     // TODO Change all Objects to the actual object type.
 
     public boolean processDailyFiles() {
         // TODO: Call FDC global update
-
-        List<Fdc> fdcList = null;
+        // get all the potential values via maat call
+        List<Fdc> fdcList = getFdcList();
         List<Fdc> successfulFdcs = new ArrayList<>();
         Map<String,String> failedContributions = new HashMap<>();
-        // get all the potential values via maat call
-        // TODO: MAAT API "Get Active Fdc" REST call on line below:
-        fdcList = new ArrayList<>();
-        ObjectFactory of = new ObjectFactory();
-        fdcList.add(of.createFdcFileFdcListFdc());
-        //
 
         // for each contribution sent by MAAT API
         for ( Fdc currentFdc : fdcList) {
@@ -62,16 +59,14 @@ public class FdcService implements FileService{
             String xmlFile = fdcMapperUtils.generateFileXML(successfulFdcs);
             // TODO: Construct other parameters for the "ATOMIC UPDATE" call.
             // populate the list of successful IDS from the successful contributions.
-//            List<BigInteger> successfulIdList = successfulFdcs.stream()
-//                    .filter(Objects::nonNull)  // null safety.
-//                    .map(CONTRIBUTIONS::getId) // we only care for the id
-//                    .toList();
+            List<BigInteger> successfulIdList = successfulFdcs.stream()
+                    .filter(Objects::nonNull)
+                    .map(Fdc::getId)
+                    .toList();
             // Failed XML lines to be logged. Need to use this to set the ATOMIC UPDATE's ack field.
             if(!failedContributions.isEmpty()){
                 log.info("Contributions failed to send: {}", failedContributions.size());
             }
-
-
 
             // TODO: Setup and make MAAT API "ATOMIC UPDATE" REST call below:
             fileSentSuccess = Objects.nonNull(xmlFile);
@@ -83,5 +78,19 @@ public class FdcService implements FileService{
 
         return fileSentSuccess;
     }
+
+    List<Fdc> getFdcList(){
+        FdcContributionsResponse response = contributionClient.getFdcContributions("REQUESTED");
+        List<Fdc> fdcList = new ArrayList<>();
+        if (Objects.nonNull(response)
+                && Objects.nonNull(response.getFdcContributions())
+                && !response.getFdcContributions().isEmpty()) {
+            List<FdcContributionEntry> fdcContributionEntryList= response.getFdcContributions();
+            fdcList = fdcContributionEntryList.stream().map(fdcMapperUtils::mapFdcEntry).toList();
+        }
+        return fdcList;
+    }
+
+
 
 }

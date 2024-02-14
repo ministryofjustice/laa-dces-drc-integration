@@ -11,6 +11,7 @@ import org.springframework.web.service.annotation.PostExchange;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.MaatApiClientFactory;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.client.MaatApiClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
+import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsResponse;
 import uk.gov.justice.laa.crime.dces.integration.model.ContributionPutRequest;
 
 import java.util.List;
@@ -20,6 +21,9 @@ import java.util.List;
 public interface ContributionClient extends MaatApiClient {
     @GetExchange("/concor-contribution-files?status={status}")
     List<ConcurContribEntry> getContributions(@PathVariable String status);
+
+    @GetExchange("/fdc-contribution-files?status={status}")
+    FdcContributionsResponse getFdcContributions(@PathVariable String status);
 
     @PostExchange("/create-contribution-file")
     Boolean updateContributions(@RequestBody ContributionPutRequest contributionPutRequest);

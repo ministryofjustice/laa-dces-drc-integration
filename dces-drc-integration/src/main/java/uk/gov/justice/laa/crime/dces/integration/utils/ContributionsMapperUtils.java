@@ -7,14 +7,13 @@ import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.C
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.ContributionFile;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.ObjectFactory;
 
-import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.transform.stream.StreamSource;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.math.BigInteger;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -70,11 +69,7 @@ public class ContributionsMapperUtils extends MapperUtils{
 
     private ContributionFile.Header generateHeader (ObjectFactory of, List<CONTRIBUTIONS> contributionsList, String fileName){
         ContributionFile.Header header = of.createContributionFileHeader();
-        try {
-            header.setDateGenerated(generateDate(new Date()));
-        } catch (DatatypeConfigurationException e) {
-            log.error("Error in generating the generated date for the header");
-        }
+        header.setDateGenerated(generateDate(LocalDate.now()));
         // TODO: Get generation method for the headers resolved.
         header.setFilename(fileName);
         header.setId(BigInteger.valueOf(123));
