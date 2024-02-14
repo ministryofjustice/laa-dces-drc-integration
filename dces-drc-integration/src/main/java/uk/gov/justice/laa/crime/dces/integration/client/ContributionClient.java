@@ -2,8 +2,8 @@ package uk.gov.justice.laa.crime.dces.integration.client;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
@@ -19,11 +19,11 @@ import java.util.List;
 
 @HttpExchange("/debt-collection-enforcement")
 public interface ContributionClient extends MaatApiClient {
-    @GetExchange("/concor-contribution-files?status={status}")
-    List<ConcurContribEntry> getContributions(@PathVariable String status);
+    @GetExchange("/concor-contribution-files")
+    List<ConcurContribEntry> getContributions(@RequestParam String status);
 
-    @GetExchange("/fdc-contribution-files?status={status}")
-    FdcContributionsResponse getFdcContributions(@PathVariable String status);
+    @GetExchange("/fdc-contribution-files")
+    FdcContributionsResponse getFdcContributions(@RequestParam String status);
 
     @PostExchange("/create-contribution-file")
     Boolean updateContributions(@RequestBody ContributionPutRequest contributionPutRequest);
