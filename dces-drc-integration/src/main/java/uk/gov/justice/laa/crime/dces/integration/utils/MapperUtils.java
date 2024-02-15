@@ -8,15 +8,12 @@ import uk.gov.justice.laa.crime.dces.integration.model.generated.ack.CONTRIBUTIO
 import uk.gov.justice.laa.crime.dces.integration.model.generated.ack.ObjectFactory;
 
 import javax.xml.datatype.DatatypeConfigurationException;
-import javax.xml.datatype.DatatypeConstants;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import java.io.StringWriter;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.Objects;
 
 @Slf4j
@@ -30,12 +27,14 @@ public class MapperUtils {
         ackMarshaller = jaxbContext.createMarshaller();
     }
 
-    protected XMLGregorianCalendar generateDate(Date date) throws DatatypeConfigurationException {
-        GregorianCalendar c = new GregorianCalendar();
-        c.setTime(date);
-        XMLGregorianCalendar calendarDate = DatatypeFactory.newInstance().newXMLGregorianCalendar(c);
-        calendarDate.setTimezone(DatatypeConstants.FIELD_UNDEFINED);
-        return calendarDate;
+    protected XMLGregorianCalendar generateDate(LocalDate date) {
+        if(Objects.isNull(date)){return null;}
+        try {
+            return DatatypeFactory.newInstance().newXMLGregorianCalendar(date.toString());
+        } catch (DatatypeConfigurationException e) {
+            log.error("Error parsing LocalDate to xmlGregorianCalendar: {}", date);
+            return null;
+        }
     }
 
     public String generateAckXML(String fileName, LocalDate date, Integer failedLines, Integer successfulLines){
