@@ -21,6 +21,7 @@ import java.util.Objects;
 @Slf4j
 public class FdcService implements FileService{
 
+    public static final String REQUESTED_STATUS = "REQUESTED";
     private final FdcMapperUtils fdcMapperUtils;
     private final ContributionClient contributionClient;
 
@@ -80,7 +81,7 @@ public class FdcService implements FileService{
     }
 
     List<Fdc> getFdcList(){
-        FdcContributionsResponse response = contributionClient.getFdcContributions("REQUESTED");
+        FdcContributionsResponse response = contributionClient.getFdcContributions(REQUESTED_STATUS);
         List<Fdc> fdcList = new ArrayList<>();
         if (Objects.nonNull(response)
                 && Objects.nonNull(response.getFdcContributions())
