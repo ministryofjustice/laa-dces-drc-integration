@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionEntry;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsResponse;
+import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcGlobalUpdateResponse;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 
@@ -29,6 +30,13 @@ public class FdcService implements FileService{
 
     public boolean processDailyFiles() {
         // TODO: Call FDC global update
+        FdcGlobalUpdateResponse globalUpdateResponse = contributionClient.executeFdcGlobalUpdate();
+        if ( !globalUpdateResponse.isSuccessful()) {
+            // We've failed to do a global update. Raise as prio.
+            log.error("Fdc Global Update failed!");
+            // TODO: throw custom error
+            return false;
+        }
         // get all the potential values via maat call
         List<Fdc> fdcList = getFdcList();
         List<Fdc> successfulFdcs = new ArrayList<>();
@@ -64,6 +72,9 @@ public class FdcService implements FileService{
                     .filter(Objects::nonNull)
                     .map(Fdc::getId)
                     .toList();
+            // check numbers.
+
+            logNumberDiscepancies(globalUpdateResponse.getNumberOfUpdates(), fdcList.size(), successfulFdcs.size());
             // Failed XML lines to be logged. Need to use this to set the ATOMIC UPDATE's ack field.
             if(!failedContributions.isEmpty()){
                 log.info("Contributions failed to send: {}", failedContributions.size());
@@ -78,6 +89,15 @@ public class FdcService implements FileService{
         // TODO: Need to figure how we're going to log a failed call to the ATOMIC UPDATE.
 
         return fileSentSuccess;
+    }
+
+    void logNumberDiscepancies(int globalUpdateCount, int getFdcCount, int successfullySentFdcCount){
+        if ( globalUpdateCount != getFdcCount ){
+            log.info("Fdc number discrepancy: {} affected by global update, {} from getFdcs", globalUpdateCount, getFdcCount);
+        }
+        if ( getFdcCount != successfullySentFdcCount ){
+            log.info("Fdc number discrepancy: {} from getFdcs, {} successfully sent", getFdcCount, successfullySentFdcCount);
+        }
     }
 
     List<Fdc> getFdcList(){
