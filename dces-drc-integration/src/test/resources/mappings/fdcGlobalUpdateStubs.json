@@ -17,27 +17,6 @@
           "numberOfUpdates": 3
         }
       }
-    },
-    {
-      "scenarioName": "FailedBasicRequest",
-      "request": {
-        "urlPath": "/debt-collection-enforcement/fdc-contribution-files",
-        "queryParameters": {
-          "status": {
-            "equalTo": "500ERROR"
-          }
-        },
-        "method": "GET"
-      },
-      "response": {
-        "status": 500,
-        "headers": {
-          "Content-Type": "application/json"
-        },
-        "jsonBody": {
-          "files": []
-        }
-      }
     }
   ]
 }
