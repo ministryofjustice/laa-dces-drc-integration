@@ -127,8 +127,8 @@ public class FdcService implements FileService{
         try {
             return contributionClient.executeFdcGlobalUpdate();
         }
-        catch (WebClientResponseException e){
-            log.error("Fdc Gloabl Update threw an exception");
+        catch (HttpServerErrorException e){
+            log.error("Fdc Global Update threw an exception");
             throw e;
         }
     }
