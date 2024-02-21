@@ -1,0 +1,22 @@
+{
+  "mappings": [
+    {
+      "scenarioName": "successBasicRequest",
+      "priority": 999,
+      "request": {
+        "urlPath": "/debt-collection-enforcement/prepare-fdc-contributions-files",
+        "method": "POST"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "successful": true,
+          "numberOfUpdates": 3
+        }
+      }
+    }
+  ]
+}
