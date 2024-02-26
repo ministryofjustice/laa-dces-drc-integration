@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CustomResponse<T> {
+public class DcesDrcApiResponse<T> {
     private T data;
     private TraceData trace;
 }

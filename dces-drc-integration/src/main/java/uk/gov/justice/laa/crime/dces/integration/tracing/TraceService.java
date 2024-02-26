@@ -3,14 +3,14 @@ package uk.gov.justice.laa.crime.dces.integration.tracing;
 import io.micrometer.tracing.Span;
 import io.micrometer.tracing.TraceContext;
 import io.micrometer.tracing.Tracer;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Slf4j
 public class TraceService {
 
@@ -21,6 +21,6 @@ public class TraceService {
         return Optional.ofNullable(span)
                 .map(Span::context)
                 .map(TraceContext::traceId)
-                .orElse("not-found");
+                .orElse("traceId-not-found");
     }
 }

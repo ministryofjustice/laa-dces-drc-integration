@@ -15,7 +15,7 @@ import java.sql.Timestamp;
 
 @ControllerAdvice
 @AllArgsConstructor
-public class CustomResponseWrapper implements ResponseBodyAdvice<Object> {
+public class DcesDrcResponseBodyWrapper implements ResponseBodyAdvice<Object> {
 
     private TraceService traceService;
 
@@ -30,14 +30,13 @@ public class CustomResponseWrapper implements ResponseBodyAdvice<Object> {
                                   final Class selectedConverterType, final ServerHttpRequest request, final ServerHttpResponse response) {
 
         if (!(body instanceof ResponseEntity)) {
-            final CustomResponse<Object> customResponse = new CustomResponse<>();
-            customResponse.setData(body);
-            customResponse.setTrace(TraceData.builder()
-                    .correlationId("UUID")
+            final DcesDrcApiResponse<Object> dcesDrcApiResponse = new DcesDrcApiResponse<>();
+            dcesDrcApiResponse.setData(body);
+            dcesDrcApiResponse.setTrace(TraceData.builder()
                     .traceId(traceService.getTraceId())
                     .timestamp(new Timestamp(System.currentTimeMillis()))
                     .build());
-            return customResponse;
+            return dcesDrcApiResponse;
         }
         return body;
     }

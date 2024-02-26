@@ -13,7 +13,6 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 public class TraceData {
 
-    private String correlationId;
     private String traceId;
     private Timestamp timestamp;
 }

@@ -24,13 +24,9 @@ class CustomErrorControllerTest {
     void verifyUsingErrorResponseWhenHittingBadRequestOnErrorController() throws Exception {
         mockMvc.perform(get("/error").headers(getHttpHeaders()))
                 .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.statusCode")
-                        .value(999))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.traceId")
-                        .isNotEmpty())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.correlationId")
-                        .isNotEmpty())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.message")
-                        .value("None for path (). "));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.statusCode").value(999))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.traceId").isNotEmpty())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.correlationId").isEmpty())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("None for path (). "));
     }
 }

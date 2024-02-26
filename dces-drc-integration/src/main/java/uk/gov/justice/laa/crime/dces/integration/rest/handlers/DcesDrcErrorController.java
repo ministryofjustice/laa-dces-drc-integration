@@ -15,20 +15,18 @@ import uk.gov.justice.laa.crime.dces.integration.rest.common.ErrorResponse;
 import uk.gov.justice.laa.crime.dces.integration.tracing.TraceService;
 
 import java.util.Map;
-import java.util.UUID;
 
 
 @Slf4j
 @RestController
 @AllArgsConstructor
-public class CustomErrorController implements ErrorController {
+public class DcesDrcErrorController implements ErrorController {
 
     private final TraceService traceService;
     public static final String MESSAGE_KEY = "message";
     public static final String STATUS_KEY = "status";
     public static final String ERROR_KEY = "error";
     public static final String PATH_KEY = "path";
-
 
     private final ErrorAttributes errorAttributes = new DefaultErrorAttributes();
 
@@ -49,7 +47,6 @@ public class CustomErrorController implements ErrorController {
                 .statusCode(statusCode)
                 .traceId(traceService.getTraceId())
                 .message(errorCode + " for path (" + path + "). " + errorMessage)
-                .correlationId(UUID.randomUUID().toString())
                 .build();
     }
 }
