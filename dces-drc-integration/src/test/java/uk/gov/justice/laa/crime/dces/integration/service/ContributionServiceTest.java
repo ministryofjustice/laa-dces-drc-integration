@@ -54,7 +54,10 @@ class ContributionServiceTest {
 	@Test
 	void testFileXMLInvalid() throws JAXBException {
 		when(contributionsMapperUtilsMock.generateFileXML(any(), any())).thenReturn("InvalidXML");
-//		boolean result = contributionService.processDailyFiles();
+		when(contributionsMapperUtilsMock.generateAckXML(any(),any(),any(),any())).thenReturn("AckXML");
+		when(contributionsMapperUtilsMock.generateFileName(any())).thenReturn("FileName");
+
+
 		Exception exception = assertThrows(HttpServerErrorException.class, () -> {
 			contributionService.processDailyFiles();
 		});
@@ -63,13 +66,10 @@ class ContributionServiceTest {
 		verify(contributionsMapperUtilsMock).generateFileXML(any(), any());
 		// failure should be the result of file generation
 
-
-
 		String expectedMessage = "500 Received error 500 INTERNAL_SERVER_ERROR due to Internal Server Error";
 		String actualMessage = exception.getMessage();
 
 		softly.assertThat(actualMessage.contains(expectedMessage)).isTrue();
-
 	}
 
 	@Test
@@ -80,5 +80,4 @@ class ContributionServiceTest {
 		// with no successful xml, should not run the file generation.
 		verify(contributionsMapperUtilsMock, times(0)).generateFileXML(any(), any());
 	}
-
 }

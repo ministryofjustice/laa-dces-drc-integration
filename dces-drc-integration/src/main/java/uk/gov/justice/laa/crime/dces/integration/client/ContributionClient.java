@@ -1,9 +1,10 @@
 package uk.gov.justice.laa.crime.dces.integration.client;
 
+import jakarta.validation.Valid;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
@@ -11,6 +12,8 @@ import org.springframework.web.service.annotation.PostExchange;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.MaatApiClientFactory;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.client.MaatApiClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
+import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsResponse;
+import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcGlobalUpdateResponse;
 import uk.gov.justice.laa.crime.dces.integration.model.ContributionPutRequest;
 
 import java.util.List;
@@ -18,11 +21,19 @@ import java.util.List;
 
 @HttpExchange("/debt-collection-enforcement")
 public interface ContributionClient extends MaatApiClient {
-    @GetExchange("/concor-contribution-files?status={status}")
-    List<ConcurContribEntry> getContributions(@PathVariable String status);
+    @GetExchange("/concor-contribution-files")
+    List<ConcurContribEntry> getContributions(@RequestParam String status);
 
     @PostExchange("/create-contribution-file")
+    @Valid
     Boolean updateContributions(@RequestBody ContributionPutRequest contributionPutRequest);
+
+    @PostExchange("/prepare-fdc-contributions-files")
+    FdcGlobalUpdateResponse executeFdcGlobalUpdate();
+
+
+    @GetExchange("/fdc-contribution-files")
+    FdcContributionsResponse getFdcContributions(@RequestParam String status);
 
     @Configuration
     class ContributionFilesClientFactory {

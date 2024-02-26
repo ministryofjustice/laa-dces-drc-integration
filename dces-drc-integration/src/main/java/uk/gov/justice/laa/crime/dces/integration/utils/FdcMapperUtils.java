@@ -5,14 +5,14 @@ import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.ObjectFactory;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 
-import javax.xml.datatype.DatatypeConfigurationException;
 import java.io.StringWriter;
 import java.math.BigInteger;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
@@ -55,11 +55,7 @@ public class FdcMapperUtils extends MapperUtils{
 
     private FdcFile.Header generateHeader (ObjectFactory of, List<Fdc> fdcList){
         FdcFile.Header header = of.createFdcFileHeader();
-        try {
-            header.setDateGenerated(generateDate(new Date()));
-        } catch (DatatypeConfigurationException e) {
-            log.error("Error in generating the generated date for the header");
-        }
+        header.setDateGenerated(generateDate(LocalDate.now()));
         // TODO: Get generation method for the headers resolved.
         header.setFilename("file.name");
         header.setFileId(BigInteger.valueOf(123));
@@ -75,6 +71,19 @@ public class FdcMapperUtils extends MapperUtils{
         FdcFile.FdcList cl = of.createFdcFileFdcList();
         cl.getFdc().addAll(fdcFileList);
         return cl;
+    }
+
+    public Fdc mapFdcEntry(FdcContributionEntry entry) {
+        ObjectFactory of = new ObjectFactory();
+        Fdc fdc = of.createFdcFileFdcListFdc();
+        fdc.setId(BigInteger.valueOf(entry.getId()));
+        fdc.setMaatId(BigInteger.valueOf(entry.getMaatId()));
+        fdc.setLgfsTotal(entry.getLgfsCost());
+        fdc.setAgfsTotal(entry.getAgfsCost());
+        fdc.setFinalCost(entry.getFinalCost());
+        fdc.setSentenceDate(super.generateDate(entry.getSentenceOrderDate()));
+        fdc.setCalculationDate(super.generateDate(entry.getDateCalculated()));
+        return fdc;
     }
 
 

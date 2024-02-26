@@ -8,15 +8,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.ObjectFactory;
 
-import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.XMLGregorianCalendar;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,9 +28,6 @@ class FdcMapperUtilsTests {
 	private static final BigDecimal DEFAULT_AGFS_TOTAL = BigDecimal.valueOf(200.00);
 	private static final BigDecimal DEFAULT_FINAL_COST = BigDecimal.valueOf(300.00);
 	private static final BigDecimal DEFAULT_LGFS_TOTAL = BigDecimal.valueOf(400.00);
-
-	private static final String DATE_FORMAT_PATTERN = "yyyy-MM-dd";
-	private static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat(DATE_FORMAT_PATTERN);
 	private static final String DEFAULT_CALCULATION_DATE = "2020-01-01";
 	private static final String DEFAULT_SENTENCE_DATE = "2000-06-30";
 
@@ -46,24 +42,25 @@ class FdcMapperUtilsTests {
 		softly.assertAll();
 	}
 
+
 	@Test
-	void testFileGenerationValid() throws DatatypeConfigurationException, ParseException {
+	void testFdcEntryToFdcMapping(){
+		FdcContributionEntry testInput = generateDefaultFdcEntry();
+		Fdc mappedFdc = fdcMapperUtils.mapFdcEntry(testInput);
+		softly.assertThat(mappedFdc.getId()).isEqualTo(DEFAULT_ID);
+		softly.assertThat(mappedFdc.getMaatId()).isEqualTo(DEFAULT_MAAT_ID);
+		softly.assertThat(mappedFdc.getAgfsTotal()).isEqualTo(DEFAULT_AGFS_TOTAL);
+		softly.assertThat(mappedFdc.getLgfsTotal()).isEqualTo(DEFAULT_LGFS_TOTAL);
+		softly.assertThat(mappedFdc.getFinalCost()).isEqualTo(DEFAULT_FINAL_COST);
+		softly.assertThat(getLocalDate(mappedFdc.getCalculationDate())).isEqualTo(testInput.getDateCalculated());
+		softly.assertThat(getLocalDate(mappedFdc.getSentenceDate())).isEqualTo(testInput.getSentenceOrderDate());
 
-		ObjectFactory of = new ObjectFactory();
+	}
 
-		XMLGregorianCalendar calculationDate = fdcMapperUtils.generateDate(simpleDateFormat.parse(DEFAULT_CALCULATION_DATE));
-		XMLGregorianCalendar sentenceDate = fdcMapperUtils.generateDate(simpleDateFormat.parse(DEFAULT_SENTENCE_DATE));
-
-		Fdc fdc = of.createFdcFileFdcListFdc();
-		fdc.setId(DEFAULT_ID);
-		fdc.setMaatId(DEFAULT_MAAT_ID);
-		fdc.setAgfsTotal(DEFAULT_AGFS_TOTAL);
-		fdc.setFinalCost(DEFAULT_FINAL_COST);
-		fdc.setLgfsTotal(DEFAULT_LGFS_TOTAL);
-		fdc.setCalculationDate(calculationDate);
-		fdc.setSentenceDate(sentenceDate);
+	@Test
+	void testFileGenerationValid() {
 		List<Fdc> fdcList = new ArrayList<>();
-		fdcList.add(fdc);
+		fdcList.add(generateDefaultFdc());
 		String generatedXML = fdcMapperUtils.generateFileXML(fdcList);
 		softly.assertThat(generatedXML).isNotNull();
 		softly.assertThat(generatedXML.length()>0).isTrue();
@@ -74,6 +71,39 @@ class FdcMapperUtilsTests {
 		softly.assertThat(generatedXML).contains("<lgfs_total>"+DEFAULT_LGFS_TOTAL+"</lgfs_total>");
 		softly.assertThat(generatedXML).contains("<sentenceDate>"+DEFAULT_SENTENCE_DATE+"</sentenceDate>");
 		softly.assertThat(generatedXML).contains("<calculationDate>"+DEFAULT_CALCULATION_DATE+"</calculationDate>");
+	}
+
+	private Fdc generateDefaultFdc() {
+		XMLGregorianCalendar calculationDate = fdcMapperUtils.generateDate(LocalDate.parse(DEFAULT_CALCULATION_DATE));
+		XMLGregorianCalendar sentenceDate = fdcMapperUtils.generateDate(LocalDate.parse(DEFAULT_SENTENCE_DATE));
+		ObjectFactory of = new ObjectFactory();
+		Fdc fdc = of.createFdcFileFdcListFdc();
+		fdc.setId(DEFAULT_ID);
+		fdc.setMaatId(DEFAULT_MAAT_ID);
+		fdc.setAgfsTotal(DEFAULT_AGFS_TOTAL);
+		fdc.setLgfsTotal(DEFAULT_LGFS_TOTAL);
+		fdc.setFinalCost(DEFAULT_FINAL_COST);
+		fdc.setCalculationDate(calculationDate);
+		fdc.setSentenceDate(sentenceDate);
+		return fdc;
+	}
+
+	private FdcContributionEntry generateDefaultFdcEntry(){
+		return FdcContributionEntry.builder()
+				.id(DEFAULT_ID.intValue())
+				.maatId(DEFAULT_MAAT_ID.intValue())
+				.agfsCost(DEFAULT_AGFS_TOTAL)
+				.lgfsCost(DEFAULT_LGFS_TOTAL)
+				.finalCost(DEFAULT_FINAL_COST)
+				.dateCalculated(LocalDate.parse(DEFAULT_CALCULATION_DATE))
+				.sentenceOrderDate(LocalDate.parse(DEFAULT_SENTENCE_DATE)).build();
+	}
+
+	private LocalDate getLocalDate(XMLGregorianCalendar gregorianCalendar){
+		return LocalDate.of(
+				gregorianCalendar.getYear(),
+				gregorianCalendar.getMonth(),
+				gregorianCalendar.getDay());
 	}
 
 }

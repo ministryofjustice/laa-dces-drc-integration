@@ -1,0 +1,156 @@
+{
+  "mappings": [
+    {
+      "scenarioName": "successBasicRequest",
+      "priority": 999,
+      "request": {
+        "urlPath": "/debt-collection-enforcement/fdc-contribution-files",
+        "queryParameters": {
+          "status": {
+            "equalTo": "REQUESTED"
+          }
+        },
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "fdcContributions": [
+            {
+              "id": 1000,
+              "maatId": 10000000,
+              "sentenceOrderDate": "2050-07-12",
+              "dateCalculated": "2011-12-03",
+              "finalCost": 3805.69,
+              "lgfsCost": 3805.69,
+              "agfsCost": 0
+            },
+            {
+              "id": 2000,
+              "maatId": 20000000,
+              "sentenceOrderDate": "2000-07-12",
+              "dateCalculated": "2017-01-11",
+              "finalCost": 38081,
+              "lgfsCost": 36987.3,
+              "agfsCost": 1093.7
+            },
+            {
+              "id": 3000,
+              "maatId": 30000000,
+              "sentenceOrderDate": "2000-07-12",
+              "dateCalculated": "2011-12-03",
+              "finalCost": 3012.58,
+              "lgfsCost": 1407.52,
+              "agfsCost": 1605.06
+            },
+            {
+              "id": 4000,
+              "maatId": 40000000,
+              "sentenceOrderDate": "2000-07-12",
+              "dateCalculated": "2014-03-20",
+              "finalCost": 2283.1,
+              "lgfsCost": 2283.1,
+              "agfsCost": 0
+            },
+            {
+              "id": 5000,
+              "maatId": 50000000,
+              "sentenceOrderDate": "2000-07-12",
+              "dateCalculated": "2011-12-03",
+              "finalCost": 4218.59,
+              "lgfsCost": 1577.16,
+              "agfsCost": 2641.43
+            },
+            {
+              "id": 6000,
+              "maatId": 60000000,
+              "sentenceOrderDate": "2024-01-01",
+              "dateCalculated": "2024-02-08",
+              "finalCost": 745,
+              "lgfsCost": 245,
+              "agfsCost": 500
+            },
+            {
+              "id": 7000,
+              "maatId": 70000000,
+              "sentenceOrderDate": "2024-01-01",
+              "dateCalculated": "2024-02-08",
+              "finalCost": 300,
+              "lgfsCost": 100,
+              "agfsCost": 200
+            },
+            {
+              "id": 8000,
+              "maatId": 80000000,
+              "sentenceOrderDate": "2024-01-01",
+              "dateCalculated": "2024-02-08",
+              "finalCost": 2562,
+              "lgfsCost": 1340,
+              "agfsCost": 1222
+            },
+            {
+              "id": 9000,
+              "maatId": 90000000,
+              "sentenceOrderDate": "2024-01-01",
+              "dateCalculated": "2024-02-05",
+              "finalCost": 3545,
+              "lgfsCost": 2345,
+              "agfsCost": 1200
+            },
+            {
+              "id": 10000,
+              "maatId": 100000000,
+              "sentenceOrderDate": "2023-05-04",
+              "dateCalculated": "2024-02-08",
+              "finalCost": 3000,
+              "lgfsCost": 2000,
+              "agfsCost": 1000
+            },
+            {
+              "id": 11000,
+              "maatId": 110000000,
+              "sentenceOrderDate": "2023-06-21",
+              "dateCalculated": "2016-11-02",
+              "finalCost": 1534.15,
+              "lgfsCost": 667.33,
+              "agfsCost": 866.82
+            },
+            {
+              "id": 12000,
+              "maatId": 120000000,
+              "sentenceOrderDate": "2010-09-10",
+              "dateCalculated": "2011-12-14",
+              "finalCost": 1820.47,
+              "lgfsCost": 716.09,
+              "agfsCost": 1104.38
+            }
+          ]
+        }
+      }
+    },
+    {
+      "scenarioName": "FailedBasicRequest",
+      "request": {
+        "urlPath": "/debt-collection-enforcement/fdc-contribution-files",
+        "queryParameters": {
+          "status": {
+            "equalTo": "500ERROR"
+          }
+        },
+        "method": "GET"
+      },
+      "response": {
+        "status": 500,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "files": []
+        }
+      }
+    }
+  ]
+}
