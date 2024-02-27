@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.rest.handlers;
+package uk.gov.justice.laa.crime.dces.integration.rest.api.controller;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
