@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DcesDrcApiResponse<T> {
+public class ErrorResponse<T> {
     private T data;
     private TraceData trace;
 }
