@@ -126,6 +126,7 @@ public class MaatApiWebClientFactory {
 
     ExchangeFilterFunction addLaaTransactionIdToRequest() {
         return ExchangeFilterFunction.ofRequestProcessor(clientRequest -> {
+            //TODO: getting the value from the Trace Serice and pass this to the Maat API
                 String laaTransactionId = UUID.randomUUID().toString();
                 log.info("LAA_TRANSACTION_ID=[{}] Calling API [{}]", laaTransactionId, clientRequest.url());
                 return Mono.just(
