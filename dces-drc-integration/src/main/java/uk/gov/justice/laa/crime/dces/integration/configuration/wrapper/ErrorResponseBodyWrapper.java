@@ -15,7 +15,7 @@ import java.sql.Timestamp;
 
 @ControllerAdvice
 @AllArgsConstructor
-public class ApiResponseBodyWrapper implements ResponseBodyAdvice<Object> {
+public class ErrorResponseBodyWrapper implements ResponseBodyAdvice<Object> {
 
     private TraceService traceService;
 

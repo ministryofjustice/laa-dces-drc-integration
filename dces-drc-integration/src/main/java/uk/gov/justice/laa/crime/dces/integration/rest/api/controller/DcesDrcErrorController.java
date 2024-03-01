@@ -7,7 +7,6 @@ import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.boot.web.servlet.error.ErrorController;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.WebRequest;
@@ -33,12 +32,12 @@ public class DcesDrcErrorController implements ErrorController {
     @RequestMapping("/error")
     public ErrorResponse handleError(final WebRequest webRequest, final Exception exception) {
         log.error("Error occurred while processing web request ", exception);
-        final Map<String, Object> errorAttributesMap = this.errorAttributes.getErrorAttributes(webRequest, ErrorAttributeOptions.defaults());
+        final Map<String, Object> errorAttributesMap = errorAttributes.getErrorAttributes(webRequest, ErrorAttributeOptions.defaults());
         return createErrorResponse(errorAttributesMap);
     }
 
     private ErrorResponse createErrorResponse(final Map<String, Object> errorAttributes) {
-        final int statusCode = (Integer) errorAttributes.getOrDefault(STATUS_KEY, HttpStatus.INTERNAL_SERVER_ERROR.value());
+        final int statusCode = (Integer) errorAttributes.get(STATUS_KEY);
         final String errorMessage = errorAttributes.getOrDefault(MESSAGE_KEY, StringUtils.EMPTY).toString();
         final String errorCode = errorAttributes.getOrDefault(ERROR_KEY, StringUtils.EMPTY).toString();
         final String path = errorAttributes.getOrDefault(PATH_KEY, StringUtils.EMPTY).toString();
