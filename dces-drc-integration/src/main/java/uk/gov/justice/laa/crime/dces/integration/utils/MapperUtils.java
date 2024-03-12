@@ -20,6 +20,7 @@ import java.util.Objects;
 public class MapperUtils {
 
     private final Marshaller ackMarshaller;
+    protected final DateTimeFormatter filenameFormat = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
     private final DateTimeFormatter ackDateGeneratedFormat = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
     protected MapperUtils() throws JAXBException {

@@ -13,6 +13,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.Fdc
 import java.io.StringWriter;
 import java.math.BigInteger;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -86,5 +87,8 @@ public class FdcMapperUtils extends MapperUtils{
         return fdc;
     }
 
+    public String generateFileName(LocalDateTime dateTime){
+        return "FDC_"+dateTime.format(filenameFormat);
+    }
 
 }

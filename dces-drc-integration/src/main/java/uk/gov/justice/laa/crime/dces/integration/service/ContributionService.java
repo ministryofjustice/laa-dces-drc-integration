@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
-import uk.gov.justice.laa.crime.dces.integration.model.ContributionPutRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
 
@@ -25,11 +25,16 @@ public class ContributionService implements FileService{
     public boolean processDailyFiles() {
         List<ConcurContribEntry> contributionsList = null;
         List<CONTRIBUTIONS> successfulContributions = new ArrayList<>();
-        Map<Integer,String> failedContributions = new HashMap<>();
+        Map<String,String> failedContributions = new HashMap<>();
         // get all the values to process via maat call
         contributionsList = contributionClient.getContributions("ACTIVE");
-        List<String> successfulIdList = new ArrayList<>();
-        // for each contribution sent by MAAT API
+        sendContributionsToDrc(contributionsList, successfulContributions, failedContributions);
+
+        return updateContributionsAndCreateFile(successfulContributions, failedContributions);
+    }
+
+    private void sendContributionsToDrc(List<ConcurContribEntry> contributionsList, List<CONTRIBUTIONS> successfulContributions, Map<String,String> failedContributions){
+// for each contribution sent by MAAT API
         for ( ConcurContribEntry contribEntry : contributionsList) {
             // convert string into objects
             CONTRIBUTIONS currentContribution = null;
@@ -37,7 +42,7 @@ public class ContributionService implements FileService{
                 currentContribution = contributionsMapperUtils.mapLineXMLToObject(contribEntry.getXmlContent());
             } catch (JAXBException e) {
                 log.error("Invalid line XML encountered");
-                failedContributions.put(contribEntry.getConcorContributionId(), "Invalid format.");
+                failedContributions.put(String.valueOf(contribEntry.getConcorContributionId()), "Invalid format.");
                 continue;
             }
 
@@ -49,31 +54,34 @@ public class ContributionService implements FileService{
                 // If successful, we need to track that we have sent this, as it will form part of the XMLFile, and
                 // needs it's status to "sent" in MAAT.
                 successfulContributions.add(currentContribution);
-                // populate the list of successful IDS from the successful contributions.
-                successfulIdList.add(String.valueOf(contribEntry.getConcorContributionId()));
             }
             else{
                 // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
-                failedContributions.put(contribEntry.getConcorContributionId(), "failure reason");
+                failedContributions.put(String.valueOf(contribEntry.getConcorContributionId()), "failure reason");
             }
 
         }
+
+    }
+
+    private boolean updateContributionsAndCreateFile(List<CONTRIBUTIONS> successfulContributions, Map<String,String> failedContributions){
         // if >1 contribution was sent
         // create xml file
         boolean fileSentSuccess = false;
         if ( Objects.nonNull(successfulContributions) && !successfulContributions.isEmpty() ) {
+            // Setup and make MAAT API "ATOMIC UPDATE" REST call below:
             LocalDateTime dateGenerated = LocalDateTime.now();
             String fileName = contributionsMapperUtils.generateFileName(dateGenerated);
             String xmlFile = contributionsMapperUtils.generateFileXML(successfulContributions, fileName);
             String ackXml = contributionsMapperUtils.generateAckXML(fileName, dateGenerated.toLocalDate(), failedContributions.size(), successfulContributions.size());
+            List<String> successfulIdList = successfulContributions.stream().map(fdc -> fdc.getId().toString()).toList();
 
             // Failed XML lines to be logged. Need to use this to set the ATOMIC UPDATE's ack field.
             if(!failedContributions.isEmpty()){
                 log.info("Contributions failed to send: {}", failedContributions.size());
             }
-            // Setup and make MAAT API "ATOMIC UPDATE" REST call below:
             try {
-                fileSentSuccess = contributionPutRequest(xmlFile, successfulIdList, successfulIdList.size(),fileName,ackXml);
+                fileSentSuccess = contributionUpdateRequest(xmlFile, successfulIdList, successfulIdList.size(),fileName,ackXml);
             }
             catch (HttpServerErrorException e){
                 // If failed, we want to handle this. As it will mean the whole process failed for current day.
@@ -85,7 +93,14 @@ public class ContributionService implements FileService{
         return fileSentSuccess;
     }
 
-    private Boolean contributionPutRequest(String xmlContent, List<String> concurContributionIdList, int numberOfRecords, String fileName, String fileAckXML) throws HttpServerErrorException {
-        return contributionClient.updateContributions(new ContributionPutRequest(numberOfRecords, xmlContent,concurContributionIdList, fileName, fileAckXML));
+    private Boolean contributionUpdateRequest(String xmlContent, List<String> concurContributionIdList, int numberOfRecords, String fileName, String fileAckXML) throws HttpServerErrorException {
+        ContributionUpdateRequest request = ContributionUpdateRequest.builder()
+                .recordsSent(numberOfRecords)
+                .xmlContent(xmlContent)
+                .concorContributionIds(concurContributionIdList)
+                .xmlFileName(fileName)
+                .ackXmlContent(fileAckXML).build();
+        return contributionClient.updateContributions(request);
     }
+
 }

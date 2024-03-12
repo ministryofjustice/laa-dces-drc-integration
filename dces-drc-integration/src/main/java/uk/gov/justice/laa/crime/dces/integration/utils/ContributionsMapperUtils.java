@@ -13,7 +13,6 @@ import java.io.StringWriter;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 
@@ -24,7 +23,6 @@ public class ContributionsMapperUtils extends MapperUtils{
     private final Unmarshaller unmarshaller;
     private final Marshaller marshaller;
 
-    private final DateTimeFormatter filenameFormat = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
 
     private ContributionsMapperUtils() throws JAXBException {
         super();
