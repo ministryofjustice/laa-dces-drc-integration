@@ -8,7 +8,6 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 public class UpdateRequest {
 
-    @NonNull
     private int recordsSent;
     @NonNull
     private String xmlContent;

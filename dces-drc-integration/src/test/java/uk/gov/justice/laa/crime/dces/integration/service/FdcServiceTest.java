@@ -15,10 +15,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
+import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.ObjectFactory;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,21 +56,26 @@ class FdcServiceTest {
 	private static final List<StubMapping> customStubs = new ArrayList<>();
 	private static final String GET_URL = "/debt-collection-enforcement/fdc-contribution-files?status=REQUESTED";
 	private static final String PREPARE_URL = "/debt-collection-enforcement/prepare-fdc-contributions-files";
+	private static final String UPDATE_URL = "/debt-collection-enforcement/create-fdc-file";
 
 	@Test
 	void testXMLValid() {
 		// setup
-		ObjectFactory of = new ObjectFactory();
-		when(fdcMapperUtils.generateFileXML(any())).thenReturn("ValidXML");
-		when(fdcMapperUtils.mapFdcEntry(any())).thenReturn(of.createFdcFileFdcListFdc());
+		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
+		when(fdcMapperUtils.generateFileXML(any())).thenReturn("<xml>ValidXML</xml>");
+		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
+		when(fdcMapperUtils.generateAckXML(any(),any(),any(),any())).thenReturn("<xml>ValidAckXML</xml>");
 		// run
 		boolean successful = fdcService.processDailyFiles();
 		// test
 		verify(fdcMapperUtils).generateFileXML(any());
+		verify(fdcMapperUtils).generateFileName(any());
+		verify(fdcMapperUtils).generateAckXML(any(),any(),any(),any());
 		verify(fdcMapperUtils,times(12)).mapFdcEntry(any());
 		softly.assertThat(successful).isTrue();
 		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
 		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
+		WireMock.verify(1, postRequestedFor(urlEqualTo(UPDATE_URL)));
 	}
 
 	@Test
@@ -140,5 +146,13 @@ class FdcServiceTest {
 		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
 		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
 		verify(fdcMapperUtils,times(0)).generateFileXML(any());
+	}
+
+
+	private Fdc generateFdc(){
+		ObjectFactory of = new ObjectFactory();
+		Fdc fdc = of.createFdcFileFdcListFdc();
+		fdc.setId(BigInteger.ONE);
+		return fdc;
 	}
 }

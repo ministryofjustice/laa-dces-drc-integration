@@ -1,0 +1,44 @@
+{
+  "mappings": [
+    {
+      "scenarioName": "successBasicRequest",
+      "request": {
+        "urlPath": "/debt-collection-enforcement/create-fdc-file",
+        "method": "POST",
+        "bodyPatterns": [
+          {
+            "contains": "{\"recordsSent\":12,\"xmlContent\":\"<xml>ValidXML</xml>\",\"xmlFileName\":\"Test.xml\",\"ackXmlContent\":\"<xml>ValidAckXML</xml>\",\"fdcIds\":[\"1000\",\"2000\",\"3000\",\"4000\",\"5000\",\"6000\",\"7000\",\"8000\",\"9000\",\"10000\",\"11000\",\"12000\"]}"
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": true
+      }
+    },
+    {
+      "scenarioName": "FailedBasicRequest",
+      "request": {
+        "urlPath": "/debt-collection-enforcement/create-contribution-file",
+        "method": "POST",
+        "bodyPatterns": [
+          {
+            "matches": ".*InvalidXML.*"
+          }
+        ]
+      },
+      "response": {
+        "status": 500,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "files": []
+        }
+      }
+    }
+  ]
+}

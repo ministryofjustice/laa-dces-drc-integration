@@ -9,7 +9,7 @@ import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionEntry;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsResponse;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcGlobalUpdateResponse;
-import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.FdcUpdateRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 
@@ -136,14 +136,14 @@ public class FdcService implements FileService{
         }
     }
 
-    private Boolean fdcUpdateRequest(String xmlContent, List<String> concurContributionIdList, int numberOfRecords, String fileName, String fileAckXML) throws HttpServerErrorException {
-        ContributionUpdateRequest request = ContributionUpdateRequest.builder()
+    private Boolean fdcUpdateRequest(String xmlContent, List<String> fdcIdList, int numberOfRecords, String fileName, String fileAckXML) throws HttpServerErrorException {
+        FdcUpdateRequest request = FdcUpdateRequest.builder()
                 .recordsSent(numberOfRecords)
                 .xmlContent(xmlContent)
-                .concorContributionIds(concurContributionIdList)
+                .fdcIds(fdcIdList)
                 .xmlFileName(fileName)
                 .ackXmlContent(fileAckXML).build();
-        return contributionClient.updateContributions(request);
+        return contributionClient.updateFdcs(request);
     }
 
 
