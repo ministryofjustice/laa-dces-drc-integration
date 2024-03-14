@@ -37,7 +37,6 @@ class FdcServiceTest {
 	@InjectSoftAssertions
 	private SoftAssertions softly;
 
-
 	@InjectMocks
 	@Autowired
 	private FdcService fdcService;
@@ -99,6 +98,7 @@ class FdcServiceTest {
 		softly.assertThat(successful).isFalse();
 		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
 		WireMock.verify(0, getRequestedFor(urlEqualTo(GET_URL)));
+		WireMock.verify(0, getRequestedFor(urlEqualTo(UPDATE_URL)));
 	}
 
 	@Test
@@ -113,6 +113,7 @@ class FdcServiceTest {
 		// test
 		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
 		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
+		WireMock.verify(0, getRequestedFor(urlEqualTo(UPDATE_URL)));
 	}
 
 	@Test
@@ -127,6 +128,7 @@ class FdcServiceTest {
 		// test
 		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
 		WireMock.verify(0, getRequestedFor(urlEqualTo(GET_URL)));
+		WireMock.verify(0, getRequestedFor(urlEqualTo(UPDATE_URL)));
 	}
 
 	@Test
@@ -145,9 +147,30 @@ class FdcServiceTest {
 		softly.assertThat(successful).isFalse();
 		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
 		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
+		WireMock.verify(0, getRequestedFor(urlEqualTo(UPDATE_URL)));
 		verify(fdcMapperUtils,times(0)).generateFileXML(any());
 	}
 
+	@Test
+	void testAtomicUpdateFailure(){
+		// setup
+		customStubs.add(stubFor(post(UPDATE_URL).atPriority(1)
+				.willReturn(serverError())));
+
+		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
+		when(fdcMapperUtils.generateFileXML(any())).thenReturn("<xml>ValidXML</xml>");
+		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
+		when(fdcMapperUtils.generateAckXML(any(),any(),any(),any())).thenReturn("<xml>ValidAckXML</xml>");
+
+		// do
+		Exception exception = assertThrows(HttpServerErrorException.class, () -> {
+			fdcService.processDailyFiles();
+		});
+		// test
+		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
+		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
+		WireMock.verify(1, postRequestedFor(urlEqualTo(UPDATE_URL)));
+	}
 
 	private Fdc generateFdc(){
 		ObjectFactory of = new ObjectFactory();

@@ -13,6 +13,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.FdcUpdateRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 
+import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,7 +33,6 @@ public class FdcService implements FileService{
     // TODO Change all Objects to the actual object type.
 
     public boolean processDailyFiles() throws WebClientResponseException {
-        List<Fdc> fdcList = getFdcList();
         List<Fdc> successfulFdcs = new ArrayList<>();
         Map<String,String> failedFdcs = new HashMap<>();
 
@@ -43,6 +43,7 @@ public class FdcService implements FileService{
             // TODO: throw custom error
             return false;
         }
+        List<Fdc> fdcList = getFdcList();
         sendFdcToDrc(fdcList, successfulFdcs, failedFdcs);
         // check numbers.
         logNumberDiscepancies(globalUpdateResponse.getNumberOfUpdates(), fdcList.size(), successfulFdcs.size());
@@ -79,7 +80,10 @@ public class FdcService implements FileService{
             String fileName = fdcMapperUtils.generateFileName(dateGenerated);
             String ackXml = fdcMapperUtils.generateAckXML(fileName, dateGenerated.toLocalDate(), failedFdcs.size(), successfulFdcs.size());
             String xmlFile = fdcMapperUtils.generateFileXML(successfulFdcs);
-            List<String> successfulIdList = successfulFdcs.stream().map(fdc -> fdc.getId().toString()).toList();
+            List<String> successfulIdList = successfulFdcs.stream()
+                    .map(Fdc::getId)
+                    .filter(Objects::nonNull)
+                    .map(BigInteger::toString).toList();
 
             // Failed XML lines to be logged. Need to use this to set the ATOMIC UPDATE's ack field.
             if (!failedFdcs.isEmpty()) {
@@ -91,6 +95,7 @@ public class FdcService implements FileService{
             } catch (HttpServerErrorException e) {
                 // TODO: If failed, we want to handle this. As it will mean the whole process failed for current day.
                 log.error("Fdc file failed to send! Investigation needed.");
+                throw e;
                 // TODO: Need to figure how we're going to log a failed call to the ATOMIC UPDATE.
             }
         }

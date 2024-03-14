@@ -2,6 +2,7 @@
   "mappings": [
     {
       "scenarioName": "successBasicRequest",
+      "priority": 999,
       "request": {
         "urlPath": "/debt-collection-enforcement/create-fdc-file",
         "method": "POST",
