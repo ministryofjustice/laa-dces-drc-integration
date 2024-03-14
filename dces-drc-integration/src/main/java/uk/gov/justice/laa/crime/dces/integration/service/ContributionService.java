@@ -23,9 +23,9 @@ public class ContributionService implements FileService{
     private final ContributionClient contributionClient;
 
     public boolean processDailyFiles() {
-        List<ConcurContribEntry> contributionsList = null;
-        List<CONTRIBUTIONS> successfulContributions = new ArrayList<>();
-        Map<String,String> failedContributions = new HashMap<>();
+        List<ConcurContribEntry> contributionsList;
+        Map<String, CONTRIBUTIONS> successfulContributions = new HashMap<>();
+        Map<String, String> failedContributions = new HashMap<>();
         // get all the values to process via maat call
         contributionsList = contributionClient.getContributions("ACTIVE");
         sendContributionsToDrc(contributionsList, successfulContributions, failedContributions);
@@ -33,11 +33,11 @@ public class ContributionService implements FileService{
         return updateContributionsAndCreateFile(successfulContributions, failedContributions);
     }
 
-    private void sendContributionsToDrc(List<ConcurContribEntry> contributionsList, List<CONTRIBUTIONS> successfulContributions, Map<String,String> failedContributions){
+    private void sendContributionsToDrc(List<ConcurContribEntry> contributionsList, Map<String, CONTRIBUTIONS> successfulContributions, Map<String,String> failedContributions){
 // for each contribution sent by MAAT API
         for ( ConcurContribEntry contribEntry : contributionsList) {
             // convert string into objects
-            CONTRIBUTIONS currentContribution = null;
+            CONTRIBUTIONS currentContribution;
             try {
                 currentContribution = contributionsMapperUtils.mapLineXMLToObject(contribEntry.getXmlContent());
             } catch (JAXBException e) {
@@ -53,7 +53,7 @@ public class ContributionService implements FileService{
             if (updateSuccessful){
                 // If successful, we need to track that we have sent this, as it will form part of the XMLFile, and
                 // needs it's status to "sent" in MAAT.
-                successfulContributions.add(currentContribution);
+                successfulContributions.put(String.valueOf(contribEntry.getConcorContributionId()), currentContribution);
             }
             else{
                 // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
@@ -64,7 +64,7 @@ public class ContributionService implements FileService{
 
     }
 
-    private boolean updateContributionsAndCreateFile(List<CONTRIBUTIONS> successfulContributions, Map<String,String> failedContributions){
+    private boolean updateContributionsAndCreateFile(Map<String, CONTRIBUTIONS> successfulContributions, Map<String,String> failedContributions){
         // if >1 contribution was sent
         // create xml file
         boolean fileSentSuccess = false;
@@ -72,9 +72,10 @@ public class ContributionService implements FileService{
             // Setup and make MAAT API "ATOMIC UPDATE" REST call below:
             LocalDateTime dateGenerated = LocalDateTime.now();
             String fileName = contributionsMapperUtils.generateFileName(dateGenerated);
-            String xmlFile = contributionsMapperUtils.generateFileXML(successfulContributions, fileName);
+            String xmlFile = contributionsMapperUtils.generateFileXML(successfulContributions.values().stream().toList(), fileName);
             String ackXml = contributionsMapperUtils.generateAckXML(fileName, dateGenerated.toLocalDate(), failedContributions.size(), successfulContributions.size());
-            List<String> successfulIdList = successfulContributions.stream().map(fdc -> fdc.getId().toString()).toList();
+            List<String> successfulIdList = successfulContributions.keySet().stream().toList();
+
 
             // Failed XML lines to be logged. Need to use this to set the ATOMIC UPDATE's ack field.
             if(!failedContributions.isEmpty()){

@@ -7,7 +7,7 @@
         "method": "POST",
         "bodyPatterns": [
           {
-            "contains": "{\"recordsSent\":2,\"xmlContent\":\"ValidXML\",\"concorContributionIds\":[\"1234\",\"9876\"],\"xmlFileName\":\"TestFilename.xml\",\"ackXmlContent\":\"ValidAckXML\"}"
+            "contains": "{\"recordsSent\":2,\"xmlContent\":\"ValidXML\",\"xmlFileName\":\"TestFilename.xml\",\"ackXmlContent\":\"ValidAckXML\",\"concorContributionIds\":[\"9876\",\"1234\"]}"
           }
         ]
       },
