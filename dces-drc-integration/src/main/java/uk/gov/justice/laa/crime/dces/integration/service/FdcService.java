@@ -49,7 +49,7 @@ public class FdcService implements FileService{
         logNumberDiscepancies(globalUpdateResponse.getNumberOfUpdates(), fdcList.size(), successfulFdcs.size());
         return updateFdcAndCreateFile(successfulFdcs, failedFdcs);
     }
-
+    @SuppressWarnings("squid:S2583") // ignore the can only be true warning. As this is placeholder.
     private void sendFdcToDrc(List<Fdc> fdcList, List<Fdc> successfulFdcs, Map<String,String> failedFdcs){
         // for each contribution sent by MAAT API
         for ( Fdc currentFdc : fdcList) {
