@@ -2,12 +2,13 @@
   "mappings": [
     {
       "scenarioName": "successBasicRequest",
+      "priority": 999,
       "request": {
-        "urlPath": "/debt-collection-enforcement/create-contribution-file",
+        "urlPath": "/debt-collection-enforcement/create-fdc-file",
         "method": "POST",
         "bodyPatterns": [
           {
-            "contains": "{\"recordsSent\":2,\"xmlContent\":\"ValidXML\",\"xmlFileName\":\"TestFilename.xml\",\"ackXmlContent\":\"ValidAckXML\",\"concorContributionIds\":[\"9876\",\"1234\"]}"
+            "contains": "{\"recordsSent\":12,\"xmlContent\":\"<xml>ValidXML</xml>\",\"xmlFileName\":\"Test.xml\",\"ackXmlContent\":\"<xml>ValidAckXML</xml>\",\"fdcIds\":[\"1000\",\"2000\",\"3000\",\"4000\",\"5000\",\"6000\",\"7000\",\"8000\",\"9000\",\"10000\",\"11000\",\"12000\"]}"
           }
         ]
       },

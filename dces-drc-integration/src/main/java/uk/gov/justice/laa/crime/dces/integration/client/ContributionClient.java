@@ -14,7 +14,8 @@ import uk.gov.justice.laa.crime.dces.integration.maatapi.client.MaatApiClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsResponse;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcGlobalUpdateResponse;
-import uk.gov.justice.laa.crime.dces.integration.model.ContributionPutRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.FdcUpdateRequest;
 
 import java.util.List;
 
@@ -26,14 +27,17 @@ public interface ContributionClient extends MaatApiClient {
 
     @PostExchange("/create-contribution-file")
     @Valid
-    Boolean updateContributions(@RequestBody ContributionPutRequest contributionPutRequest);
+    Boolean updateContributions(@RequestBody ContributionUpdateRequest contributionUpdateRequest);
 
     @PostExchange("/prepare-fdc-contributions-files")
     FdcGlobalUpdateResponse executeFdcGlobalUpdate();
 
-
     @GetExchange("/fdc-contribution-files")
     FdcContributionsResponse getFdcContributions(@RequestParam String status);
+
+    @PostExchange("/create-fdc-file")
+    @Valid
+    Boolean updateFdcs(@RequestBody FdcUpdateRequest contributionPutRequest);
 
     @Configuration
     class ContributionFilesClientFactory {
