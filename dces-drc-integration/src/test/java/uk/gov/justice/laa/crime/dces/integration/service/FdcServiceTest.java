@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.web.client.HttpServerErrorException;
+import uk.gov.justice.laa.crime.dces.integration.model.drc.DrcDataRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.ObjectFactory;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
@@ -25,7 +26,9 @@ import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
@@ -170,6 +173,26 @@ class FdcServiceTest {
 		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
 		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
 		WireMock.verify(1, postRequestedFor(urlEqualTo(UPDATE_URL)));
+	}
+
+	@Test
+	void testProcessFdcUpdateWhenReturnedTrue() {
+		DrcDataRequest dataRequest = DrcDataRequest.builder()
+				.concorId(911)
+				.build();
+		String response = fdcService.processFdcUpdate(dataRequest);
+		assertEquals("The request has been processed successfully", response);
+	}
+
+	@Test
+	void testProcessFdcUpdateWhenReturnedFalse() {
+		String errorText = "The request has failed to process";
+		DrcDataRequest dataRequest = DrcDataRequest.builder()
+				.concorId(9)
+				.errorText(errorText)
+				.build();
+		String response = fdcService.processFdcUpdate(dataRequest);
+		assertEquals("The request has failed to process", response);
 	}
 
 	private Fdc generateFdc(){

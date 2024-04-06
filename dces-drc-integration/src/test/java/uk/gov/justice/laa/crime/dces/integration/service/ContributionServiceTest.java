@@ -15,19 +15,21 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.web.client.HttpServerErrorException;
+import uk.gov.justice.laa.crime.dces.integration.model.drc.DrcDataRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.ObjectFactory;
 import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
-import org.springframework.web.client.HttpServerErrorException;
-
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
@@ -42,6 +44,7 @@ class ContributionServiceTest {
 	@MockBean
 	ContributionsMapperUtils contributionsMapperUtilsMock;
 
+
 	@Autowired
 	private ContributionService contributionService;
 
@@ -55,6 +58,7 @@ class ContributionServiceTest {
 		softly.assertAll();
 		for(StubMapping stub: customStubs ){
 			WireMock.removeStub(stub);
+			WireMock.resetAllRequests();
 		}
 	}
 	@Test
@@ -119,6 +123,25 @@ class ContributionServiceTest {
 		WireMock.verify(1, postRequestedFor(urlEqualTo(UPDATE_URL)));
 	}
 
+	@Test
+	void testProcessContributionUpdateWhenReturnedTrue() {
+		DrcDataRequest dataRequest = DrcDataRequest.builder()
+				.concorId(911)
+				.build();
+		String response = contributionService.processContributionUpdate(dataRequest);
+		assertEquals("The request has been processed successfully", response);
+	}
+
+	@Test
+	void testProcessContributionUpdateWhenReturnedFalse() {
+		String errorText = "The request has failed to process";
+		DrcDataRequest dataRequest = DrcDataRequest.builder()
+				.concorId(9)
+				.errorText(errorText)
+				.build();
+		String response = contributionService.processContributionUpdate(dataRequest);
+		assertEquals("The request has failed to process", response);
+	}
 
 	CONTRIBUTIONS createTestContribution(){
 		ObjectFactory of = new ObjectFactory();

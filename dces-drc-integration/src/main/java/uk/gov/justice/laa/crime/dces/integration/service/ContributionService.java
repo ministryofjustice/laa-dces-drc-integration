@@ -8,11 +8,15 @@ import org.springframework.web.client.HttpServerErrorException;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.drc.DrcDataRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @Service
 @AllArgsConstructor
@@ -21,6 +25,15 @@ public class ContributionService implements FileService{
 
     private final ContributionsMapperUtils contributionsMapperUtils;
     private final ContributionClient contributionClient;
+
+    public String processContributionUpdate(DrcDataRequest drcDataRequest) {
+        Boolean response = contributionClient.sendLogContributionProcessed(drcDataRequest);
+        if (response != null && response) {
+            return "The request has been processed successfully";
+        } else {
+            return "The request has failed to process";
+        }
+    }
 
     public boolean processDailyFiles() {
         List<ConcurContribEntry> contributionsList;
