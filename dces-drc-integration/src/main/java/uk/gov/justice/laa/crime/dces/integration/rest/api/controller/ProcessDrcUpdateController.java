@@ -31,7 +31,7 @@ public class ProcessDrcUpdateController {
     private ContributionService contributionService;
 
     @PostMapping(value = "/process-drc-update/fdc")
-    @Operation(description = "Retrieve application details from crime apply datastore")
+    @Operation(description = "Processing the updates for FDC from DRC and passing this for downstream processing.")
     @ApiResponse(responseCode = "200",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = String.class)))
@@ -46,12 +46,12 @@ public class ProcessDrcUpdateController {
     public String processFdcUpdate(@NotEmpty @RequestBody final DrcDataRequest drcDataRequest) {
         log.info("Request received from DRC to update FDC {}", drcDataRequest);
         String response = fdcService.processFdcUpdate(drcDataRequest);
-        log.info("Returning Contribution-FDC API Response as a: {}", response);
+        log.info("Returning FDC API Response as a: {}", response);
         return response;
     }
 
     @PostMapping(value = "/process-drc-update/contribution")
-    @Operation(description = "Process Updates from DRC for Contributions.")
+    @Operation(description = "Processing the updates for Contribution from DRC and passing this for downstream processing.")
     @ApiResponse(responseCode = "200",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = String.class)))
