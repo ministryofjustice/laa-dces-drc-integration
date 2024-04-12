@@ -10,16 +10,13 @@ import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributi
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsResponse;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcGlobalUpdateResponse;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcUpdateRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.drc.UpdateLogFdcRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 
 import java.math.BigInteger;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Service
 @AllArgsConstructor
@@ -29,6 +26,15 @@ public class FdcService implements FileService{
     public static final String REQUESTED_STATUS = "REQUESTED";
     private final FdcMapperUtils fdcMapperUtils;
     private final ContributionClient contributionClient;
+
+    public String processFdcUpdate(UpdateLogFdcRequest updateLogFdcRequest) {
+        Boolean response = contributionClient.sendLogFdcProcessed(updateLogFdcRequest);
+        if (response != null && response) {
+            return "The request has been processed successfully";
+        } else {
+            return "The request has failed to process";
+        }
+    }
 
     // TODO Change all Objects to the actual object type.
 

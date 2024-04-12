@@ -1,0 +1,46 @@
+{
+  "mappings": [
+    {
+      "scenarioName": "successBasicRequest",
+      "request": {
+        "urlPath": "/debt-collection-enforcement/log-fdc-response",
+        "method": "POST",
+        "bodyPatterns": [
+          {
+            "equalToJson": "{ \"fdcId\": 911  }",
+            "ignoreArrayOrder": true,
+            "ignoreExtraElements": true
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": true
+      }
+    },
+    {
+      "scenarioName": "failedBasicRequest",
+      "request": {
+        "urlPath": "/debt-collection-enforcement/log-fdc-response",
+        "method": "POST",
+        "bodyPatterns": [
+          {
+            "equalToJson": "{ \"fdcId\": 9  }",
+            "ignoreArrayOrder": true,
+            "ignoreExtraElements": true
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": false
+      }
+    }
+  ]
+}
