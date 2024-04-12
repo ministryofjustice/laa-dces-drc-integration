@@ -16,7 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.web.client.HttpServerErrorException;
-import uk.gov.justice.laa.crime.dces.integration.model.drc.DrcDataRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.drc.UpdateLogContributionRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.ObjectFactory;
 import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
@@ -125,7 +125,7 @@ class ContributionServiceTest {
 
 	@Test
 	void testProcessContributionUpdateWhenReturnedTrue() {
-		DrcDataRequest dataRequest = DrcDataRequest.builder()
+		UpdateLogContributionRequest dataRequest = UpdateLogContributionRequest.builder()
 				.concorId(911)
 				.build();
 		String response = contributionService.processContributionUpdate(dataRequest);
@@ -135,7 +135,7 @@ class ContributionServiceTest {
 	@Test
 	void testProcessContributionUpdateWhenReturnedFalse() {
 		String errorText = "The request has failed to process";
-		DrcDataRequest dataRequest = DrcDataRequest.builder()
+		UpdateLogContributionRequest dataRequest = UpdateLogContributionRequest.builder()
 				.concorId(9)
 				.errorText(errorText)
 				.build();

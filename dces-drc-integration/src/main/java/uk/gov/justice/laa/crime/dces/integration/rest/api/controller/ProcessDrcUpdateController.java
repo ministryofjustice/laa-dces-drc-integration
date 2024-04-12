@@ -13,7 +13,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import uk.gov.justice.laa.crime.dces.integration.model.drc.DrcDataRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.drc.UpdateLogContributionRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.drc.UpdateLogFdcRequest;
 import uk.gov.justice.laa.crime.dces.integration.rest.common.ErrorResponse;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
@@ -43,9 +44,9 @@ public class ProcessDrcUpdateController {
             description = "Server Error.",
             content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
                     schema = @Schema(implementation = ErrorResponse.class)))
-    public String processFdcUpdate(@NotEmpty @RequestBody final DrcDataRequest drcDataRequest) {
-        log.info("Request received from DRC to update FDC {}", drcDataRequest);
-        String response = fdcService.processFdcUpdate(drcDataRequest);
+    public String processFdcUpdate(@NotEmpty @RequestBody final UpdateLogFdcRequest updateLogFdcRequest) {
+        log.info("Request received from DRC to update FDC {}", updateLogFdcRequest);
+        String response = fdcService.processFdcUpdate(updateLogFdcRequest);
         log.info("Returning FDC API Response as a: {}", response);
         return response;
     }
@@ -63,9 +64,9 @@ public class ProcessDrcUpdateController {
             description = "Server Error.",
             content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
                     schema = @Schema(implementation = ErrorResponse.class)))
-    public String processContributionUpdate(@NotEmpty @RequestBody final DrcDataRequest drcDataRequest) {
-        log.info("Request received from DRC to update contribution {}", drcDataRequest);
-        String response = contributionService.processContributionUpdate(drcDataRequest);
+    public String processContributionUpdate(@NotEmpty @RequestBody final UpdateLogContributionRequest updateLogContributionRequest) {
+        log.info("Request received from DRC to update contribution {}", updateLogContributionRequest);
+        String response = contributionService.processContributionUpdate(updateLogContributionRequest);
         log.info("Returning Contribution API Response as a: {}", response);
         return response;
     }

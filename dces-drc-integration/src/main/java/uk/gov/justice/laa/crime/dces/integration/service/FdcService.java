@@ -10,7 +10,7 @@ import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributi
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsResponse;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcGlobalUpdateResponse;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcUpdateRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.drc.DrcDataRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.drc.UpdateLogFdcRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 
@@ -27,8 +27,8 @@ public class FdcService implements FileService{
     private final FdcMapperUtils fdcMapperUtils;
     private final ContributionClient contributionClient;
 
-    public String processFdcUpdate(DrcDataRequest drcDataRequest) {
-        Boolean response = contributionClient.sendLogFdcProcessed(drcDataRequest);
+    public String processFdcUpdate(UpdateLogFdcRequest updateLogFdcRequest) {
+        Boolean response = contributionClient.sendLogFdcProcessed(updateLogFdcRequest);
         if (response != null && response) {
             return "The request has been processed successfully";
         } else {

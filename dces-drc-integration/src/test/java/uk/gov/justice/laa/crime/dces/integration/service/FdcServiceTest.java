@@ -15,7 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.web.client.HttpServerErrorException;
-import uk.gov.justice.laa.crime.dces.integration.model.drc.DrcDataRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.drc.UpdateLogFdcRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.ObjectFactory;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
@@ -177,8 +177,8 @@ class FdcServiceTest {
 
 	@Test
 	void testProcessFdcUpdateWhenReturnedTrue() {
-		DrcDataRequest dataRequest = DrcDataRequest.builder()
-				.concorId(911)
+		UpdateLogFdcRequest dataRequest = UpdateLogFdcRequest.builder()
+				.fdcId(911)
 				.build();
 		String response = fdcService.processFdcUpdate(dataRequest);
 		assertEquals("The request has been processed successfully", response);
@@ -187,8 +187,8 @@ class FdcServiceTest {
 	@Test
 	void testProcessFdcUpdateWhenReturnedFalse() {
 		String errorText = "The request has failed to process";
-		DrcDataRequest dataRequest = DrcDataRequest.builder()
-				.concorId(9)
+		UpdateLogFdcRequest dataRequest = UpdateLogFdcRequest.builder()
+				.fdcId(9)
 				.errorText(errorText)
 				.build();
 		String response = fdcService.processFdcUpdate(dataRequest);

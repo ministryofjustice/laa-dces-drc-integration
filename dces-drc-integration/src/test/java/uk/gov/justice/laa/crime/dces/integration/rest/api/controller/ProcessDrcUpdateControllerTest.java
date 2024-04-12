@@ -9,7 +9,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import uk.gov.justice.laa.crime.dces.integration.model.drc.DrcDataRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.drc.UpdateLogContributionRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.drc.UpdateLogFdcRequest;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
 import uk.gov.justice.laa.crime.dces.integration.tracing.TraceService;
@@ -42,7 +43,7 @@ class ProcessDrcUpdateControllerTest {
     @Test
     void testProcessContributionUpdateWhenDownstreamResponseIsValid() throws Exception {
 
-        DrcDataRequest dataRequest = DrcDataRequest.builder()
+        UpdateLogContributionRequest dataRequest = UpdateLogContributionRequest.builder()
                 .concorId(99)
                 .errorText("error 99")
                 .build();
@@ -62,7 +63,7 @@ class ProcessDrcUpdateControllerTest {
     @Test
     void testProcessContributionUpdateWhenDownstreamResponseIsNotValid() throws Exception {
 
-        DrcDataRequest dataRequest = DrcDataRequest.builder()
+        UpdateLogContributionRequest dataRequest = UpdateLogContributionRequest.builder()
                 .concorId(9)
                 .errorText("Failed to process")
                 .build();
@@ -82,8 +83,8 @@ class ProcessDrcUpdateControllerTest {
     @Test
     void testProcessFdcUpdateWhenDownstreamResponseIsValid() throws Exception {
 
-        DrcDataRequest dataRequest = DrcDataRequest.builder()
-                .concorId(99)
+        UpdateLogFdcRequest dataRequest = UpdateLogFdcRequest.builder()
+                .fdcId(99)
                 .build();
         String serviceResponse = "The request has been processed successfully";
         when(fdcService.processFdcUpdate(dataRequest)).thenReturn(serviceResponse);
@@ -101,8 +102,8 @@ class ProcessDrcUpdateControllerTest {
     @Test
     void testProcessFdcUpdateWhenDownstreamResponseIsNotValid() throws Exception {
 
-        DrcDataRequest dataRequest = DrcDataRequest.builder()
-                .concorId(9)
+        UpdateLogFdcRequest dataRequest = UpdateLogFdcRequest.builder()
+                .fdcId(9)
                 .errorText("Failed to process")
                 .build();
         String serviceResponse = "The request has failed to process";
