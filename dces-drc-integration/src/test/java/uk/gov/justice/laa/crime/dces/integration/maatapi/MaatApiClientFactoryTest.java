@@ -12,7 +12,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MaatApiClientFactoryTest {
 
-    @MockBean
+    @MockBean(name = "maatApiWebClient")
     WebClient maatApiWebClient;
 
     @Test
