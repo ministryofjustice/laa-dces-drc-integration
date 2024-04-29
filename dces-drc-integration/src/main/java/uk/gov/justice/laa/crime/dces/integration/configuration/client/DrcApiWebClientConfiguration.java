@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.client.external.drc;
+package uk.gov.justice.laa.crime.dces.integration.configuration.client;
 
 import io.netty.resolver.DefaultAddressResolverGroup;
 import lombok.AllArgsConstructor;
@@ -11,6 +11,7 @@ import org.springframework.web.reactive.function.client.support.WebClientAdapter
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
+import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.config.ServicesConfiguration;
 
 import java.time.Duration;

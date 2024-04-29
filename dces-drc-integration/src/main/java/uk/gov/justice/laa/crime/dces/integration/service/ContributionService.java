@@ -6,11 +6,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
-import uk.gov.justice.laa.crime.dces.integration.client.external.drc.DrcClient;
+import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.drc.DrcDataRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.drc.UpdateLogContributionRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.external.SendFileDataToExternalRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
 
@@ -62,19 +62,20 @@ public class ContributionService implements FileService {
                 continue;
             }
 
-            boolean updateSuccessful = Boolean.TRUE.equals(drcClient.sendUpdate(createDrcDataRequest(contribEntry)));
-            if (updateSuccessful){
-                successfulContributions.put(String.valueOf(contribEntry.getConcorContributionId()), currentContribution);
-            }
-            else{
+            String contributionId = String.valueOf(contribEntry.getConcorContributionId());
+            Boolean updateSuccessful = drcClient.sendUpdate(createDrcDataRequest(contribEntry));
+
+            if (Boolean.TRUE.equals(updateSuccessful)) {
+                successfulContributions.put(contributionId, currentContribution);
+            } else {
                 // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
-                failedContributions.put(String.valueOf(contribEntry.getConcorContributionId()), "failure reason");
+                failedContributions.put(contributionId, "failure reason");
             }
         }
     }
 
-    private DrcDataRequest createDrcDataRequest(ConcurContribEntry contribEntry) {
-        return DrcDataRequest.builder().contributionId(contribEntry.getConcorContributionId()).build();
+    private SendFileDataToExternalRequest createDrcDataRequest(ConcurContribEntry contribEntry) {
+        return SendFileDataToExternalRequest.builder().contributionId(contribEntry.getConcorContributionId()).build();
     }
 
     private boolean updateContributionsAndCreateFile(Map<String, CONTRIBUTIONS> successfulContributions, Map<String,String> failedContributions){

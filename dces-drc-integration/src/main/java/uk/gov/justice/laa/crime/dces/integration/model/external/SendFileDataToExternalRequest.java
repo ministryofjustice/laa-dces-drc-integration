@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.model.drc;
+package uk.gov.justice.laa.crime.dces.integration.model.external;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DrcDataRequest {
+public class SendFileDataToExternalRequest {
 
     private Integer contributionId;
 

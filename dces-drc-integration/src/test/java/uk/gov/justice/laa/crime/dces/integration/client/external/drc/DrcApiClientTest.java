@@ -15,8 +15,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
+import uk.gov.justice.laa.crime.dces.integration.configuration.client.DrcApiWebClientConfiguration;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.config.ServicesConfiguration;
-import uk.gov.justice.laa.crime.dces.integration.model.drc.DrcDataRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.external.SendFileDataToExternalRequest;
 
 import java.io.IOException;
 
@@ -60,35 +61,35 @@ class DrcApiClientTest {
     @Test
     void test_whenWebClientIsInvoked_thenShouldReturnedValidResponse() throws JsonProcessingException {
 
-        DrcDataRequest drcDataRequest = DrcDataRequest.builder()
+        SendFileDataToExternalRequest sendFileDataToExternalRequest = SendFileDataToExternalRequest.builder()
                 .contributionId(99)
                 .build();
         Boolean expectedResponse = true;
         setupValidResponse(expectedResponse);
         WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(configuration);
 
-        Boolean response = callDrcClient(actualWebClient, drcDataRequest);
+        Boolean response = callDrcClient(actualWebClient, sendFileDataToExternalRequest);
         assertThat(response).isTrue();
     }
 
     @Test
     void test_whenWebClientIsInvokedWithNull_thenShouldReturnedFalseResponse() throws JsonProcessingException {
 
-        DrcDataRequest drcDataRequest = DrcDataRequest.builder().build();
+        SendFileDataToExternalRequest sendFileDataToExternalRequest = SendFileDataToExternalRequest.builder().build();
         Boolean expectedResponse = false;
         setupValidResponse(expectedResponse);
         WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(configuration);
 
-        Boolean response = callDrcClient(actualWebClient, drcDataRequest);
+        Boolean response = callDrcClient(actualWebClient, sendFileDataToExternalRequest);
         assertThat(response).isFalse();
     }
 
-    private @Nullable Boolean callDrcClient(WebClient actualWebClient, DrcDataRequest drcDataRequest) {
+    private @Nullable Boolean callDrcClient(WebClient actualWebClient, SendFileDataToExternalRequest sendFileDataToExternalRequest) {
         return actualWebClient
                 .post()
                 .uri(configuration.getDrcClientApi().getBaseUrl())
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(drcDataRequest)
+                .bodyValue(sendFileDataToExternalRequest)
                 .retrieve()
                 .bodyToMono(Boolean.class)
                 .block();
