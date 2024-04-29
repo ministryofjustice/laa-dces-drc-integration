@@ -8,7 +8,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.env.Environment;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.config.ServicesConfiguration;
 
-
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @SpringBootTest
 @EnableConfigurationProperties(value = ServicesConfiguration.class)
@@ -24,5 +23,10 @@ class MaatApiConfigurationTest {
     @Test
     void givenDefinedBasedURL_whenGetBaseUrlIsInvoked_thenCorrectBaseURLIsReturned() {
         assertThat(configuration.getMaatApi().getBaseUrl()).isEqualTo("http://localhost:1111");
+    }
+
+    @Test
+    void givenDefinedBasedURL_whenGetBaseUrlIsInvoked_thenDrcApiBaseURLIsReturned() {
+        assertThat(configuration.getDrcClientApi().getBaseUrl()).isEqualTo("http://localhost:2222");
     }
 }

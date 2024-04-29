@@ -1,8 +1,8 @@
 plugins {
 	id 'java'
 	id 'jacoco'
-	id 'org.springframework.boot' version '3.0.5'
-	id 'io.spring.dependency-management' version '1.1.0'
+	id 'org.springframework.boot' version '3.2.4'
+	id 'io.spring.dependency-management' version '1.1.4'
 	id "org.sonarqube" version "4.0.0.2929"
 }
 
@@ -84,7 +84,7 @@ dependencies {
 	implementation "org.springframework.security:spring-security-config:$versions.springSecurityConfig"
 	implementation "org.springframework.security:spring-security-web:$versions.springSecurityWeb"
 	implementation "org.springframework.boot:spring-boot-starter-oauth2-resource-server:$versions.springOAuthResource"
-	implementation "org.springframework.boot:spring-boot-starter-oauth2-client:$versions.springOAuthClient"
+	implementation "org.springframework.boot:spring-boot-starter-oauth2-client"
 	implementation "org.springframework.security:spring-security-oauth2-jose:$versions.springOAuthJose"
 
 	implementation "net.logstash.logback:logstash-logback-encoder:$versions.logbackEncoderVersion"
@@ -150,8 +150,8 @@ sonar {
 		property "sonar.organization", "ministryofjustice"
 		property "sonar.projectKey", "ministryofjustice_laa-dces-drc-integration"
 
-		property "sonar.exclusions", "**/entity/**.java , **/model/**.java , **/dto/**.java , **/config/**.java, **/jms/**.java,**/exception/**.java,**/handler/**.java,**/maatapi/**Client**.java,**/generated/**"
-		property "sonar.coverage.exclusions", "**/DcesDrcIntegrationApplication.java"
+		property "sonar.exclusions", "**/entity/**.java , **/model/**.java , **/dto/**.java , **/config/**.java, **/jms/**.java,**/exception/**.java,**/handler/**.java,**/maatapi/**Client**.java,**/generated/**, **/listener/stub/DrcStubRestController.java"
+		property "sonar.coverage.exclusions", "**/DcesDrcIntegrationApplication.java, **/listener/stub/DrcStubRestController.java"
 		property "sonar.coverage.jacoco.xmlReportPaths",
 				"${project.buildDir}/reports/jacoco/test/jacocoTestReport.xml"
 	}

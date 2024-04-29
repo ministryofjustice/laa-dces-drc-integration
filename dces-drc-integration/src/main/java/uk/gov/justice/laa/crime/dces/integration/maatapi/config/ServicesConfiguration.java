@@ -18,6 +18,10 @@ public class ServicesConfiguration {
     @NotNull
     private MaatApi maatApi;
 
+    @NotNull
+    private DrcClientApi drcClientApi;
+
+
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
@@ -32,5 +36,15 @@ public class ServicesConfiguration {
         private boolean oAuthEnabled;
 
         private int maxBufferSize = 1;
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class DrcClientApi {
+
+        @NotNull
+        private String baseUrl;
+        private boolean oAuthEnabled;
     }
 }

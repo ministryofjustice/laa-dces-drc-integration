@@ -6,9 +6,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
+import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.drc.UpdateLogContributionRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.external.SendFileDataToExternalRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
 
@@ -21,10 +23,11 @@ import java.util.Objects;
 @Service
 @AllArgsConstructor
 @Slf4j
-public class ContributionService implements FileService{
+public class ContributionService implements FileService {
 
     private final ContributionsMapperUtils contributionsMapperUtils;
     private final ContributionClient contributionClient;
+    private final DrcClient drcClient;
 
     public String processContributionUpdate(UpdateLogContributionRequest updateLogContributionRequest) {
         Boolean response = contributionClient.sendLogContributionProcessed(updateLogContributionRequest);
@@ -47,7 +50,7 @@ public class ContributionService implements FileService{
     }
 
     private void sendContributionsToDrc(List<ConcurContribEntry> contributionsList, Map<String, CONTRIBUTIONS> successfulContributions, Map<String,String> failedContributions){
-// for each contribution sent by MAAT API
+        // for each contribution sent by MAAT API
         for ( ConcurContribEntry contribEntry : contributionsList) {
             // convert string into objects
             CONTRIBUTIONS currentContribution;
@@ -59,22 +62,20 @@ public class ContributionService implements FileService{
                 continue;
             }
 
-            // TODO: Send Contribution to DRC on line below:
-            boolean updateSuccessful = true; // hook in drc call here.
-            // handle response
-            // if successful/failure track accordingly.
-            if (updateSuccessful){
-                // If successful, we need to track that we have sent this, as it will form part of the XMLFile, and
-                // needs it's status to "sent" in MAAT.
-                successfulContributions.put(String.valueOf(contribEntry.getConcorContributionId()), currentContribution);
-            }
-            else{
+            String contributionId = String.valueOf(contribEntry.getConcorContributionId());
+            Boolean updateSuccessful = drcClient.sendUpdate(createDrcDataRequest(contribEntry));
+
+            if (Boolean.TRUE.equals(updateSuccessful)) {
+                successfulContributions.put(contributionId, currentContribution);
+            } else {
                 // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
-                failedContributions.put(String.valueOf(contribEntry.getConcorContributionId()), "failure reason");
+                failedContributions.put(contributionId, "failure reason");
             }
-
         }
+    }
 
+    private SendFileDataToExternalRequest createDrcDataRequest(ConcurContribEntry contribEntry) {
+        return SendFileDataToExternalRequest.builder().contributionId(contribEntry.getConcorContributionId()).build();
     }
 
     private boolean updateContributionsAndCreateFile(Map<String, CONTRIBUTIONS> successfulContributions, Map<String,String> failedContributions){

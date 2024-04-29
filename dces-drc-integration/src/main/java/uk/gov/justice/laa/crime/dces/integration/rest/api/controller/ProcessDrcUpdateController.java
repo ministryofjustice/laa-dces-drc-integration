@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +43,7 @@ public class ProcessDrcUpdateController {
             description = "Server Error.",
             content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
                     schema = @Schema(implementation = ErrorResponse.class)))
-    public String processFdcUpdate(@NotEmpty @RequestBody final UpdateLogFdcRequest updateLogFdcRequest) {
+    public String processFdcUpdate(@RequestBody final UpdateLogFdcRequest updateLogFdcRequest) {
         log.info("Request received from DRC to update FDC {}", updateLogFdcRequest);
         String response = fdcService.processFdcUpdate(updateLogFdcRequest);
         log.info("Returning FDC API Response as a: {}", response);
@@ -64,7 +63,7 @@ public class ProcessDrcUpdateController {
             description = "Server Error.",
             content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
                     schema = @Schema(implementation = ErrorResponse.class)))
-    public String processContributionUpdate(@NotEmpty @RequestBody final UpdateLogContributionRequest updateLogContributionRequest) {
+    public String processContributionUpdate(@RequestBody final UpdateLogContributionRequest updateLogContributionRequest) {
         log.info("Request received from DRC to update contribution {}", updateLogContributionRequest);
         String response = contributionService.processContributionUpdate(updateLogContributionRequest);
         log.info("Returning Contribution API Response as a: {}", response);

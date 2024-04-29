@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.web.client.HttpServerErrorException;
+import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.model.drc.UpdateLogContributionRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.ObjectFactory;
@@ -44,6 +45,8 @@ class ContributionServiceTest {
 	@MockBean
 	ContributionsMapperUtils contributionsMapperUtilsMock;
 
+	@MockBean
+	private DrcClient drcClient;
 
 	@Autowired
 	private ContributionService contributionService;
@@ -68,6 +71,8 @@ class ContributionServiceTest {
 		when(contributionsMapperUtilsMock.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtilsMock.generateFileName(any())).thenReturn("TestFilename.xml");
 		when(contributionsMapperUtilsMock.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
+		when(drcClient.sendUpdate(any())).thenReturn(true);
+
 		boolean result = contributionService.processDailyFiles();
 		verify(contributionsMapperUtilsMock,times(2)).mapLineXMLToObject(any());
 		verify(contributionsMapperUtilsMock).generateFileXML(any(), any());
@@ -79,7 +84,7 @@ class ContributionServiceTest {
 		when(contributionsMapperUtilsMock.generateFileXML(any(), any())).thenReturn("InvalidXML");
 		when(contributionsMapperUtilsMock.generateAckXML(any(),any(),any(),any())).thenReturn("AckXML");
 		when(contributionsMapperUtilsMock.generateFileName(any())).thenReturn("FileName");
-
+		when(drcClient.sendUpdate(any())).thenReturn(true);
 
 		Exception exception = assertThrows(HttpServerErrorException.class, () -> {
 			contributionService.processDailyFiles();
@@ -114,6 +119,7 @@ class ContributionServiceTest {
 		when(contributionsMapperUtilsMock.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtilsMock.generateFileName(any())).thenReturn("TestFilename.xml");
 		when(contributionsMapperUtilsMock.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
+		when(drcClient.sendUpdate(any())).thenReturn(true);
 		// do
 		Exception exception = Assert.assertThrows(HttpServerErrorException.class, () -> {
 			contributionService.processDailyFiles();

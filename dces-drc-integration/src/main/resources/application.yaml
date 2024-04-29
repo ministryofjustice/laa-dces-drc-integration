@@ -46,6 +46,9 @@ services:
     registrationId: ${MAAT_API_REGISTRATION_ID}
     oAuthEnabled: true
     maxBufferSize: 16
+  drc-client-api:
+    baseUrl: http://localhost:1110
+    oAuthEnabled: false
 
 spring:
   security:
