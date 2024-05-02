@@ -169,7 +169,7 @@ class FdcServiceTest {
 		when(fdcMapperUtils.generateFileXML(any())).thenReturn("<xml>ValidXML</xml>");
 		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
 		when(fdcMapperUtils.generateAckXML(any(),any(),any(),any())).thenReturn("<xml>ValidAckXML</xml>");
-//		when(drcClient.sendFdcUpdate(any())).thenThrow(HttpServerErrorException.class);
+		when(drcClient.sendFdcUpdate(any())).thenReturn(true);
 
 		// do
 		Exception exception = assertThrows(HttpServerErrorException.class, () -> {
