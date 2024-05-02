@@ -14,23 +14,23 @@ import org.mockito.InjectMocks;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.junit.jupiter.EnabledIf;
 import org.springframework.web.client.HttpServerErrorException;
 import uk.gov.justice.laa.crime.dces.integration.model.drc.UpdateLogFdcRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.ObjectFactory;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.*;
 
+@EnabledIf(expression = "#{environment['sentry.environment'] == 'DEV'}", loadContext = true)
 @SpringBootTest
 @ExtendWith(SoftAssertionsExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -61,7 +61,7 @@ class FdcIntegrationTest {
 	private static final String UPDATE_URL = "/debt-collection-enforcement/create-fdc-file";
 
 	@Test
-	void testXMLValid() {
+	void testXMLValid() throws Exception {
 		// setup
 		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
 		when(fdcMapperUtils.generateFileXML(any())).thenReturn("<xml>ValidXML</xml>");
@@ -110,7 +110,7 @@ class FdcIntegrationTest {
 		customStubs.add(stubFor(get(GET_URL).atPriority(1)
 				.willReturn(serverError())));
 		// do
-		Exception exception = assertThrows(HttpServerErrorException.class, () -> {
+		assertThrows(HttpServerErrorException.class, () -> {
 			fdcService.processDailyFiles();
 		});
 		// test
@@ -195,10 +195,4 @@ class FdcIntegrationTest {
 		assertEquals("The request has failed to process", response);
 	}
 
-	private Fdc generateFdc(){
-		ObjectFactory of = new ObjectFactory();
-		Fdc fdc = of.createFdcFileFdcListFdc();
-		fdc.setId(BigInteger.ONE);
-		return fdc;
-	}
 }

@@ -96,7 +96,6 @@ dependencies {
 
 	// XML Conversion
 	implementation "org.glassfish.jaxb:jaxb-runtime:$versions.glassfishJaxb"
-	testImplementation project(path: ':')
 
 	xsd2java "com.sun.xml.bind:jaxb-xjc:$versions.jaxbXjc"
 	xsd2java "com.sun.xml.bind:jaxb-impl:$versions.jaxbImpl"
