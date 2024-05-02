@@ -8,7 +8,7 @@ services:
     oAuthEnabled: false
 
 sentry:
-  environment: test
+  environment: ${HOST_ENV}
 
 spring:
   security:
