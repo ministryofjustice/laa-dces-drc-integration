@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SendFileDataToExternalRequest {
+public class SendContributionFileDataToExternalRequest {
 
     private Integer contributionId;
 

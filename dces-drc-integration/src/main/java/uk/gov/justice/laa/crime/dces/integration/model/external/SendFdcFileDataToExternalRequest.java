@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SendFdcContributionFileDataToExternalRequest {
+public class SendFdcFileDataToExternalRequest {
     private Integer fdcId;
 }

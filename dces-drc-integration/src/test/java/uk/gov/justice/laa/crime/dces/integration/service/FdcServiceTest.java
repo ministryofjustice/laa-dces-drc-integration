@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.web.client.HttpServerErrorException;
+import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.model.drc.UpdateLogFdcRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.ObjectFactory;
@@ -47,6 +48,9 @@ class FdcServiceTest {
 	@MockBean
 	FdcMapperUtils fdcMapperUtils;
 
+	@MockBean
+	private DrcClient drcClient;
+
 	@AfterEach
 	void afterTestAssertAll(){
 		softly.assertAll();
@@ -67,6 +71,7 @@ class FdcServiceTest {
 		when(fdcMapperUtils.generateFileXML(any())).thenReturn("<xml>ValidXML</xml>");
 		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
 		when(fdcMapperUtils.generateAckXML(any(),any(),any(),any())).thenReturn("<xml>ValidAckXML</xml>");
+		when(drcClient.sendFdcUpdate(any())).thenReturn(true);
 		// run
 		boolean successful = fdcService.processDailyFiles();
 		// test
@@ -164,6 +169,7 @@ class FdcServiceTest {
 		when(fdcMapperUtils.generateFileXML(any())).thenReturn("<xml>ValidXML</xml>");
 		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
 		when(fdcMapperUtils.generateAckXML(any(),any(),any(),any())).thenReturn("<xml>ValidAckXML</xml>");
+//		when(drcClient.sendFdcUpdate(any())).thenThrow(HttpServerErrorException.class);
 
 		// do
 		Exception exception = assertThrows(HttpServerErrorException.class, () -> {
