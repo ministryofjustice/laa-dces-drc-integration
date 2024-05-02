@@ -60,6 +60,9 @@ configurations {
 		extendsFrom annotationProcessor
 	}
 	xsd2java
+	integrationTestImplementation.extendsFrom testImplementation
+	integrationTestImplementation.extendsFrom testCompile
+	integrationTestImplementation.extendsFrom testRuntime
 }
 
 
@@ -93,6 +96,7 @@ dependencies {
 
 	// XML Conversion
 	implementation "org.glassfish.jaxb:jaxb-runtime:$versions.glassfishJaxb"
+	testImplementation project(path: ':')
 
 	xsd2java "com.sun.xml.bind:jaxb-xjc:$versions.jaxbXjc"
 	xsd2java "com.sun.xml.bind:jaxb-impl:$versions.jaxbImpl"
@@ -114,6 +118,13 @@ dependencies {
 	testImplementation "com.github.tomakehurst:wiremock-jre8-standalone:$versions.wiremockVersion"
 	testImplementation "com.squareup.okhttp3:mockwebserver:$versions.mockwebserverVersion"
 
+	integrationTestImplementation 'org.springframework.boot:spring-boot-starter-test'
+	integrationTestImplementation 'org.springframework.boot:spring-boot-starter-test'
+	integrationTestImplementation "org.springframework.security:spring-security-test"
+	integrationTestImplementation 'io.projectreactor:reactor-test'
+	integrationTestImplementation "com.github.tomakehurst:wiremock-jre8-standalone:$versions.wiremockVersion"
+	integrationTestImplementation "com.squareup.okhttp3:mockwebserver:$versions.mockwebserverVersion"
+
 }
 
 jacoco {
@@ -123,6 +134,16 @@ jacoco {
 tasks.named('test') {
 	useJUnitPlatform()
 	finalizedBy jacocoTestReport
+}
+
+sourceSets {
+	// Note that just declaring this sourceset creates two configurations.
+	integrationTest {
+		java {
+			compileClasspath += main.output
+			runtimeClasspath += main.output
+		}
+	}
 }
 
 jacocoTestReport {
@@ -182,6 +203,12 @@ task xsd2java() {
 				schema: 'src/main/resources/schemas/fileACK.xsd'
 		)
 	}
+}
+
+task integrationTest(type: Test) {
+	useJUnitPlatform()
+	testClassesDirs = sourceSets.integrationTest.output.classesDirs
+	classpath = sourceSets.integrationTest.runtimeClasspath
 }
 
 compileJava.dependsOn xsd2java
