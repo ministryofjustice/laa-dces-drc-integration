@@ -18,6 +18,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import uk.gov.justice.laa.crime.dces.integration.configuration.client.DrcApiWebClientConfiguration;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.config.ServicesConfiguration;
 import uk.gov.justice.laa.crime.dces.integration.model.external.SendContributionFileDataToExternalRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.external.SendFdcFileDataToExternalRequest;
 
 import java.io.IOException;
 
@@ -84,12 +85,39 @@ class DrcApiClientTest {
         assertThat(response).isFalse();
     }
 
-    private @Nullable Boolean callDrcClient(WebClient actualWebClient, SendContributionFileDataToExternalRequest sendContributionFileDataToExternalRequest) {
+    @Test
+    void test_whenFdcWebClientIsInvoked_thenShouldReturnedValidResponse() throws JsonProcessingException {
+
+        SendFdcFileDataToExternalRequest request = SendFdcFileDataToExternalRequest.builder()
+                .fdcId(12)
+                .build();
+        Boolean expectedResponse = true;
+        setupValidResponse(expectedResponse);
+        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(configuration);
+
+        Boolean response = callDrcClient(actualWebClient, request);
+        assertThat(response).isTrue();
+    }
+
+    @Test
+    void test_whenFdcWebClientIsInvokedWithNull_thenShouldReturnedFalseResponse() throws JsonProcessingException {
+
+        SendFdcFileDataToExternalRequest request = SendFdcFileDataToExternalRequest.builder().build();
+        Boolean expectedResponse = false;
+        setupValidResponse(expectedResponse);
+        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(configuration);
+
+        Boolean response = callDrcClient(actualWebClient, request);
+        assertThat(response).isFalse();
+    }
+
+
+    private <T> @Nullable Boolean callDrcClient(WebClient actualWebClient, T request) {
         return actualWebClient
                 .post()
                 .uri(configuration.getDrcClientApi().getBaseUrl())
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(sendContributionFileDataToExternalRequest)
+                .bodyValue(request)
                 .retrieve()
                 .bodyToMono(Boolean.class)
                 .block();
