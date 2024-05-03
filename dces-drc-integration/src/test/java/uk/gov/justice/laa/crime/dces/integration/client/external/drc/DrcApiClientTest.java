@@ -17,7 +17,8 @@ import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
 import uk.gov.justice.laa.crime.dces.integration.configuration.client.DrcApiWebClientConfiguration;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.config.ServicesConfiguration;
-import uk.gov.justice.laa.crime.dces.integration.model.external.SendFileDataToExternalRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.external.SendContributionFileDataToExternalRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.external.SendFdcFileDataToExternalRequest;
 
 import java.io.IOException;
 
@@ -61,35 +62,62 @@ class DrcApiClientTest {
     @Test
     void test_whenWebClientIsInvoked_thenShouldReturnedValidResponse() throws JsonProcessingException {
 
-        SendFileDataToExternalRequest sendFileDataToExternalRequest = SendFileDataToExternalRequest.builder()
+        SendContributionFileDataToExternalRequest sendContributionFileDataToExternalRequest = SendContributionFileDataToExternalRequest.builder()
                 .contributionId(99)
                 .build();
         Boolean expectedResponse = true;
         setupValidResponse(expectedResponse);
         WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(configuration);
 
-        Boolean response = callDrcClient(actualWebClient, sendFileDataToExternalRequest);
+        Boolean response = callDrcClient(actualWebClient, sendContributionFileDataToExternalRequest);
         assertThat(response).isTrue();
     }
 
     @Test
     void test_whenWebClientIsInvokedWithNull_thenShouldReturnedFalseResponse() throws JsonProcessingException {
 
-        SendFileDataToExternalRequest sendFileDataToExternalRequest = SendFileDataToExternalRequest.builder().build();
+        SendContributionFileDataToExternalRequest sendContributionFileDataToExternalRequest = SendContributionFileDataToExternalRequest.builder().build();
         Boolean expectedResponse = false;
         setupValidResponse(expectedResponse);
         WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(configuration);
 
-        Boolean response = callDrcClient(actualWebClient, sendFileDataToExternalRequest);
+        Boolean response = callDrcClient(actualWebClient, sendContributionFileDataToExternalRequest);
         assertThat(response).isFalse();
     }
 
-    private @Nullable Boolean callDrcClient(WebClient actualWebClient, SendFileDataToExternalRequest sendFileDataToExternalRequest) {
+    @Test
+    void test_whenFdcWebClientIsInvoked_thenShouldReturnedValidResponse() throws JsonProcessingException {
+
+        SendFdcFileDataToExternalRequest request = SendFdcFileDataToExternalRequest.builder()
+                .fdcId(12)
+                .build();
+        Boolean expectedResponse = true;
+        setupValidResponse(expectedResponse);
+        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(configuration);
+
+        Boolean response = callDrcClient(actualWebClient, request);
+        assertThat(response).isTrue();
+    }
+
+    @Test
+    void test_whenFdcWebClientIsInvokedWithNull_thenShouldReturnedFalseResponse() throws JsonProcessingException {
+
+        SendFdcFileDataToExternalRequest request = SendFdcFileDataToExternalRequest.builder().build();
+        Boolean expectedResponse = false;
+        setupValidResponse(expectedResponse);
+        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(configuration);
+
+        Boolean response = callDrcClient(actualWebClient, request);
+        assertThat(response).isFalse();
+    }
+
+
+    private <T> @Nullable Boolean callDrcClient(WebClient actualWebClient, T request) {
         return actualWebClient
                 .post()
                 .uri(configuration.getDrcClientApi().getBaseUrl())
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(sendFileDataToExternalRequest)
+                .bodyValue(request)
                 .retrieve()
                 .bodyToMono(Boolean.class)
                 .block();
