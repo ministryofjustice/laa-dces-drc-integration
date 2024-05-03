@@ -1,3 +1,5 @@
+# This should be kept in lockstep with the integrationTest application.yaml
+
 server:
   port: 8089
 
