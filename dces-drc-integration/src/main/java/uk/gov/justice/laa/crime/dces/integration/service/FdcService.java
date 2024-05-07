@@ -41,21 +41,30 @@ public class FdcService implements FileService{
 
     // TODO Change all Objects to the actual object type.
 
+    private int callGlobalUpdate(){
+        FdcGlobalUpdateResponse globalUpdateResponse = null;
+        try {
+            globalUpdateResponse = callFdcGlobalUpdate();
+        }
+        catch (Exception e){
+            // We've failed to do a global update. Raise as prio.
+            // TODO: Flag here for sentry
+            log.error("Fdc Global Update failed!");
+            // continue processing, as can still have data to deal with.
+        }
+        return Objects.nonNull(globalUpdateResponse)? globalUpdateResponse.getNumberOfUpdates() :0;
+    }
+
     public boolean processDailyFiles() throws WebClientResponseException {
         List<Fdc> successfulFdcs = new ArrayList<>();
         Map<String,String> failedFdcs = new HashMap<>();
 
-        FdcGlobalUpdateResponse globalUpdateResponse = callFdcGlobalUpdate();
-        if ( !globalUpdateResponse.isSuccessful()) {
-            // We've failed to do a global update. Raise as prio.
-            log.error("Fdc Global Update failed!");
-            // TODO: throw custom error
-            return false;
-        }
+
+        int globalUpdateResult = callGlobalUpdate();
         List<Fdc> fdcList = getFdcList();
         sendFdcToDrc(fdcList, successfulFdcs, failedFdcs);
         // check numbers.
-        logNumberDiscepancies(globalUpdateResponse.getNumberOfUpdates(), fdcList.size(), successfulFdcs.size());
+        logNumberDiscepancies(globalUpdateResult, fdcList.size(), successfulFdcs.size());
         return updateFdcAndCreateFile(successfulFdcs, failedFdcs);
     }
     @SuppressWarnings("squid:S2583") // ignore the can only be true warning. As this is placeholder.
