@@ -39,22 +39,6 @@ public class FdcService implements FileService{
         }
     }
 
-    // TODO Change all Objects to the actual object type.
-
-    private int callGlobalUpdate(){
-        FdcGlobalUpdateResponse globalUpdateResponse = null;
-        try {
-            globalUpdateResponse = callFdcGlobalUpdate();
-        }
-        catch (Exception e){
-            // We've failed to do a global update. Raise as prio.
-            // TODO: Flag here for sentry
-            log.error("Fdc Global Update failed!");
-            // continue processing, as can still have data to deal with.
-        }
-        return Objects.nonNull(globalUpdateResponse)? globalUpdateResponse.getNumberOfUpdates() :0;
-    }
-
     public boolean processDailyFiles() throws WebClientResponseException {
         List<Fdc> successfulFdcs = new ArrayList<>();
         Map<String,String> failedFdcs = new HashMap<>();
@@ -157,6 +141,30 @@ public class FdcService implements FileService{
             log.error("Fdc Global Update threw an exception");
             throw e;
         }
+    }
+
+
+    private int callGlobalUpdate(){
+        FdcGlobalUpdateResponse globalUpdateResponse;
+        try {
+            globalUpdateResponse = callFdcGlobalUpdate();
+        }
+        catch (Exception e){
+            return logGlobalUpdateFailure(e.getMessage());
+        }
+        // handle response
+        if(!globalUpdateResponse.isSuccessful()){
+            return logGlobalUpdateFailure("Failure Returned from Endpoint");
+        }
+        return globalUpdateResponse.getNumberOfUpdates();
+    }
+
+    private int logGlobalUpdateFailure(String errorMessage){
+        // We've failed to do a global update.
+        // TODO: Flag here for sentry
+        log.error("FDC Global Update failure: {}", errorMessage);
+        // continue processing, as can still have data to deal with.
+        return 0;
     }
 
     private Boolean fdcUpdateRequest(String xmlContent, List<String> fdcIdList, int numberOfRecords, String fileName, String fileAckXML) throws HttpServerErrorException {
