@@ -11,10 +11,10 @@ def versions = [
 		sentryVersion          : '6.15.0',
 		springdocVersion       : '2.3.0',
 		okhttpVersion          : '4.9.3',
-		mockwebserverVersion   : '4.9.3',
+		mockwebserverVersion   : '4.12.0',
 		reactorTestVersion     : '3.2.3',
-		springSecurityConfig   : '6.1.2',
-		springSecurityWeb      : '6.1.1',
+		springSecurityConfig   : '6.2.0',
+		springSecurityWeb      : '6.1.7',
 		springOAuthJose        : '6.1.1',
 		springOAuthClient      : '3.1.1',
 		springOAuthResource    : '3.1.1',
@@ -27,7 +27,7 @@ def versions = [
 		jakartaXmlBindApi      : '4.0.0',
 		glassfishJaxb          : '4.0.2',
 		resilience4jVersion    : '2.0.2',
-		wiremockVersion        : '2.35.0',
+		wiremockVersion        : '2.35.1',
 		notifyVersion          : '4.1.0-RELEASE',
 		micrometerio           : '1.1.3',
 		prometheus           : '1.11.2',
@@ -116,13 +116,6 @@ dependencies {
 	testImplementation 'io.projectreactor:reactor-test'
 	testImplementation "com.github.tomakehurst:wiremock-jre8-standalone:$versions.wiremockVersion"
 	testImplementation "com.squareup.okhttp3:mockwebserver:$versions.mockwebserverVersion"
-
-	integrationTestImplementation 'org.springframework.boot:spring-boot-starter-test'
-	integrationTestImplementation 'org.springframework.boot:spring-boot-starter-test'
-	integrationTestImplementation "org.springframework.security:spring-security-test"
-	integrationTestImplementation 'io.projectreactor:reactor-test'
-	integrationTestImplementation "com.github.tomakehurst:wiremock-jre8-standalone:$versions.wiremockVersion"
-	integrationTestImplementation "com.squareup.okhttp3:mockwebserver:$versions.mockwebserverVersion"
 
 }
 
