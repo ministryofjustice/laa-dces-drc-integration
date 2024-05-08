@@ -202,7 +202,7 @@ jobs:
           token: ${CIRCLE_CI_TOKEN_DEV}
       - run:
           working_directory: ~/laa-dces-drc-integration/dces-drc-integration
-          command: ./gradlew integrationTest
+          command: pwd && ./gradlew integrationTest
 
 
   deploy-uat:
