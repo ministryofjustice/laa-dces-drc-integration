@@ -6,11 +6,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
+import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionEntry;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsResponse;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcGlobalUpdateResponse;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcUpdateRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.drc.UpdateLogFdcRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.external.SendFdcFileDataToExternalRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 
@@ -26,6 +28,7 @@ public class FdcService implements FileService{
     public static final String REQUESTED_STATUS = "REQUESTED";
     private final FdcMapperUtils fdcMapperUtils;
     private final ContributionClient contributionClient;
+    private final DrcClient drcClient;
 
     public String processFdcUpdate(UpdateLogFdcRequest updateLogFdcRequest) {
         Boolean response = contributionClient.sendLogFdcProcessed(updateLogFdcRequest);
@@ -57,24 +60,24 @@ public class FdcService implements FileService{
     }
     @SuppressWarnings("squid:S2583") // ignore the can only be true warning. As this is placeholder.
     private void sendFdcToDrc(List<Fdc> fdcList, List<Fdc> successfulFdcs, Map<String,String> failedFdcs){
-        // for each contribution sent by MAAT API
-        for ( Fdc currentFdc : fdcList) {
-            // TODO: Send Contribution to DRC on line below:
-            boolean updateSuccessful = true; // hook in drc call here.
-            // handle response
-            // if successful/failure track accordingly.
-            if (updateSuccessful){
-                // If successful, we need to track that we have sent this, as it will form part of the XMLFile, and
-                // needs it's status to "sent" in MAAT.
+        fdcList.forEach(currentFdc -> {
+            Boolean updateSuccessful = drcClient.sendFdcUpdate(buildSendFdcFileDataToExternalRequest(currentFdc.getId().intValue()));
+            if (Boolean.TRUE.equals(updateSuccessful)) {
                 successfulFdcs.add(currentFdc);
-            }
-            else{
+                log.info("FDC update successful for ID: {}", currentFdc.getId());
+            } else {
                 // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
                 failedFdcs.put(String.valueOf(currentFdc.getId()), "failure reason");
+                log.warn("FDC update failed for ID: {}. Reason: {}", currentFdc.getId(), "failure reason");
             }
-        }
+        });
     }
 
+    private SendFdcFileDataToExternalRequest buildSendFdcFileDataToExternalRequest(Integer fdcId) {
+        return SendFdcFileDataToExternalRequest.builder()
+                .fdcId(fdcId)
+                .build();
+    }
 
     private boolean updateFdcAndCreateFile(List<Fdc> successfulFdcs, Map<String,String> failedFdcs){
         // if >1 contribution was sent
