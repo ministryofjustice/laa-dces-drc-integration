@@ -200,6 +200,10 @@ jobs:
       - deploy-to:
           environment: dev
           token: ${CIRCLE_CI_TOKEN_DEV}
+      - run:
+          command: ./gradlew integrationTest
+          working_directory: ~/laa-dces-drc-integration/dces-drc-integration
+          
 
   deploy-uat:
     executor: cloud-platform-executor
