@@ -17,11 +17,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.web.client.HttpServerErrorException;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.model.drc.UpdateLogFdcRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
-import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.ObjectFactory;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -86,27 +83,53 @@ class FdcServiceTest {
 	}
 
 	@Test
-	void testFdcGlobalUpdateUnsuccessful(){
+	void testFdcGlobalUpdateError(){
 		// setup
-		ObjectFactory of = new ObjectFactory();
-		when(fdcMapperUtils.generateFileXML(any())).thenReturn(null);
-		when(fdcMapperUtils.mapFdcEntry(any())).thenReturn(of.createFdcFileFdcListFdc());
+		when(fdcMapperUtils.generateFileXML(any())).thenReturn("<xml>ValidXML</xml>");
+		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
+		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
+		when(fdcMapperUtils.generateAckXML(any(),any(),any(),any())).thenReturn("<xml>ValidAckXML</xml>");
+		when(drcClient.sendFdcUpdate(any())).thenReturn(true);
 		customStubs.add(stubFor(post(PREPARE_URL).atPriority(1)
-				.willReturn(ok("""
-						{
-						          "successful": false,
-						          "numberOfUpdates": 0
-						        }
-						""").withHeader("Content-Type", "application/json"))));
+				.willReturn(serverError())));
 		// run
 		boolean successful = fdcService.processDailyFiles();
 
 
 		// test
-		softly.assertThat(successful).isFalse();
+		verify(fdcMapperUtils).generateFileXML(any());
+		verify(fdcMapperUtils).generateFileName(any());
+		verify(fdcMapperUtils).generateAckXML(any(),any(),any(),any());
+		verify(fdcMapperUtils,times(12)).mapFdcEntry(any());
+		softly.assertThat(successful).isTrue();
+		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
 		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
-		WireMock.verify(0, getRequestedFor(urlEqualTo(GET_URL)));
-		WireMock.verify(0, getRequestedFor(urlEqualTo(UPDATE_URL)));
+		WireMock.verify(1, postRequestedFor(urlEqualTo(UPDATE_URL)));
+	}
+
+	@Test
+	void testFdcGlobalUpdateFailure(){
+		// setup
+		when(fdcMapperUtils.generateFileXML(any())).thenReturn("<xml>ValidXML</xml>");
+		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
+		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
+		when(fdcMapperUtils.generateAckXML(any(),any(),any(),any())).thenReturn("<xml>ValidAckXML</xml>");
+		when(drcClient.sendFdcUpdate(any())).thenReturn(true);
+		customStubs.add(stubFor(post(PREPARE_URL).atPriority(1)
+				.willReturn(serverError())));
+		// run
+		boolean successful = fdcService.processDailyFiles();
+
+
+		// test
+		verify(fdcMapperUtils).generateFileXML(any());
+		verify(fdcMapperUtils).generateFileName(any());
+		verify(fdcMapperUtils).generateAckXML(any(),any(),any(),any());
+		verify(fdcMapperUtils,times(12)).mapFdcEntry(any());
+		softly.assertThat(successful).isTrue();
+		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
+		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
+		WireMock.verify(1, postRequestedFor(urlEqualTo(UPDATE_URL)));
 	}
 
 	@Test
@@ -115,27 +138,12 @@ class FdcServiceTest {
 		customStubs.add(stubFor(get(GET_URL).atPriority(1)
 				.willReturn(serverError())));
 		// do
-		Exception exception = assertThrows(HttpServerErrorException.class, () -> {
+		assertThrows(HttpServerErrorException.class, () -> {
 			fdcService.processDailyFiles();
 		});
 		// test
 		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
 		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
-		WireMock.verify(0, getRequestedFor(urlEqualTo(UPDATE_URL)));
-	}
-
-	@Test
-	void testPrepareFdcError() {
-		// setup
-		customStubs.add(stubFor(post(PREPARE_URL).atPriority(1)
-				.willReturn(serverError())));
-		// do
-		Exception exception = assertThrows(HttpServerErrorException.class, () -> {
-			fdcService.processDailyFiles();
-		});
-		// test
-		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
-		WireMock.verify(0, getRequestedFor(urlEqualTo(GET_URL)));
 		WireMock.verify(0, getRequestedFor(urlEqualTo(UPDATE_URL)));
 	}
 
@@ -172,7 +180,7 @@ class FdcServiceTest {
 		when(drcClient.sendFdcUpdate(any())).thenReturn(true);
 
 		// do
-		Exception exception = assertThrows(HttpServerErrorException.class, () -> {
+		assertThrows(HttpServerErrorException.class, () -> {
 			fdcService.processDailyFiles();
 		});
 		// test
@@ -201,10 +209,4 @@ class FdcServiceTest {
 		assertEquals("The request has failed to process", response);
 	}
 
-	private Fdc generateFdc(){
-		ObjectFactory of = new ObjectFactory();
-		Fdc fdc = of.createFdcFileFdcListFdc();
-		fdc.setId(BigInteger.ONE);
-		return fdc;
-	}
 }
