@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.crime.dces.integration.service;
 
+import io.micrometer.core.annotation.Timed;
 import jakarta.xml.bind.JAXBException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,8 @@ public class ContributionService implements FileService {
         }
     }
 
+    @Timed(value = "laa_dces_drc_service_process_contributions_daily_files",
+            description = "Time taken to process the daily contributions files from DRC and passing this for downstream processing.")
     public boolean processDailyFiles() {
         List<ConcurContribEntry> contributionsList;
         Map<String, CONTRIBUTIONS> successfulContributions = new HashMap<>();
