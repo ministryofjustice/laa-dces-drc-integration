@@ -47,17 +47,12 @@ public class FdcService implements FileService{
         List<Fdc> successfulFdcs = new ArrayList<>();
         Map<String,String> failedFdcs = new HashMap<>();
 
-        FdcGlobalUpdateResponse globalUpdateResponse = callFdcGlobalUpdate();
-        if ( !globalUpdateResponse.isSuccessful()) {
-            // We've failed to do a global update. Raise as prio.
-            log.error("Fdc Global Update failed!");
-            // TODO: throw custom error
-            return false;
-        }
+
+        int globalUpdateResult = callGlobalUpdate();
         List<Fdc> fdcList = getFdcList();
         sendFdcToDrc(fdcList, successfulFdcs, failedFdcs);
         // check numbers.
-        logNumberDiscepancies(globalUpdateResponse.getNumberOfUpdates(), fdcList.size(), successfulFdcs.size());
+        logNumberDiscepancies(globalUpdateResult, fdcList.size(), successfulFdcs.size());
         return updateFdcAndCreateFile(successfulFdcs, failedFdcs);
     }
     @SuppressWarnings("squid:S2583") // ignore the can only be true warning. As this is placeholder.
@@ -150,6 +145,30 @@ public class FdcService implements FileService{
             log.error("Fdc Global Update threw an exception");
             throw e;
         }
+    }
+
+
+    private int callGlobalUpdate(){
+        FdcGlobalUpdateResponse globalUpdateResponse;
+        try {
+            globalUpdateResponse = callFdcGlobalUpdate();
+        }
+        catch (Exception e){
+            return logGlobalUpdateFailure(e.getMessage());
+        }
+        // handle response
+        if(!globalUpdateResponse.isSuccessful()){
+            return logGlobalUpdateFailure("Failure Returned from Endpoint");
+        }
+        return globalUpdateResponse.getNumberOfUpdates();
+    }
+
+    private int logGlobalUpdateFailure(String errorMessage){
+        // We've failed to do a global update.
+        // TODO: Flag here for sentry
+        log.error("FDC Global Update failure: {}", errorMessage);
+        // continue processing, as can still have data to deal with.
+        return 0;
     }
 
     private Boolean fdcUpdateRequest(String xmlContent, List<String> fdcIdList, int numberOfRecords, String fileName, String fileAckXML) throws HttpServerErrorException {
