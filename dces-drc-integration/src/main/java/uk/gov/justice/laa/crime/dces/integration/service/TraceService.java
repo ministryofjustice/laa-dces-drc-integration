@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.tracing;
+package uk.gov.justice.laa.crime.dces.integration.service;
 
 import io.micrometer.tracing.Span;
 import io.micrometer.tracing.TraceContext;

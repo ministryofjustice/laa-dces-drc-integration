@@ -8,7 +8,7 @@ import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
-import uk.gov.justice.laa.crime.dces.integration.tracing.TraceService;
+import uk.gov.justice.laa.crime.dces.integration.service.TraceService;
 
 import java.lang.reflect.Method;
 import java.sql.Timestamp;

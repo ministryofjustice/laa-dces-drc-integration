@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import uk.gov.justice.laa.crime.dces.integration.rest.common.ErrorResponse;
 import uk.gov.justice.laa.crime.dces.integration.rest.common.ErrorSubMessage;
 import uk.gov.justice.laa.crime.dces.integration.rest.common.exception.DcesDrcValidationException;
-import uk.gov.justice.laa.crime.dces.integration.tracing.TraceService;
+import uk.gov.justice.laa.crime.dces.integration.service.TraceService;
 
 import java.util.List;
 

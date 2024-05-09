@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.rest.api.controller;
+package uk.gov.justice.laa.crime.dces.integration.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.listener.stub;
+package uk.gov.justice.laa.crime.dces.integration.controller;
 
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
@@ -19,10 +19,13 @@ import java.util.Random;
 @RestController
 @AllArgsConstructor
 @RequestMapping("/api/v1/drc/external")
+@SuppressWarnings("squid:S2245") // Safe to use random here, as it's not being used in any fashion beyond a return value.
 public class DrcStubRestController {
 
+    private static final Random random = new Random();
+
     public static int getRandomZeroOrOne() {
-        return new Random().nextInt(2);
+        return random.nextInt(2);
     }
 
     @PostMapping(value = "/fdc")

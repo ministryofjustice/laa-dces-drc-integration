@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.rest.api.controller;
+package uk.gov.justice.laa.crime.dces.integration.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -13,7 +13,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.drc.UpdateLogContribution
 import uk.gov.justice.laa.crime.dces.integration.model.drc.UpdateLogFdcRequest;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
-import uk.gov.justice.laa.crime.dces.integration.tracing.TraceService;
+import uk.gov.justice.laa.crime.dces.integration.service.TraceService;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
