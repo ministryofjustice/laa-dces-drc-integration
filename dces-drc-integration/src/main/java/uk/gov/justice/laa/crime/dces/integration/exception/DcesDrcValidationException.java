@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.rest.common.exception;
+package uk.gov.justice.laa.crime.dces.integration.exception;
 
 import lombok.Getter;
 

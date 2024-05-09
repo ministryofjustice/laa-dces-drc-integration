@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.rest.handlers;
+package uk.gov.justice.laa.crime.dces.integration.handler;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import uk.gov.justice.laa.crime.dces.integration.rest.common.ErrorResponse;
 import uk.gov.justice.laa.crime.dces.integration.rest.common.ErrorSubMessage;
-import uk.gov.justice.laa.crime.dces.integration.rest.common.exception.DcesDrcValidationException;
+import uk.gov.justice.laa.crime.dces.integration.exception.DcesDrcValidationException;
 import uk.gov.justice.laa.crime.dces.integration.service.TraceService;
 
 import java.util.List;

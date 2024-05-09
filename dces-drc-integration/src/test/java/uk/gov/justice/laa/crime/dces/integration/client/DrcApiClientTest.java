@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.client.external.drc;
+package uk.gov.justice.laa.crime.dces.integration.client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

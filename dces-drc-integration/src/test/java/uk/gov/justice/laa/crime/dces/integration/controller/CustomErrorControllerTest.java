@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.rest.handlers;
+package uk.gov.justice.laa.crime.dces.integration.controller;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +10,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static uk.gov.justice.laa.crime.dces.integration.rest.handlers.RestTestUtils.getHttpHeaders;
+import static uk.gov.justice.laa.crime.dces.integration.utils.RestTestUtils.getHttpHeaders;
 
 @SpringBootTest
 @AutoConfigureMockMvc

@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.rest.handlers;
+package uk.gov.justice.laa.crime.dces.integration.utils;
 
 import org.springframework.http.HttpHeaders;
 
