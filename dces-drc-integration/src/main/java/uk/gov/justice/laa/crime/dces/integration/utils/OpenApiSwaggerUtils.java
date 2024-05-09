@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.configuration.handlers;
+package uk.gov.justice.laa.crime.dces.integration.utils;
 
 import io.swagger.v3.oas.models.examples.Example;
 import lombok.experimental.UtilityClass;

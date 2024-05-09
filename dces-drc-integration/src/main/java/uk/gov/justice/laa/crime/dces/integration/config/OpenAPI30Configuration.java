@@ -1,9 +1,10 @@
-package uk.gov.justice.laa.crime.dces.integration.configuration.handlers;
+package uk.gov.justice.laa.crime.dces.integration.config;
 
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import org.springframework.context.annotation.Configuration;
 
+@SuppressWarnings("squid:S1118")
 @Configuration
 @SecurityScheme(
         name = OpenAPI30Configuration.AUTHORIZATION_SCHEMA_NAME,

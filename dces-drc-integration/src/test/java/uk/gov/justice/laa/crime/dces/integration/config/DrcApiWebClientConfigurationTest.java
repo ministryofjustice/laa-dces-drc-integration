@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.configuration.client;
+package uk.gov.justice.laa.crime.dces.integration.config;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

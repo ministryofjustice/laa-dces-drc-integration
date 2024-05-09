@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.configuration.handlers;
+package uk.gov.justice.laa.crime.dces.integration.config;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static uk.gov.justice.laa.crime.dces.integration.configuration.handlers.OpenApiSwaggerUtils.createExample;
+import static uk.gov.justice.laa.crime.dces.integration.utils.OpenApiSwaggerUtils.createExample;
 
 @Configuration
 public class OpenApiConfig {

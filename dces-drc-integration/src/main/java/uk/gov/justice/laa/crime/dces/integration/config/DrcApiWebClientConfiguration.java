@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.configuration.client;
+package uk.gov.justice.laa.crime.dces.integration.config;
 
 import io.netty.resolver.DefaultAddressResolverGroup;
 import lombok.AllArgsConstructor;
