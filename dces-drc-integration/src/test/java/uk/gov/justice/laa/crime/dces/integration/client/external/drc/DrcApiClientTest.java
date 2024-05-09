@@ -16,7 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
 import uk.gov.justice.laa.crime.dces.integration.configuration.client.DrcApiWebClientConfiguration;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.config.ServicesConfiguration;
+import uk.gov.justice.laa.crime.dces.integration.config.ServicesConfiguration;
 import uk.gov.justice.laa.crime.dces.integration.model.external.SendContributionFileDataToExternalRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.SendFdcFileDataToExternalRequest;
 

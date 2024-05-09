@@ -12,7 +12,7 @@ import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.config.ServicesConfiguration;
+import uk.gov.justice.laa.crime.dces.integration.config.ServicesConfiguration;
 
 import java.time.Duration;
 
