@@ -17,8 +17,8 @@ import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
 import uk.gov.justice.laa.crime.dces.integration.config.DrcApiWebClientConfiguration;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.config.ServicesConfiguration;
-import uk.gov.justice.laa.crime.dces.integration.model.drc.SendContributionFileDataToDrcRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.drc.SendFdcFileDataToDrcRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.SendContributionFileDataToDrcRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.SendFdcFileDataToDrcRequest;
 
 import java.io.IOException;
 

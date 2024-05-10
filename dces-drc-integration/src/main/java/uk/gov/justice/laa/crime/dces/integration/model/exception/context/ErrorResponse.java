@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.model.drc;
+package uk.gov.justice.laa.crime.dces.integration.model.exception.context;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SendFdcFileDataToDrcRequest {
-    private Integer fdcId;
+public class ErrorResponse<T> {
+    private T data;
+    private TraceData trace;
 }

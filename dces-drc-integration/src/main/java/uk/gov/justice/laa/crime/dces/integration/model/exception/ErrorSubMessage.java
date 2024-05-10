@@ -5,14 +5,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.sql.Timestamp;
-
 @Builder
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-public class TraceData {
+@NoArgsConstructor
+public class ErrorSubMessage {
 
-    private String traceId;
-    private Timestamp timestamp;
+    private String errorCode;
+    private String field;
+    private String value;
+    private String message;
 }

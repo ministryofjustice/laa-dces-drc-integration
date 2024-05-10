@@ -6,8 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import uk.gov.justice.laa.crime.dces.integration.rest.common.ErrorResponse;
-import uk.gov.justice.laa.crime.dces.integration.rest.common.ErrorSubMessage;
+import uk.gov.justice.laa.crime.dces.integration.model.exception.ErrorResponse;
+import uk.gov.justice.laa.crime.dces.integration.model.exception.ErrorSubMessage;
 import uk.gov.justice.laa.crime.dces.integration.exception.DcesDrcValidationException;
 import uk.gov.justice.laa.crime.dces.integration.service.TraceService;
 

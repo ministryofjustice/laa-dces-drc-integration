@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.configuration.wrapper;
+package uk.gov.justice.laa.crime.dces.integration.model.exception.context;
 
 
 import java.lang.annotation.ElementType;

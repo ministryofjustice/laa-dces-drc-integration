@@ -10,7 +10,7 @@ import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.drc.SendContributionFileDataToDrcRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.SendContributionFileDataToDrcRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
 

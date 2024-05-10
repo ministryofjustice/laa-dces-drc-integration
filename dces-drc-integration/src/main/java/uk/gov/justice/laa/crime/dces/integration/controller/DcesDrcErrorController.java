@@ -10,7 +10,7 @@ import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.WebRequest;
-import uk.gov.justice.laa.crime.dces.integration.rest.common.ErrorResponse;
+import uk.gov.justice.laa.crime.dces.integration.model.exception.ErrorResponse;
 import uk.gov.justice.laa.crime.dces.integration.service.TraceService;
 
 import java.util.Map;

@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
-import uk.gov.justice.laa.crime.dces.integration.rest.common.ErrorResponse;
+import uk.gov.justice.laa.crime.dces.integration.model.exception.ErrorResponse;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
 
