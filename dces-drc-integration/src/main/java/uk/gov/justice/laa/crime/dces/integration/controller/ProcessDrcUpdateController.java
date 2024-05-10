@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.crime.dces.integration.controller;
 
+import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -30,6 +31,8 @@ public class ProcessDrcUpdateController {
     @Autowired
     private ContributionService contributionService;
 
+    @Timed(value = "laa_dces_drc_service_process_drc_update_fdc",
+            description = "Time taken to process the updates for FDC from DRC and passing this for downstream processing.")
     @PostMapping(value = "/process-drc-update/fdc")
     @Operation(description = "Processing the updates for FDC from DRC and passing this for downstream processing.")
     @ApiResponse(responseCode = "200",
@@ -50,6 +53,8 @@ public class ProcessDrcUpdateController {
         return response;
     }
 
+    @Timed(value = "laa_dces_drc_service_process_drc_update_contributions",
+            description = "Time taken to process the updates for Contribution from DRC and passing this for downstream processing.")
     @PostMapping(value = "/process-drc-update/contribution")
     @Operation(description = "Processing the updates for Contribution from DRC and passing this for downstream processing.")
     @ApiResponse(responseCode = "200",

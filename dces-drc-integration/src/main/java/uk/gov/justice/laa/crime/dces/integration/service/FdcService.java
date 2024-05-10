@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.crime.dces.integration.service;
 
+import io.micrometer.core.annotation.Timed;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -39,6 +40,9 @@ public class FdcService implements FileService{
         }
     }
 
+    // TODO Change all Objects to the actual object type.
+    @Timed(value = "laa_dces_drc_service_process_fdc_daily_files",
+            description = "Time taken to process the daily fdc files from DRC and passing this for downstream processing.")
     public boolean processDailyFiles() throws WebClientResponseException {
         List<Fdc> successfulFdcs = new ArrayList<>();
         Map<String,String> failedFdcs = new HashMap<>();

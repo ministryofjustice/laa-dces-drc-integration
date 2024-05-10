@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.crime.dces.integration.controller;
 
+import io.micrometer.core.annotation.Timed;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -29,6 +30,8 @@ public class DcesDrcErrorController implements ErrorController {
 
     private final ErrorAttributes errorAttributes = new DefaultErrorAttributes();
 
+    @Timed(value = "laa_dces_drc_service_error_handler",
+            description = "Time taken to handle the error occurred while processing the web request.")
     @RequestMapping("/error")
     public ErrorResponse handleError(final WebRequest webRequest, final Exception exception) {
         log.error("Error occurred while processing web request ", exception);
