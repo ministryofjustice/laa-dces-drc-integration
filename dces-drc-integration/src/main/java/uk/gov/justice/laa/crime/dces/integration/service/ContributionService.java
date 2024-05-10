@@ -9,8 +9,8 @@ import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.drc.UpdateLogContributionRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.external.SendContributionFileDataToExternalRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.drc.SendContributionFileDataToDrcRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
 
@@ -74,8 +74,8 @@ public class ContributionService implements FileService {
         }
     }
 
-    private SendContributionFileDataToExternalRequest createDrcDataRequest(ConcurContribEntry contribEntry) {
-        return SendContributionFileDataToExternalRequest.builder().contributionId(contribEntry.getConcorContributionId()).build();
+    private SendContributionFileDataToDrcRequest createDrcDataRequest(ConcurContribEntry contribEntry) {
+        return SendContributionFileDataToDrcRequest.builder().contributionId(contribEntry.getConcorContributionId()).build();
     }
 
     private boolean updateContributionsAndCreateFile(Map<String, CONTRIBUTIONS> successfulContributions, Map<String,String> failedContributions){

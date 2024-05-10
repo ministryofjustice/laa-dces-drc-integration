@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UpdateLogFdcRequest {
+public class SendFdcFileDataToDrcRequest {
     private Integer fdcId;
-    private String errorText;
 }

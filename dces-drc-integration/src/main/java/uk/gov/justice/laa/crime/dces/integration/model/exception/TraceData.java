@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.configuration.wrapper;
+package uk.gov.justice.laa.crime.dces.integration.model.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import uk.gov.justice.laa.crime.dces.integration.model.external.SendContributionFileDataToExternalRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.drc.SendContributionFileDataToDrcRequest;
 
 import java.util.Random;
 
@@ -29,13 +29,13 @@ public class DrcStubRestController {
     }
 
     @PostMapping(value = "/fdc")
-    public Boolean fdc(@NotEmpty @RequestBody final SendContributionFileDataToExternalRequest dataRequest) {
+    public Boolean fdc(@NotEmpty @RequestBody final SendContributionFileDataToDrcRequest dataRequest) {
         log.info("Request received from DRC to update FDC {}", dataRequest);
         return getRandomZeroOrOne() == 0;
     }
 
     @PostMapping(value = "/contribution")
-    public Boolean contribution(@NotEmpty @RequestBody final SendContributionFileDataToExternalRequest dataRequest) {
+    public Boolean contribution(@NotEmpty @RequestBody final SendContributionFileDataToDrcRequest dataRequest) {
         log.info("DrcStubRestController Stub returing a response for input {}", dataRequest);
         return getRandomZeroOrOne() == 0;
     }

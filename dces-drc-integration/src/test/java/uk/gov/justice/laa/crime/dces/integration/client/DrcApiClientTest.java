@@ -17,8 +17,8 @@ import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
 import uk.gov.justice.laa.crime.dces.integration.config.DrcApiWebClientConfiguration;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.config.ServicesConfiguration;
-import uk.gov.justice.laa.crime.dces.integration.model.external.SendContributionFileDataToExternalRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.external.SendFdcFileDataToExternalRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.drc.SendContributionFileDataToDrcRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.drc.SendFdcFileDataToDrcRequest;
 
 import java.io.IOException;
 
@@ -62,33 +62,33 @@ class DrcApiClientTest {
     @Test
     void test_whenWebClientIsInvoked_thenShouldReturnedValidResponse() throws JsonProcessingException {
 
-        SendContributionFileDataToExternalRequest sendContributionFileDataToExternalRequest = SendContributionFileDataToExternalRequest.builder()
+        SendContributionFileDataToDrcRequest sendContributionFileDataToDrcRequest = SendContributionFileDataToDrcRequest.builder()
                 .contributionId(99)
                 .build();
         Boolean expectedResponse = true;
         setupValidResponse(expectedResponse);
         WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(configuration);
 
-        Boolean response = callDrcClient(actualWebClient, sendContributionFileDataToExternalRequest);
+        Boolean response = callDrcClient(actualWebClient, sendContributionFileDataToDrcRequest);
         assertThat(response).isTrue();
     }
 
     @Test
     void test_whenWebClientIsInvokedWithNull_thenShouldReturnedFalseResponse() throws JsonProcessingException {
 
-        SendContributionFileDataToExternalRequest sendContributionFileDataToExternalRequest = SendContributionFileDataToExternalRequest.builder().build();
+        SendContributionFileDataToDrcRequest sendContributionFileDataToDrcRequest = SendContributionFileDataToDrcRequest.builder().build();
         Boolean expectedResponse = false;
         setupValidResponse(expectedResponse);
         WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(configuration);
 
-        Boolean response = callDrcClient(actualWebClient, sendContributionFileDataToExternalRequest);
+        Boolean response = callDrcClient(actualWebClient, sendContributionFileDataToDrcRequest);
         assertThat(response).isFalse();
     }
 
     @Test
     void test_whenFdcWebClientIsInvoked_thenShouldReturnedValidResponse() throws JsonProcessingException {
 
-        SendFdcFileDataToExternalRequest request = SendFdcFileDataToExternalRequest.builder()
+        SendFdcFileDataToDrcRequest request = SendFdcFileDataToDrcRequest.builder()
                 .fdcId(12)
                 .build();
         Boolean expectedResponse = true;
@@ -102,7 +102,7 @@ class DrcApiClientTest {
     @Test
     void test_whenFdcWebClientIsInvokedWithNull_thenShouldReturnedFalseResponse() throws JsonProcessingException {
 
-        SendFdcFileDataToExternalRequest request = SendFdcFileDataToExternalRequest.builder().build();
+        SendFdcFileDataToDrcRequest request = SendFdcFileDataToDrcRequest.builder().build();
         Boolean expectedResponse = false;
         setupValidResponse(expectedResponse);
         WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(configuration);

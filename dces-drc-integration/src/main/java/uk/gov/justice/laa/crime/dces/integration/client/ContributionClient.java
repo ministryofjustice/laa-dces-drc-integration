@@ -16,8 +16,8 @@ import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributi
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcGlobalUpdateResponse;
 import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcUpdateRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.drc.UpdateLogContributionRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.drc.UpdateLogFdcRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
 
 import java.util.List;
 

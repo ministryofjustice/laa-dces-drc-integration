@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UpdateLogContributionRequest {
-    private Integer concorId;
-    private String errorText;
+public class SendContributionFileDataToDrcRequest {
+
+    private Integer contributionId;
+
 }
