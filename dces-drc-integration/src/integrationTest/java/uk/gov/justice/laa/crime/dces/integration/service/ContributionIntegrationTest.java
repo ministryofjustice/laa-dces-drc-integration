@@ -10,7 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
-import uk.gov.justice.laa.crime.dces.integration.model.drc.UpdateLogContributionRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
 
 
 @EnabledIf(expression = "#{environment['sentry.environment'] == 'DEV'}", loadContext = true)

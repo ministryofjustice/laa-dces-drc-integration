@@ -12,8 +12,8 @@ import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributi
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsResponse;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcGlobalUpdateResponse;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcUpdateRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.drc.UpdateLogFdcRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.external.SendFdcFileDataToExternalRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.SendFdcFileDataToDrcRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 
@@ -70,8 +70,8 @@ public class FdcService implements FileService{
         });
     }
 
-    private SendFdcFileDataToExternalRequest buildSendFdcFileDataToExternalRequest(Integer fdcId) {
-        return SendFdcFileDataToExternalRequest.builder()
+    private SendFdcFileDataToDrcRequest buildSendFdcFileDataToExternalRequest(Integer fdcId) {
+        return SendFdcFileDataToDrcRequest.builder()
                 .fdcId(fdcId)
                 .build();
     }
