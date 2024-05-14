@@ -260,7 +260,7 @@ jobs:
           tag: ${CIRCLE_SHA1}
           region: $ECR_REGION
           repo: $ECR_REPOSITORY
-      - push-integration-test-image:
+      - push-integration-test-image
 
   deploy-dev:
     executor: cloud-platform-executor
