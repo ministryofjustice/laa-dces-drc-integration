@@ -1,0 +1,17 @@
+FROM amazoncorretto:17-alpine
+RUN mkdir -p /home/integration-tests/
+WORKDIR /home/integration-tests/
+
+COPY dces-drc-integration /home/integration-tests/dces-drc-integration
+COPY application /home/integration-tests/application
+COPY build.gradle /home/integration-tests/
+COPY settings.gradle /home/integration-tests/
+COPY gradlew /home/integration-tests/
+COPY gradlew.bat /home/integration-tests/
+COPY gradle /home/integration-tests/gradle
+
+RUN addgroup -S appgroup && adduser -u 1001 -S appuser -G appgroup
+RUN chmod -R 777 /home/api-test-suite/
+USER 1001
+
+ENTRYPOINT ["/bin/sh"]

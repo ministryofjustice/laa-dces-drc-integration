@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  int-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.int-test
+    ports:
+      - "8089:8089"
+      - "8188:8188"
+    env_file:
+      - .env
+    command: [ "./gradlew", "integrationTest" ]
