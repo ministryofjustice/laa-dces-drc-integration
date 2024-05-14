@@ -1,13 +1,13 @@
 FROM amazoncorretto:17-alpine
-RUN mkdir -p /home/integration-tests/
-WORKDIR /home/integration-tests/
+RUN mkdir -p /opt/laa-dces-drc-integration/
+WORKDIR /opt/laa-dces-drc-integration/
 
-COPY dces-drc-integration /home/integration-tests/dces-drc-integration
-COPY build.gradle /home/integration-tests/
-COPY settings.gradle /home/integration-tests/
-COPY gradlew /home/integration-tests/
-COPY gradlew.bat /home/integration-tests/
-COPY gradle /home/integration-tests/gradle
+COPY dces-drc-integration /opt/laa-dces-drc-integration/dces-drc-integration
+COPY build.gradle /opt/laa-dces-drc-integration/
+COPY settings.gradle /opt/laa-dces-drc-integration/
+COPY gradlew /opt/laa-dces-drc-integration/
+COPY gradlew.bat /opt/laa-dces-drc-integration/
+COPY gradle /opt/laa-dces-drc-integration/gradle
 
 RUN addgroup -S appgroup && adduser -u 1001 -S appuser -G appgroup
 RUN chmod -R 777 /home/api-test-suite/
