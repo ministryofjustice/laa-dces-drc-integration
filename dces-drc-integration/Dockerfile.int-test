@@ -3,7 +3,6 @@ RUN mkdir -p /home/integration-tests/
 WORKDIR /home/integration-tests/
 
 COPY dces-drc-integration /home/integration-tests/dces-drc-integration
-COPY application /home/integration-tests/application
 COPY build.gradle /home/integration-tests/
 COPY settings.gradle /home/integration-tests/
 COPY gradlew /home/integration-tests/
