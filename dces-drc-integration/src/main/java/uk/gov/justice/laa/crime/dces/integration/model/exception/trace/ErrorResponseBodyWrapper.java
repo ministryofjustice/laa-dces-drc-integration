@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.model.exception.context;
+package uk.gov.justice.laa.crime.dces.integration.model.exception.trace;
 
 import lombok.AllArgsConstructor;
 import org.springframework.core.MethodParameter;
@@ -30,13 +30,13 @@ public class ErrorResponseBodyWrapper implements ResponseBodyAdvice<Object> {
                                   final Class selectedConverterType, final ServerHttpRequest request, final ServerHttpResponse response) {
 
         if (!(body instanceof ResponseEntity)) {
-            final ErrorResponse<Object> errorResponse = new ErrorResponse<>();
-            errorResponse.setData(body);
-            errorResponse.setTrace(TraceData.builder()
+            final CustomDataResponse<Object> customDataResponse = new CustomDataResponse<>();
+            customDataResponse.setData(body);
+            customDataResponse.setTrace(TraceData.builder()
                     .traceId(traceService.getTraceId())
                     .timestamp(new Timestamp(System.currentTimeMillis()))
                     .build());
-            return errorResponse;
+            return customDataResponse;
         }
         return body;
     }
