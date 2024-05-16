@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.model.exception.context;
+package uk.gov.justice.laa.crime.dces.integration.model.exception.trace;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
