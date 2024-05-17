@@ -95,18 +95,18 @@ commands:
             echo "export NAMESPACE=\"$NAMESPACE\"" >> "$BASH_ENV"
             echo "export POD_NAME=\"$POD_NAME\"" >> "$BASH_ENV"
       - run:
-          name: Run API tests
+          name: Run Integration Tests
           command: |
             kubectl wait --for=condition=ready pod/${POD_NAME} --timeout=60s -n ${NAMESPACE}
             kubectl exec -n ${NAMESPACE} ${POD_NAME} -- ./gradlew integrationTest
       - run:
-          name: Fetch API test results
+          name: Fetch Integration Test results
           command: |
-            echo Copying API test date from Pod:${NAMESPACE} in Namespace:${POD_NAME}
+            echo Copying Integration Test data from Pod:${NAMESPACE} in Namespace:${POD_NAME}
             mkdir -p ./int-test-results/reports
             mkdir -p ./int-test-results/test-results
-            kubectl cp ${NAMESPACE}/${POD_NAME}:/home/integration-tests/dces-drc-integration/build/reports ./int-test-results/reports
-            kubectl cp ${NAMESPACE}/${POD_NAME}:/home/integration-tests/dces-drc-integration/build/test-results ./int-test-results/test-results
+            kubectl cp ${NAMESPACE}/${POD_NAME}:home/laa-dces-drc-integration/build/reports ./int-test-results/reports
+            kubectl cp ${NAMESPACE}/${POD_NAME}:/home/laa-dces-drc-integration/build/test-results/ ./int-test-results/test-results
           when: always
 #      - run:
 #          name: Uninstall API test release
