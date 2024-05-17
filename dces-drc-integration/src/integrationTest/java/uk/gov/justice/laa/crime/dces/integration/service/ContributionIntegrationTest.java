@@ -13,7 +13,7 @@ import org.springframework.test.context.junit.jupiter.EnabledIf;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
 
 
-@EnabledIf(expression = "#{environment['sentry.environment'] == 'DEV'}", loadContext = true)
+@EnabledIf(expression = "#{environment['sentry.environment'] == 'development'}", loadContext = true)
 @SpringBootTest
 @ExtendWith(SoftAssertionsExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
