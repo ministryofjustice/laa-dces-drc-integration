@@ -108,17 +108,17 @@ commands:
             kubectl cp ${NAMESPACE}/${POD_NAME}:/home/laa-dces-drc-integration/build/reports ./int-test-results/reports
             kubectl cp ${NAMESPACE}/${POD_NAME}:/home/laa-dces-drc-integration/build/test-results/ ./int-test-results/test-results
           when: always
-#      - run:
-#          name: Uninstall API test release
-#          command: |
-#            helm uninstall laa-dces-drc-integration-int-tests -n ${NAMESPACE}
-#          when: always
+      - run:
+          name: Uninstall API test release
+          command: |
+            helm uninstall laa-dces-drc-integration-int-tests -n ${NAMESPACE}
+          when: always
       - store_test_results:
           path: ./int-test-results/test-results/integrationTest
       - store_artifacts:
-          path: ./int-test-results/reports/tests/int-test-results
+          path: ./int-test-results/reports/tests/integrationTest/
       - store_artifacts:
-          path: ./int-test-results/test-results/int-test-results
+          path: ./int-test-results/test-results/integrationTest/
 
 
   deploy-to:
