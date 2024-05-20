@@ -4,7 +4,6 @@ import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -53,11 +52,6 @@ class ContributionIntegrationTest {
 				.build();
 		String response = contributionService.processContributionUpdate(dataRequest);
 		softly.assertThat(response).isEqualTo("The request has been processed successfully");
-	}
-
-	@Test
-	void testFail() {
-		Assertions.fail();
 	}
 
 }
