@@ -7,4 +7,4 @@ services:
       dockerfile: Dockerfile.int-test
     env_file:
       - .env
-    command: [ "./gradlew", "integrationTest" ]
+    command: ["./gradlew", "integrationTest"]

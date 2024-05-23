@@ -120,7 +120,6 @@ commands:
       - store_artifacts:
           path: ./int-test-results/test-results/integrationTest/
 
-
   deploy-to:
     description: >
       Deploy image to the specified environment
