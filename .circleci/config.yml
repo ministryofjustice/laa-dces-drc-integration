@@ -34,6 +34,92 @@ commands:
       - run: echo "${GIT_CRYPT_KEY}" | base64 -d > git-crypt.key
       - run: git-crypt unlock git-crypt.key
 
+  setup-kubectl:
+    description: >
+      Authenticate with kubernetes cluster
+    parameters:
+      environment:
+        description: Destination environment
+        type: string
+      token:
+        description: CircleCI Service account token
+        type: string
+    steps:
+      - run:
+          command: |
+            echo -n ${K8S_CLUSTER_CERT} | base64 -d > ./ca.crt
+            kubectl config set-cluster ${K8S_CLUSTER_NAME} --certificate-authority=./ca.crt --server=https://${K8S_CLUSTER_NAME}
+            kubectl config set-credentials circleci --token=<< parameters.token >>
+            kubectl config set-context ${K8S_CLUSTER_NAME} --cluster=${K8S_CLUSTER_NAME} --user=circleci --namespace=laa-dces-drc-integration-<< parameters.environment >>
+            kubectl config use-context ${K8S_CLUSTER_NAME}
+            kubectl --namespace=laa-dces-drc-integration-<< parameters.environment >> get pods
+
+  push-integration-test-image:
+    description: >
+      Push Integration Test image
+    steps:
+      - aws-ecr/build-image:
+          dockerfile: Dockerfile.int-test
+          push-image: true
+          tag: int-test-${CIRCLE_SHA1}
+          region: $ECR_REGION
+          repo: $ECR_REPOSITORY
+
+  run-integration-tests:
+    description: >
+      Run Integration Tests against the environment's Maat API endpoint
+    parameters:
+      environment:
+        description: Destination environment
+        type: string
+      token:
+        description: CircleCI Service account token
+        type: string
+    steps:
+      - setup-kubectl:
+          environment: << parameters.environment >>
+          token: << parameters.token >>
+      - helm/upgrade-helm-chart:
+          namespace: laa-dces-drc-integration-<< parameters.environment >>
+          update-repositories: false
+          chart: ./helm_deploy/laa-dces-drc-integration-int-tests/
+          release-name: laa-dces-drc-integration-int-tests
+          values: ./helm_deploy/laa-dces-drc-integration-int-tests/values-<< parameters.environment >>.yaml
+          values-to-override: image.tag=int-test-${CIRCLE_SHA1}
+      - run:
+          name: Setup environment variables
+          command: |
+            export NAMESPACE=laa-dces-drc-integration-<< parameters.environment >>
+            export POD_NAME=$(kubectl get pods -n ${NAMESPACE} -l "app.kubernetes.io/name=laa-dces-drc-integration-int-tests,app.kubernetes.io/instance=laa-dces-drc-integration-int-tests" -o jsonpath="{.items[0].metadata.name}")
+
+            echo "export NAMESPACE=\"$NAMESPACE\"" >> "$BASH_ENV"
+            echo "export POD_NAME=\"$POD_NAME\"" >> "$BASH_ENV"
+      - run:
+          name: Run Integration Tests
+          command: |
+            kubectl wait --for=condition=ready pod/${POD_NAME} --timeout=60s -n ${NAMESPACE}
+            kubectl exec -n ${NAMESPACE} ${POD_NAME} -- ./gradlew integrationTest
+      - run:
+          name: Fetch Integration Test results
+          command: |
+            echo Copying Integration Test data from Pod:${NAMESPACE} in Namespace:${POD_NAME}
+            mkdir -p ./int-test-results/reports
+            mkdir -p ./int-test-results/test-results
+            kubectl cp ${NAMESPACE}/${POD_NAME}:/home/laa-dces-drc-integration/build/reports ./int-test-results/reports
+            kubectl cp ${NAMESPACE}/${POD_NAME}:/home/laa-dces-drc-integration/build/test-results/ ./int-test-results/test-results
+          when: always
+      - run:
+          name: Uninstall Integration Test release
+          command: |
+            helm uninstall laa-dces-drc-integration-int-tests -n ${NAMESPACE}
+          when: always
+      - store_test_results:
+          path: ./int-test-results/test-results/integrationTest
+      - store_artifacts:
+          path: ./int-test-results/reports/tests/integrationTest/
+      - store_artifacts:
+          path: ./int-test-results/test-results/integrationTest/
+
   deploy-to:
     description: >
       Deploy image to the specified environment
@@ -46,15 +132,9 @@ commands:
         type: string
     steps:
       - checkout_and_decrypt
-      - run:
-          name: Authenticate with cluster
-          command: |
-            echo -n ${K8S_CLUSTER_CERT} | base64 -d > ./ca.crt
-            kubectl config set-cluster ${K8S_CLUSTER_NAME} --certificate-authority=./ca.crt --server=https://${K8S_CLUSTER_NAME}
-            kubectl config set-credentials circleci --token=<< parameters.token >>
-            kubectl config set-context ${K8S_CLUSTER_NAME} --cluster=${K8S_CLUSTER_NAME} --user=circleci --namespace=laa-dces-drc-integration-<< parameters.environment >>
-            kubectl config use-context ${K8S_CLUSTER_NAME}
-            kubectl --namespace=laa-dces-drc-integration-<< parameters.environment >> get pods
+      - setup-kubectl:
+          environment: << parameters.environment >>
+          token: << parameters.token >>
       - helm/upgrade-helm-chart:
           namespace: laa-dces-drc-integration-<< parameters.environment >>
           update-repositories: false
@@ -193,11 +273,15 @@ jobs:
           tag: ${CIRCLE_SHA1}
           region: $ECR_REGION
           repo: $ECR_REPOSITORY
+      - push-integration-test-image
 
   deploy-dev:
     executor: cloud-platform-executor
     steps:
       - deploy-to:
+          environment: dev
+          token: ${CIRCLE_CI_TOKEN_DEV}
+      - run-integration-tests:
           environment: dev
           token: ${CIRCLE_CI_TOKEN_DEV}
 

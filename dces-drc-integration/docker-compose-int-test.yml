@@ -1,0 +1,10 @@
+version: "3.9"
+
+services:
+  int-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.int-test
+    env_file:
+      - .env
+    command: ["./gradlew", "integrationTest"]

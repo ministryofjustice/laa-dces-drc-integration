@@ -1,0 +1,16 @@
+FROM amazoncorretto:17-alpine
+RUN mkdir -p /home/laa-dces-drc-integration/
+WORKDIR /home/laa-dces-drc-integration/
+
+COPY build.gradle /home/laa-dces-drc-integration/
+COPY settings.gradle /home/laa-dces-drc-integration/
+COPY gradlew /home/laa-dces-drc-integration/
+COPY gradlew.bat /home/laa-dces-drc-integration/
+COPY gradle /home/laa-dces-drc-integration/gradle
+COPY src /home/laa-dces-drc-integration/src
+
+RUN addgroup -S appgroup && adduser -u 1001 -S appuser -G appgroup
+RUN chmod -R 777 /home/laa-dces-drc-integration/
+USER 1001
+
+ENTRYPOINT ["/bin/sh"]
