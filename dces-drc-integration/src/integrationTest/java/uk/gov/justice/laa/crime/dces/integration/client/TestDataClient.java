@@ -13,7 +13,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateConcorCont
 
 import java.util.List;
 
-@HttpExchange("/test-data/debt-collection-enforcement")
+@HttpExchange("/debt-collection-enforcement/test-data")
 public interface TestDataClient extends MaatApiClient {
     @PutExchange("/concor-contribution-status")
     @Valid
