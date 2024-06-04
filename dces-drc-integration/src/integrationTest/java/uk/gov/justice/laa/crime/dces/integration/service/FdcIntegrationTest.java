@@ -48,7 +48,7 @@ class FdcIntegrationTest {
 				.fdcId(31774046)
 				.build();
 		String response = fdcService.processFdcUpdate(dataRequest);
-		assertEquals("The request has been processed successfully", response);
+		softly.assertThat(response).isEqualTo("The request has been processed successfully");
 	}
 
 	@Test
@@ -59,7 +59,7 @@ class FdcIntegrationTest {
 				.errorText(errorText)
 				.build();
 		String response = fdcService.processFdcUpdate(dataRequest);
-		assertEquals("The request has failed to process", response);
+		softly.assertThat(response).isEqualTo("The request has failed to process");
 	}
 
 }
