@@ -4,13 +4,19 @@ import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
+import uk.gov.justice.laa.crime.dces.integration.client.TestDataClient;
+import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
+import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateConcorContributionStatusRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
+
+import java.util.List;
 
 
 @EnabledIf(expression = "#{environment['sentry.environment'] == 'development'}", loadContext = true)
@@ -25,6 +31,9 @@ class ContributionIntegrationTest {
 
 	@Autowired
 	private ContributionService contributionService;
+
+	@Autowired
+	private TestDataClient testDataClient;
 
 	@AfterEach
 	void assertAll(){
@@ -52,6 +61,16 @@ class ContributionIntegrationTest {
 				.build();
 		String response = contributionService.processContributionUpdate(dataRequest);
 		softly.assertThat(response).isEqualTo("The request has been processed successfully");
+	}
+
+	@Test @Disabled("This test currently fails until Cognito auth in maat-api is fixed")
+	void testOneContributionStatusChanges() {
+		UpdateConcorContributionStatusRequest dataRequest = UpdateConcorContributionStatusRequest.builder()
+				.status(ConcorContributionStatus.ACTIVE)
+				.recordCount(1)
+				.build();
+		List<Long> response = testDataClient.updateConcurContributionStatus(dataRequest);
+		softly.assertThat(response).hasSize(1);
 	}
 
 }
