@@ -63,6 +63,12 @@ configurations {
 	integrationTestImplementation.extendsFrom testImplementation
 	integrationTestImplementation.extendsFrom testCompile
 	integrationTestImplementation.extendsFrom testRuntime
+	integrationTestCompileOnly {
+		extendsFrom testCompileOnly
+	}
+	integrationTestAnnotationProcessor {
+		extendsFrom testAnnotationProcessor
+	}
 }
 
 
@@ -117,6 +123,8 @@ dependencies {
 	testImplementation "com.github.tomakehurst:wiremock-jre8-standalone:$versions.wiremockVersion"
 	testImplementation "com.squareup.okhttp3:mockwebserver:$versions.mockwebserverVersion"
 
+	testCompileOnly 'org.projectlombok:lombok'
+	testAnnotationProcessor 'org.projectlombok:lombok'
 }
 
 jacoco {
