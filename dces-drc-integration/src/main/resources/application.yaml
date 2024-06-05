@@ -80,7 +80,7 @@ springdoc:
     enabled: true
   writer-with-order-by-keys: true
   writer-with-default-pretty-printer: true
-  packages-to-scan: uk.gov.justice.laa.crime.dces.integration.rest.api.controller
+  packages-to-scan: uk.gov.justice.laa.crime.dces.integration.controller
 
 api:
   title: DCES DRC Integration RestAPIs
