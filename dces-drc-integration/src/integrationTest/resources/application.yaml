@@ -49,7 +49,7 @@ services:
     oAuthEnabled: true
     maxBufferSize: 16
   drc-client-api:
-    baseUrl: http://localhost:8089 # don't commit
+    baseUrl: http://localhost:1110
     oAuthEnabled: false
 
 spring:

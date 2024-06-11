@@ -10,7 +10,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -18,7 +17,6 @@ import org.springframework.test.context.junit.jupiter.EnabledIf;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.client.TestDataClient;
-import uk.gov.justice.laa.crime.dces.integration.controller.DrcStubRestController;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.SendContributionFileDataToDrcRequest;
@@ -29,7 +27,6 @@ import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContrib
 
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -38,7 +35,7 @@ import static org.mockito.Mockito.mockingDetails;
 
 
 @EnabledIf(expression = "#{environment['sentry.environment'] == 'development'}", loadContext = true)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest
 @ExtendWith(SoftAssertionsExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ContributionIntegrationTest {
