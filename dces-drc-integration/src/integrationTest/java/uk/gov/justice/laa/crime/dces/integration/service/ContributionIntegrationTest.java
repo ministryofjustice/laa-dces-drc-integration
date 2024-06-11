@@ -1,5 +1,8 @@
 package uk.gov.justice.laa.crime.dces.integration.service;
 
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Singular;
 import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
@@ -7,6 +10,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -29,11 +33,12 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mockingDetails;
 
 
 @EnabledIf(expression = "#{environment['sentry.environment'] == 'development'}", loadContext = true)
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @ExtendWith(SoftAssertionsExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ContributionIntegrationTest {
@@ -52,9 +57,6 @@ class ContributionIntegrationTest {
 
 	@SpyBean
 	private DrcClient drcClientSpy;
-
-	@SpyBean
-	private DrcStubRestController drcStubRestControllerSpy;
 
 	@AfterEach
 	void assertAll(){
@@ -84,79 +86,65 @@ class ContributionIntegrationTest {
 		softly.assertThat(response).isEqualTo("The request has been processed successfully");
 	}
 
+	@Builder
+	@Getter
+	static class ContributionProcessing {
+		@Singular private Set<Integer> contribs; // returned by ContributionClient.getContributions("ACTIVE")
+		@Singular private Set<Integer> sents; // sent to the DRC using DrcClient.
+		@Singular private Set<Integer> successfullySents; // sent to ContributionClient.updateContribution()
+		private int successfullySentCount; // sent to ContributionClient.updateContribution()
+		private String name; // sent to ContributionClient.updateContribution()
+		private Boolean result; // returned by ContributionClient.updateContribution()
+	}
+
 	@Test
 	void testPositiveActiveContributionProcessing() {
-		// Set 3 concor_contributions rows to status ACTIVE
+		// Set three rows in concor_contributions to status `ACTIVE`
 		var request = UpdateConcorContributionStatusRequest.builder().status(ConcorContributionStatus.ACTIVE).recordCount(3).build();
 		var idList = testDataClient.updateConcurContributionStatus(request); // REST call
 		softly.assertThat(idList).hasSize(3);
 
-		// After processDailyFiles() is called, contribSet will contain the set of contribution IDs returned by the call to getContributions.
-		final var contribSet = new TreeSet<Integer>();
-		when(contributionClientSpy.getContributions("ACTIVE")).thenAnswer(invocation -> {
-			var entries = (List<ConcurContribEntry>) invocation.callRealMethod();
-			var activeSet = entries.stream().map(ConcurContribEntry::getConcorContributionId).collect(Collectors.toSet());
-			contribSet.addAll(activeSet);
-			// could change this to only return three entries?
-			return entries;
-		});
-
-		// After processDailyFiles() is called, these sets will contain the set of contribution IDs sent to the DRC.
-		final var sentSet = new TreeSet<Integer>();
-		final var successfullySentSet = new TreeSet<Integer>();
-		when(drcClientSpy.sendContributionUpdate(any())).thenAnswer(invocation -> {
+		final var processing = ContributionProcessing.builder();
+		// processDailyFiles() calls ContributionsClient.getContributions("ACTIVE");
+		doAnswer(invocation -> {
+			var result = (List<ConcurContribEntry>) mockingDetails(contributionClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation);
+			processing.contribs(result.stream().map(ConcurContribEntry::getConcorContributionId).collect(Collectors.toSet()));
+			return result; // could change this to only return three entries?
+		}).when(contributionClientSpy).getContributions("ACTIVE");
+		// processDailyFiles() calls DrcClient.sendContributionUpdate(...);
+		doAnswer(invocation -> {
 			var data = (SendContributionFileDataToDrcRequest) invocation.getArgument(0);
-			sentSet.add(data.getContributionId());
-			var result = (Boolean) invocation.callRealMethod();
-			if (Boolean.TRUE.equals(result)) { // note because of the next block, this is likely always true.
-				successfullySentSet.add(data.getContributionId());
-			}
-			return result;
-		});
-
-		// After processDailyFiles() is called, these sets will contain the set of contribution IDs received by the DRC.
-		final var recvSet = new TreeSet<Integer>();
-		when(drcStubRestControllerSpy.contribution(any())).thenAnswer(invocation -> {
-			var data = (SendContributionFileDataToDrcRequest) invocation.getArgument(0);
-			recvSet.add(data.getContributionId());
-			var result = (Boolean) invocation.callRealMethod(); // always return true for our "blessed" rows.
-			return idList.contains(data.getContributionId()) ? Boolean.TRUE : result;
-		});
-
-		// After processDailyFiles() is called, file will contain valid information.
-        final var file = new Object() {
-			Set<Integer> successfullySentSet;
-			int successfullySentCount;
-			String name;
-			Boolean result;
-        };
-		when(contributionClientSpy.updateContributions(any())).thenAnswer(invocation -> {
+			processing.sent(data.getContributionId());
+			return Boolean.TRUE;
+		}).when(drcClientSpy).sendContributionUpdate(any());
+		// processDailyFiles() calls ContributionClient.updateContributions(...);
+		doAnswer(invocation -> {
 			var data = (ContributionUpdateRequest) invocation.getArgument(0);
-			file.successfullySentSet = data.getConcorContributionIds().stream().map(Integer::valueOf).collect(Collectors.toSet());
-			file.successfullySentCount = data.getRecordsSent();
-			file.name = data.getXmlFileName();
-			file.result = (Boolean) invocation.callRealMethod();
-			return file.result;
-		});
+			processing.successfullySents(data.getConcorContributionIds().stream().map(Integer::valueOf).collect(Collectors.toSet()));
+			processing.successfullySentCount(data.getRecordsSent());
+			processing.name(data.getXmlFileName());
+			processing.result((Boolean) mockingDetails(contributionClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation));
+			return processing.result;
+		}).when(contributionClientSpy).updateContributions(any());
 
-		// Run processDailyFiles
+		// Actually execute processDailyFiles() now:
 		contributionService.processDailyFiles();
 
-		// Check 1: were our 3 updated rows returned by getContributions?
-		softly.assertThatCollection(contribSet).containsAll(idList);
+		ContributionProcessing process = processing.build();
 
-		// Check 2: were our 3 updated rows sent to the DRC, and was there a synchronous positive response?
-		softly.assertThatCollection(sentSet).containsAll(idList);
-		softly.assertThatCollection(successfullySentSet).containsAll(idList);
-		softly.assertThatCollection(recvSet).containsAll(idList);
+		// Check 1: were our updated rows returned by getContributions?
+		softly.assertThatCollection(process.getContribs()).containsAll(idList);
 
-		// Check 3: were there three successful contributions recorded, did they include our ids, is the name and result valid?
-		softly.assertThat(file.successfullySentCount).isGreaterThanOrEqualTo(3);
-		softly.assertThatCollection(file.successfullySentSet).containsAll(idList);
-		softly.assertThat(file.name).isNotBlank();
-		softly.assertThat(file.result).isEqualTo(Boolean.TRUE);
+		// Check 2: were our updated rows sent to the pseudo DRC?
+		softly.assertThatCollection(process.getSents()).containsAll(idList);
 
-		// Check 4: have our 3 updated rows been reset to status SENT
+		// Check 3: were successful contributions recorded for our rows, and is the name and result valid?
+		softly.assertThat(process.getSuccessfullySentCount()).isGreaterThanOrEqualTo(3);
+		softly.assertThatCollection(process.getSuccessfullySents()).containsAll(idList);
+		softly.assertThat(process.getName()).isNotBlank();
+		softly.assertThat(process.getResult()).isEqualTo(Boolean.TRUE);
+
+		// Check 4: have our updated rows been reset to status SENT
 		for (var id: idList) {
 			ConcorContributionResponseDTO contrib = testDataClient.getConcorContribution(id); // REST call
 			softly.assertThat(contrib.getStatus()).isEqualTo(ConcorContributionStatus.SENT);
