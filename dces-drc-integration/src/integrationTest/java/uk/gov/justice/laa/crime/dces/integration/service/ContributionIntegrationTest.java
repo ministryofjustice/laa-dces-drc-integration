@@ -20,7 +20,6 @@ import uk.gov.justice.laa.crime.dces.integration.client.TestDataClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.SendContributionFileDataToDrcRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionResponseDTO;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateConcorContributionStatusRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
@@ -28,6 +27,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContrib
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import uk.gov.justice.laa.crime.dces.integration.service.ContributionIntegrationTest.ContributionProcess.ContributionProcessBuilder;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
@@ -95,34 +95,53 @@ class ContributionIntegrationTest {
 		private Boolean fileResult;                 // returned from maat-api by ContributionClient.updateContribution(...)
 	}
 
+	private List<Integer> updateContributionStatus(ConcorContributionStatus status, int recordCount) {
+		UpdateConcorContributionStatusRequest dataRequest = UpdateConcorContributionStatusRequest.builder()
+				.status(status)
+				.recordCount(recordCount)
+				.build();
+		return testDataClient.updateConcurContributionStatus(dataRequest);
+	}
+
+	@Test
+	void testReplacedContributionIsNotProcessed() {
+		final var processing = ContributionProcess.builder();
+		processing.updatedIds(updateContributionStatus(ConcorContributionStatus.REPLACED, 1));
+
+		setSpyOnGetActiveContributions(processing);
+		mockAndSpyOnDrcClientSendContributionUpdate(processing, true);
+		setSpyOnUpdateContributions(processing, true);
+
+		contributionService.processDailyFiles();
+
+		var processed = processing.build();
+
+		softly.assertThat(processed.getUpdatedIds()).hasSize(1); // how many rows did we try to update to SENT?
+
+		softly.assertThatCollection(processed.getActiveIds()).doesNotContainAnyElementsOf(processed.getUpdatedIds()); // our IDs should not be ACTIVE
+
+		softly.assertThatCollection(processed.getSentIds()).doesNotContainAnyElementsOf(processed.getUpdatedIds()); // our rows should not be sent to the DRC
+
+		softly.assertThatCollection(processed.getFileIds()).doesNotContainAnyElementsOf(processed.getUpdatedIds()); // were our rows processed?
+		softly.assertThat(processed.getFileName()).isNotBlank(); // was an XML filename generated?
+		softly.assertThat(processed.getFileResult()).isEqualTo(Boolean.TRUE); // was contribution_files row created ok?
+
+		processed.getUpdatedIds().forEach(id -> {
+			var contribution = testDataClient.getConcorContribution(id);
+			softly.assertThat(contribution.getStatus()).isEqualTo(ConcorContributionStatus.REPLACED); // did our rows stay as REPLACED?
+		});
+
+	}
+
 	@Test
 	void testPositiveActiveContributionProcessing() {
 		final var processing = ContributionProcess.builder();
 
-		var request = UpdateConcorContributionStatusRequest.builder().status(ConcorContributionStatus.ACTIVE).recordCount(3).build();
-		processing.updatedIds(testDataClient.updateConcurContributionStatus(request)); // set three rows in concor_contributions to ACTIVE
-		
-		doAnswer(invocation -> {
-			// Because ContributionClient is a proxied interface, cannot just call `invocation.callRealMethod()` here - see https://github.com/spring-projects/spring-boot/issues/36653
-			var result = (List<ConcurContribEntry>) mockingDetails(contributionClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation);
-			processing.activeIds(result.stream().map(ConcurContribEntry::getConcorContributionId).collect(Collectors.toSet()));
-			return result;
-		}).when(contributionClientSpy).getContributions("ACTIVE");
+		processing.updatedIds(updateContributionStatus(ConcorContributionStatus.ACTIVE, 3));
 
-		doAnswer(invocation -> {
-			var data = (SendContributionFileDataToDrcRequest) invocation.getArgument(0);
-			processing.sentId(data.getContributionId());
-			return Boolean.TRUE;
-		}).when(drcClientSpy).sendContributionUpdate(any());
-
-		doAnswer(invocation -> {
-			var data = (ContributionUpdateRequest) invocation.getArgument(0);
-			processing.fileIds(data.getConcorContributionIds().stream().map(Integer::valueOf).collect(Collectors.toSet()));
-			processing.fileIdCount(data.getRecordsSent());
-			processing.fileName(data.getXmlFileName());
-			processing.fileResult((Boolean) mockingDetails(contributionClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation));
-			return processing.fileResult;
-		}).when(contributionClientSpy).updateContributions(any());
+		setSpyOnGetActiveContributions(processing);
+		mockAndSpyOnDrcClientSendContributionUpdate(processing, true);
+		setSpyOnUpdateContributions(processing, true);
 
 		contributionService.processDailyFiles();
 
@@ -145,6 +164,35 @@ class ContributionIntegrationTest {
 		});
 
 		// TODO: Check that a contribution_files row has been created with the XML filename from before
+	}
+
+	private void setSpyOnUpdateContributions(ContributionProcessBuilder processing, boolean requiredOutcome) {
+		doAnswer(invocation -> {
+			var data = (ContributionUpdateRequest) invocation.getArgument(0);
+			processing.fileIds(data.getConcorContributionIds().stream().map(Integer::valueOf).collect(Collectors.toSet()));
+			processing.fileIdCount(data.getRecordsSent());
+			processing.fileName(data.getXmlFileName());
+//			processing.fileResult((Boolean) mockingDetails(contributionClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation));
+			processing.fileResult(requiredOutcome);
+			return processing.fileResult;
+		}).when(contributionClientSpy).updateContributions(any());
+	}
+
+	private void mockAndSpyOnDrcClientSendContributionUpdate(ContributionProcessBuilder processing, boolean requiredOutcome) {
+		doAnswer(invocation -> {
+			var data = (SendContributionFileDataToDrcRequest) invocation.getArgument(0);
+			processing.sentId(data.getContributionId());
+			return requiredOutcome;
+		}).when(drcClientSpy).sendContributionUpdate(any());
+	}
+
+	private void setSpyOnGetActiveContributions(ContributionProcessBuilder processing) {
+		doAnswer(invocation -> {
+			// Because ContributionClient is a proxied interface, cannot just call `invocation.callRealMethod()` here - see https://github.com/spring-projects/spring-boot/issues/36653
+			var result = (List<ConcurContribEntry>) mockingDetails(contributionClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation);
+			processing.activeIds(result.stream().map(ConcurContribEntry::getConcorContributionId).collect(Collectors.toSet()));
+			return result;
+		}).when(contributionClientSpy).getContributions("ACTIVE");
 	}
 
 }
