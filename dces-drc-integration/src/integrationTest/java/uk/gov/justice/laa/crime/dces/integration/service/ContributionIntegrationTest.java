@@ -85,70 +85,66 @@ class ContributionIntegrationTest {
 
 	@Builder
 	@Getter
-	static class ContributionProcessing {
-		@Singular private Set<Integer> contribs; // returned by ContributionClient.getContributions("ACTIVE")
-		@Singular private Set<Integer> sents; // sent to the DRC using DrcClient.
-		@Singular private Set<Integer> successfullySents; // sent to ContributionClient.updateContribution()
-		private int successfullySentCount; // sent to ContributionClient.updateContribution()
-		private String name; // sent to ContributionClient.updateContribution()
-		private Boolean result; // returned by ContributionClient.updateContribution()
+	static class ContributionProcess {
+		@Singular private List<Integer> updatedIds; // returned from maat-api by TestDataClient.updateConcurContributionStatus(...)
+		@Singular private Set<Integer> activeIds;   // returned from maat-api by ContributionClient.getContributions("ACTIVE")
+		@Singular private Set<Integer> sentIds;     // sent to the DRC by DrcClient.sendContributionUpdate(...)
+		@Singular private Set<Integer> fileIds;     // sent to maat-api by ContributionClient.updateContribution(...)
+		private int fileIdCount;                    //   "    "    "
+		private String fileName;                    //   "    "    "
+		private Boolean fileResult;                 // returned from maat-api by ContributionClient.updateContribution(...)
 	}
 
 	@Test
 	void testPositiveActiveContributionProcessing() {
-		// Set three rows in concor_contributions to status `ACTIVE`
-		var request = UpdateConcorContributionStatusRequest.builder().status(ConcorContributionStatus.ACTIVE).recordCount(3).build();
-		var idList = testDataClient.updateConcurContributionStatus(request); // REST call
-		softly.assertThat(idList).hasSize(3);
+		final var processing = ContributionProcess.builder();
 
-		final var processing = ContributionProcessing.builder();
-		// processDailyFiles() calls ContributionsClient.getContributions("ACTIVE");
+		var request = UpdateConcorContributionStatusRequest.builder().status(ConcorContributionStatus.ACTIVE).recordCount(3).build();
+		processing.updatedIds(testDataClient.updateConcurContributionStatus(request)); // set three rows in concor_contributions to ACTIVE
+		
 		doAnswer(invocation -> {
+			// Because ContributionClient is a proxied interface, cannot just call `invocation.callRealMethod()` here - see https://github.com/spring-projects/spring-boot/issues/36653
 			var result = (List<ConcurContribEntry>) mockingDetails(contributionClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation);
-			processing.contribs(result.stream().map(ConcurContribEntry::getConcorContributionId).collect(Collectors.toSet()));
-			return result; // could change this to only return three entries?
+			processing.activeIds(result.stream().map(ConcurContribEntry::getConcorContributionId).collect(Collectors.toSet()));
+			return result;
 		}).when(contributionClientSpy).getContributions("ACTIVE");
-		// processDailyFiles() calls DrcClient.sendContributionUpdate(...);
+
 		doAnswer(invocation -> {
 			var data = (SendContributionFileDataToDrcRequest) invocation.getArgument(0);
-			processing.sent(data.getContributionId());
+			processing.sentId(data.getContributionId());
 			return Boolean.TRUE;
 		}).when(drcClientSpy).sendContributionUpdate(any());
-		// processDailyFiles() calls ContributionClient.updateContributions(...);
+
 		doAnswer(invocation -> {
 			var data = (ContributionUpdateRequest) invocation.getArgument(0);
-			processing.successfullySents(data.getConcorContributionIds().stream().map(Integer::valueOf).collect(Collectors.toSet()));
-			processing.successfullySentCount(data.getRecordsSent());
-			processing.name(data.getXmlFileName());
-			processing.result((Boolean) mockingDetails(contributionClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation));
-			return processing.result;
+			processing.fileIds(data.getConcorContributionIds().stream().map(Integer::valueOf).collect(Collectors.toSet()));
+			processing.fileIdCount(data.getRecordsSent());
+			processing.fileName(data.getXmlFileName());
+			processing.fileResult((Boolean) mockingDetails(contributionClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation));
+			return processing.fileResult;
 		}).when(contributionClientSpy).updateContributions(any());
 
-		// Actually execute processDailyFiles() now:
 		contributionService.processDailyFiles();
 
-		ContributionProcessing process = processing.build();
+		var processed = processing.build();
 
-		// Check 1: were our updated rows returned by getContributions?
-		softly.assertThatCollection(process.getContribs()).containsAll(idList);
+		softly.assertThat(processed.getUpdatedIds()).hasSize(3); // how many rows did we try to update to ACTIVE?
 
-		// Check 2: were our updated rows sent to the pseudo DRC?
-		softly.assertThatCollection(process.getSents()).containsAll(idList);
+		softly.assertThatCollection(processed.getActiveIds()).containsAll(processed.getUpdatedIds()); // were our rows actually updated to ACTIVE?
 
-		// Check 3: were successful contributions recorded for our rows, and is the name and result valid?
-		softly.assertThat(process.getSuccessfullySentCount()).isGreaterThanOrEqualTo(3);
-		softly.assertThatCollection(process.getSuccessfullySents()).containsAll(idList);
-		softly.assertThat(process.getName()).isNotBlank();
-		softly.assertThat(process.getResult()).isEqualTo(Boolean.TRUE);
+		softly.assertThatCollection(processed.getSentIds()).containsAll(processed.getUpdatedIds()); // were our rows sent to the DRC?
 
-		// Check 4: have our updated rows been reset to status SENT
-		for (var id: idList) {
-			ConcorContributionResponseDTO contrib = testDataClient.getConcorContribution(id); // REST call
-			softly.assertThat(contrib.getStatus()).isEqualTo(ConcorContributionStatus.SENT);
-		}
+		softly.assertThat(processed.getFileIdCount()).isGreaterThanOrEqualTo(3); // were enough rows processed?
+		softly.assertThatCollection(processed.getFileIds()).containsAll(processed.getUpdatedIds()); // were our rows processed?
+		softly.assertThat(processed.getFileName()).isNotBlank(); // was an XML filename generated?
+		softly.assertThat(processed.getFileResult()).isEqualTo(Boolean.TRUE); // was contribution_files row created ok?
 
-		// Check 5: has a contribution_files row been created>
-		//TODO
+		processed.getUpdatedIds().forEach(id -> {
+			var contribution = testDataClient.getConcorContribution(id);
+			softly.assertThat(contribution.getStatus()).isEqualTo(ConcorContributionStatus.SENT); // were our rows reset to SENT?
+		});
+
+		// TODO: Check that a contribution_files row has been created with the XML filename from before
 	}
 
 }
