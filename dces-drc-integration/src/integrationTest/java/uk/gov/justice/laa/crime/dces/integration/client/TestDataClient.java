@@ -20,7 +20,7 @@ import java.util.List;
 public interface TestDataClient extends MaatApiClient {
     @PutExchange("/concor-contribution-status")
     @Valid
-    List<Integer> updateConcurContributionStatus(@RequestBody UpdateConcorContributionStatusRequest updateConcorContributionStatusRequest);
+    List<Integer> updateConcorContributionStatus(@RequestBody UpdateConcorContributionStatusRequest updateConcorContributionStatusRequest);
 
     @GetExchange("/concor-contribution/{id}")
     @Valid

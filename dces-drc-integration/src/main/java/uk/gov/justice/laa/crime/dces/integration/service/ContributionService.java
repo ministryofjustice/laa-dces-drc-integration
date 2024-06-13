@@ -111,11 +111,11 @@ public class ContributionService implements FileService {
         return fileSentSuccess;
     }
 
-    private Boolean contributionUpdateRequest(String xmlContent, List<String> concurContributionIdList, int numberOfRecords, String fileName, String fileAckXML) throws HttpServerErrorException {
+    private Boolean contributionUpdateRequest(String xmlContent, List<String> concorContributionIdList, int numberOfRecords, String fileName, String fileAckXML) throws HttpServerErrorException {
         ContributionUpdateRequest request = ContributionUpdateRequest.builder()
                 .recordsSent(numberOfRecords)
                 .xmlContent(xmlContent)
-                .concorContributionIds(concurContributionIdList)
+                .concorContributionIds(concorContributionIdList)
                 .xmlFileName(fileName)
                 .ackXmlContent(fileAckXML).build();
         return contributionClient.updateContributions(request);

@@ -20,11 +20,11 @@ import uk.gov.justice.laa.crime.dces.integration.client.TestDataClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.SendContributionFileDataToDrcRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionResponseDTO;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateConcorContributionStatusRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -86,22 +86,23 @@ class ContributionIntegrationTest {
 	@Builder
 	@Getter
 	static class ContributionProcess {
-		@Singular private List<Integer> updatedIds; // returned from maat-api by TestDataClient.updateConcurContributionStatus(...)
-		@Singular private Set<Integer> activeIds;   // returned from maat-api by ContributionClient.getContributions("ACTIVE")
-		@Singular private Set<Integer> sentIds;     // sent to the DRC by DrcClient.sendContributionUpdate(...)
-		@Singular private Set<Integer> fileIds;     // sent to maat-api by ContributionClient.updateContribution(...)
-		private int fileIdCount;                    //   "    "    "
-		private String fileName;                    //   "    "    "
-		private Boolean fileResult;                 // returned from maat-api by ContributionClient.updateContribution(...)
+		@Singular private final List<Integer> updatedIds; // returned from maat-api by TestDataClient.updateConcorContributionStatus(...)
+		@Singular private final Set<Integer> activeIds;   // returned from maat-api by ContributionClient.getContributions("ACTIVE")
+		@Singular private final Set<Integer> sentIds;     // sent to the DRC by DrcClient.sendContributionUpdate(...)
+		@Singular private final Set<Integer> fileIds;     // sent to maat-api by ContributionClient.updateContribution(...)
+		private final int fileIdCount;                    //   "    "    "
+		private final String fileName;                    //   "    "    "
+		private final Boolean fileResult;                 // returned from maat-api by ContributionClient.updateContribution(...)
 	}
 
 	@Test
-	void testPositiveActiveContributionProcessing() {
+	void testPositiveActiveContributionProcess() {
+		LocalDate startDate = LocalDate.now();
 		final var processing = ContributionProcess.builder();
 
 		var request = UpdateConcorContributionStatusRequest.builder().status(ConcorContributionStatus.ACTIVE).recordCount(3).build();
-		processing.updatedIds(testDataClient.updateConcurContributionStatus(request)); // set three rows in concor_contributions to ACTIVE
-		
+		processing.updatedIds(testDataClient.updateConcorContributionStatus(request)); // set three rows in concor_contributions to ACTIVE
+
 		doAnswer(invocation -> {
 			// Because ContributionClient is a proxied interface, cannot just call `invocation.callRealMethod()` here - see https://github.com/spring-projects/spring-boot/issues/36653
 			var result = (List<ConcurContribEntry>) mockingDetails(contributionClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation);
@@ -144,7 +145,14 @@ class ContributionIntegrationTest {
 			softly.assertThat(contribution.getStatus()).isEqualTo(ConcorContributionStatus.SENT); // were our rows reset to SENT?
 		});
 
-		// TODO: Check that a contribution_files row has been created with the XML filename from before
+		boolean foundFile = false;
+		for (var fileContent: contributionClientSpy.findContributionFiles(startDate, LocalDate.now())) {
+			if (fileContent.contains("<filename>" + processed.getFileName() + "</filename>")) {
+				foundFile = true;
+				break;
+			}
+		}
+		softly.assertThat(foundFile).isTrue(); // was the contribution file data persisted into contribution_files?
 	}
 
 }
