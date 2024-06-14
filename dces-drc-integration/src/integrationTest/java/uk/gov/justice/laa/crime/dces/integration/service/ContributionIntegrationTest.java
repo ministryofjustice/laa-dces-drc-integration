@@ -1,7 +1,5 @@
 package uk.gov.justice.laa.crime.dces.integration.service;
 
-import lombok.Builder;
-import lombok.Singular;
 import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
@@ -11,28 +9,18 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
-import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.client.TestDataClient;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
-import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.SendContributionFileDataToDrcRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionResponseDTO;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateConcorContributionStatusRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
+import uk.gov.justice.laa.crime.dces.integration.testing.SpyFactory;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mockingDetails;
 
 @EnabledIf(expression = "#{environment['sentry.environment'] == 'development'}", loadContext = true)
 @SpringBootTest
@@ -43,16 +31,16 @@ class ContributionIntegrationTest {
     private SoftAssertions softly;
 
     @Autowired
+    private SpyFactory spyFactory;
+
+    @Autowired
     private ContributionService contributionService;
 
     @Autowired
     private TestDataClient testDataClient;
 
-    @SpyBean
-    private ContributionClient contributionClientSpy;
-
-    @SpyBean
-    private DrcClient drcClientSpy;
+    @Autowired
+    private ContributionClient contributionClient;
 
     @AfterEach
     void assertAll() {
@@ -81,98 +69,46 @@ class ContributionIntegrationTest {
         softly.assertThat(response).isEqualTo("The request has been processed successfully");
     }
 
-    /**
-     * @param updatedIds              Returned from maat-api by TestDataClient.updateConcorContributionStatus(...)
-     * @param activeIds               Returned from maat-api by ContributionClient.getContributions("ACTIVE")
-     * @param sentIds                 Sent to the DRC by DrcClient.sendContributionUpdate(...)
-     * @param xmlCcIds                Sent to maat-api by ContributionClient.updateContribution(...)
-     * @param recordsSent              "    "    "
-     * @param xmlContent               "    "    "
-     * @param xmlFileName              "    "    "
-     * @param xmlFileResult           Returned from maat-api by ContributionClient.updateContribution(...)
-     * @param concurContributions     Returned from maat-api by TestDataClient.getContribution(...)
-     * @param contributionFileContent Returned from maat-api by ContributionClient.findContributionFiles(...)
-     */
-    @Builder(setterPrefix = "with")
-    record ContributionProcess(@Singular List<Integer> updatedIds,
-                               @Singular Set<Integer> activeIds,
-                               @Singular Set<Integer> sentIds,
-                               @Singular Set<Integer> xmlCcIds,
-                               int recordsSent,
-                               String xmlContent,
-                               String xmlFileName,
-                               Boolean xmlFileResult,
-                               @Singular List<ConcorContributionResponseDTO> concurContributions,
-                               String contributionFileContent) {
-        public static class ContributionProcessBuilder { // Add a method to the Lombok-generated builder:
-            public String xmlFileName() {
-                return xmlFileName;
-            }
-        }
-    }
-
     @Test
     void testPositiveActiveContributionProcess() {
-        final var processing = ContributionProcess.builder();
-
-        doAnswer(invocation -> {
-            // Because ContributionClient is a proxied interface, cannot just call `invocation.callRealMethod()` here.
-            // https://github.com/spring-projects/spring-boot/issues/36653
-            @SuppressWarnings("unchecked") var result = (List<ConcurContribEntry>) mockingDetails(contributionClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation);
-            processing.withActiveIds(result.stream().map(ConcurContribEntry::getConcorContributionId).collect(Collectors.toSet()));
-            return result;
-        }).when(contributionClientSpy).getContributions("ACTIVE");
-
-        doAnswer(invocation -> {
-            processing.withSentId(((SendContributionFileDataToDrcRequest) invocation.getArgument(0)).getContributionId());
-            return Boolean.TRUE;
-        }).when(drcClientSpy).sendContributionUpdate(any());
-
-        doAnswer(invocation -> {
-            var data = (ContributionUpdateRequest) invocation.getArgument(0);
-            processing.withXmlCcIds(data.getConcorContributionIds().stream().map(Integer::valueOf).collect(Collectors.toSet()));
-            processing.withRecordsSent(data.getRecordsSent());
-            processing.withXmlContent(data.getXmlContent());
-            processing.withXmlFileName(data.getXmlFileName());
-            Boolean result = (Boolean) mockingDetails(contributionClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation);
-            processing.withXmlFileResult(result);
-            return result;
-        }).when(contributionClientSpy).updateContributions(any());
+        final var watching = spyFactory.newContributionProcessSpyBuilder();
+        watching.instrumentGetContributionsActive();
+        watching.instrumentStubbedSendContributionUpdate(Boolean.TRUE);
+        watching.instrumentUpdateContributions();
 
         // Create at least 3 ACTIVE concor_contribution rows for this test to be meaningful:
-        var updatedIds = testDataClient.updateConcorContributionStatus(UpdateConcorContributionStatusRequest.builder()
-                .status(ConcorContributionStatus.ACTIVE).recordCount(3).build());
-        processing.withUpdatedIds(updatedIds);
+        final var updatedIds = updateConcorContributionStatus(ConcorContributionStatus.ACTIVE, 3);
+        watching.updatedIds(updatedIds);
 
         // Call the processDailyFiles() method under test (date range in case executing near to midnight)
-        var startDate = LocalDate.now();
+        final var startDate = LocalDate.now();
         contributionService.processDailyFiles();
-        var endDate = LocalDate.now();
+        final var endDate = LocalDate.now();
 
-        // Fetch a couple of items of information from the maat-api to use during validation:
-        updatedIds.forEach(id -> processing.withConcurContribution(testDataClient.getConcorContribution(id)));
-        contributionClientSpy.findContributionFiles(startDate, endDate).stream() // retrieve the contribution_file row's content
-                .filter(content -> content.contains("<filename>" + processing.xmlFileName() + "</filename>"))
-                .findFirst().ifPresentOrElse(processing::withContributionFileContent,
-                        () -> softly.fail("no contribution_file named `" + processing.xmlFileName() + "` was found"));
-        var processed = processing.build(); // it's solely validation from now on
+        // Fetch some items of information from the maat-api to use during validation:
+        updatedIds.forEach(id -> watching.concorContribution(testDataClient.getConcorContribution(id)));
+        contributionClient.findContributionFiles(startDate, endDate).stream() // retrieve the contribution_file row's content
+                .filter(content -> content.contains("<filename>" + watching.getXmlFileName() + "</filename>"))
+                .findFirst().ifPresentOrElse(watching::contributionFileContent,
+                        () -> softly.fail("no contribution_file named `" + watching.getXmlFileName() + "` was found"));
+        final var watched = watching.build(); // it's solely validation from now on
 
-        softly.assertThat(processed.updatedIds()).hasSize(3);
-        softly.assertThat(processed.activeIds()).containsAll(processed.updatedIds());
-        softly.assertThat(processed.sentIds()).containsAll(processed.updatedIds());
+        softly.assertThat(watched.getUpdatedIds()).hasSize(3);
+        softly.assertThat(watched.getActiveIds()).containsAll(watched.getUpdatedIds());
+        softly.assertThat(watched.getSentIds()).containsAll(watched.getUpdatedIds());
 
-        softly.assertThat(processed.recordsSent()).isGreaterThanOrEqualTo(3);
-        softly.assertThat(processed.xmlCcIds()).containsAll(processed.updatedIds());
-        processed.concurContributions().forEach(concorContribution ->
-                softly.assertThat(processed.xmlContent()).contains("<maat_id>" + concorContribution.getRepId() + "</maat_id>"));
-        softly.assertThat(processed.xmlFileName()).isNotBlank();
-        softly.assertThat(processed.xmlFileResult()).isEqualTo(Boolean.TRUE);
+        softly.assertThat(watched.getRecordsSent()).isGreaterThanOrEqualTo(3);
+        softly.assertThat(watched.getXmlCcIds()).containsAll(watched.getUpdatedIds());
+        watched.getConcorContributions().forEach(concorContribution ->
+                softly.assertThat(watched.getXmlContent()).contains("<maat_id>" + concorContribution.getRepId() + "</maat_id>"));
+        softly.assertThat(watched.getXmlFileName()).isNotBlank();
+        softly.assertThat(watched.getXmlFileResult()).isEqualTo(Boolean.TRUE);
 
-        checkConcorContributionsAreSent(processed.concurContributions(), startDate, endDate);
+        checkConcorContributionsAreSent(watched.getConcorContributions(), startDate, endDate);
 
-        checkContributionFileIsCreated(processed.contributionFileContent(), startDate, endDate);
-        processed.concurContributions().forEach(concorContribution ->
-                softly.assertThat(processed.contributionFileContent()).contains("<maat_id>" + concorContribution.getRepId() + "</maat_id>"));
+        checkContributionFileIsCreated(watched.getContributionFileContent(), startDate, endDate);
+        watched.getConcorContributions().forEach(concorContribution ->
+                softly.assertThat(watched.getContributionFileContent()).contains("<maat_id>" + concorContribution.getRepId() + "</maat_id>"));
     }
 
     private void checkConcorContributionsAreSent(final List<ConcorContributionResponseDTO> concorContributions, final LocalDate startDate, final LocalDate endDate) {
@@ -197,5 +133,13 @@ class ContributionIntegrationTest {
         } else {
             softly.fail("contribution_file does not contain a <recordCount> element");
         }
+    }
+
+    private List<Integer> updateConcorContributionStatus(final ConcorContributionStatus status, final int recordCount) {
+        UpdateConcorContributionStatusRequest dataRequest = UpdateConcorContributionStatusRequest.builder()
+                .status(status)
+                .recordCount(recordCount)
+                .build();
+        return testDataClient.updateConcorContributionStatus(dataRequest);
     }
 }
