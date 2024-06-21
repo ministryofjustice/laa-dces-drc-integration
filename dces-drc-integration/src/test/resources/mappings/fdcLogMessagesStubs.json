@@ -18,7 +18,7 @@
         "headers": {
           "Content-Type": "application/json"
         },
-        "jsonBody": true
+        "jsonBody": 1111
       }
     },
     {
@@ -35,11 +35,14 @@
         ]
       },
       "response": {
-        "status": 200,
+        "status": 400,
         "headers": {
           "Content-Type": "application/json"
         },
-        "jsonBody": false
+        "jsonBody": {
+          "code": "BAD_REQUEST",
+          "message": "Some message"
+        }
       }
     }
   ]

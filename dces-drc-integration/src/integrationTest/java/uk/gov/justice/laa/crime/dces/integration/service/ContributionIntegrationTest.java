@@ -48,7 +48,7 @@ class ContributionIntegrationTest {
     }
 
     @Test
-    void testProcessContributionUpdateWhenReturnedFalse() {
+    void testProcessContributionUpdateWhenNotFound() {
         String errorText = "The request has failed to process";
         UpdateLogContributionRequest dataRequest = UpdateLogContributionRequest.builder()
                 .concorId(9)
@@ -59,7 +59,7 @@ class ContributionIntegrationTest {
     }
 
     @Test
-    void testProcessContributionUpdateWhenReturnedTrue() {
+    void testProcessContributionUpdateWhenFound() {
         String errorText = "Error Text updated successfully.";
         UpdateLogContributionRequest dataRequest = UpdateLogContributionRequest.builder()
                 .concorId(47959912)
@@ -102,20 +102,21 @@ class ContributionIntegrationTest {
         watched.getConcorContributions().forEach(concorContribution ->
                 softly.assertThat(watched.getXmlContent()).contains("<maat_id>" + concorContribution.getRepId() + "</maat_id>"));
         softly.assertThat(watched.getXmlFileName()).isNotBlank();
-        softly.assertThat(watched.getXmlFileResult()).isEqualTo(Boolean.TRUE);
+        softly.assertThat(watched.getXmlFileResult()).isNotNull();
+        final int contributionFileId = watched.getXmlFileResult();
 
-        checkConcorContributionsAreSent(watched.getConcorContributions(), startDate, endDate);
+        checkConcorContributionsAreSent(watched.getConcorContributions(), startDate, endDate, contributionFileId);
 
         checkContributionFileIsCreated(watched.getContributionFileContent(), startDate, endDate);
         watched.getConcorContributions().forEach(concorContribution ->
                 softly.assertThat(watched.getContributionFileContent()).contains("<maat_id>" + concorContribution.getRepId() + "</maat_id>"));
     }
 
-    private void checkConcorContributionsAreSent(final List<ConcorContributionResponseDTO> concorContributions, final LocalDate startDate, final LocalDate endDate) {
+    private void checkConcorContributionsAreSent(final List<ConcorContributionResponseDTO> concorContributions, final LocalDate startDate, final LocalDate endDate, final int contributionFileId) {
         concorContributions.forEach(concorContribution -> {
             softly.assertThat(concorContribution.getStatus()).isEqualTo(ConcorContributionStatus.SENT);
-            softly.assertThat(concorContribution.getContribFileId()).isNotNull();
-            softly.assertThat(concorContribution.getUserModified()).isEqualTo("TOGDATA"); // actually we should be checking for "DCES"
+            softly.assertThat(concorContribution.getContribFileId()).isEqualTo(contributionFileId);
+            softly.assertThat(concorContribution.getUserModified()).isEqualTo("DCES"); // actually we should be checking for "DCES"
             softly.assertThat(concorContribution.getDateModified()).isBetween(startDate, endDate);
         });
     }

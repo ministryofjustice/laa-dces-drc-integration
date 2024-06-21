@@ -5,15 +5,17 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.reactive.function.client.WebClientException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
+import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionEntry;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsResponse;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcGlobalUpdateResponse;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcUpdateRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.SendFdcFileDataToDrcRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 
@@ -32,10 +34,11 @@ public class FdcService implements FileService{
     private final DrcClient drcClient;
 
     public String processFdcUpdate(UpdateLogFdcRequest updateLogFdcRequest) {
-        Boolean response = contributionClient.sendLogFdcProcessed(updateLogFdcRequest);
-        if (response != null && response) {
+        try {
+            contributionClient.sendLogFdcProcessed(updateLogFdcRequest);
             return "The request has been processed successfully";
-        } else {
+        } catch (MaatApiClientException | WebClientException | HttpServerErrorException e) {
+            log.info("processFdcUpdate failed", e);
             return "The request has failed to process";
         }
     }
@@ -79,7 +82,7 @@ public class FdcService implements FileService{
     private boolean updateFdcAndCreateFile(List<Fdc> successfulFdcs, Map<String,String> failedFdcs){
         // if >1 contribution was sent
         // finish off with updates and create the file.
-        Boolean fileSentSuccess = false;
+        Integer contributionFileId = null;
         if ( Objects.nonNull(successfulFdcs) && !successfulFdcs.isEmpty() ) {
             // Construct other parameters for the "ATOMIC UPDATE" call.
             LocalDateTime dateGenerated = LocalDateTime.now();
@@ -97,15 +100,15 @@ public class FdcService implements FileService{
             }
             // Setup and make MAAT API "ATOMIC UPDATE" REST call below:
             try {
-                fileSentSuccess = fdcUpdateRequest(xmlFile, successfulIdList, successfulIdList.size(), fileName, ackXml);
-            } catch (HttpServerErrorException e) {
+                contributionFileId = fdcUpdateRequest(xmlFile, successfulIdList, successfulIdList.size(), fileName, ackXml);
+            } catch (MaatApiClientException | WebClientException| HttpServerErrorException e){
                 // TODO: If failed, we want to handle this. As it will mean the whole process failed for current day.
                 log.error("Fdc file failed to send! Investigation needed.");
                 throw e;
                 // TODO: Need to figure how we're going to log a failed call to the ATOMIC UPDATE.
             }
         }
-        return fileSentSuccess;
+        return contributionFileId != null;
     }
 
     void logNumberDiscepancies(int globalUpdateCount, int getFdcCount, int successfullySentFdcCount){
@@ -171,7 +174,7 @@ public class FdcService implements FileService{
         return 0;
     }
 
-    private Boolean fdcUpdateRequest(String xmlContent, List<String> fdcIdList, int numberOfRecords, String fileName, String fileAckXML) throws HttpServerErrorException {
+    private Integer fdcUpdateRequest(String xmlContent, List<String> fdcIdList, int numberOfRecords, String fileName, String fileAckXML) throws HttpServerErrorException {
         FdcUpdateRequest request = FdcUpdateRequest.builder()
                 .recordsSent(numberOfRecords)
                 .xmlContent(xmlContent)
