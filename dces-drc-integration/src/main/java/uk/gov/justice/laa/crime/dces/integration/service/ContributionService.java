@@ -87,7 +87,7 @@ public class ContributionService implements FileService {
     private boolean updateContributionsAndCreateFile(Map<String, CONTRIBUTIONS> successfulContributions, Map<String,String> failedContributions){
         // if >1 contribution was sent
         // create xml file
-        Integer contributionFileId = 0;
+        Integer contributionFileId = null;
         if ( Objects.nonNull(successfulContributions) && !successfulContributions.isEmpty() ) {
             // Setup and make MAAT API "ATOMIC UPDATE" REST call below:
             LocalDateTime dateGenerated = LocalDateTime.now();
