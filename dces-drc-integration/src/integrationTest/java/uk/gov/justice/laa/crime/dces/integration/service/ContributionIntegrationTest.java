@@ -69,8 +69,9 @@ class ContributionIntegrationTest {
         softly.assertThat(response).isEqualTo("The request has been processed successfully");
     }
 
+    /** See DCES-349 for test specification. */
     @Test
-    void testPositiveActiveContributionProcess() {
+    void testActiveContributionIsProcessed() {
         final var watching = spyFactory.newContributionProcessSpyBuilder();
         watching.instrumentGetContributionsActive();
         watching.instrumentStubbedSendContributionUpdate(Boolean.TRUE);
@@ -110,6 +111,45 @@ class ContributionIntegrationTest {
         checkContributionFileIsCreated(watched.getContributionFileContent(), startDate, endDate);
         watched.getConcorContributions().forEach(concorContribution ->
                 softly.assertThat(watched.getContributionFileContent()).contains("<maat_id>" + concorContribution.getRepId() + "</maat_id>"));
+    }
+
+    /** See DCES-361 for test specification. */
+    @Test
+    void testReplacedContributionIsNotProcessed() {
+        final var watching = spyFactory.newContributionProcessSpyBuilder();
+        watching.instrumentGetContributionsActive();
+        watching.instrumentStubbedSendContributionUpdate(Boolean.TRUE);
+        watching.instrumentUpdateContributions();
+
+        // Create at least 1 REPLACED concor_contribution row for this test to be meaningful:
+        final var updatedIds = updateConcorContributionStatus(ConcorContributionStatus.REPLACED, 1);
+        watching.updatedIds(updatedIds);
+
+        // Call the processDailyFiles() method under test
+        contributionService.processDailyFiles();
+
+        // Fetch some items of information from the maat-api to use during validation:
+        updatedIds.forEach(id -> watching.concorContribution(testDataClient.getConcorContribution(id)));
+        final var watched = watching.build(); // it's solely validation from now on
+
+        softly.assertThat(watched.getUpdatedIds()).hasSize(1);
+        softly.assertThat(watched.getActiveIds()).doesNotContainAnyElementsOf(watched.getUpdatedIds());
+        softly.assertThat(watched.getSentIds()).doesNotContainAnyElementsOf(watched.getUpdatedIds());
+
+        if (!watched.getActiveIds().isEmpty()) { // are there are any other ACTIVE records or not?
+            softly.assertThat(watched.getRecordsSent()).isPositive();
+            softly.assertThat(watched.getXmlCcIds()).doesNotContainAnyElementsOf(watched.getUpdatedIds());
+            softly.assertThat(watched.getXmlFileName()).isNotBlank();
+            softly.assertThat(watched.getXmlFileResult()).isNotNull();
+        } else {
+            softly.assertThat(watched.getRecordsSent()).isZero();
+            softly.assertThat(watched.getXmlCcIds()).isNull();
+            softly.assertThat(watched.getXmlFileName()).isNull();
+            softly.assertThat(watched.getXmlFileResult()).isNull();
+        }
+
+        watched.getConcorContributions().forEach(concorContribution ->
+                softly.assertThat(concorContribution.getStatus()).isEqualTo(ConcorContributionStatus.REPLACED));
     }
 
     private void checkConcorContributionsAreSent(final List<ConcorContributionResponseDTO> concorContributions, final LocalDate startDate, final LocalDate endDate, final int contributionFileId) {
