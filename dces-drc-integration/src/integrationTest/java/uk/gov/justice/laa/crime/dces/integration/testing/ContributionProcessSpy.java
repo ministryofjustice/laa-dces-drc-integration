@@ -31,7 +31,7 @@ public class ContributionProcessSpy {
     private final int recordsSent;                //  "    "    "
     private final String xmlContent;              //  "    "    "
     private final String xmlFileName;             //  "    "    "
-    private final Boolean xmlFileResult;          // Returned from maat-api by ContributionClient.updateContribution(...)
+    private final Integer xmlFileResult;          // Returned from maat-api by ContributionClient.updateContribution(...)
     @Singular
     private final List<ConcorContributionResponseDTO> concorContributions; // Returned from maat-api by TestDataClient.getContribution(...)
     private final String contributionFileContent; // Returned from maat-api by ContributionClient.findContributionFiles(...)
@@ -82,7 +82,7 @@ public class ContributionProcessSpy {
                 recordsSent(data.getRecordsSent());
                 xmlContent(data.getXmlContent());
                 xmlFileName(data.getXmlFileName());
-                final var result = (Boolean) mockingDetails(contributionClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation);
+                final var result = (Integer) mockingDetails(contributionClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation);
                 xmlFileResult(result);
                 return result;
             }).when(contributionClientSpy).updateContributions(any());

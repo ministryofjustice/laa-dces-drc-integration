@@ -51,7 +51,7 @@ public class MaatApiWebClientFactory {
                 HttpClient.create(provider)
                     .resolver(DefaultAddressResolverGroup.INSTANCE)
                     .compress(true)
-                    .responseTimeout(Duration.ofSeconds(30))
+                    .responseTimeout(Duration.ofSeconds(90))
                 )
             )
             .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)

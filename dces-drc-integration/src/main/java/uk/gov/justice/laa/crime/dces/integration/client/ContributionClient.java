@@ -30,7 +30,7 @@ public interface ContributionClient extends MaatApiClient {
 
     @PostExchange("/create-contribution-file")
     @Valid
-    Boolean updateContributions(@RequestBody ContributionUpdateRequest contributionUpdateRequest);
+    Integer updateContributions(@RequestBody ContributionUpdateRequest contributionUpdateRequest);
 
     @PostExchange("/prepare-fdc-contributions-files")
     FdcGlobalUpdateResponse executeFdcGlobalUpdate();
@@ -40,15 +40,15 @@ public interface ContributionClient extends MaatApiClient {
 
     @PostExchange("/create-fdc-file")
     @Valid
-    Boolean updateFdcs(@RequestBody FdcUpdateRequest contributionPutRequest);
+    Integer updateFdcs(@RequestBody FdcUpdateRequest contributionPutRequest);
 
     @PostExchange("/log-contribution-response")
     @Valid
-    Boolean sendLogContributionProcessed(@RequestBody UpdateLogContributionRequest updateLogContributionRequest);
+    Integer sendLogContributionProcessed(@RequestBody UpdateLogContributionRequest updateLogContributionRequest);
 
     @PostExchange("/log-fdc-response")
     @Valid
-    Boolean sendLogFdcProcessed(@RequestBody UpdateLogFdcRequest updateLogFdcRequest);
+    Integer sendLogFdcProcessed(@RequestBody UpdateLogFdcRequest updateLogFdcRequest);
 
     /** For testing only? */
     @GetExchange("/contributions")
