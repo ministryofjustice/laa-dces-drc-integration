@@ -1,15 +1,19 @@
 package uk.gov.justice.laa.crime.dces.integration.service;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static uk.gov.justice.laa.crime.dces.integration.model.external.FdcTestType.NEGATIVE_CCO;
-import static uk.gov.justice.laa.crime.dces.integration.model.external.FdcTestType.NEGATIVE_FDC_ITEM;
-import static uk.gov.justice.laa.crime.dces.integration.model.external.FdcTestType.NEGATIVE_FDC_STATUS;
-import static uk.gov.justice.laa.crime.dces.integration.model.external.FdcTestType.NEGATIVE_SOD;
+import static uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType.NEGATIVE_CCO;
+import static uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType.NEGATIVE_FDC_ITEM;
+import static uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType.NEGATIVE_FDC_STATUS;
+import static uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType.NEGATIVE_PREVIOUS_FDC;
+import static uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType.NEGATIVE_SOD;
+import static uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType.POSITIVE;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
@@ -30,6 +34,8 @@ import uk.gov.justice.laa.crime.dces.integration.client.TestDataClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.MaatApiClientFactory;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.MaatApiWebClientFactory;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.config.ServicesConfiguration;
+import uk.gov.justice.laa.crime.dces.integration.model.local.FdcAccelerationType;
+
 @Slf4j
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -62,88 +68,209 @@ class FdcTestDataCreatorServiceTest {
   }
 
   @Test
-  void test_whenCreateMinimumDelayAppliesTestDataNegativeSod_thenShouldUpdateSod()
+  void test_whenCreateMDATestDataNegativeSod_thenShouldUpdateSod()
       throws InterruptedException {
     fdcTestDataCreatorService.createMinimumDelayAppliesTestData(NEGATIVE_SOD, 3);
-    checkRequest("GET", "/debt-collection-enforcement/test-data/rep-orders-eligible-for-min-delay-applies-fdc?delayPeriod=5&dateReceived=01-JAN-2015&numRecords=3");
-    checkRequest("PUT", "/debt-collection-enforcement/test-data/create-fdc-contribution?repOrderId=1");
-    checkRequest("PUT", "/debt-collection-enforcement/test-data/insert-fdc-items?fdcId=1001");
-    checkRequest("PUT", "/debt-collection-enforcement/test-data/update-rep-order-sentence-order-date?repOrderId=1&monthsAfterSysDate=3");
-    checkRequest("PUT", "/debt-collection-enforcement/test-data/create-fdc-contribution?repOrderId=2");
-    checkRequest("PUT", "/debt-collection-enforcement/test-data/insert-fdc-items?fdcId=2001");
-    checkRequest("PUT", "/debt-collection-enforcement/test-data/update-rep-order-sentence-order-date?repOrderId=2&monthsAfterSysDate=3");
-    checkRequest("PUT", "/debt-collection-enforcement/test-data/create-fdc-contribution?repOrderId=3");
-    checkRequest("PUT", "/debt-collection-enforcement/test-data/insert-fdc-items?fdcId=3001");
-    checkRequest("PUT", "/debt-collection-enforcement/test-data/update-rep-order-sentence-order-date?repOrderId=3&monthsAfterSysDate=3");
+    checkRequest("GET", "/debt-collection-enforcement/rep-orders-eligible-for-min-delay-applies-fdc?delayPeriod=5&dateReceived=01-JAN-2015&numRecords=3");
+    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
+        "{\"repOrderId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
+
+    checkRequest("PUT", "/debt-collection-enforcement/insert-fdc-items?fdcId=1001&fdcItemType=&adjustmentReason=&paidAsClaimed=&latestCostIndicator=&userCreated=DCES");
+    checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(3)+"\"}");
+    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
+        "{\"repOrderId\":2,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
+    checkRequest("PUT", "/debt-collection-enforcement/insert-fdc-items?fdcId=1001&fdcItemType=&adjustmentReason=&paidAsClaimed=&latestCostIndicator=&userCreated=DCES");
+    checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":2,\"sentenceOrderDate\":\""+getDateAfterMonths(3)+"\"}");
+    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
+        "{\"repOrderId\":3,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
+    checkRequest("PUT", "/debt-collection-enforcement/insert-fdc-items?fdcId=1001&fdcItemType=&adjustmentReason=&paidAsClaimed=&latestCostIndicator=&userCreated=DCES");
+    checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":3,\"sentenceOrderDate\":\""+getDateAfterMonths(3)+"\"}");
   }
 
   @Test
-  void test_whenCreateMinimumDelayAppliesTestDataNegativeCco_thenShouldDeleteCco()
+  void test_whenCreateMDATestDataNegativeCco_thenShouldDeleteCco()
       throws InterruptedException {
     fdcTestDataCreatorService.createMinimumDelayAppliesTestData(NEGATIVE_CCO, 3);
-    checkRequest("GET", "/debt-collection-enforcement/test-data/rep-orders-eligible-for-min-delay-applies-fdc?delayPeriod=5&dateReceived=01-JAN-2015&numRecords=3");
-    checkRequest("PUT", "/debt-collection-enforcement/test-data/create-fdc-contribution?repOrderId=1");
-    checkRequest("PUT", "/debt-collection-enforcement/test-data/insert-fdc-items?fdcId=1001");
-    checkRequest("DELETE", "/debt-collection-enforcement/test-data/delete-crown-court-outcomes?repOrderId=1");
-    checkRequest("PUT", "/debt-collection-enforcement/test-data/create-fdc-contribution?repOrderId=2");
-    checkRequest("PUT", "/debt-collection-enforcement/test-data/insert-fdc-items?fdcId=2001");
-    checkRequest("DELETE", "/debt-collection-enforcement/test-data/delete-crown-court-outcomes?repOrderId=2");
-    checkRequest("PUT", "/debt-collection-enforcement/test-data/create-fdc-contribution?repOrderId=3");
-    checkRequest("PUT", "/debt-collection-enforcement/test-data/insert-fdc-items?fdcId=3001");
-    checkRequest("DELETE", "/debt-collection-enforcement/test-data/delete-crown-court-outcomes?repOrderId=3");
+    checkRequest("GET", "/debt-collection-enforcement/rep-orders-eligible-for-min-delay-applies-fdc?delayPeriod=5&dateReceived=01-JAN-2015&numRecords=3");
+    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
+        "{\"repOrderId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
+    checkRequest("PUT", "/debt-collection-enforcement/insert-fdc-items?fdcId=1001&fdcItemType=&adjustmentReason=&paidAsClaimed=&latestCostIndicator=&userCreated=DCES");
+    checkRequest("DELETE", "/debt-collection-enforcement/delete-crown-court-outcomes?repOrderId=1");
+    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
+        "{\"repOrderId\":2,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
+    checkRequest("PUT", "/debt-collection-enforcement/insert-fdc-items?fdcId=1001&fdcItemType=&adjustmentReason=&paidAsClaimed=&latestCostIndicator=&userCreated=DCES");
+    checkRequest("DELETE", "/debt-collection-enforcement/delete-crown-court-outcomes?repOrderId=2");
+    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
+        "{\"repOrderId\":3,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
+    checkRequest("PUT", "/debt-collection-enforcement/insert-fdc-items?fdcId=1001&fdcItemType=&adjustmentReason=&paidAsClaimed=&latestCostIndicator=&userCreated=DCES");
+    checkRequest("DELETE", "/debt-collection-enforcement/delete-crown-court-outcomes?repOrderId=3");
   }
 
   @Test
-  void test_whenCreateMinimumDelayAppliesTestDataNegativeFdcStatus_thenShouldUpdateFdcContributionsToSent()
+  void test_whenCreateMDATestDataNegativeFdcStatus_thenShouldCreateFdcContributionsAsSent()
       throws InterruptedException {
     fdcTestDataCreatorService.createMinimumDelayAppliesTestData(NEGATIVE_FDC_STATUS, 1);
-    checkRequest("GET", "/debt-collection-enforcement/test-data/rep-orders-eligible-for-min-delay-applies-fdc?delayPeriod=5&dateReceived=01-JAN-2015&numRecords=1");
-    checkRequest("PUT", "/debt-collection-enforcement/test-data/create-fdc-contribution?repOrderId=1");
-    checkRequest("PUT", "/debt-collection-enforcement/test-data/insert-fdc-items?fdcId=1001");
-    checkRequest("PUT", "/debt-collection-enforcement/test-data/update-fdc-contribution-to-sent?repOrderId=1&previousStatus=&newStatus=SENT");
+    checkRequest("GET", "/debt-collection-enforcement/rep-orders-eligible-for-min-delay-applies-fdc?delayPeriod=5&dateReceived=01-JAN-2015&numRecords=1");
+    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
+        "{\"repOrderId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"SENT\"}");
+    checkRequest("PUT", "/debt-collection-enforcement/insert-fdc-items?fdcId=1001&fdcItemType=&adjustmentReason=&paidAsClaimed=&latestCostIndicator=&userCreated=DCES");
   }
 
   @Test
-  void test_whenCreateMinimumDelayAppliesTestDataNegativeFdcItem_thenShouldNotCreateFdcItems()
+  void test_whenCreateMDATestDataNegativeFdcItem_thenShouldNotCreateFdcItems()
       throws InterruptedException {
     fdcTestDataCreatorService.createMinimumDelayAppliesTestData(NEGATIVE_FDC_ITEM, 1);
-    checkRequest("GET", "/debt-collection-enforcement/test-data/rep-orders-eligible-for-min-delay-applies-fdc?delayPeriod=5&dateReceived=01-JAN-2015&numRecords=1");
-    checkRequest("PUT", "/debt-collection-enforcement/test-data/create-fdc-contribution?repOrderId=1");
+    checkRequest("GET", "/debt-collection-enforcement/rep-orders-eligible-for-min-delay-applies-fdc?delayPeriod=5&dateReceived=01-JAN-2015&numRecords=1");
+    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
+        "{\"repOrderId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
+  }
+
+  @Test
+  void test_whenCreateMDNATestDataPositiveAcceleration_thenShouldCreateContributionAndFdcItem()
+      throws InterruptedException {
+    fdcTestDataCreatorService.createMinimumDelayNotAppliesTestData(FdcAccelerationType.POSITIVE,  NEGATIVE_PREVIOUS_FDC, 1);
+    checkRequest("GET", "/debt-collection-enforcement/rep-orders-eligible-for-min-delay-not-applies-fdc?delayPeriod=-3&dateReceived=01-JAN-2015&numRecords=1");
+    checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-3)+"\"}");
+    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
+        "{\"repOrderId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
+    checkRequest("PUT", "/debt-collection-enforcement/insert-fdc-items?fdcId=1001&fdcItemType=&adjustmentReason=&paidAsClaimed=&latestCostIndicator=&userCreated=DCES");
+  }
+
+  @Test
+  void test_whenCreateMDNATestDataPositiveAccelerationNegSod_thenShouldDoSevenMonths()
+      throws InterruptedException {
+    fdcTestDataCreatorService.createMinimumDelayNotAppliesTestData(FdcAccelerationType.POSITIVE,  NEGATIVE_SOD, 1);
+    checkRequest("GET", "/debt-collection-enforcement/rep-orders-eligible-for-min-delay-not-applies-fdc?delayPeriod=-3&dateReceived=01-JAN-2015&numRecords=1");
+    checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-3)+"\"}");
+    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
+        "{\"repOrderId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
+    checkRequest("PUT", "/debt-collection-enforcement/insert-fdc-items?fdcId=1001&fdcItemType=&adjustmentReason=&paidAsClaimed=&latestCostIndicator=&userCreated=DCES");
+    checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-7)+"\"}");
+  }
+
+  @Test
+  void test_whenCreateMDNATestDataPositiveAccelerationNegSco_thenShouldDeleteCco()
+      throws InterruptedException {
+    fdcTestDataCreatorService.createMinimumDelayNotAppliesTestData(FdcAccelerationType.POSITIVE,  NEGATIVE_CCO, 1);
+    checkRequest("GET", "/debt-collection-enforcement/rep-orders-eligible-for-min-delay-not-applies-fdc?delayPeriod=-3&dateReceived=01-JAN-2015&numRecords=1");
+    checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-3)+"\"}");
+    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
+        "{\"repOrderId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
+    checkRequest("PUT", "/debt-collection-enforcement/insert-fdc-items?fdcId=1001&fdcItemType=&adjustmentReason=&paidAsClaimed=&latestCostIndicator=&userCreated=DCES");
+    checkRequest("DELETE", "/debt-collection-enforcement/delete-crown-court-outcomes?repOrderId=1");
+  }
+
+  @Test
+  void test_whenCreateMDNATestDataPositiveAccelerationNegFdcStatus_thenShouldCreateFdcContributionsAsSent()
+      throws InterruptedException {
+    fdcTestDataCreatorService.createMinimumDelayNotAppliesTestData(FdcAccelerationType.POSITIVE,  NEGATIVE_FDC_STATUS, 1);
+    checkRequest("GET", "/debt-collection-enforcement/rep-orders-eligible-for-min-delay-not-applies-fdc?delayPeriod=-3&dateReceived=01-JAN-2015&numRecords=1");
+    checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-3)+"\"}");
+    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
+        "{\"repOrderId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"SENT\"}");
+    checkRequest("PUT", "/debt-collection-enforcement/insert-fdc-items?fdcId=1001&fdcItemType=&adjustmentReason=&paidAsClaimed=&latestCostIndicator=&userCreated=DCES");
+  }
+
+  @Test
+  void test_whenCreateMDNATestDataPositiveAccelerationNegFdcItem_thenShouldNotCreateFdcItem()
+      throws InterruptedException {
+    fdcTestDataCreatorService.createMinimumDelayNotAppliesTestData(FdcAccelerationType.POSITIVE,  NEGATIVE_FDC_ITEM, 1);
+    checkRequest("GET", "/debt-collection-enforcement/rep-orders-eligible-for-min-delay-not-applies-fdc?delayPeriod=-3&dateReceived=01-JAN-2015&numRecords=1");
+    checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-3)+"\"}");
+    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
+        "{\"repOrderId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
+  }
+
+  @Test
+  void test_whenCreateMDNATestDataNegativeAcceleration_thenShouldCreateTwoFdcItems()
+      throws InterruptedException {
+    fdcTestDataCreatorService.createMinimumDelayNotAppliesTestData(FdcAccelerationType.NEGATIVE,  POSITIVE, 1);
+    checkRequest("GET", "/debt-collection-enforcement/rep-orders-eligible-for-min-delay-not-applies-fdc?delayPeriod=-3&dateReceived=01-JAN-2015&numRecords=1");
+    checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-3)+"\"}");
+    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
+        "{\"repOrderId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
+    checkRequest("PUT", "/debt-collection-enforcement/insert-fdc-items?fdcId=1001&fdcItemType=LGFS&adjustmentReason=&paidAsClaimed=Y&latestCostIndicator=Current&userCreated=DCES");
+    checkRequest("PUT", "/debt-collection-enforcement/insert-fdc-items?fdcId=1001&fdcItemType=AGFS&adjustmentReason=Pre%20AGFS%20Transfer&paidAsClaimed=N&latestCostIndicator=Current&userCreated=DCES");
+  }
+
+  @Test
+  void test_whenCreateMDNATestDataPrevFdc_thenShouldCreateTwoContributions()
+      throws InterruptedException {
+    fdcTestDataCreatorService.createMinimumDelayNotAppliesTestData(FdcAccelerationType.PREVIOUS_FDC,  POSITIVE, 1);
+    checkRequest("GET", "/debt-collection-enforcement/rep-orders-eligible-for-min-delay-not-applies-fdc?delayPeriod=-3&dateReceived=01-JAN-2015&numRecords=1");
+    checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-3)+"\"}");
+    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
+        "{\"repOrderId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
+    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
+        "{\"repOrderId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"SENT\"}");
+    checkRequest("PUT", "/debt-collection-enforcement/insert-fdc-items?fdcId=1001&fdcItemType=&adjustmentReason=&paidAsClaimed=&latestCostIndicator=&userCreated=DCES");
+  }
+
+  @Test
+  void test_whenCreateMDNATestDataPrevFdcNegative_thenShouldCreateTwoWaitingContributions()
+      throws InterruptedException {
+    fdcTestDataCreatorService.createMinimumDelayNotAppliesTestData(FdcAccelerationType.PREVIOUS_FDC, NEGATIVE_PREVIOUS_FDC, 1);
+    checkRequest("GET", "/debt-collection-enforcement/rep-orders-eligible-for-min-delay-not-applies-fdc?delayPeriod=-3&dateReceived=01-JAN-2015&numRecords=1");
+    checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-3)+"\"}");
+    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
+        "{\"repOrderId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
+    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
+        "{\"repOrderId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
+    checkRequest("PUT", "/debt-collection-enforcement/insert-fdc-items?fdcId=1001&fdcItemType=&adjustmentReason=&paidAsClaimed=&latestCostIndicator=&userCreated=DCES");
   }
 
   /**
    * Utility method to take the next request received by the mock web server and test it against the expected request
    * @param expectedMethod expected HTTP method type such as GET, PUT, POST or DELETE
    * @param expectedRequestPath expected full request path
-   * @throws InterruptedException
+   * @throws InterruptedException Thrown by mockWebServer.takeRequest
    */
-  private void checkRequest(String expectedMethod, String expectedRequestPath)
+  private RecordedRequest checkRequest(String expectedMethod, String expectedRequestPath)
       throws InterruptedException {
     RecordedRequest recordedRequest = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
     assertNotNull(recordedRequest);
     assertEquals(expectedMethod, recordedRequest.getMethod());
     assertEquals(expectedRequestPath, recordedRequest.getPath());
+    return recordedRequest;
+  }
+
+  /**
+   * Utility method to take the next request received by the mock web server and test it against the expected request
+   * @param expectedMethod expected HTTP method type such as GET, PUT, POST or DELETE
+   * @param expectedRequestPath expected full request path
+   * @throws InterruptedException Thrown by checkRequest
+   */
+  private void checkRequestAndBody(String expectedMethod, String expectedRequestPath, String expectedRequestBody)
+      throws InterruptedException {
+    RecordedRequest recordedRequest = checkRequest(expectedMethod, expectedRequestPath);
+    assertEquals(expectedRequestBody, recordedRequest.getBody().readUtf8());
   }
 
   /**
    * Dispatcher to generate mock success responses for different types of requests
    */
   Dispatcher dispatcher = new Dispatcher() {
+    @SneakyThrows
     @NotNull
     @Override
     public MockResponse dispatch(RecordedRequest request) {
       MockResponse mockResponse = new MockResponse().setResponseCode(HttpStatus.OK.value()).addHeader("Content-Type", "application/json");
       String requestPath = request.getPath();
-      if (requestPath.contains("/rep-orders-eligible-for-min-delay-applies-fdc")) {
-        mockResponse.setBody(getRequestedNumberOfMockRepIds(request));
-      } else if (requestPath.contains("/create-fdc-contribution")) {
-        int repOrderId = Integer.parseInt(request.getRequestUrl().queryParameter("repOrderId"));
-        mockResponse.setBody(Integer.toString(repOrderId*1000+1));
-      } else if (!(requestPath.contains("/insert-fdc-items") || //These are valid paths that don't return anything except status 200
-          requestPath.contains("/update-fdc-contribution-to-sent") ||
-          requestPath.contains("/delete-crown-court-outcomes") ||
-          requestPath.contains("/update-rep-order-sentence-order-date"))){
-        mockResponse.setResponseCode(HttpStatus.NOT_FOUND.value());
+      log.info("vvvv dispatcher request: {}", requestPath);
+      if (requestPath != null) {
+        if (requestPath.contains("/rep-orders-eligible-for-min-delay-applies-fdc")) {
+          mockResponse.setBody(getRequestedNumberOfMockRepIds(request));
+        } else if (requestPath.contains("/rep-orders-eligible-for-min-delay-not-applies-fdc")) {
+          mockResponse.setBody(getRequestedNumberOfMockRepIds(request));
+        } else if (requestPath.contains("/fdc-contribution")) {
+          mockResponse.setBody("1001");
+        } else if (!(requestPath.contains("/insert-fdc-items") ||
+            //These are valid paths that don't return anything except status 200
+            requestPath.contains("/update-fdc-contribution-to-sent") ||
+            requestPath.contains("/delete-crown-court-outcomes") ||
+            requestPath.contains("/assessment/rep-orders"))) {
+          mockResponse.setResponseCode(HttpStatus.NOT_FOUND.value());
+        }
       }
       return mockResponse;
     }
@@ -161,4 +288,16 @@ class FdcTestDataCreatorServiceTest {
         .toList()
         .toString();
   }
+
+  /**
+   *
+   * @param monthsToAdd Number of months to add to system date
+   * @return String representing the result of adding the months to current system date
+   */
+  private String getDateAfterMonths(int monthsToAdd) {
+    DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    return dateTimeFormatter.format(LocalDate.now().plusMonths(monthsToAdd));
+  }
+
+
 }
