@@ -6,7 +6,6 @@ import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.SendContributionFileDataToDrcRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionResponseDTO;
 
 import java.util.List;
 import java.util.Set;
@@ -23,7 +22,6 @@ import static org.mockito.Mockito.mockingDetails;
 @Builder
 @Getter
 public class ContributionProcessSpy {
-    private final List<Integer> updatedIds;       // Returned from maat-api by TestDataClient.updateConcorContributionStatus(...)
     private final Set<Integer> activeIds;         // Returned from maat-api by ContributionClient.getContributions("ACTIVE")
     @Singular
     private final Set<Integer> sentIds;           // Sent to the DRC by DrcClient.sendContributionUpdate(...)
@@ -32,9 +30,6 @@ public class ContributionProcessSpy {
     private final String xmlContent;              //  "    "    "
     private final String xmlFileName;             //  "    "    "
     private final Integer xmlFileResult;          // Returned from maat-api by ContributionClient.updateContribution(...)
-    @Singular
-    private final List<ConcorContributionResponseDTO> concorContributions; // Returned from maat-api by TestDataClient.getContribution(...)
-    private final String contributionFileContent; // Returned from maat-api by ContributionClient.findContributionFiles(...)
 
     private static ContributionProcessSpyBuilder builder() {
         throw new UnsupportedOperationException("Call SpyFactory.newContributionProcessSpyBuilder instead");
@@ -51,10 +46,6 @@ public class ContributionProcessSpy {
         ContributionProcessSpyBuilder(final ContributionClient contributionClientSpy, final DrcClient drcClientSpy) {
             this.contributionClientSpy = contributionClientSpy;
             this.drcClientSpy = drcClientSpy;
-        }
-
-        public String getXmlFileName() {
-            return xmlFileName;
         }
 
         public void instrumentGetContributionsActive() {
