@@ -1,6 +1,10 @@
 package uk.gov.justice.laa.crime.dces.integration.testing;
 
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Singular;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
@@ -59,7 +63,18 @@ public class ContributionProcessSpy {
             }).when(contributionClientSpy).getContributions("ACTIVE");
         }
 
-        public void instrumentStubbedSendContributionUpdate(Boolean stubbedResult) {
+        public void instrumentAndFilterGetContributionsActive(final List<Integer> activeIds) {
+            final var idSet = Set.copyOf(activeIds); // defensive copy
+            doAnswer(invocation -> {
+                @SuppressWarnings("unchecked")
+                var result = (List<ConcurContribEntry>) mockingDetails(contributionClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation);
+                result = result.stream().filter(concurContribEntry -> idSet.contains(concurContribEntry.getConcorContributionId())).toList();
+                activeIds(result.stream().map(ConcurContribEntry::getConcorContributionId).collect(Collectors.toSet()));
+                return result;
+            }).when(contributionClientSpy).getContributions("ACTIVE");
+        }
+
+        public void instrumentAndStubSendContributionUpdate(final Boolean stubbedResult) {
             doAnswer(invocation -> {
                 sentId(((SendContributionFileDataToDrcRequest) invocation.getArgument(0)).getContributionId());
                 return stubbedResult;

@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.reactive.function.client.WebClientException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
@@ -21,7 +20,11 @@ import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 
 import java.math.BigInteger;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @Service
 @AllArgsConstructor
@@ -37,7 +40,7 @@ public class FdcService implements FileService{
         try {
             contributionClient.sendLogFdcProcessed(updateLogFdcRequest);
             return "The request has been processed successfully";
-        } catch (MaatApiClientException | WebClientException | HttpServerErrorException e) {
+        } catch (MaatApiClientException | WebClientResponseException | HttpServerErrorException e) {
             log.info("processFdcUpdate failed", e);
             return "The request has failed to process";
         }
@@ -101,7 +104,7 @@ public class FdcService implements FileService{
             // Setup and make MAAT API "ATOMIC UPDATE" REST call below:
             try {
                 contributionFileId = fdcUpdateRequest(xmlFile, successfulIdList, successfulIdList.size(), fileName, ackXml);
-            } catch (MaatApiClientException | WebClientException| HttpServerErrorException e){
+            } catch (MaatApiClientException | WebClientResponseException| HttpServerErrorException e){
                 // TODO: If failed, we want to handle this. As it will mean the whole process failed for current day.
                 log.error("Fdc file failed to send! Investigation needed.");
                 throw e;
