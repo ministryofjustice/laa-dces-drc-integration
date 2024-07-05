@@ -6,12 +6,14 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.reactive.function.client.WebClientException;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
+import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.SendContributionFileDataToDrcRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
 
@@ -31,10 +33,11 @@ public class ContributionService implements FileService {
     private final DrcClient drcClient;
 
     public String processContributionUpdate(UpdateLogContributionRequest updateLogContributionRequest) {
-        Boolean response = contributionClient.sendLogContributionProcessed(updateLogContributionRequest);
-        if (response != null && response) {
+        try {
+            contributionClient.sendLogContributionProcessed(updateLogContributionRequest);
             return "The request has been processed successfully";
-        } else {
+        } catch (MaatApiClientException | WebClientException | HttpServerErrorException e) {
+            log.info("processContributionUpdate failed", e);
             return "The request has failed to process";
         }
     }
@@ -84,7 +87,7 @@ public class ContributionService implements FileService {
     private boolean updateContributionsAndCreateFile(Map<String, CONTRIBUTIONS> successfulContributions, Map<String,String> failedContributions){
         // if >1 contribution was sent
         // create xml file
-        boolean fileSentSuccess = false;
+        Integer contributionFileId = null;
         if ( Objects.nonNull(successfulContributions) && !successfulContributions.isEmpty() ) {
             // Setup and make MAAT API "ATOMIC UPDATE" REST call below:
             LocalDateTime dateGenerated = LocalDateTime.now();
@@ -99,23 +102,23 @@ public class ContributionService implements FileService {
                 log.info("Contributions failed to send: {}", failedContributions.size());
             }
             try {
-                fileSentSuccess = contributionUpdateRequest(xmlFile, successfulIdList, successfulIdList.size(),fileName,ackXml);
+                contributionFileId = contributionUpdateRequest(xmlFile, successfulIdList, successfulIdList.size(),fileName,ackXml);
             }
-            catch (HttpServerErrorException e){
+            catch (MaatApiClientException | WebClientException| HttpServerErrorException e){
                 // If failed, we want to handle this. As it will mean the whole process failed for current day.
                 log.error("Contributions file failed to send! Investigation needed. State of files will be out of sync!");
                 // TODO: Need to figure how we're going to log a failed call to the ATOMIC UPDATE.
                 throw e;
             }
         }
-        return fileSentSuccess;
+        return contributionFileId != null;
     }
 
-    private Boolean contributionUpdateRequest(String xmlContent, List<String> concurContributionIdList, int numberOfRecords, String fileName, String fileAckXML) throws HttpServerErrorException {
+    private Integer contributionUpdateRequest(String xmlContent, List<String> concorContributionIdList, int numberOfRecords, String fileName, String fileAckXML) throws HttpServerErrorException {
         ContributionUpdateRequest request = ContributionUpdateRequest.builder()
                 .recordsSent(numberOfRecords)
                 .xmlContent(xmlContent)
-                .concorContributionIds(concurContributionIdList)
+                .concorContributionIds(concorContributionIdList)
                 .xmlFileName(fileName)
                 .ackXmlContent(fileAckXML).build();
         return contributionClient.updateContributions(request);
