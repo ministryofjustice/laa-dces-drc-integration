@@ -179,7 +179,7 @@ class ContributionIntegrationTest {
         final var sentIds = updateConcorContributionStatus(ConcorContributionStatus.SENT, 1);
         final var updatedIds = Stream.of(replacedIds, sentIds).flatMap(List::stream).toList();
 
-        final var watching = spyFactory.newContributionProcessSpyBuilder();
+        final ContributionProcessSpy.ContributionProcessSpyBuilder watching = spyFactory.newContributionProcessSpyBuilder();
         watching.instrumentGetContributionsActive();
         watching.instrumentStubbedSendContributionUpdate(Boolean.TRUE);
         watching.instrumentUpdateContributions();
@@ -187,7 +187,7 @@ class ContributionIntegrationTest {
         // Call the processDailyFiles() method under test
         contributionService.processDailyFiles();
 
-        final var watched = watching.build();
+        final ContributionProcessSpy watched = watching.build();
 
         // Fetch some items of information from the maat-api to use during validation:
         final var concorContributions = updatedIds.stream().map(testDataClient::getConcorContribution).toList();
