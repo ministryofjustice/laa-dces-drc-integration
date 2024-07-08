@@ -10,10 +10,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
-import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.TestDataClient;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
-import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateConcorContributionStatusRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
 import uk.gov.justice.laa.crime.dces.integration.testing.ContributionProcessSpy;
 import uk.gov.justice.laa.crime.dces.integration.testing.SpyFactory;
@@ -38,9 +36,6 @@ class ContributionIntegrationTest {
 
     @Autowired
     private TestDataClient testDataClient;
-
-    @Autowired
-    private ContributionClient contributionClient;
 
     @AfterEach
     void assertAll() {
@@ -103,14 +98,14 @@ class ContributionIntegrationTest {
     @Test
     void givenSomeActiveConcorContributions_whenProcessDailyFilesRuns_thenTheyAreQueriedSentAndInCreatedFile() {
         // Update at least 3 concor_contribution rows to ACTIVE:
-        final var updatedIds = updateConcorContributionStatus(ConcorContributionStatus.ACTIVE, 3);
+        final var updatedIds = spyFactory.updateConcorContributionStatus(ConcorContributionStatus.ACTIVE, 3);
 
         final ContributionProcessSpy.ContributionProcessSpyBuilder watching = spyFactory.newContributionProcessSpyBuilder();
-        watching.instrumentGetContributionsActive();
-        watching.instrumentStubbedSendContributionUpdate(Boolean.TRUE);
+        watching.instrumentAndFilterGetContributionsActive(updatedIds);
+        watching.instrumentAndStubSendContributionUpdate(Boolean.TRUE);
         watching.instrumentUpdateContributions();
 
-        // Call the processDailyFiles() method under test (date range in case executing near to midnight)
+        // Call the processDailyFiles() method under test:
         final var startDate = LocalDate.now();
         contributionService.processDailyFiles();
         final var endDate = LocalDate.now();
@@ -167,7 +162,7 @@ class ContributionIntegrationTest {
      * <p>4. After the `processDailyFiles` method call returns, the concor_contribution entities corresponding to each
      *    of the updated IDs is checked:<br>
      *    - Each has unchanged status (REPLACED or SENT)<br>
-     * <p>6. After the `processDailyFiles` method call returns, a contribution_file entity may or may not be created
+     * <p>5. After the `processDailyFiles` method call returns, a contribution_file entity may or may not be created
      *    (depends if there are other ACTIVE records or not). If one is created, the updated IDs are not included.</p>
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-351">DCES-351</a> for test specification.
@@ -175,16 +170,16 @@ class ContributionIntegrationTest {
     @Test
     void givenAReplacedAndSentConcorContribution_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
         // Update at least 1 concor_contribution row to REPLACED, and leave 1 other at SENT:
-        final var replacedIds = updateConcorContributionStatus(ConcorContributionStatus.REPLACED, 1);
-        final var sentIds = updateConcorContributionStatus(ConcorContributionStatus.SENT, 1);
+        final var replacedIds = spyFactory.updateConcorContributionStatus(ConcorContributionStatus.REPLACED, 1);
+        final var sentIds = spyFactory.updateConcorContributionStatus(ConcorContributionStatus.SENT, 1);
         final var updatedIds = Stream.of(replacedIds, sentIds).flatMap(List::stream).toList();
 
         final ContributionProcessSpy.ContributionProcessSpyBuilder watching = spyFactory.newContributionProcessSpyBuilder();
-        watching.instrumentGetContributionsActive();
-        watching.instrumentStubbedSendContributionUpdate(Boolean.TRUE);
+        watching.instrumentAndFilterGetContributionsActive(updatedIds);
+        watching.instrumentAndStubSendContributionUpdate(Boolean.TRUE);
         watching.instrumentUpdateContributions();
 
-        // Call the processDailyFiles() method under test
+        // Call the processDailyFiles() method under test:
         contributionService.processDailyFiles();
 
         final ContributionProcessSpy watched = watching.build();
@@ -196,7 +191,11 @@ class ContributionIntegrationTest {
         softly.assertThat(watched.getActiveIds()).doesNotContainAnyElementsOf(updatedIds); // 2.
         softly.assertThat(watched.getSentIds()).doesNotContainAnyElementsOf(updatedIds); // 3.
 
-        if (!watched.getActiveIds().isEmpty()) { // are there are any other ACTIVE records or not?
+        concorContributions.forEach(concorContribution -> // 4.
+                softly.assertThat(concorContribution.getStatus()).isIn(ConcorContributionStatus.REPLACED, ConcorContributionStatus.SENT));
+
+        if (!watched.getActiveIds().isEmpty()) { // 5.
+            // contribution_file got created:
             softly.assertThat(watched.getRecordsSent()).isPositive();
             softly.assertThat(watched.getXmlCcIds()).doesNotContainAnyElementsOf(updatedIds);
             softly.assertThat(watched.getXmlFileName()).isNotBlank();
@@ -207,16 +206,5 @@ class ContributionIntegrationTest {
             softly.assertThat(watched.getXmlFileName()).isNull();
             softly.assertThat(watched.getXmlFileResult()).isNull();
         }
-
-        concorContributions.forEach(concorContribution ->
-                softly.assertThat(concorContribution.getStatus()).isIn(ConcorContributionStatus.REPLACED, ConcorContributionStatus.SENT));
-    }
-
-    private List<Integer> updateConcorContributionStatus(final ConcorContributionStatus status, final int recordCount) {
-        UpdateConcorContributionStatusRequest dataRequest = UpdateConcorContributionStatusRequest.builder()
-                .status(status)
-                .recordCount(recordCount)
-                .build();
-        return testDataClient.updateConcorContributionStatus(dataRequest);
     }
 }
