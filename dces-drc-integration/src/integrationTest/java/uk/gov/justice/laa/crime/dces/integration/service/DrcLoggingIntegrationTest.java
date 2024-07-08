@@ -92,17 +92,17 @@ class DrcLoggingIntegrationTest {
         // Update at least 3 concor_contribution rows to ACTIVE:
         final var updatedIds = spyFactory.updateConcorContributionStatus(ConcorContributionStatus.ACTIVE, 3);
 
-        final ContributionProcessSpy.ContributionProcessSpyBuilder watching = spyFactory.newContributionProcessSpyBuilder();
-        watching.instrumentAndFilterGetContributionsActive(updatedIds); // fake ACTIVE records to just 3 updated
-        watching.instrumentAndStubSendContributionUpdate(Boolean.TRUE); // fake DRC response
-        watching.instrumentUpdateContributions(); // capture contribution_file ID
+        final ContributionProcessSpy.ContributionProcessSpyBuilder watching = spyFactory.newContributionProcessSpyBuilder()
+                .traceAndFilterGetContributionsActive(updatedIds) // fake ACTIVE records to just 3 updated
+                .traceAndStubSendContributionUpdate(id -> Boolean.TRUE) // fake DRC response
+                .traceUpdateContributions(); // capture contribution_file ID
 
         contributionService.processDailyFiles();
 
         final ContributionProcessSpy watched = watching.build();
 
-        final DrcLoggingProcessSpy.DrcLoggingProcessSpyBuilder logging = spyFactory.newDrcLoggingProcessSpyBuilder();
-        logging.instrumentSendLogContributionProcessed();
+        final DrcLoggingProcessSpy.DrcLoggingProcessSpyBuilder logging = spyFactory.newDrcLoggingProcessSpyBuilder()
+                .traceSendLogContributionProcessed();
 
         // Call the fake DRC responses under test:
         final var startDate = LocalDate.now();

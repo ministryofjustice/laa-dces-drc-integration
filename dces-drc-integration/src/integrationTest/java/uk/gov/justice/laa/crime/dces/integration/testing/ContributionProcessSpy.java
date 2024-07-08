@@ -13,6 +13,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.SendContributionFileDataT
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -52,7 +53,7 @@ public class ContributionProcessSpy {
             this.drcClientSpy = drcClientSpy;
         }
 
-        public void instrumentGetContributionsActive() {
+        public ContributionProcessSpyBuilder traceGetContributionsActive() {
             doAnswer(invocation -> {
                 // Because ContributionClient is a proxied interface, cannot just call `invocation.callRealMethod()` here.
                 // https://github.com/spring-projects/spring-boot/issues/36653
@@ -61,9 +62,10 @@ public class ContributionProcessSpy {
                 activeIds(result.stream().map(ConcurContribEntry::getConcorContributionId).collect(Collectors.toSet()));
                 return result;
             }).when(contributionClientSpy).getContributions("ACTIVE");
+            return this;
         }
 
-        public void instrumentAndFilterGetContributionsActive(final List<Integer> activeIds) {
+        public ContributionProcessSpyBuilder traceAndFilterGetContributionsActive(final List<Integer> activeIds) {
             final var idSet = Set.copyOf(activeIds); // defensive copy
             doAnswer(invocation -> {
                 @SuppressWarnings("unchecked")
@@ -72,16 +74,19 @@ public class ContributionProcessSpy {
                 activeIds(result.stream().map(ConcurContribEntry::getConcorContributionId).collect(Collectors.toSet()));
                 return result;
             }).when(contributionClientSpy).getContributions("ACTIVE");
+            return this;
         }
 
-        public void instrumentAndStubSendContributionUpdate(final Boolean stubbedResult) {
+        public ContributionProcessSpyBuilder traceAndStubSendContributionUpdate(final Predicate<Integer> stubResults) {
             doAnswer(invocation -> {
-                sentId(((SendContributionFileDataToDrcRequest) invocation.getArgument(0)).getContributionId());
-                return stubbedResult;
+                var contributionId = ((SendContributionFileDataToDrcRequest) invocation.getArgument(0)).getContributionId();
+                sentId(contributionId);
+                return stubResults.test(contributionId);
             }).when(drcClientSpy).sendContributionUpdate(any());
+            return this;
         }
 
-        public void instrumentUpdateContributions() {
+        public ContributionProcessSpyBuilder traceUpdateContributions() {
             doAnswer(invocation -> {
                 final var data = (ContributionUpdateRequest) invocation.getArgument(0);
                 xmlCcIds(data.getConcorContributionIds().stream().map(Integer::valueOf).collect(Collectors.toSet()));
@@ -92,6 +97,7 @@ public class ContributionProcessSpy {
                 xmlFileResult(result);
                 return result;
             }).when(contributionClientSpy).updateContributions(any());
+            return this;
         }
     }
 }
