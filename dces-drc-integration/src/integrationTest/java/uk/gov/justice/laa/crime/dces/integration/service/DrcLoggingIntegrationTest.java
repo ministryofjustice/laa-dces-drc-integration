@@ -19,6 +19,8 @@ import uk.gov.justice.laa.crime.dces.integration.client.TestDataClient;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionFileErrorResponse;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
+import uk.gov.justice.laa.crime.dces.integration.testing.ContributionProcessSpy;
+import uk.gov.justice.laa.crime.dces.integration.testing.DrcLoggingProcessSpy;
 import uk.gov.justice.laa.crime.dces.integration.testing.SpyFactory;
 
 import java.time.LocalDate;
@@ -90,16 +92,16 @@ class DrcLoggingIntegrationTest {
         // Update at least 3 concor_contribution rows to ACTIVE:
         final var updatedIds = spyFactory.updateConcorContributionStatus(ConcorContributionStatus.ACTIVE, 3);
 
-        final var watching = spyFactory.newContributionProcessSpyBuilder();
+        final ContributionProcessSpy.ContributionProcessSpyBuilder watching = spyFactory.newContributionProcessSpyBuilder();
         watching.instrumentAndFilterGetContributionsActive(updatedIds); // fake ACTIVE records to just 3 updated
         watching.instrumentAndStubSendContributionUpdate(Boolean.TRUE); // fake DRC response
         watching.instrumentUpdateContributions(); // capture contribution_file ID
 
         contributionService.processDailyFiles();
 
-        final var watched = watching.build();
+        final ContributionProcessSpy watched = watching.build();
 
-        final var logging = spyFactory.newDrcLoggingProcessSpyBuilder();
+        final DrcLoggingProcessSpy.DrcLoggingProcessSpyBuilder logging = spyFactory.newDrcLoggingProcessSpyBuilder();
         logging.instrumentSendLogContributionProcessed();
 
         // Call the fake DRC responses under test:
@@ -107,7 +109,7 @@ class DrcLoggingIntegrationTest {
         updatedIds.forEach(this::acknowledgeSuccessContributionMVC);
         final var endDate = LocalDate.now();
 
-        final var logged = logging.build();
+        final DrcLoggingProcessSpy logged = logging.build();
 
         // Fetch some items of information from the maat-api to use during validation:
         final int contributionFileId = watched.getXmlFileResult();
@@ -150,25 +152,6 @@ class DrcLoggingIntegrationTest {
             softly.fail("acknowledgeContributionMVC(" + concorContributionId + ") failed", e);
         }
     }
-
-    /*
-    // Need to handle CSRF and OAuth2 login before can use testRestTemplate like this:
-    private void acknowledgeSuccessContributionHTTP(final int concorContributionId) {
-        try {
-            final var request = UpdateLogContributionRequest.builder().concorId(concorContributionId).errorText(null).build();
-            final var headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            final var requestEntity = new HttpEntity<>(request, headers);
-            final var responseEntity = testRestTemplate.postForEntity(
-                    "http://localhost:" + port + "/api/internal/v1/dces-drc-integration/process-drc-update/contribution",
-                    requestEntity, String.class);
-            softly.assertThat(responseEntity.getStatusCode().is2xxSuccessful()).isTrue();
-            softly.assertThat(responseEntity.getBody()).isEqualTo("The request has been processed successfully");
-        } catch (Exception e) {
-            softly.fail("acknowledgeContributionHTTP(" + concorContributionId + ") failed", e);
-        }
-    }
-     */
 
     /**
      * Get a contribution_file_error entity, but handle 404 by returning Optional.empty() instead of an exception.
