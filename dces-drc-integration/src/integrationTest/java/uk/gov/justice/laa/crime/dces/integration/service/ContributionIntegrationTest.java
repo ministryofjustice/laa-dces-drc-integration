@@ -15,6 +15,7 @@ import uk.gov.justice.laa.crime.dces.integration.client.TestDataClient;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateConcorContributionStatusRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
+import uk.gov.justice.laa.crime.dces.integration.testing.ContributionProcessSpy;
 import uk.gov.justice.laa.crime.dces.integration.testing.SpyFactory;
 
 import java.time.LocalDate;
@@ -104,7 +105,7 @@ class ContributionIntegrationTest {
         // Update at least 3 concor_contribution rows to ACTIVE:
         final var updatedIds = updateConcorContributionStatus(ConcorContributionStatus.ACTIVE, 3);
 
-        final var watching = spyFactory.newContributionProcessSpyBuilder();
+        final ContributionProcessSpy.ContributionProcessSpyBuilder watching = spyFactory.newContributionProcessSpyBuilder();
         watching.instrumentGetContributionsActive();
         watching.instrumentStubbedSendContributionUpdate(Boolean.TRUE);
         watching.instrumentUpdateContributions();
@@ -114,7 +115,7 @@ class ContributionIntegrationTest {
         contributionService.processDailyFiles();
         final var endDate = LocalDate.now();
 
-        final var watched = watching.build();
+        final ContributionProcessSpy watched = watching.build();
 
         // Fetch some items of information from the maat-api to use during validation:
         final var concorContributions = updatedIds.stream().map(testDataClient::getConcorContribution).toList();
