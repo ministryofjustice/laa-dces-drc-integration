@@ -153,13 +153,14 @@ class DrcLoggingIntegrationTest {
      * <p>3. The endpoint that the DRC calls returns this contribution file ID each time it is called.</p>
      * <p>4. After all three concor_contributions have been marked as failed by the DRC, the contribution file is
      *    checked:<br>
-     *    - It has a "records received" of 0<br>
-     *    - It has a received and last modified time during the processDailyFiles call<br>
+     *    - It has either an unset (null) or zero (0) "records received"<br>
+     *    - It has an unset (null) received time<br>
+     *    - It has a last modified time during the processDailyFiles call<br>
      *    - It has a last modified user of "DCES"</p>
      * <p>5. After all three concor_contributions have been acknowledged by the DRC, the contribution file errors
      *    for the contribution file and each concor_contribution are checked:<br>
-     *    - Each should return a contribution_file_error with the expected IDs.
-     *    - Each should have the correct rep_id
+     *    - Each should return a contribution_file_error with the expected IDs.<br>
+     *    - Each should have the correct rep_id<br>
      *    - Each should have the expected error text</p>
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-355">DCES-355</a> for test specification.
@@ -201,8 +202,8 @@ class DrcLoggingIntegrationTest {
         softly.assertThat(logged.getContributionFileIds()).containsExactly(contributionFileId, contributionFileId, contributionFileId); // 3.
         softly.assertThat(logged.getConcorContributionIds()).containsOnlyOnceElementsOf(updatedIds);
 
-        // TODO uncomment after fix 3 actual: softly.assertThat(contributionFile.getRecordsReceived()).isEqualTo(0); // 4.
-        softly.assertThat(contributionFile.getDateReceived()).isBeforeOrEqualTo(startDate);
+        softly.assertThat(contributionFile.getRecordsReceived()).isIn(0, null); // 4. (either zero or NULL)
+        softly.assertThat(contributionFile.getDateReceived()).isNull();
         softly.assertThat(contributionFile.getDateModified()).isBeforeOrEqualTo(startDate);
         softly.assertThat(contributionFile.getUserModified()).isEqualTo("DCES");
 
