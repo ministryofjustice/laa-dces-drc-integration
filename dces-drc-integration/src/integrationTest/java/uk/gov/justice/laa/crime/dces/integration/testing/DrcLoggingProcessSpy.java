@@ -1,17 +1,14 @@
 package uk.gov.justice.laa.crime.dces.integration.testing;
 
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Singular;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
-import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
-import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.SendContributionFileDataToDrcRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionResponseDTO;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
@@ -46,7 +43,7 @@ public class DrcLoggingProcessSpy {
             this.contributionClientSpy = contributionClientSpy;
         }
 
-        public void instrumentSendLogContributionProcessed() {
+        public DrcLoggingProcessSpyBuilder traceSendLogContributionProcessed() {
             doAnswer(invocation -> {
                 final var argument = (UpdateLogContributionRequest) invocation.getArgument(0);
                 concorContributionId(argument.getConcorId());
@@ -57,6 +54,7 @@ public class DrcLoggingProcessSpy {
                 contributionFileId(result);
                 return result;
             }).when(contributionClientSpy).sendLogContributionProcessed(any());
+            return this;
         }
     }
 }

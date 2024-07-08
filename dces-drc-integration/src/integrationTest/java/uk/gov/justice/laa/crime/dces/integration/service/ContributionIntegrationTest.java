@@ -100,10 +100,10 @@ class ContributionIntegrationTest {
         // Update at least 3 concor_contribution rows to ACTIVE:
         final var updatedIds = spyFactory.updateConcorContributionStatus(ConcorContributionStatus.ACTIVE, 3);
 
-        final ContributionProcessSpy.ContributionProcessSpyBuilder watching = spyFactory.newContributionProcessSpyBuilder();
-        watching.instrumentAndFilterGetContributionsActive(updatedIds);
-        watching.instrumentAndStubSendContributionUpdate(Boolean.TRUE);
-        watching.instrumentUpdateContributions();
+        final ContributionProcessSpy.ContributionProcessSpyBuilder watching = spyFactory.newContributionProcessSpyBuilder()
+                .traceAndFilterGetContributionsActive(updatedIds)
+                .traceAndStubSendContributionUpdate(id -> Boolean.TRUE)
+                .traceUpdateContributions();
 
         // Call the processDailyFiles() method under test:
         final var startDate = LocalDate.now();
@@ -174,10 +174,10 @@ class ContributionIntegrationTest {
         final var sentIds = spyFactory.updateConcorContributionStatus(ConcorContributionStatus.SENT, 1);
         final var updatedIds = Stream.of(replacedIds, sentIds).flatMap(List::stream).toList();
 
-        final ContributionProcessSpy.ContributionProcessSpyBuilder watching = spyFactory.newContributionProcessSpyBuilder();
-        watching.instrumentAndFilterGetContributionsActive(updatedIds);
-        watching.instrumentAndStubSendContributionUpdate(Boolean.TRUE);
-        watching.instrumentUpdateContributions();
+        final ContributionProcessSpy.ContributionProcessSpyBuilder watching = spyFactory.newContributionProcessSpyBuilder()
+                .traceAndFilterGetContributionsActive(updatedIds)
+                .traceAndStubSendContributionUpdate(id -> Boolean.TRUE)
+                .traceUpdateContributions();
 
         // Call the processDailyFiles() method under test:
         contributionService.processDailyFiles();
@@ -206,5 +206,65 @@ class ContributionIntegrationTest {
             softly.assertThat(watched.getXmlFileName()).isNull();
             softly.assertThat(watched.getXmlFileResult()).isNull();
         }
+    }
+
+    /**
+     * <h4>Scenario:</h4>
+     * <p>A negative integration test which checks that when a concor_contribution fails to be sent to the DRC, the
+     *    status is not updated to SENT (remains ACTIVE).</p>
+     * <h4>Given:</h4>
+     * <p>* Update 2 concor_contribution records to the ACTIVE status for the purposes of the test.</p>
+     * <h4>When:</h4>
+     * <p>* The {@link ContributionService#processDailyFiles()} method is called.</p>
+     * <p>* However, sending the records to the DRC should fail.</p>
+     * <h4>Then:</h4>
+     * <p>1. The IDs of the 2 updated records are returned (by call to retrieve active contributions).</p>
+     * <p>2. The integration's steps are called correctly to create a contribution file, which is persisted.</p>
+     * <p>3. The updated IDs are included in the set of payloads sent to the DRC.</p>
+     * <p>4. A contribution file gets created, with at least 2 failed records.<br>
+     *    The generated XML content does not include either of the 2 linked rep_order IDs in a &lt;maat_id&gt; tag.</p>
+     * <p>5. After the `processDailyFiles` method call returns, the concor_contribution entities corresponding to each
+     *    of the updated IDs is checked:<br>
+     *    - Each remains at status ACTIVE</p>
+     *
+     * Note: We actually update 3 records to ACTIVE, so that one can succeed (because no contribution file is created
+     * at all if zero records are successfully sent to the DRC).
+     *
+     * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-352">DCES-352</a> for test specification.
+     */
+    @Test
+    void givenSomeActiveConcorContributions_whenProcessDailyFilesFailsToSend_thenTheirStatusIsNotUpdated() {
+        // Update at least 3 concor_contribution rows to ACTIVE:
+        final var updatedIds = spyFactory.updateConcorContributionStatus(ConcorContributionStatus.ACTIVE, 3);
+
+        final ContributionProcessSpy.ContributionProcessSpyBuilder watching = spyFactory.newContributionProcessSpyBuilder()
+                .traceAndFilterGetContributionsActive(updatedIds)
+                .traceAndStubSendContributionUpdate(id -> !(id.equals(updatedIds.get(0)) || id.equals(updatedIds.get(1)))) // first two fail
+                .traceUpdateContributions();
+
+        // Call the processDailyFiles() method under test:
+        contributionService.processDailyFiles();
+
+        final ContributionProcessSpy watched = watching.build();
+
+        // Fetch some items of information from the maat-api to use during validation:
+        final var concorContributions = updatedIds.stream().map(testDataClient::getConcorContribution).toList();
+        final int contributionFileId = watched.getXmlFileResult();
+        final var contributionFile = testDataClient.getContributionFile(contributionFileId);
+
+        softly.assertThat(updatedIds).hasSize(3).doesNotContainNull(); // 1.
+        softly.assertThat(watched.getActiveIds()).containsAll(updatedIds); // 2.
+        softly.assertThat(watched.getSentIds()).containsAll(updatedIds); // 3.
+
+        softly.assertThat(watched.getXmlCcIds()).doesNotContain(updatedIds.get(0), updatedIds.get(1)); // 4.
+        // If the failed cpncor_contribution rows have the same rep_order as the successful one, then skip these checks:
+        if (concorContributions.get(0).getRepId() != concorContributions.get(2).getRepId()) {
+            softly.assertThat(contributionFile.getXmlContent()).doesNotContain("<maat_id>" + concorContributions.get(0).getRepId() + "</maat_id>");
+        }
+        if (concorContributions.get(1).getRepId() != concorContributions.get(2).getRepId()) {
+            softly.assertThat(contributionFile.getXmlContent()).doesNotContain("<maat_id>" + concorContributions.get(1).getRepId() + "</maat_id>");
+        }
+        softly.assertThat(concorContributions.get(0).getStatus()).isEqualTo(ConcorContributionStatus.ACTIVE); // 5.
+        softly.assertThat(concorContributions.get(1).getStatus()).isEqualTo(ConcorContributionStatus.ACTIVE);
     }
 }
