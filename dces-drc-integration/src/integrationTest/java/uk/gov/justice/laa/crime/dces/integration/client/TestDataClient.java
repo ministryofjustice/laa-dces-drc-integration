@@ -1,6 +1,7 @@
 package uk.gov.justice.laa.crime.dces.integration.client;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -9,12 +10,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.DeleteExchange;
+import org.springframework.web.service.annotation.PatchExchange;
 import org.springframework.web.service.annotation.PostExchange;
 import org.springframework.web.service.annotation.PutExchange;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.MaatApiClientFactory;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.client.MaatApiClient;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionResponseDTO;
+import uk.gov.justice.laa.crime.dces.integration.model.external.FdcContribution;
 import uk.gov.justice.laa.crime.dces.integration.model.external.FdcItem;
+import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateFdcContributionRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateRepOrder;
 import uk.gov.justice.laa.crime.dces.integration.model.external.CreateFdcContributionRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateConcorContributionStatusRequest;
@@ -34,6 +38,10 @@ public interface TestDataClient extends MaatApiClient {
     @Valid
     void createFdcItems(@Valid @RequestBody final FdcItem fdcItemDTO);
 
+    @DeleteExchange("/debt-collection-enforcement/fdc-items/fdc-id/{fdcId}")
+    @Valid
+    void deleteFdcItems(@NotNull @PathVariable final Integer fdcId);
+
     @DeleteExchange("/assessment/rep-orders/cc-outcome/rep-order/{repId}")
     @Valid
     void deleteCrownCourtOutcomes(@PathVariable Integer repId);
@@ -44,15 +52,15 @@ public interface TestDataClient extends MaatApiClient {
 
     @PostExchange("/debt-collection-enforcement/fdc-contribution")
     @Valid
-    int createFdcContribution(@RequestBody CreateFdcContributionRequest fdcContribution);
+    FdcContribution createFdcContribution(@RequestBody CreateFdcContributionRequest fdcContribution);
 
-    @GetExchange("/debt-collection-enforcement/rep-orders-eligible-for-min-delay-applies-fdc")
+    @PatchExchange("/debt-collection-enforcement/fdc-contribution")
     @Valid
-    List<Integer> getRepOrdersEligibleForMinDelayAppliesFDCs(@RequestParam int delayPeriod,@RequestParam String dateReceived, @RequestParam int numRecords);
+    int updateFdcContribution(@RequestBody UpdateFdcContributionRequest fdcContribution);
 
-    @GetExchange("/debt-collection-enforcement/rep-orders-eligible-for-min-delay-not-applies-fdc")
+    @GetExchange("/assessment/rep-orders")
     @Valid
-    List<Integer> getRepOrdersEligibleForMinDelayNotAppliesFDCs(@RequestParam int delayPeriod, @RequestParam String dateReceived, @RequestParam int numRecords);
+    List<Integer> getRepOrders(@RequestParam int delay, @RequestParam String dateReceived, @RequestParam int numRecords, @RequestParam boolean fdcDelayedPickup, @RequestParam boolean fdcFastTrack);
 
     @Configuration
     class TestDataClientFactory {
