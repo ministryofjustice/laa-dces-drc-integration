@@ -11,8 +11,6 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@AllArgsConstructor
-@NoArgsConstructor
 @XmlType
 public class FdcContribution {
 

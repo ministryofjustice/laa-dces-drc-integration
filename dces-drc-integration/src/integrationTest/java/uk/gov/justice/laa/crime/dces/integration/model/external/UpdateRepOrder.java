@@ -13,8 +13,6 @@ import java.time.LocalDateTime;
 
 @Data
 @SuperBuilder
-@AllArgsConstructor
-@NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UpdateRepOrder {
 
