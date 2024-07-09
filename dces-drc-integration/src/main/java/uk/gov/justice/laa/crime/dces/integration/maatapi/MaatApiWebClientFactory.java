@@ -54,8 +54,6 @@ public class MaatApiWebClientFactory {
                     .resolver(DefaultAddressResolverGroup.INSTANCE)
                     .compress(true)
                     .responseTimeout(Duration.ofSeconds(90))
-                    .wiretap("reactor.netty.http.client.HttpClient",
-                        LogLevel.DEBUG, AdvancedByteBufFormat.TEXTUAL)
                 )
             )
             .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
