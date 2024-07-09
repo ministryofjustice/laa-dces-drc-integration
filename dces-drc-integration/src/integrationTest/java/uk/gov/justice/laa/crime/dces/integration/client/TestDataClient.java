@@ -64,11 +64,11 @@ public interface TestDataClient extends MaatApiClient {
     @Valid
     List<Integer> getRepOrders(@RequestParam int delay, @RequestParam String dateReceived, @RequestParam int numRecords, @RequestParam boolean fdcDelayedPickup, @RequestParam boolean fdcFastTrack);
 
-    @GetExchange("/contribution-file/{contributionFileId}")
+    @GetExchange("/debt-collection-enforcement/contribution-file/{contributionFileId}")
     @Valid
     ContributionFileResponse getContributionFile(@PathVariable int contributionFileId);
 
-    @GetExchange("/contribution-file/{contributionFileId}/error/{contributionId}")
+    @GetExchange("/debt-collection-enforcement/contribution-file/{contributionFileId}/error/{contributionId}")
     @Valid
     ContributionFileErrorResponse getContributionFileError(@PathVariable int contributionFileId, @PathVariable int contributionId);
 
