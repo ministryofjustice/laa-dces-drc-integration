@@ -21,6 +21,8 @@ import uk.gov.justice.laa.crime.dces.integration.model.external.FdcItem;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateFdcContributionRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateRepOrder;
 import uk.gov.justice.laa.crime.dces.integration.model.external.CreateFdcContributionRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionFileErrorResponse;
+import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionFileResponse;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateConcorContributionStatusRequest;
 
 import java.util.List;
@@ -61,6 +63,14 @@ public interface TestDataClient extends MaatApiClient {
     @GetExchange("/assessment/rep-orders")
     @Valid
     List<Integer> getRepOrders(@RequestParam int delay, @RequestParam String dateReceived, @RequestParam int numRecords, @RequestParam boolean fdcDelayedPickup, @RequestParam boolean fdcFastTrack);
+
+    @GetExchange("/contribution-file/{contributionFileId}")
+    @Valid
+    ContributionFileResponse getContributionFile(@PathVariable int contributionFileId);
+
+    @GetExchange("/contribution-file/{contributionFileId}/error/{contributionId}")
+    @Valid
+    ContributionFileErrorResponse getContributionFileError(@PathVariable int contributionFileId, @PathVariable int contributionId);
 
     @Configuration
     class TestDataClientFactory {

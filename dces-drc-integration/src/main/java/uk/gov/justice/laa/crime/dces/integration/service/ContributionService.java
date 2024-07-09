@@ -6,7 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.reactive.function.client.WebClientException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
@@ -36,7 +36,7 @@ public class ContributionService implements FileService {
         try {
             contributionClient.sendLogContributionProcessed(updateLogContributionRequest);
             return "The request has been processed successfully";
-        } catch (MaatApiClientException | WebClientException | HttpServerErrorException e) {
+        } catch (MaatApiClientException | WebClientResponseException | HttpServerErrorException e) {
             log.info("processContributionUpdate failed", e);
             return "The request has failed to process";
         }
@@ -104,7 +104,7 @@ public class ContributionService implements FileService {
             try {
                 contributionFileId = contributionUpdateRequest(xmlFile, successfulIdList, successfulIdList.size(),fileName,ackXml);
             }
-            catch (MaatApiClientException | WebClientException| HttpServerErrorException e){
+            catch (MaatApiClientException | WebClientResponseException | HttpServerErrorException e){
                 // If failed, we want to handle this. As it will mean the whole process failed for current day.
                 log.error("Contributions file failed to send! Investigation needed. State of files will be out of sync!");
                 // TODO: Need to figure how we're going to log a failed call to the ATOMIC UPDATE.
