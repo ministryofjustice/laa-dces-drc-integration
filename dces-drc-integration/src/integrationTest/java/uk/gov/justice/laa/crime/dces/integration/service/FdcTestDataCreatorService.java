@@ -26,7 +26,7 @@ public class FdcTestDataCreatorService {
 
   private final TestDataClient testDataClient;
 
-  public void createDelayedPickupTestData(FdcTestType testType, int recordsToUpdate){
+  public List<Integer> createDelayedPickupTestData(FdcTestType testType, int recordsToUpdate){
     List<Integer> repOrderIds = testDataClient.getRepOrders(5, "2015-01-01", recordsToUpdate, true, false);
     if (repOrderIds != null && !repOrderIds.isEmpty()) {
       repOrderIds.forEach(repOrderId -> {
@@ -38,9 +38,10 @@ public class FdcTestDataCreatorService {
     } else {
       throw new RuntimeException("No candidate rep orders found for delayed pickup test type " + testType);
     }
+    return repOrderIds;
   }
 
-  public void createFastTrackTestData( FdcAccelerationType fdcAccelerationType, FdcTestType testType, int recordsToUpdate){
+  public List<Integer> createFastTrackTestData( FdcAccelerationType fdcAccelerationType, FdcTestType testType, int recordsToUpdate){
     List<Integer> repOrderIds = testDataClient.getRepOrders(-3, "2015-01-01", recordsToUpdate, false, true);
     if (repOrderIds != null && !repOrderIds.isEmpty()) {
       repOrderIds.forEach(repOrderId -> {
@@ -62,6 +63,7 @@ public class FdcTestDataCreatorService {
     } else {
       throw new RuntimeException("No candidate rep orders found for delayed pickup test type " + testType);
     }
+    return repOrderIds;
   }
 
   private void processNegativeTests(FdcTestType testType, Integer repOrderId, Integer fdcId, int monthsAfterSysDate) {
