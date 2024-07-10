@@ -2,6 +2,7 @@ package uk.gov.justice.laa.crime.dces.integration.client;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import java.util.Set;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -62,7 +63,7 @@ public interface TestDataClient extends MaatApiClient {
 
     @GetExchange("/assessment/rep-orders")
     @Valid
-    List<Integer> getRepOrders(@RequestParam int delay, @RequestParam String dateReceived, @RequestParam int numRecords, @RequestParam boolean fdcDelayedPickup, @RequestParam boolean fdcFastTrack);
+    Set<Integer> getRepOrders(@RequestParam int delay, @RequestParam String dateReceived, @RequestParam int numRecords, @RequestParam boolean fdcDelayedPickup, @RequestParam boolean fdcFastTrack);
 
     @GetExchange("/debt-collection-enforcement/contribution-file/{contributionFileId}")
     @Valid

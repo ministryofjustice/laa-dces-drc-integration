@@ -5,6 +5,7 @@ import static uk.gov.justice.laa.crime.dces.integration.model.external.FdcContri
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,8 +27,8 @@ public class FdcTestDataCreatorService {
 
   private final TestDataClient testDataClient;
 
-  public List<Integer> createDelayedPickupTestData(FdcTestType testType, int recordsToUpdate){
-    List<Integer> repOrderIds = testDataClient.getRepOrders(5, "2015-01-01", recordsToUpdate, true, false);
+  public Set<Integer> createDelayedPickupTestData(FdcTestType testType, int recordsToUpdate){
+    Set<Integer> repOrderIds = testDataClient.getRepOrders(5, "2015-01-01", recordsToUpdate, true, false);
     if (repOrderIds != null && !repOrderIds.isEmpty()) {
       repOrderIds.forEach(repOrderId -> {
         FdcContribution fdcContribution = testDataClient.createFdcContribution(new CreateFdcContributionRequest(repOrderId, "Y", "Y", null, WAITING_ITEMS));
@@ -41,8 +42,8 @@ public class FdcTestDataCreatorService {
     return repOrderIds;
   }
 
-  public List<Integer> createFastTrackTestData( FdcAccelerationType fdcAccelerationType, FdcTestType testType, int recordsToUpdate){
-    List<Integer> repOrderIds = testDataClient.getRepOrders(-3, "2015-01-01", recordsToUpdate, false, true);
+  public Set<Integer> createFastTrackTestData( FdcAccelerationType fdcAccelerationType, FdcTestType testType, int recordsToUpdate){
+    Set<Integer> repOrderIds = testDataClient.getRepOrders(-3, "2015-01-01", recordsToUpdate, false, true);
     if (repOrderIds != null && !repOrderIds.isEmpty()) {
       repOrderIds.forEach(repOrderId -> {
         testDataClient.updateRepOrderSentenceOrderDate(UpdateRepOrder.builder().repId(repOrderId).sentenceOrderDate(LocalDate.now().plusMonths(-3)).build());
