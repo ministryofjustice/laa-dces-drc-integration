@@ -18,6 +18,7 @@ import uk.gov.justice.laa.crime.dces.integration.testing.SpyFactory;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 @EnabledIf(expression = "#{environment['sentry.environment'] == 'development'}", loadContext = true)
@@ -138,8 +139,8 @@ class ContributionIntegrationTest {
         softly.assertThat(contributionFile.getRecordsSent()).isGreaterThanOrEqualTo(3);
         softly.assertThat(contributionFile.getDateCreated()).isBetween(startDate, endDate);
         softly.assertThat(contributionFile.getUserCreated()).isEqualTo("DCES");
-        // TODO uncomment after fix null actual: softly.assertThat(contributionFile.getDateModified()).isBetween(startDate, endDate);
-        // TODO uncomment after fix null actual: softly.assertThat(contributionFile.getUserModified()).isEqualTo("DCES");
+        softly.assertThat(contributionFile.getDateModified()).isBetween(startDate, endDate);
+        softly.assertThat(contributionFile.getUserModified()).isEqualTo("DCES");
         softly.assertThat(contributionFile.getDateSent()).isBetween(startDate, endDate);
         concorContributions.forEach(concorContribution ->
                 softly.assertThat(contributionFile.getXmlContent()).contains("<maat_id>" + concorContribution.getRepId() + "</maat_id>"));
@@ -257,11 +258,11 @@ class ContributionIntegrationTest {
         softly.assertThat(watched.getSentIds()).containsAll(updatedIds); // 3.
 
         softly.assertThat(watched.getXmlCcIds()).doesNotContain(updatedIds.get(0), updatedIds.get(1)); // 4.
-        // If the failed cpncor_contribution rows have the same rep_order as the successful one, then skip these checks:
-        if (concorContributions.get(0).getRepId() != concorContributions.get(2).getRepId()) {
+        // If the failed concor_contribution rows have the same rep_order as the successful one, then skip these checks:
+        if (!Objects.equals(concorContributions.get(0).getRepId(), concorContributions.get(2).getRepId())) {
             softly.assertThat(contributionFile.getXmlContent()).doesNotContain("<maat_id>" + concorContributions.get(0).getRepId() + "</maat_id>");
         }
-        if (concorContributions.get(1).getRepId() != concorContributions.get(2).getRepId()) {
+        if (!Objects.equals(concorContributions.get(1).getRepId(), concorContributions.get(2).getRepId())) {
             softly.assertThat(contributionFile.getXmlContent()).doesNotContain("<maat_id>" + concorContributions.get(1).getRepId() + "</maat_id>");
         }
         softly.assertThat(concorContributions.get(0).getStatus()).isEqualTo(ConcorContributionStatus.ACTIVE); // 5.
