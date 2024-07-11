@@ -89,3 +89,23 @@ api:
   contactName: DCES Support Team
   contactEmail: laa-dces@digital.justice.gov.uk
   contactUrl: justice.gov.uk/laa
+
+resilience4j:
+  retry:
+    configs:
+      default:
+        max-attempts: 3
+        wait-duration: 2s
+        retry-exceptions:
+          - org.springframework.web.reactive.function.client.WebClientRequestException
+          - org.springframework.web.reactive.function.client.WebClientResponseException.BadGateway
+          - org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
+          - org.springframework.web.reactive.function.client.WebClientResponseException.InternalServerError
+          - org.springframework.web.reactive.function.client.WebClientResponseException.NotImplemented
+          - org.springframework.web.reactive.function.client.WebClientResponseException.GatewayTimeout
+
+    instances:
+      FdcService:
+        base-config: default
+      ContributionService:
+        base-config: default
