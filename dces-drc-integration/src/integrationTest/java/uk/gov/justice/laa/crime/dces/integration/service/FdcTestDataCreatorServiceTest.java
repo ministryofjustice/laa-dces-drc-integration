@@ -83,17 +83,17 @@ class FdcTestDataCreatorServiceTest {
         "{\"repId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
 
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"\",\"userCreated\":\"DCES\"}");
+        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
     checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(3)+"\"}");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
         "{\"repId\":2,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"\",\"userCreated\":\"DCES\"}");
+        "{\"fdcId\":1002,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
     checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":2,\"sentenceOrderDate\":\""+getDateAfterMonths(3)+"\"}");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
         "{\"repId\":3,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"\",\"userCreated\":\"DCES\"}");
+        "{\"fdcId\":1003,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
     checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":3,\"sentenceOrderDate\":\""+getDateAfterMonths(3)+"\"}");
   }
 
@@ -106,17 +106,17 @@ class FdcTestDataCreatorServiceTest {
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
         "{\"repId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"\",\"userCreated\":\"DCES\"}");
+        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
     checkRequest("DELETE", "/assessment/rep-orders/cc-outcome/rep-order/1");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
         "{\"repId\":2,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"\",\"userCreated\":\"DCES\"}");
+        "{\"fdcId\":1002,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
     checkRequest("DELETE", "/assessment/rep-orders/cc-outcome/rep-order/2");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
         "{\"repId\":3,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"\",\"userCreated\":\"DCES\"}");
+        "{\"fdcId\":1003,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
     checkRequest("DELETE", "/assessment/rep-orders/cc-outcome/rep-order/3");
   }
 
@@ -129,7 +129,7 @@ class FdcTestDataCreatorServiceTest {
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
         "{\"repId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"\",\"userCreated\":\"DCES\"}");
+        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
     checkRequestAndBody("PATCH", "/debt-collection-enforcement/fdc-contribution",
         "{\"fdcContributionId\":1001,\"repId\":1,\"previousStatus\":null,\"newStatus\":\"SENT\"}");
   }
@@ -143,7 +143,7 @@ class FdcTestDataCreatorServiceTest {
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
         "{\"repId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"\",\"userCreated\":\"DCES\"}");
+        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
     checkRequest("DELETE", "/debt-collection-enforcement/fdc-items/fdc-id/1001");
   }
 
@@ -157,7 +157,7 @@ class FdcTestDataCreatorServiceTest {
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
         "{\"repId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"manualAcceleration\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"\",\"userCreated\":\"DCES\"}");
+        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
   }
 
   @Test
@@ -170,7 +170,7 @@ class FdcTestDataCreatorServiceTest {
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
         "{\"repId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"manualAcceleration\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"\",\"userCreated\":\"DCES\"}");
+        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
     checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-7)+"\"}");
   }
 
@@ -184,7 +184,7 @@ class FdcTestDataCreatorServiceTest {
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
         "{\"repId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"manualAcceleration\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"\",\"userCreated\":\"DCES\"}");
+        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
     checkRequest("DELETE", "/assessment/rep-orders/cc-outcome/rep-order/1");
   }
 
@@ -198,7 +198,7 @@ class FdcTestDataCreatorServiceTest {
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
         "{\"repId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"manualAcceleration\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"\",\"userCreated\":\"DCES\"}");
+        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
     checkRequestAndBody("PATCH", "/debt-collection-enforcement/fdc-contribution",
         "{\"fdcContributionId\":1001,\"repId\":1,\"previousStatus\":null,\"newStatus\":\"SENT\"}");
   }
@@ -213,7 +213,7 @@ class FdcTestDataCreatorServiceTest {
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
         "{\"repId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"manualAcceleration\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"\",\"userCreated\":\"DCES\"}");
+        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
     checkRequest("DELETE", "/debt-collection-enforcement/fdc-items/fdc-id/1001");
   }
 
@@ -227,9 +227,9 @@ class FdcTestDataCreatorServiceTest {
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
         "{\"repId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-        "{\"fdcId\":1001,\"itemType\":\"LGFS\",\"dateCreated\":\""+getDateAfterMonths(0)+"\",\"paidAsClaimed\":\"Y\",\"latestCostInd\":\"Current\",\"userCreated\":\"DCES\"}");
+        "{\"fdcId\":1001,\"itemType\":\"LGFS\",\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"paidAsClaimed\":\"Y\",\"latestCostInd\":\"Current\",\"userCreated\":\"DCES\"}");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-        "{\"fdcId\":1001,\"itemType\":\"AGFS\",\"adjustmentReason\":\"Pre AGFS Transfer\",\"dateCreated\":\""+getDateAfterMonths(0)+"\",\"paidAsClaimed\":\"N\",\"latestCostInd\":\"Current\",\"userCreated\":\"DCES\"}");
+        "{\"fdcId\":1001,\"itemType\":\"AGFS\",\"adjustmentReason\":\"Pre AGFS Transfer\",\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"paidAsClaimed\":\"N\",\"latestCostInd\":\"Current\",\"userCreated\":\"DCES\"}");
   }
 
   @Test
@@ -244,7 +244,7 @@ class FdcTestDataCreatorServiceTest {
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
         "{\"repId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"SENT\"}");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"\",\"userCreated\":\"DCES\"}");
+        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
   }
 
   @Test
@@ -259,7 +259,7 @@ class FdcTestDataCreatorServiceTest {
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
         "{\"repId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"SENT\"}");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"\",\"userCreated\":\"DCES\"}");
+        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
     checkRequestAndBody("PATCH", "/debt-collection-enforcement/fdc-contribution",
         "{\"fdcContributionId\":1001,\"repId\":1,\"previousStatus\":\"SENT\",\"newStatus\":\"WAITING_ITEMS\"}");
   }
@@ -306,6 +306,10 @@ class FdcTestDataCreatorServiceTest {
    * Dispatcher to generate mock success responses for different types of requests
    */
   Dispatcher dispatcher = new Dispatcher() {
+
+    private int mockFdcId = 1001;
+
+    public void resetMockFdcId() {mockFdcId = 1001;}
     @SneakyThrows
     @NotNull
     @Override
@@ -314,12 +318,15 @@ class FdcTestDataCreatorServiceTest {
       String requestPath = request.getPath();
       if (requestPath != null) {
         if (requestPath.contains("/fdc-contribution")) {
-          if ("POST".equals(request.getMethod())) mockResponse.setBody("{\"id\" : \"1001\"}");
+          if ("POST".equals(request.getMethod())) {
+            mockResponse.setBody("{\"id\" : \""+mockFdcId++ +"\"}");
+          }
           else if ("PATCH".equals(request.getMethod())) mockResponse.setBody("1");
         } else if (requestPath.contains("/assessment/rep-orders/cc-outcome/rep-order") && "DELETE".equals(request.getMethod())) {
           mockResponse.setBody("1");
         } else if ("GET".equals(request.getMethod()) && requestPath.contains("/assessment/rep-orders")) {
           mockResponse.setBody(getRequestedNumberOfMockRepIds(request));
+          mockFdcId = 1001;
         } else if (!validRequestPath(requestPath)) {
           mockResponse.setResponseCode(HttpStatus.NOT_FOUND.value());
         }
