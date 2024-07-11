@@ -4,7 +4,7 @@ import static uk.gov.justice.laa.crime.dces.integration.model.external.FdcContri
 import static uk.gov.justice.laa.crime.dces.integration.model.external.FdcContributionsStatus.WAITING_ITEMS;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.time.LocalDateTime;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +33,7 @@ public class FdcTestDataCreatorService {
       repOrderIds.forEach(repOrderId -> {
         FdcContribution fdcContribution = testDataClient.createFdcContribution(new CreateFdcContributionRequest(repOrderId, "Y", "Y", null, WAITING_ITEMS));
         int fdcId = fdcContribution.getId();
-        testDataClient.createFdcItems(FdcItem.builder().fdcId(fdcId).userCreated("DCES").build());
+        testDataClient.createFdcItems(FdcItem.builder().fdcId(fdcId).userCreated("DCES").dateCreated(LocalDateTime.now()).build());
         processNegativeTests(testType, repOrderId, fdcId, 3);
       });
     } else {
@@ -52,7 +52,7 @@ public class FdcTestDataCreatorService {
         if (fdcAccelerationType.equals(FdcAccelerationType.PREVIOUS_FDC)) {
           testDataClient.createFdcContribution(new CreateFdcContributionRequest(repOrderId, "Y", "Y", null, SENT));
         }
-        FdcItemBuilder fdcItemBuilder = FdcItem.builder().fdcId(fdcId).userCreated("DCES");
+        FdcItemBuilder fdcItemBuilder = FdcItem.builder().fdcId(fdcId).userCreated("DCES").dateCreated(LocalDateTime.now());
         if (fdcAccelerationType.equals(FdcAccelerationType.NEGATIVE)) {
           fdcItemBuilder.itemType(FdcItemType.LGFS).paidAsClaimed("Y").latestCostInd("Current");
           testDataClient.createFdcItems(fdcItemBuilder.build());
