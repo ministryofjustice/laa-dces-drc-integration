@@ -59,10 +59,9 @@ public class FdcProcessSpy {
     public FdcProcessSpyBuilder traceAndFilterGetFdcContributions(final Set<Integer> updatedIds) {
       final var idSet = Set.copyOf(updatedIds); // defensive copy
       doAnswer(invocation -> {
-        @SuppressWarnings("unchecked")
         var result = (FdcContributionsResponse) mockingDetails(FdcClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation);
-        result.setFdcContributions(result.getFdcContributions().stream().filter(fdcContributionEntry -> idSet.contains(fdcContributionEntry.getMaatId())).toList());
-        activeIds(result.getFdcContributions().stream().map(FdcContributionEntry::getMaatId).collect(Collectors.toSet()));
+        result.setFdcContributions(result.getFdcContributions().stream().filter(fdcContributionEntry -> idSet.contains(fdcContributionEntry.getId())).toList());
+        activeIds(result.getFdcContributions().stream().map(FdcContributionEntry::getId).collect(Collectors.toSet()));
         return result;
       }).when(FdcClientSpy).getFdcContributions(REQUESTED_STATUS);
       return this;
