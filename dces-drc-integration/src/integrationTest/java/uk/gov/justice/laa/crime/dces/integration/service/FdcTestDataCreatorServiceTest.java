@@ -43,7 +43,7 @@ import uk.gov.justice.laa.crime.dces.integration.maatapi.MaatApiWebClientFactory
 import uk.gov.justice.laa.crime.dces.integration.maatapi.config.ServicesConfiguration;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcAccelerationType;
 
-@EnabledIf(expression = "#{environment['sentry.environment'] == 'disabled'}", loadContext = true)
+@EnabledIf(expression = "#{environment['sentry.environment'] == 'development'}", loadContext = true)
 @Slf4j
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
