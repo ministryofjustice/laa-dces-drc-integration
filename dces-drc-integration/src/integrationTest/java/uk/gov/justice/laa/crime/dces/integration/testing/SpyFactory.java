@@ -1,15 +1,19 @@
 package uk.gov.justice.laa.crime.dces.integration.testing;
 
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
+import uk.gov.justice.laa.crime.dces.integration.client.FdcClient;
 import uk.gov.justice.laa.crime.dces.integration.client.TestDataClient;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateConcorContributionStatusRequest;
 
 import java.util.List;
+import uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType;
+import uk.gov.justice.laa.crime.dces.integration.service.FdcTestDataCreatorService;
 
 /**
  * Entry-point for working with the ContributionProcessSpy and ContributionProcessSpyBuilder classes (and other spies
@@ -27,6 +31,12 @@ public class SpyFactory {
     @SpyBean
     private DrcClient drcClientSpy;
 
+    @SpyBean
+    private FdcClient fdcClientSpy;
+
+    @SpyBean
+    private FdcTestDataCreatorService fdcTestDataCreatorService;
+
     @Autowired
     private TestDataClient testDataClient;
 
@@ -38,6 +48,10 @@ public class SpyFactory {
         return new DrcLoggingProcessSpy.DrcLoggingProcessSpyBuilder(contributionClientSpy);
     }
 
+    public FdcProcessSpy.FdcProcessSpyBuilder newFdcProcessSpyBuilder() {
+        return new FdcProcessSpy.FdcProcessSpyBuilder(fdcClientSpy, drcClientSpy);
+    }
+
     public List<Integer> updateConcorContributionStatus(final ConcorContributionStatus status, final int recordCount) {
         final var request = UpdateConcorContributionStatusRequest.builder()
                 .status(status)
@@ -45,4 +59,9 @@ public class SpyFactory {
                 .build();
         return testDataClient.updateConcorContributionStatus(request);
     }
+
+    public Set<Integer> createFdcDelayedPickupTestData(final FdcTestType testType, final int recordsToUpdate) {
+        return fdcTestDataCreatorService.createDelayedPickupTestData (testType, recordsToUpdate);
+    }
+
 }
