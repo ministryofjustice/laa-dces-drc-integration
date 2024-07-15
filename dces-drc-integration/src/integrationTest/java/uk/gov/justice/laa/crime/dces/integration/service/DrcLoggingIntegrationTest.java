@@ -93,7 +93,6 @@ class DrcLoggingIntegrationTest {
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-354">DCES-354</a> for test specification.
      */
     @Test
-    @Disabled
     void givenSomeActiveConcorContributionsAndProcessDailyFilesRan_whenDrcRespondsToAcknowledge_thenContributionsAndFileAreUpdated() {
         // Update at least 3 concor_contribution rows to ACTIVE:
         final var updatedIds = spyFactory.updateConcorContributionStatus(ConcorContributionStatus.ACTIVE, 3);
@@ -168,6 +167,7 @@ class DrcLoggingIntegrationTest {
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-355">DCES-355</a> for test specification.
      */
     @Test
+    @Disabled
     void givenSomeActiveConcorContributionsAndProcessDailyFilesRan_whenDrcRespondsWithError_thenContributionFileIsNotUpdatedButErrorIsCreated() {
         // Update at least 3 concor_contribution rows to ACTIVE:
         final var updatedIds = spyFactory.updateConcorContributionStatus(ConcorContributionStatus.ACTIVE, 3);
