@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@EnabledIf(expression = "#{environment['sentry.environment'] == 'disabled'}", loadContext = true)
+@EnabledIf(expression = "#{environment['sentry.environment'] == 'development'}", loadContext = true)
 @SpringBootTest
 @AutoConfigureMockMvc
 @ExtendWith(SoftAssertionsExtension.class)
