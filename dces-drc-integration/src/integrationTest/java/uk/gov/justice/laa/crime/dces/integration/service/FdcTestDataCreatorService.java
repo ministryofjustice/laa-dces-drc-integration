@@ -29,6 +29,13 @@ public class FdcTestDataCreatorService {
 
   private final TestDataClient testDataClient;
 
+  /**
+   * Create test data required for testing the FDC Delayed Pickup logic
+   * (	 * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-356">DCES-365</a> for test specification.)
+   * @param testType: One of the test types defined in enum FdcTestType
+   * @param recordsToUpdate Number of records to update
+   * @return A set of FDC IDs updated as required
+   */
   public Set<Integer> createDelayedPickupTestData(FdcTestType testType, int recordsToUpdate){
     Set<Integer> repOrderIds = testDataClient.getRepOrders(5, "2015-01-01", recordsToUpdate, true, false);
     Set<Integer> fdcIds = new HashSet<>();
@@ -45,6 +52,17 @@ public class FdcTestDataCreatorService {
     }
     return fdcIds;
   }
+
+  /**
+   * Create test data required for testing the FDC Fast Track  logic
+   * (	 * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-356">DCES-367</a>,
+   * <a href="https://dsdmoj.atlassian.net/browse/DCES-356">DCES-377</a> and
+   * <a href="https://dsdmoj.atlassian.net/browse/DCES-356">DCES-378</a>for test specification (this one method caters to all of them).)
+   * @param fdcAccelerationType: One of the acceleration types defined in enum FdcAccelerationType
+   * @param testType: One of the test types defined in enum FdcTestType
+   * @param recordsToUpdate Number of records to update
+   * @return A set of FDC IDs updated as required
+   */
 
   public Set<Integer> createFastTrackTestData( FdcAccelerationType fdcAccelerationType, FdcTestType testType, int recordsToUpdate){
     Set<Integer> repOrderIds = testDataClient.getRepOrders(-3, "2015-01-01", recordsToUpdate, false, true);

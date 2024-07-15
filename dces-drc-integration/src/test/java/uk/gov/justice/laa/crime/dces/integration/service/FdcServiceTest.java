@@ -1,7 +1,5 @@
 package uk.gov.justice.laa.crime.dces.integration.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
@@ -18,9 +16,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.web.client.HttpServerErrorException;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
-import uk.gov.justice.laa.crime.dces.integration.client.FdcClient;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionEntry;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsResponse;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 
@@ -52,9 +47,6 @@ class FdcServiceTest {
 
 	@MockBean
 	private DrcClient drcClient;
-
-	@MockBean
-	private FdcClient fdcClient;
 
 	@AfterEach
 	void afterTestAssertAll(){
@@ -217,39 +209,4 @@ class FdcServiceTest {
 		assertEquals("The request has failed to process", response);
 	}
 
-	@Test
-	void getFdcList() {
-		String jsonString = "{\n"
-				+ "    \"fdcContributions\": [{\n"
-				+ "            \"id\": 27817569,\n"
-				+ "            \"maatId\": 1977359,\n"
-				+ "            \"sentenceOrderDate\": \"2000-07-12\",\n"
-				+ "            \"dateCalculated\": \"2017-01-11\",\n"
-				+ "            \"finalCost\": 38081,\n"
-				+ "            \"lgfsCost\": 36987.3,\n"
-				+ "            \"agfsCost\": 1093.7,\n"
-				+ "            \"userModified\": null,\n"
-				+ "            \"userCreated\": null,\n"
-				+ "            \"dateCreated\": null,\n"
-				+ "            \"dateModified\": null,\n"
-				+ "            \"accelerate\": null,\n"
-				+ "            \"judApportionPercent\": null,\n"
-				+ "            \"agfsVat\": null,\n"
-				+ "            \"contFileId\": null,\n"
-				+ "            \"dateReplaced\": null,\n"
-				+ "            \"status\": null,\n"
-				+ "            \"lgfsComplete\": null,\n"
-				+ "            \"agfsComplete\": null,\n"
-				+ "            \"vat\": null,\n"
-				+ "            \"lgfsVat\": null\n"
-				+ "        }]}";
-		ObjectMapper mapper = new ObjectMapper();
-		mapper.registerModule(new JavaTimeModule());
-		try {
-			FdcContributionsResponse response = mapper.readValue(jsonString, FdcContributionsResponse.class);
-			System.out.println("Deserialized object: " + response);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
 }

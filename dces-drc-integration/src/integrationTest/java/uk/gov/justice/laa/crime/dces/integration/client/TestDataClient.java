@@ -16,7 +16,6 @@ import org.springframework.web.service.annotation.PostExchange;
 import org.springframework.web.service.annotation.PutExchange;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.MaatApiClientFactory;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.client.MaatApiClient;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionResponseDTO;
 import uk.gov.justice.laa.crime.dces.integration.model.external.FdcContribution;
 import uk.gov.justice.laa.crime.dces.integration.model.external.FdcItem;
