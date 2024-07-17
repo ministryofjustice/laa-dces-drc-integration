@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
+import uk.gov.justice.laa.crime.dces.integration.client.FdcClient;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionEntry;
@@ -33,12 +33,12 @@ public class FdcService implements FileService{
 
     public static final String REQUESTED_STATUS = "REQUESTED";
     private final FdcMapperUtils fdcMapperUtils;
-    private final ContributionClient contributionClient;
+    private final FdcClient fdcClient;
     private final DrcClient drcClient;
 
     public String processFdcUpdate(UpdateLogFdcRequest updateLogFdcRequest) {
         try {
-            contributionClient.sendLogFdcProcessed(updateLogFdcRequest);
+            fdcClient.sendLogFdcProcessed(updateLogFdcRequest);
             return "The request has been processed successfully";
         } catch (MaatApiClientException | WebClientResponseException | HttpServerErrorException e) {
             log.info("processFdcUpdate failed", e);
@@ -52,8 +52,6 @@ public class FdcService implements FileService{
     public boolean processDailyFiles() throws WebClientResponseException {
         List<Fdc> successfulFdcs = new ArrayList<>();
         Map<String,String> failedFdcs = new HashMap<>();
-
-
         int globalUpdateResult = callGlobalUpdate();
         List<Fdc> fdcList = getFdcList();
         sendFdcToDrc(fdcList, successfulFdcs, failedFdcs);
@@ -126,7 +124,7 @@ public class FdcService implements FileService{
     List<Fdc> getFdcList() throws HttpServerErrorException{
         FdcContributionsResponse response;
         try {
-            response = contributionClient.getFdcContributions(REQUESTED_STATUS);
+            response = fdcClient.getFdcContributions(REQUESTED_STATUS);
         }
         catch ( HttpServerErrorException e ) {
             log.error("Fdc Get Failed. The Global Update was successful!");
@@ -145,7 +143,7 @@ public class FdcService implements FileService{
 
     private FdcGlobalUpdateResponse callFdcGlobalUpdate(){
         try {
-            return contributionClient.executeFdcGlobalUpdate();
+            return fdcClient.executeFdcGlobalUpdate();
         }
         catch (HttpServerErrorException e){
             log.error("Fdc Global Update threw an exception");
@@ -184,7 +182,8 @@ public class FdcService implements FileService{
                 .fdcIds(fdcIdList)
                 .xmlFileName(fileName)
                 .ackXmlContent(fileAckXML).build();
-        return contributionClient.updateFdcs(request);
+
+    return fdcClient.updateFdcs(request);
     }
 
 

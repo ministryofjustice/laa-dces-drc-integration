@@ -1,13 +1,11 @@
 package uk.gov.justice.laa.crime.dces.integration.model.external;
 
-import jakarta.validation.constraints.Size;
 import jakarta.xml.bind.annotation.XmlType;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsStatus;
 
 @Data
 @Builder
@@ -15,48 +13,24 @@ import lombok.NoArgsConstructor;
 public class FdcContribution {
 
   private Integer id;
-
-  private Integer contFileId;
-
+  private Integer maatId;
+  private LocalDate sentenceOrderDate;
   private LocalDate dateCalculated;
-
-  private LocalDate dateReplaced;
-
-  private FdcContributionsStatus status;
-
-  @Size(max = 1)
-  private String lgfsComplete;
-
-  @Size(max = 1)
-  private String agfsComplete;
-
-  @Builder.Default
-  private BigDecimal finalCost = BigDecimal.valueOf(0);
-
-  @Builder.Default
-  private BigDecimal vat = BigDecimal.valueOf(0);
-
-  @Builder.Default
-  private BigDecimal lgfsCost = BigDecimal.valueOf(0);
-
-  @Builder.Default
-  private BigDecimal agfsCost = BigDecimal.valueOf(0);
-
-  @Builder.Default
-  private BigDecimal lgfsVat = BigDecimal.valueOf(0);
-  @Builder.Default
-  private BigDecimal agfsVat = BigDecimal.valueOf(0);
-  @Builder.Default
-  private BigDecimal judApportionPercent = BigDecimal.valueOf(0);
-
-  private String accelerate;
-
-  private LocalDate dateModified;
-
-  private LocalDate dateCreated;
-
-  @Builder.Default
-  private String userCreated = "DCES";
-
+  private BigDecimal finalCost;
+  private BigDecimal lgfsCost;
+  private BigDecimal agfsCost;
   private String userModified;
+  private String userCreated;
+  private LocalDate dateCreated;
+  private LocalDate dateModified;
+  private String accelerate;
+  private BigDecimal judApportionPercent;
+  private BigDecimal agfsVat;
+  private Integer contFileId;
+  private LocalDate dateReplaced;
+  private FdcContributionsStatus status;
+  private String lgfsComplete;
+  private String agfsComplete;
+  private BigDecimal vat;
+  private BigDecimal lgfsVat;
 }

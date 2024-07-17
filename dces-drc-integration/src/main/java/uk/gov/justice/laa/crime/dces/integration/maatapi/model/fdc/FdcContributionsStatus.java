@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.model.external;
+package uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc;
 
 public enum FdcContributionsStatus {
   REQUESTED,
