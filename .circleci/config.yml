@@ -98,7 +98,7 @@ commands:
           name: Run Integration Tests
           command: |
             kubectl wait --for=condition=ready pod/${POD_NAME} --timeout=60s -n ${NAMESPACE}
-            kubectl exec -n ${NAMESPACE} ${POD_NAME} -- ./gradlew integrationTest -Dorg.gradle.jvmargs=-Xmx8g -S --no-daemon
+            kubectl exec -n ${NAMESPACE} ${POD_NAME} -- ./gradlew clean integrationTest -Dorg.gradle.jvmargs=-Xmx4g -S --no-daemon
       - run:
           name: Fetch Integration Test results
           command: |
