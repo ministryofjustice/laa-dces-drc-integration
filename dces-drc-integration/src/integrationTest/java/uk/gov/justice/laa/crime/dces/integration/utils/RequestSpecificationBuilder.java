@@ -1,0 +1,61 @@
+package uk.gov.justice.laa.crime.dces.integration.utils;
+
+import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.specification.RequestSpecification;
+import uk.gov.justice.laa.crime.dces.integration.utils.auth.OAuthTokenUtil;
+
+import static io.restassured.filter.log.LogDetail.ALL;
+import static io.restassured.http.ContentType.JSON;
+
+
+public class RequestSpecificationBuilder {
+
+    private static final String MAAT_CD_BASE_URL = TestConfiguration.get("maat.api.base.url");
+    private static final String MAAT_CD_AUTH_BASE_URL =
+            TestConfiguration.get("maat.api.oauth.base.url");
+    private static final String MAAT_CD_AUTH_CAA_CLIENT_ID =
+            TestConfiguration.get("maat.api.oauth.client.id");
+    private static final String MAAT_CD_AUTH_CAA_CLIENT_SECRET =
+            TestConfiguration.get("maat.api.oauth.client.secret");
+    private static final String MAAT_CD_AUTH_TOKEN_URI =
+            TestConfiguration.get("maat.api.oauth.token.uri");
+
+    private RequestSpecificationBuilder() {
+    }
+
+
+    public static RequestSpecification getMaatAPICrimeApplyReqSpec() {
+        return getMaatApiReqSpec(
+                MAAT_CD_BASE_URL,
+                MAAT_CD_AUTH_BASE_URL,
+                MAAT_CD_AUTH_CAA_CLIENT_ID,
+                MAAT_CD_AUTH_CAA_CLIENT_SECRET,
+                MAAT_CD_AUTH_TOKEN_URI);
+    }
+
+    private static RequestSpecification getMaatApiReqSpec(
+            String baseUrl,
+            String authUrl,
+            String authClientId,
+            String authClientSecret,
+            String authTokenUri) {
+        RequestSpecBuilder requestSpecBuilder = setUpRequestSpecBuilder(baseUrl);
+        requestSpecBuilder.addHeader(
+                "Authorization",
+                "Bearer " + getOauthAccessToken(authUrl, authClientId, authClientSecret, authTokenUri));
+        return requestSpecBuilder.build();
+    }
+
+    private static String getOauthAccessToken(
+            String authUrl, String authClientId, String authClientSecret, String authTokenUri) {
+        return OAuthTokenUtil.getAccessToken(authUrl, authClientId, authClientSecret, authTokenUri);
+    }
+
+    private static RequestSpecBuilder setUpRequestSpecBuilder(String baseUrl) {
+        RequestSpecBuilder requestSpecBuilder = new RequestSpecBuilder();
+        requestSpecBuilder.setBaseUri(baseUrl);
+        requestSpecBuilder.setContentType(JSON);
+        requestSpecBuilder.log(ALL);
+        return requestSpecBuilder;
+    }
+}
