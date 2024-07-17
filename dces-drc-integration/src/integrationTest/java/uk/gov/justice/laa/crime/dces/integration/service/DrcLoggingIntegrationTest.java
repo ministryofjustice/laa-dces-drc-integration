@@ -5,7 +5,6 @@ import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -167,7 +166,6 @@ class DrcLoggingIntegrationTest {
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-355">DCES-355</a> for test specification.
      */
     @Test
-    @Disabled
     void givenSomeActiveConcorContributionsAndProcessDailyFilesRan_whenDrcRespondsWithError_thenContributionFileIsNotUpdatedButErrorIsCreated() {
         // Update at least 3 concor_contribution rows to ACTIVE:
         final var updatedIds = spyFactory.updateConcorContributionStatus(ConcorContributionStatus.ACTIVE, 3);
