@@ -249,4 +249,68 @@ class FdcIntegrationTest {
 			// softly.assertThat(contributionFile.getXmlContent()).contains("<maat_id>" + fdcContribution.getMaatId() + "</maat_id>");
 		});
 	}
+
+	/**
+	 * <h4>Scenario:</h4>
+	 * <p>A negative integration test to check that fdc_contributions having status SENT are NOT picked up and are not
+	 *    processed.</p>
+	 * <h4>Given:</h4>
+	 * <p>* 3 fdc_contributions record IDs that have been updated to the SENT status.</p>
+	 * <h4>When</h4>
+	 * <p>* The {@link FdcService#processDailyFiles()} method is called.</p>
+	 * <h4>Then:</h4>
+	 * <p>1. The call to the callGlobalUpdate is successful i.e. MAAT API returned a successful response
+	 * <p>2. The IDs of the 3 updated records are returned.</p>
+	 * <p>3. The updated IDs are NOT included in the list of IDs returned by the call to retrieve 'REQUESTED' FDC Contributions.</p>
+	 * <p>4. The updated IDs are NOT included in the set of payloads sent to the DRC.</p>
+	 * <p>5. A contribution file may or may not get created (if it is created the updated IDs are not sent to the MAAT API).</p>
+	 * <p>6. After the `processDailyFiles` method call returns, the fdc_contribution entities corresponding to each
+	 *       of the updated IDs is checked:<br>
+	 *       - Each remains at status SENT<br>
+	 *       - Each has an unpopulated contribution_file ID.</p>
+	 *
+	 * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-360">DCES-360</a> for test specification.
+	 */
+	@Test
+	void givenSomeNegativeFdcStatusTestWaitingItems_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
+		// Set up test data for the scenario:
+		final var updatedIds = spyFactory.createFdcDelayedPickupTestData(FdcTestType.NEGATIVE_FDC_STATUS, 3);
+
+		final FdcProcessSpy.FdcProcessSpyBuilder watching = spyFactory.newFdcProcessSpyBuilder()
+				.traceExecuteFdcGlobalUpdate()
+				.traceAndFilterGetFdcContributions(updatedIds)
+				.traceAndStubSendFdcUpdate(id -> Boolean.TRUE)
+				.traceUpdateFdcs();
+
+		// Call the processDailyFiles() method under test:
+		fdcService.processDailyFiles();
+
+		final FdcProcessSpy watched = watching.build();
+
+		// Fetch some items of information from the maat-api to use during validation:
+		final var fdcContributions = updatedIds.stream().map(testDataClient::getFdcContribution).toList();
+
+		softly.assertThat(watched.getGlobalUpdateResponse().isSuccessful()).isTrue(); // 1
+		softly.assertThat(updatedIds).hasSize(3).doesNotContainNull(); // 2.
+		softly.assertThat(watched.getRequestedIds()).doesNotContainAnyElementsOf(updatedIds); // 3.
+		softly.assertThat(watched.getSentIds()).doesNotContainAnyElementsOf(updatedIds); // 4.
+
+		if (!watched.getRequestedIds().isEmpty()) { // 5.
+			// contribution_file got created:
+			softly.assertThat(watched.getRecordsSent()).isPositive();
+			softly.assertThat(watched.getXmlCcIds()).doesNotContainAnyElementsOf(updatedIds);
+			softly.assertThat(watched.getXmlFileName()).isNotBlank();
+			softly.assertThat(watched.getXmlFileResult()).isNotNull();
+		} else {
+			softly.assertThat(watched.getRecordsSent()).isZero();
+			softly.assertThat(watched.getXmlCcIds()).isNull();
+			softly.assertThat(watched.getXmlFileName()).isNull();
+			softly.assertThat(watched.getXmlFileResult()).isNull();
+		}
+
+		fdcContributions.forEach(fdcContribution -> { // 6.
+			softly.assertThat(fdcContribution.getStatus()).isEqualTo(FdcContributionsStatus.SENT);
+			softly.assertThat(fdcContribution.getContFileId()).isNull();
+		});
+	}
 }

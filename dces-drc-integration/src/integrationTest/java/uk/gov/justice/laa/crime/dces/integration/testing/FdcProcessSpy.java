@@ -29,6 +29,7 @@ import static uk.gov.justice.laa.crime.dces.integration.service.FdcService.REQUE
 @Builder
 @Getter
 public class FdcProcessSpy {
+  private final FdcGlobalUpdateResponse globalUpdateResponse;  // Returned from maat-api by FdcClient.executeFdcGlobalUpdate(...)
   private final Set<Integer> requestedIds;      // Returned from maat-api by FdcClient.getFdcContributions("REQUESTED")
   @Singular
   private final Set<Integer> sentIds;           // Sent to the DRC by DrcClient.sendFdcUpdate(...)
@@ -37,7 +38,6 @@ public class FdcProcessSpy {
   private final String xmlContent;              //  "    "    "
   private final String xmlFileName;             //  "    "    "
   private final Integer xmlFileResult;          // Returned from maat-api by FdcClient.updateFdcs(...)
-  private final FdcGlobalUpdateResponse globalUpdateResponse;  // Returned from maat-api by FdcClient.executeFdcGlobalUpdate(...)
 
   private static FdcProcessSpyBuilder builder() {
     throw new UnsupportedOperationException("Call SpyFactory.newFdcProcessSpyBuilder instead");
@@ -54,6 +54,15 @@ public class FdcProcessSpy {
     FdcProcessSpyBuilder(final FdcClient FdcClientSpy, final DrcClient drcClientSpy) {
       this.fdcClientSpy = FdcClientSpy;
       this.drcClientSpy = drcClientSpy;
+    }
+
+    public FdcProcessSpyBuilder traceExecuteFdcGlobalUpdate() {
+      doAnswer(invocation -> {
+        final var result = (FdcGlobalUpdateResponse) mockingDetails(fdcClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation);
+        globalUpdateResponse(result);
+        return result;
+      }).when(fdcClientSpy).executeFdcGlobalUpdate();
+      return this;
     }
 
     public FdcProcessSpyBuilder traceAndFilterGetFdcContributions(final Set<Integer> updatedIds) {
@@ -87,15 +96,6 @@ public class FdcProcessSpy {
         xmlFileResult(result);
         return result;
       }).when(fdcClientSpy).updateFdcs(any());
-      return this;
-    }
-
-    public FdcProcessSpyBuilder traceExecuteFdcGlobalUpdate() {
-      doAnswer(invocation -> {
-        final var result = (FdcGlobalUpdateResponse) mockingDetails(fdcClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation);
-        globalUpdateResponse(result);
-        return result;
-      }).when(fdcClientSpy).executeFdcGlobalUpdate();
       return this;
     }
   }

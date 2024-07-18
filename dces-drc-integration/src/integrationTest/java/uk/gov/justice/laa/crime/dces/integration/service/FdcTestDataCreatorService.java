@@ -86,7 +86,7 @@ public class FdcTestDataCreatorService {
         processNegativeTests(testType, repOrderId, fdcId, -7);
       });
     } else {
-      throw new RuntimeException("No candidate rep orders found for delayed pickup test type " + testType);
+      throw new RuntimeException("No candidate rep orders found for fast track test type " + testType);
     }
     return fdcIds;
   }
