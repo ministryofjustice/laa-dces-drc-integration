@@ -45,23 +45,23 @@ class ContributionIntegrationTest {
 
     @Test
     void testProcessContributionUpdateWhenNotFound() {
-        String errorText = "The request has failed to process";
-        UpdateLogContributionRequest dataRequest = UpdateLogContributionRequest.builder()
+        final String errorText = "The request has failed to process";
+        final var updateLogContributionRequest = UpdateLogContributionRequest.builder()
                 .concorId(9)
                 .errorText(errorText)
                 .build();
-        String response = contributionService.processContributionUpdate(dataRequest);
+        final String response = contributionService.processContributionUpdate(updateLogContributionRequest);
         softly.assertThat(response).isEqualTo("The request has failed to process");
     }
 
     @Test
     void testProcessContributionUpdateWhenFound() {
-        String errorText = "Error Text updated successfully.";
-        UpdateLogContributionRequest dataRequest = UpdateLogContributionRequest.builder()
+        final String errorText = "Error Text updated successfully.";
+        final var updateLogContributionRequest = UpdateLogContributionRequest.builder()
                 .concorId(47959912)
                 .errorText(errorText)
                 .build();
-        String response = contributionService.processContributionUpdate(dataRequest);
+        final String response = contributionService.processContributionUpdate(updateLogContributionRequest);
         softly.assertThat(response).isEqualTo("The request has been processed successfully");
     }
 
