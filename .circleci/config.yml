@@ -278,7 +278,6 @@ jobs:
 
   deploy-dev:
     executor: cloud-platform-executor
-    resource_class: large
     steps:
       - deploy-to:
           environment: dev
