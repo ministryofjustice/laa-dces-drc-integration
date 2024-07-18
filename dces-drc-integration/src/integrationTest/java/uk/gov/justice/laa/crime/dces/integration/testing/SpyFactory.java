@@ -1,6 +1,5 @@
 package uk.gov.justice.laa.crime.dces.integration.testing;
 
-import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.stereotype.Component;
@@ -10,10 +9,12 @@ import uk.gov.justice.laa.crime.dces.integration.client.FdcClient;
 import uk.gov.justice.laa.crime.dces.integration.client.TestDataClient;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateConcorContributionStatusRequest;
-
-import java.util.List;
+import uk.gov.justice.laa.crime.dces.integration.model.local.FdcAccelerationType;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcTestDataCreatorService;
+
+import java.util.List;
+import java.util.Set;
 
 /**
  * Entry-point for working with the ContributionProcessSpy and ContributionProcessSpyBuilder classes (and other spies
@@ -61,7 +62,11 @@ public class SpyFactory {
     }
 
     public Set<Integer> createFdcDelayedPickupTestData(final FdcTestType testType, final int recordsToUpdate) {
-        return fdcTestDataCreatorService.createDelayedPickupTestData (testType, recordsToUpdate);
+        return fdcTestDataCreatorService.createDelayedPickupTestData(testType, recordsToUpdate);
     }
 
+    public Set<Integer> createFastTrackTestData(
+            final FdcAccelerationType fdcAccelerationType, final FdcTestType testType, final int recordsToUpdate) {
+        return fdcTestDataCreatorService.createFastTrackTestData(fdcAccelerationType, testType, recordsToUpdate);
+    }
 }
