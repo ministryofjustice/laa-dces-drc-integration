@@ -20,7 +20,7 @@ import static org.mockito.Mockito.mockingDetails;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Getter
-public class DrcLoggingProcessSpy {
+public class ContributionLoggingProcessSpy {
     @Singular
     private final List<Integer> concorContributionIds;         // Sent to the maat-api by ContributionClient.sendLogContributionProcessed(...)
     @Singular
@@ -28,22 +28,22 @@ public class DrcLoggingProcessSpy {
     @Singular
     private final List<Integer> contributionFileIds;           // Returned from maat-api by ContributionClient.sendLogContributionProcessed(...)
 
-    private static DrcLoggingProcessSpyBuilder builder() {
-        throw new UnsupportedOperationException("Call SpyFactory.newDrcLoggingProcessSpyBuilder instead");
+    private static ContributionLoggingProcessSpyBuilder builder() {
+        throw new UnsupportedOperationException("Call SpyFactory.newContributionLoggingProcessSpyBuilder instead");
     }
 
-    public static class DrcLoggingProcessSpyBuilder {
+    public static class ContributionLoggingProcessSpyBuilder {
         private final ContributionClient contributionClientSpy;
 
-        private DrcLoggingProcessSpyBuilder() {
-            throw new UnsupportedOperationException("Call SpyFactory.newDrcLoggingProcessSpyBuilder instead");
+        private ContributionLoggingProcessSpyBuilder() {
+            throw new UnsupportedOperationException("Call SpyFactory.newContributionLoggingProcessSpyBuilder instead");
         }
 
-        DrcLoggingProcessSpyBuilder(final ContributionClient contributionClientSpy) {
+        ContributionLoggingProcessSpyBuilder(final ContributionClient contributionClientSpy) {
             this.contributionClientSpy = contributionClientSpy;
         }
 
-        public DrcLoggingProcessSpyBuilder traceSendLogContributionProcessed() {
+        public ContributionLoggingProcessSpyBuilder traceSendLogContributionProcessed() {
             doAnswer(invocation -> {
                 final var argument = (UpdateLogContributionRequest) invocation.getArgument(0);
                 concorContributionId(argument.getConcorId());

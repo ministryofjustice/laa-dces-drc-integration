@@ -326,7 +326,8 @@ class FdcIntegrationTest {
 	 * <h4>Given:</h4>
 	 * <p>* 3 fdc_contributions record IDs that have been updated to the REQUESTED status.</p>
 	 * <h4>When</h4>
-	 * <p>* The {@link FdcService#processDailyFiles()} method is called.</p>
+	 * <p>* The {@link FdcService#processDailyFiles()} method is called (but the DRC responds negatively in its
+	 *      synchronous responses).</p>
 	 * <h4>Then:</h4>
 	 * <p>1. The call to the callGlobalUpdate is successful i.e. MAAT API returned a successful response
 	 * <p>2. The IDs of the 3 updated records are returned.</p>
