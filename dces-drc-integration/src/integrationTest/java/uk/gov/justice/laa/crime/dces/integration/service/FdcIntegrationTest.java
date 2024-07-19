@@ -276,6 +276,8 @@ class FdcIntegrationTest {
 	 *
 	 * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-360">DCES-360</a> for test specification.
 	 */
+	//TODO: Fix test with implementation of /assessment/ endpoint access.
+	@Disabled("Pending creation of /assessment/ handler")
 	@Test
 	void givenSomeSentFdcContributions_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
 		// Set up test data for the scenario:
@@ -340,6 +342,8 @@ class FdcIntegrationTest {
 	 *
 	 * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-360">DCES-360</a> for test specification.
 	 */
+	//TODO: Fix test with implementation of /assessment/ endpoint access.
+	@Disabled("Pending creation of /assessment/ handler")
 	@Test
 	void givenRequestedFdcContributions_whenProcessDailyFilesFailsToSend_thenTheirStatusIsNotUpdated() {
 		// Set up test data for the scenario:
