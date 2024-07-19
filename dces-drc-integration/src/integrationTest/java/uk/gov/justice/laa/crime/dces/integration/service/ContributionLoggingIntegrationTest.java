@@ -14,19 +14,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.client.TestDataClient;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionResponseDTO;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
-import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionFileErrorResponse;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
+import uk.gov.justice.laa.crime.dces.integration.testing.ContributionLoggingProcessSpy;
 import uk.gov.justice.laa.crime.dces.integration.testing.ContributionProcessSpy;
-import uk.gov.justice.laa.crime.dces.integration.testing.DrcLoggingProcessSpy;
 import uk.gov.justice.laa.crime.dces.integration.testing.SpyFactory;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.Optional;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oauth2Login;
@@ -39,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ExtendWith(SoftAssertionsExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class DrcLoggingIntegrationTest {
+class ContributionLoggingIntegrationTest {
     private static final String ERROR_TEXT = "There was an error with this contribution. Please contact CCMT team.";
 
     @InjectSoftAssertions
@@ -105,7 +102,7 @@ class DrcLoggingIntegrationTest {
 
         final ContributionProcessSpy watched = watching.build();
 
-        final DrcLoggingProcessSpy.DrcLoggingProcessSpyBuilder logging = spyFactory.newDrcLoggingProcessSpyBuilder()
+        final ContributionLoggingProcessSpy.ContributionLoggingProcessSpyBuilder logging = spyFactory.newContributionLoggingProcessSpyBuilder()
                 .traceSendLogContributionProcessed();
 
         // Call the fake DRC processing-successful responses under test:
@@ -113,13 +110,13 @@ class DrcLoggingIntegrationTest {
         updatedIds.forEach(this::successfulContribution);
         final var endDate = LocalDate.now();
 
-        final DrcLoggingProcessSpy logged = logging.build();
+        final ContributionLoggingProcessSpy logged = logging.build();
 
         // Fetch some items of information from the maat-api to use during validation:
         final int contributionFileId = watched.getXmlFileResult();
         final var contributionFile = testDataClient.getContributionFile(contributionFileId);
         final var contributionFileErrors = updatedIds.stream().flatMap(id ->
-                getContributionFileErrorOptional(contributionFileId, id).stream()).toList();
+                spyFactory.getContributionFileErrorOptional(contributionFileId, id).stream()).toList();
 
         softly.assertThat(updatedIds).hasSize(3).doesNotContainNull(); // 1.
         softly.assertThat(contributionFile.getId()).isEqualTo(contributionFileId); // 2.
@@ -179,7 +176,7 @@ class DrcLoggingIntegrationTest {
 
         final ContributionProcessSpy watched = watching.build();
 
-        final DrcLoggingProcessSpy.DrcLoggingProcessSpyBuilder logging = spyFactory.newDrcLoggingProcessSpyBuilder()
+        final ContributionLoggingProcessSpy.ContributionLoggingProcessSpyBuilder logging = spyFactory.newContributionLoggingProcessSpyBuilder()
                 .traceSendLogContributionProcessed();
 
         // Call the fake DRC processing-failed responses under test:
@@ -187,14 +184,14 @@ class DrcLoggingIntegrationTest {
         updatedIds.forEach(this::failedContribution);
         final var endDate = LocalDate.now();
 
-        final DrcLoggingProcessSpy logged = logging.build();
+        final ContributionLoggingProcessSpy logged = logging.build();
 
         // Fetch some items of information from the maat-api to use during validation:
         final var repIds = updatedIds.stream().map(testDataClient::getConcorContribution).map(ConcorContributionResponseDTO::getRepId).toList();
         final int contributionFileId = watched.getXmlFileResult();
         final var contributionFile = testDataClient.getContributionFile(contributionFileId);
         final var contributionFileErrors = updatedIds.stream().flatMap(id ->
-                getContributionFileErrorOptional(contributionFileId, id).stream()).toList();
+                spyFactory.getContributionFileErrorOptional(contributionFileId, id).stream()).toList();
 
         softly.assertThat(updatedIds).hasSize(3).doesNotContainNull(); // 1.
         softly.assertThat(contributionFile.getId()).isEqualTo(contributionFileId); // 2.
@@ -250,19 +247,6 @@ class DrcLoggingIntegrationTest {
             acknowledgeContribution(concorContributionId, ERROR_TEXT);
         } catch (Exception e) {
             softly.fail("failedContribution(" + concorContributionId + ") failed with an exception:", e);
-        }
-    }
-
-    /**
-     * Get a contribution_file_error entity, but handle 404 by returning Optional.empty() instead of an exception.
-     * <p>
-     * Testing utility method.
-     */
-    private Optional<ContributionFileErrorResponse> getContributionFileErrorOptional(final int contributionFileId, final int contributionId) {
-        try {
-            return Optional.of(testDataClient.getContributionFileError(contributionFileId, contributionId));
-        } catch (WebClientResponseException.NotFound e) {
-            return Optional.empty();
         }
     }
 }
