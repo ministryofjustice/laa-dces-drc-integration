@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.crime.dces.integration.service;
 
+import io.github.resilience4j.retry.annotation.Retry;
 import io.micrometer.core.annotation.Timed;
 import jakarta.xml.bind.JAXBException;
 import lombok.AllArgsConstructor;
@@ -28,6 +29,7 @@ import java.util.Objects;
 @Slf4j
 public class ContributionService implements FileService {
 
+    private static final String SERVICE_NAME = "ContributionService";
     private final ContributionsMapperUtils contributionsMapperUtils;
     private final ContributionClient contributionClient;
     private final DrcClient drcClient;
@@ -55,7 +57,9 @@ public class ContributionService implements FileService {
         return updateContributionsAndCreateFile(successfulContributions, failedContributions);
     }
 
-    private void sendContributionsToDrc(List<ConcurContribEntry> contributionsList, Map<String, CONTRIBUTIONS> successfulContributions, Map<String,String> failedContributions){
+
+    @Retry(name=SERVICE_NAME)
+    public void sendContributionsToDrc(List<ConcurContribEntry> contributionsList, Map<String, CONTRIBUTIONS> successfulContributions, Map<String,String> failedContributions){
         // for each contribution sent by MAAT API
         for ( ConcurContribEntry contribEntry : contributionsList) {
             // convert string into objects
@@ -114,7 +118,9 @@ public class ContributionService implements FileService {
         return contributionFileId != null;
     }
 
-    private Integer contributionUpdateRequest(String xmlContent, List<String> concorContributionIdList, int numberOfRecords, String fileName, String fileAckXML) throws HttpServerErrorException {
+
+    @Retry(name=SERVICE_NAME)
+    public Integer contributionUpdateRequest(String xmlContent, List<String> concorContributionIdList, int numberOfRecords, String fileName, String fileAckXML) throws HttpServerErrorException {
         ContributionUpdateRequest request = ContributionUpdateRequest.builder()
                 .recordsSent(numberOfRecords)
                 .xmlContent(xmlContent)
