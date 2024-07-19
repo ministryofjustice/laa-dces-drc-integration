@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.crime.dces.integration.model.external;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Data;
@@ -13,6 +14,7 @@ public class FdcItem {
   private int fdcId;
   private FdcItemType itemType;
   private String adjustmentReason;
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
   private LocalDateTime dateCreated;
   private String paidAsClaimed;
   private String latestCostInd;

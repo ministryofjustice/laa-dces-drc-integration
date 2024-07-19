@@ -37,6 +37,10 @@ public interface TestDataClient extends MaatApiClient {
     @Valid
     ConcorContributionResponseDTO getConcorContribution(@PathVariable Integer id);
 
+    @GetExchange("/debt-collection-enforcement/fdc-contribution/{fdcContributionId}")
+    @Valid
+    FdcContribution getFdcContribution(@PathVariable Integer fdcContributionId);
+
     @PostExchange("/debt-collection-enforcement/fdc-items")
     @Valid
     void createFdcItems(@Valid @RequestBody final FdcItem fdcItemDTO);

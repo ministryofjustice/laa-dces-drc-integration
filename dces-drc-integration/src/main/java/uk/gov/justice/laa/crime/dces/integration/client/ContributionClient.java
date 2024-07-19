@@ -13,12 +13,8 @@ import org.springframework.web.service.annotation.PostExchange;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.MaatApiClientFactory;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.client.MaatApiClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsResponse;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcGlobalUpdateResponse;
 import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.FdcUpdateRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -32,35 +28,15 @@ public interface ContributionClient extends MaatApiClient {
     @Valid
     Integer updateContributions(@RequestBody ContributionUpdateRequest contributionUpdateRequest);
 
-    @PostExchange("/prepare-fdc-contributions-files")
-    FdcGlobalUpdateResponse executeFdcGlobalUpdate();
-
-    @GetExchange("/fdc-contribution-files")
-    FdcContributionsResponse getFdcContributions(@RequestParam String status);
-
-    @PostExchange("/create-fdc-file")
-    @Valid
-    Integer updateFdcs(@RequestBody FdcUpdateRequest contributionPutRequest);
-
     @PostExchange("/log-contribution-response")
     @Valid
     Integer sendLogContributionProcessed(@RequestBody UpdateLogContributionRequest updateLogContributionRequest);
-
-    @PostExchange("/log-fdc-response")
-    @Valid
-    Integer sendLogFdcProcessed(@RequestBody UpdateLogFdcRequest updateLogFdcRequest);
 
     /** For testing only? */
     @GetExchange("/contributions")
     @Valid
     List<String> findContributionFiles(@RequestParam(name = "fromDate") @DateTimeFormat(pattern = "dd.MM.yyyy") final LocalDate fromDate,
                                        @RequestParam(name = "toDate") @DateTimeFormat(pattern = "dd.MM.yyyy") final LocalDate toDate);
-
-    /** For testing only? */
-    @GetExchange("/final-defence-cost")
-    @Valid
-    List<String> getFdcFiles(@RequestParam(name = "fromDate") @DateTimeFormat(pattern = "dd.MM.yyyy") final LocalDate fromDate,
-                             @RequestParam(name = "toDate") @DateTimeFormat(pattern = "dd.MM.yyyy") final LocalDate toDate);
 
     @Configuration
     class ContributionFilesClientFactory {
