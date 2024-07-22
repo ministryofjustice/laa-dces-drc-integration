@@ -253,6 +253,7 @@ class FdcIntegrationTest {
 			//      endpoint /debt-collection-enforcement/fdc-contribution returns the maatId as null.
 			// softly.assertThat(contributionFile.getXmlContent()).contains("<maat_id>" + fdcContribution.getMaatId() + "</maat_id>");
 		});
+
 	}
 
 	/**
@@ -340,7 +341,7 @@ class FdcIntegrationTest {
 	 *       of the updated IDs is checked:<br>
 	 *       - Each remains at status REQUESTED.</p>
 	 *
-	 * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-360">DCES-360</a> for test specification.
+	 * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-360">DCES-361</a> for test specification.
 	 */
 	//TODO: Fix test with implementation of /assessment/ endpoint access.
 	@Disabled("Pending creation of /assessment/ handler")
