@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import uk.gov.justice.laa.crime.dces.integration.client.MaatApiClient;
-import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 
 import java.time.LocalDate;
@@ -50,11 +49,11 @@ class NewIntegrationTest {
 
         response.assertThat().statusCode(200);
         response.body("", not(empty()));
+
     }
 
     @Test
     void testFDCList_Service() {
-
         List<Fdc> fdcList = fdcService.getFdcList();
         log.info(fdcList.stream().map(x->x.getId().toString()).collect(Collectors.joining(",")));
     }

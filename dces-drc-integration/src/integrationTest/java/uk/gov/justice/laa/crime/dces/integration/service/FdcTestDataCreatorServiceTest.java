@@ -36,6 +36,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
+import uk.gov.justice.laa.crime.dces.integration.client.MaatApiClient;
 import uk.gov.justice.laa.crime.dces.integration.client.TestDataClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.MaatApiClientFactory;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.MaatApiWebClientFactory;
@@ -57,6 +58,9 @@ class FdcTestDataCreatorServiceTest {
   @MockBean
   OAuth2AuthorizedClientManager authorizedClientManager;
 
+  @MockBean
+  MaatApiClient maatApiClient;
+
   @BeforeAll
   public void setup() {
     mockWebServer = new MockWebServer();
@@ -65,7 +69,7 @@ class FdcTestDataCreatorServiceTest {
     TestDataClient newTestDataClient = MaatApiClientFactory.maatApiClient(
         (new MaatApiWebClientFactory()).maatApiWebClient(configuration, authorizedClientManager),
         TestDataClient.class);
-    fdcTestDataCreatorService = new FdcTestDataCreatorService(newTestDataClient);
+    fdcTestDataCreatorService = new FdcTestDataCreatorService(newTestDataClient,maatApiClient);
   }
 
   @AfterAll
