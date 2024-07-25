@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -19,8 +20,11 @@ import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.crime.dces.integration.client.MaatApiClient;
 import uk.gov.justice.laa.crime.dces.integration.client.TestDataClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsStatus;
+import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionResponseDTO;
+import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionFileResponse;
 import uk.gov.justice.laa.crime.dces.integration.model.external.FdcContribution;
+import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateConcorContributionStatusRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateFdcContributionRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateRepOrder;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcAccelerationType;
@@ -33,7 +37,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class FdcTestDataService {
+public class TestDataService {
 
   private final TestDataClient testDataClient;
 
@@ -156,4 +160,26 @@ public class FdcTestDataService {
     ValidatableResponse response = maatApiClient.getContributionFile(fdcId);
     return response.extract().body().as(ContributionFileResponse.class);
   }
+  public List<Integer> updateConcorContributionStatus(final ConcorContributionStatus status, final int recordCount){
+    UpdateConcorContributionStatusRequest request = UpdateConcorContributionStatusRequest.builder()
+            .status(status)
+            .recordCount(recordCount)
+            .build();
+    ValidatableResponse response = maatApiClient.updateConcorContributionStatus(request);
+    return response.extract().body().as(List.class);
+  }
+  public List<Integer> getConcorContributionStatus(final ConcorContributionStatus status, final int recordCount){
+    UpdateConcorContributionStatusRequest request = UpdateConcorContributionStatusRequest.builder()
+            .status(status)
+            .recordCount(recordCount)
+            .build();
+    ValidatableResponse response = maatApiClient.updateConcorContributionStatus(request);
+    return response.extract().body().as(List.class);
+  }
+
+  public ConcorContributionResponseDTO getConcorContribution(int concorId){
+    ValidatableResponse response = maatApiClient.getConcorContribution(concorId);
+    return response.extract().body().as(ConcorContributionResponseDTO.class);
+  }
+
 }

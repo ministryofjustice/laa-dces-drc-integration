@@ -8,6 +8,7 @@ import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.client.FdcClient;
 import uk.gov.justice.laa.crime.dces.integration.client.TestDataClient;
+import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionResponseDTO;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionFileResponse;
 import uk.gov.justice.laa.crime.dces.integration.model.external.FdcContribution;
@@ -16,7 +17,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateConcorCont
 import java.util.List;
 
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType;
-import uk.gov.justice.laa.crime.dces.integration.service.FdcTestDataService;
+import uk.gov.justice.laa.crime.dces.integration.service.TestDataService;
 
 /**
  * Entry-point for working with the ContributionProcessSpy and ContributionProcessSpyBuilder classes (and other spies
@@ -38,7 +39,7 @@ public class SpyFactory {
     private FdcClient fdcClientSpy;
 
     @SpyBean
-    private FdcTestDataService fdcTestDataService;
+    private TestDataService testDataService;
 
     @Autowired
     private TestDataClient testDataClient;
@@ -60,18 +61,23 @@ public class SpyFactory {
                 .status(status)
                 .recordCount(recordCount)
                 .build();
-        return testDataClient.updateConcorContributionStatus(request);
+//        return testDataClient.updateConcorContributionStatus(request);
+        return testDataService.updateConcorContributionStatus(status, recordCount);
     }
 
     public Set<Integer> createFdcDelayedPickupTestData(final FdcTestType testType, final int recordsToUpdate) {
-        return fdcTestDataService.createDelayedPickupTestData (testType, recordsToUpdate);
+        return testDataService.createDelayedPickupTestData (testType, recordsToUpdate);
     }
 
     public FdcContribution getFdcContribution(int fdcId){
-        return fdcTestDataService.getFdcContribution(fdcId);
+        return testDataService.getFdcContribution(fdcId);
     }
     public ContributionFileResponse getContributionsFile(int fileId){
-        return fdcTestDataService.getContributionsFile(fileId);
+        return testDataService.getContributionsFile(fileId);
+    }
+
+    public ConcorContributionResponseDTO getConcorContribution(int concorId){
+        return testDataService.getConcorContribution(concorId);
     }
 
 }

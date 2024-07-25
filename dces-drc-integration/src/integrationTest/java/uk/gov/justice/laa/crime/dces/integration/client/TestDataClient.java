@@ -19,17 +19,10 @@ import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateConcorCont
 import java.util.List;
 
 public interface TestDataClient extends MaatApiClient {
-    @PutExchange("/debt-collection-enforcement/concor-contribution-status")
-    @Valid
-    List<Integer> updateConcorContributionStatus(@RequestBody UpdateConcorContributionStatusRequest updateConcorContributionStatusRequest);
 
     @GetExchange("/debt-collection-enforcement/concor-contribution/{id}")
     @Valid
     ConcorContributionResponseDTO getConcorContribution(@PathVariable Integer id);
-
-    @GetExchange("/debt-collection-enforcement/fdc-contribution/{fdcContributionId}")
-    @Valid
-    FdcContribution getFdcContribution(@PathVariable Integer fdcContributionId);
 
     @GetExchange("/debt-collection-enforcement/contribution-file/{contributionFileId}")
     @Valid

@@ -4,6 +4,7 @@ import io.restassured.response.ValidatableResponse;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.crime.dces.integration.model.external.CreateFdcContributionRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.FdcItem;
+import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateConcorContributionStatusRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateFdcContributionRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateRepOrder;
 import uk.gov.justice.laa.crime.dces.integration.utils.RequestSpecificationBuilder;
@@ -19,6 +20,8 @@ public class MaatApiClient {
     private static final String DCES_BASE_URL = "debt-collection-enforcement";
     private static final String FDC_CONTRIBUTION_FILES_URI = "/fdc-contribution-files";
     private static final String CONTRIBUTION_FILE_URI = "/contribution-file";
+    private static final String CONCOR_CONTRIBUTION_STATUS_URI = "/concor-contribution-status";
+    private static final String CONCOR_CONTRIBUTION_URI = "/concor-contribution";
     private static final String FDC_ITEMS_URI = "/fdc-items";
     private static final String FDC_CONTRIBUTION_URI = "/fdc-contribution";
     private static final String REP_ORDERS_BASE_URL = "assessment/rep-orders";
@@ -168,4 +171,32 @@ public class MaatApiClient {
                 .log()
                 .all();
     }
+
+    //    @PutExchange("/debt-collection-enforcement/concor-contribution-status")
+    //    @Valid
+    //    List<Integer> updateConcorContributionStatus(@RequestBody UpdateConcorContributionStatusRequest updateConcorContributionStatusRequest);
+    public ValidatableResponse updateConcorContributionStatus(UpdateConcorContributionStatusRequest concorContributionRequest) {
+        return given()
+                .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
+                .body(concorContributionRequest)
+                .put(DCES_BASE_URL+ CONCOR_CONTRIBUTION_STATUS_URI)
+                .then()
+                .log()
+                .all();
+    }
+
+    //    @GetExchange("/debt-collection-enforcement/concor-contribution/{id}")
+    //    @Valid
+    //    ConcorContributionResponseDTO getConcorContribution(@PathVariable Integer id);
+    public ValidatableResponse getConcorContribution(int concorId) {
+        String contributionIdParameter = "/{concorId}";
+        return given()
+                .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
+                .pathParam("concorId",concorId)
+                .get(DCES_BASE_URL + CONCOR_CONTRIBUTION_URI +contributionIdParameter)
+                .then()
+                .log()
+                .all();
+    }
+
 }

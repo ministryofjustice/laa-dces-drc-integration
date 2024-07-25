@@ -46,14 +46,14 @@ import uk.gov.justice.laa.crime.dces.integration.model.local.FdcAccelerationType
 @Slf4j
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class FdcTestDataServiceTest {
+class TestDataServiceTest {
 
   private static MockWebServer mockWebServer;
   @Qualifier("servicesConfiguration")
   @Autowired
   private ServicesConfiguration configuration;
 
-  FdcTestDataService fdcTestDataService;
+  TestDataService testDataService;
 
   @MockBean
   OAuth2AuthorizedClientManager authorizedClientManager;
@@ -69,7 +69,7 @@ class FdcTestDataServiceTest {
     TestDataClient newTestDataClient = MaatApiClientFactory.maatApiClient(
         (new MaatApiWebClientFactory()).maatApiWebClient(configuration, authorizedClientManager),
         TestDataClient.class);
-    fdcTestDataService = new FdcTestDataService(newTestDataClient,maatApiClient);
+    testDataService = new TestDataService(newTestDataClient,maatApiClient);
   }
 
   @AfterAll
@@ -80,7 +80,7 @@ class FdcTestDataServiceTest {
   @Test
   void test_whenCreateDelayedPickupTestDataNegativeSod_thenShouldUpdateSod()
       throws InterruptedException {
-    Set<Integer> refIds = fdcTestDataService.createDelayedPickupTestData(NEGATIVE_SOD, 3);
+    Set<Integer> refIds = testDataService.createDelayedPickupTestData(NEGATIVE_SOD, 3);
     assertEquals(3, refIds.size());
     checkRequest("GET", "/assessment/rep-orders?delay=5&dateReceived=2015-01-01&numRecords=3&fdcDelayedPickup=true&fdcFastTrack=false");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
@@ -104,7 +104,7 @@ class FdcTestDataServiceTest {
   @Test
   void test_whenCreateDelayedPickupTestDataNegativeCco_thenShouldDeleteCco()
       throws InterruptedException {
-    Set<Integer> refIds = fdcTestDataService.createDelayedPickupTestData(NEGATIVE_CCO, 3);
+    Set<Integer> refIds = testDataService.createDelayedPickupTestData(NEGATIVE_CCO, 3);
     assertEquals(3, refIds.size());
     checkRequest("GET", "/assessment/rep-orders?delay=5&dateReceived=2015-01-01&numRecords=3&fdcDelayedPickup=true&fdcFastTrack=false");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
@@ -127,7 +127,7 @@ class FdcTestDataServiceTest {
   @Test
   void test_whenCreateDelayedPickupTestDataNegativeFdcStatus_thenShouldUpdateFdcContributionToSent()
       throws InterruptedException {
-    Set<Integer> refIds = fdcTestDataService.createDelayedPickupTestData(NEGATIVE_FDC_STATUS, 1);
+    Set<Integer> refIds = testDataService.createDelayedPickupTestData(NEGATIVE_FDC_STATUS, 1);
     assertEquals(1, refIds.size());
     checkRequest("GET", "/assessment/rep-orders?delay=5&dateReceived=2015-01-01&numRecords=1&fdcDelayedPickup=true&fdcFastTrack=false");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
@@ -141,7 +141,7 @@ class FdcTestDataServiceTest {
   @Test
   void test_whenCreateDelayedPickupTestDataNegativeFdcItem_thenShouldDeleteFdcItems()
       throws InterruptedException {
-    Set<Integer> refIds = fdcTestDataService.createDelayedPickupTestData(NEGATIVE_FDC_ITEM, 1);
+    Set<Integer> refIds = testDataService.createDelayedPickupTestData(NEGATIVE_FDC_ITEM, 1);
     assertEquals(1, refIds.size());
     checkRequest("GET", "/assessment/rep-orders?delay=5&dateReceived=2015-01-01&numRecords=1&fdcDelayedPickup=true&fdcFastTrack=false");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
@@ -154,7 +154,7 @@ class FdcTestDataServiceTest {
   @Test
   void test_whenCreateFastTrackTestDataPositiveAcceleration_thenShouldCreateContributionAndFdcItem()
       throws InterruptedException {
-    Set<Integer> refIds = fdcTestDataService.createFastTrackTestData(FdcAccelerationType.POSITIVE,  POSITIVE, 1);
+    Set<Integer> refIds = testDataService.createFastTrackTestData(FdcAccelerationType.POSITIVE,  POSITIVE, 1);
     assertEquals(1, refIds.size());
     checkRequest("GET", "/assessment/rep-orders?delay=-3&dateReceived=2015-01-01&numRecords=1&fdcDelayedPickup=false&fdcFastTrack=true");
     checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-3)+"\"}");
@@ -167,7 +167,7 @@ class FdcTestDataServiceTest {
   @Test
   void test_whenCreateFastTrackTestDataPositiveAccelerationNegSod_thenShouldDoSevenMonths()
       throws InterruptedException {
-    Set<Integer> refIds = fdcTestDataService.createFastTrackTestData(FdcAccelerationType.POSITIVE,  NEGATIVE_SOD, 1);
+    Set<Integer> refIds = testDataService.createFastTrackTestData(FdcAccelerationType.POSITIVE,  NEGATIVE_SOD, 1);
     assertEquals(1, refIds.size());
     checkRequest("GET", "/assessment/rep-orders?delay=-3&dateReceived=2015-01-01&numRecords=1&fdcDelayedPickup=false&fdcFastTrack=true");
     checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-3)+"\"}");
@@ -181,7 +181,7 @@ class FdcTestDataServiceTest {
   @Test
   void test_whenCreateFastTrackTestDataPositiveAccelerationNegCco_thenShouldDeleteCco()
       throws InterruptedException {
-    Set<Integer> refIds = fdcTestDataService.createFastTrackTestData(FdcAccelerationType.POSITIVE,  NEGATIVE_CCO, 1);
+    Set<Integer> refIds = testDataService.createFastTrackTestData(FdcAccelerationType.POSITIVE,  NEGATIVE_CCO, 1);
     assertEquals(1, refIds.size());
     checkRequest("GET", "/assessment/rep-orders?delay=-3&dateReceived=2015-01-01&numRecords=1&fdcDelayedPickup=false&fdcFastTrack=true");
     checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-3)+"\"}");
@@ -195,7 +195,7 @@ class FdcTestDataServiceTest {
   @Test
   void test_whenCreateFastTrackTestDataPositiveAccelerationNegFdcStatus_thenShouldUpdateFdcContributionsToSent()
       throws InterruptedException {
-    Set<Integer> refIds = fdcTestDataService.createFastTrackTestData(FdcAccelerationType.POSITIVE,  NEGATIVE_FDC_STATUS, 1);
+    Set<Integer> refIds = testDataService.createFastTrackTestData(FdcAccelerationType.POSITIVE,  NEGATIVE_FDC_STATUS, 1);
     assertEquals(1, refIds.size());
     checkRequest("GET", "/assessment/rep-orders?delay=-3&dateReceived=2015-01-01&numRecords=1&fdcDelayedPickup=false&fdcFastTrack=true");
     checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-3)+"\"}");
@@ -210,7 +210,7 @@ class FdcTestDataServiceTest {
   @Test
   void test_whenCreateFastTrackTestDataPositiveAccelerationNegFdcItem_thenShouldDeleteFdcItem()
       throws InterruptedException {
-    Set<Integer> refIds = fdcTestDataService.createFastTrackTestData(FdcAccelerationType.POSITIVE,  NEGATIVE_FDC_ITEM, 1);
+    Set<Integer> refIds = testDataService.createFastTrackTestData(FdcAccelerationType.POSITIVE,  NEGATIVE_FDC_ITEM, 1);
     assertEquals(1, refIds.size());
     checkRequest("GET", "/assessment/rep-orders?delay=-3&dateReceived=2015-01-01&numRecords=1&fdcDelayedPickup=false&fdcFastTrack=true");
     checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-3)+"\"}");
@@ -224,7 +224,7 @@ class FdcTestDataServiceTest {
   @Test
   void test_whenCreateFastTrackTestDataNegativeAcceleration_thenShouldCreateTwoFdcItems()
       throws InterruptedException {
-    Set<Integer> refIds = fdcTestDataService.createFastTrackTestData(FdcAccelerationType.NEGATIVE,  POSITIVE, 1);
+    Set<Integer> refIds = testDataService.createFastTrackTestData(FdcAccelerationType.NEGATIVE,  POSITIVE, 1);
     assertEquals(1, refIds.size());
     checkRequest("GET", "/assessment/rep-orders?delay=-3&dateReceived=2015-01-01&numRecords=1&fdcDelayedPickup=false&fdcFastTrack=true");
     checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-3)+"\"}");
@@ -239,7 +239,7 @@ class FdcTestDataServiceTest {
   @Test
   void test_whenCreateFastTrackTestDataPrevFdc_thenShouldCreateTwoContributions()
       throws InterruptedException {
-    Set<Integer> refIds = fdcTestDataService.createFastTrackTestData(FdcAccelerationType.PREVIOUS_FDC,  POSITIVE, 1);
+    Set<Integer> refIds = testDataService.createFastTrackTestData(FdcAccelerationType.PREVIOUS_FDC,  POSITIVE, 1);
     assertEquals(1, refIds.size());
     checkRequest("GET", "/assessment/rep-orders?delay=-3&dateReceived=2015-01-01&numRecords=1&fdcDelayedPickup=false&fdcFastTrack=true");
     checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-3)+"\"}");
@@ -254,7 +254,7 @@ class FdcTestDataServiceTest {
   @Test
   void test_whenCreateFastTrackTestDataPrevFdcNegative_thenShouldCreateTwoWaitingContributions()
       throws InterruptedException {
-    Set<Integer> refIds = fdcTestDataService.createFastTrackTestData(FdcAccelerationType.PREVIOUS_FDC, NEGATIVE_PREVIOUS_FDC, 1);
+    Set<Integer> refIds = testDataService.createFastTrackTestData(FdcAccelerationType.PREVIOUS_FDC, NEGATIVE_PREVIOUS_FDC, 1);
     assertEquals(1, refIds.size());
     checkRequest("GET", "/assessment/rep-orders?delay=-3&dateReceived=2015-01-01&numRecords=1&fdcDelayedPickup=false&fdcFastTrack=true");
     checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-3)+"\"}");
