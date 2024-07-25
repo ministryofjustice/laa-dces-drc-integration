@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
+import uk.gov.justice.laa.crime.dces.integration.client.MaatApiClient;
 import uk.gov.justice.laa.crime.dces.integration.client.TestDataClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsStatus;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
@@ -38,6 +39,8 @@ class FdcIntegrationTest {
 
 	@Autowired
 	private TestDataClient testDataClient;
+	@Autowired
+	private MaatApiClient maatApiClient;
 
 	@Autowired
 	FdcMapperUtils fdcMapperUtils;
@@ -120,9 +123,9 @@ class FdcIntegrationTest {
 		final FdcProcessSpy watched = watching.build();
 
 		// Fetch some items of information from the maat-api to use during validation:
-		final var fdcContributions = updatedIds.stream().map(testDataClient::getFdcContribution).toList();
+		final var fdcContributions = updatedIds.stream().map(spyFactory::getFdcContribution).toList();
 		final int contributionFileId = watched.getXmlFileResult();
-		final var contributionFile = testDataClient.getContributionFile(contributionFileId);
+		final var contributionFile = spyFactory.getContributionsFile(contributionFileId);
 
 		softly.assertThat(watched.getGlobalUpdateResponse().isSuccessful()).isTrue(); // 1
 		softly.assertThat(updatedIds).hasSize(3).doesNotContainNull(); // 2.

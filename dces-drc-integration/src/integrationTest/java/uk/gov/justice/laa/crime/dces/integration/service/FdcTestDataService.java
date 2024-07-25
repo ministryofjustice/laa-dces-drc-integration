@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.crime.dces.integration.client.MaatApiClient;
 import uk.gov.justice.laa.crime.dces.integration.client.TestDataClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsStatus;
+import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionFileResponse;
 import uk.gov.justice.laa.crime.dces.integration.model.external.FdcContribution;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateFdcContributionRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateRepOrder;
@@ -32,7 +33,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class FdcTestDataCreatorService {
+public class FdcTestDataService {
 
   private final TestDataClient testDataClient;
 
@@ -53,7 +54,12 @@ public class FdcTestDataCreatorService {
         FdcContribution fdcContribution = createFdcContribution(repOrderId, "Y", "Y", null, WAITING_ITEMS);
         int fdcId = fdcContribution.getId();
         fdcIds.add(fdcId);
-        createFdcItem(fdcId);
+        FdcItem fdcItem = FdcItem.builder()
+                .fdcId(fdcId)
+                .userCreated("DCES")
+                .dateCreated(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS))
+                .build();
+        createFdcItem(fdcItem);
         processNegativeTests(testType, repOrderId, fdcId, 3);
       });
     } else {
@@ -74,24 +80,26 @@ public class FdcTestDataCreatorService {
    */
 
   public Set<Integer> createFastTrackTestData( FdcAccelerationType fdcAccelerationType, FdcTestType testType, int recordsToUpdate){
-    Set<Integer> repOrderIds = testDataClient.getRepOrders(-3, "2015-01-01", recordsToUpdate, false, true);
+    Set<Integer> repOrderIds = getFdcFastTrackCandidateRepOrderIds(-3, LocalDate.of(2015,1,1), recordsToUpdate);
     Set<Integer> fdcIds = new HashSet<>();
     if (repOrderIds != null && !repOrderIds.isEmpty()) {
       repOrderIds.forEach(repOrderId -> {
-        testDataClient.updateRepOrderSentenceOrderDate(UpdateRepOrder.builder().repId(repOrderId).sentenceOrderDate(LocalDate.now().plusMonths(-3)).build());
+        maatApiClient.updateRepOrder(UpdateRepOrder.builder().repId(repOrderId).sentenceOrderDate(LocalDate.now().plusMonths(-3)).build());
         String manualAcceleration = (fdcAccelerationType == FdcAccelerationType.POSITIVE)?"Y":null;
-        int fdcId = testDataClient.createFdcContribution(new CreateFdcContributionRequest(repOrderId, "Y", "Y", manualAcceleration, WAITING_ITEMS)).getId();
+        int fdcId = createFdcContribution(repOrderId, "Y", "Y", manualAcceleration, WAITING_ITEMS).getId();
         fdcIds.add(fdcId);
         if (fdcAccelerationType.equals(FdcAccelerationType.PREVIOUS_FDC)) {
-          testDataClient.createFdcContribution(new CreateFdcContributionRequest(repOrderId, "Y", "Y", null, SENT));
+          createFdcContribution(repOrderId, "Y", "Y", null, SENT);
         }
         FdcItemBuilder fdcItemBuilder = FdcItem.builder().fdcId(fdcId).userCreated("DCES").dateCreated(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS));
         if (fdcAccelerationType.equals(FdcAccelerationType.NEGATIVE)) {
           fdcItemBuilder.itemType(FdcItemType.LGFS).paidAsClaimed("Y").latestCostInd("Current");
-          testDataClient.createFdcItems(fdcItemBuilder.build());
+//          testDataClient.createFdcItems(fdcItemBuilder.build());
+          createFdcItem(fdcItemBuilder.build());
           fdcItemBuilder.itemType(FdcItemType.AGFS).adjustmentReason("Pre AGFS Transfer").paidAsClaimed("N").latestCostInd("Current");
         }
-        testDataClient.createFdcItems(fdcItemBuilder.build());
+//        testDataClient.createFdcItems(fdcItemBuilder.build());
+        createFdcItem(fdcItemBuilder.build());
         processNegativeTests(testType, repOrderId, fdcId, -7);
       });
     } else {
@@ -102,12 +110,12 @@ public class FdcTestDataCreatorService {
 
   private void processNegativeTests(FdcTestType testType, Integer repOrderId, Integer fdcId, int monthsAfterSysDate) {
     switch (testType) {
-      case NEGATIVE_SOD -> testDataClient.updateRepOrderSentenceOrderDate(UpdateRepOrder.builder().repId(repOrderId)
+      case NEGATIVE_SOD -> maatApiClient.updateRepOrder(UpdateRepOrder.builder().repId(repOrderId)
           .sentenceOrderDate(LocalDate.now().plusMonths(monthsAfterSysDate)).build());
       case NEGATIVE_CCO -> maatApiClient.deleteCrownCourtOutcomes(repOrderId);
       case NEGATIVE_FDC_ITEM -> maatApiClient.deleteFdcItem(fdcId);
-      case NEGATIVE_PREVIOUS_FDC -> testDataClient.updateFdcContribution(new UpdateFdcContributionRequest(fdcId, repOrderId, SENT.name(), WAITING_ITEMS));
-      case NEGATIVE_FDC_STATUS -> testDataClient.updateFdcContribution(new UpdateFdcContributionRequest(fdcId, repOrderId, null, SENT));
+      case NEGATIVE_PREVIOUS_FDC -> maatApiClient.updateFdcContribution(new UpdateFdcContributionRequest(fdcId, repOrderId, SENT.name(), WAITING_ITEMS));
+      case NEGATIVE_FDC_STATUS -> maatApiClient.updateFdcContribution(new UpdateFdcContributionRequest(fdcId, repOrderId, null, SENT));
     }
   }
 
@@ -121,14 +129,15 @@ public class FdcTestDataCreatorService {
     return repOrderResponse.extract().body().as(Set.class);
   }
 
-  private FdcItem createFdcItem(int fdcId){
-    FdcItem requestFdcItem = FdcItem.builder()
-            .fdcId(fdcId)
-            .userCreated("DCES")
-            .dateCreated(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS))
-            .build();
-    ValidatableResponse response = maatApiClient.createFdcItem(requestFdcItem);
 
+  private Set<Integer> getFdcFastTrackCandidateRepOrderIds(int delay, LocalDate dateReceived, int recordsToUpdate){
+    ValidatableResponse repOrderResponse = maatApiClient.getFdcFastTrackRepOrderIdList(delay, dateReceived, recordsToUpdate);
+    return repOrderResponse.extract().body().as(Set.class);
+  }
+
+  private FdcItem createFdcItem(FdcItem fdcItem){
+    ValidatableResponse response = maatApiClient.createFdcItem(fdcItem);
+    // map the LocalDate returned back into a LocalDateTime, as rest-assured exceptions with the returned format.
     ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     FdcItem responseFdcItem = null;
     try {
@@ -136,8 +145,15 @@ public class FdcTestDataCreatorService {
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
     }
-
     return responseFdcItem;
   }
 
+  public FdcContribution getFdcContribution(int fdcId){
+    ValidatableResponse response = maatApiClient.getFdcContribution(fdcId);
+    return response.extract().body().as(FdcContribution.class);
+  }
+  public ContributionFileResponse getContributionsFile(int fdcId){
+    ValidatableResponse response = maatApiClient.getContributionFile(fdcId);
+    return response.extract().body().as(ContributionFileResponse.class);
+  }
 }

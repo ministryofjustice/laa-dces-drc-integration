@@ -9,11 +9,14 @@ import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.client.FdcClient;
 import uk.gov.justice.laa.crime.dces.integration.client.TestDataClient;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
+import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionFileResponse;
+import uk.gov.justice.laa.crime.dces.integration.model.external.FdcContribution;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateConcorContributionStatusRequest;
 
 import java.util.List;
+
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType;
-import uk.gov.justice.laa.crime.dces.integration.service.FdcTestDataCreatorService;
+import uk.gov.justice.laa.crime.dces.integration.service.FdcTestDataService;
 
 /**
  * Entry-point for working with the ContributionProcessSpy and ContributionProcessSpyBuilder classes (and other spies
@@ -35,7 +38,7 @@ public class SpyFactory {
     private FdcClient fdcClientSpy;
 
     @SpyBean
-    private FdcTestDataCreatorService fdcTestDataCreatorService;
+    private FdcTestDataService fdcTestDataService;
 
     @Autowired
     private TestDataClient testDataClient;
@@ -61,7 +64,14 @@ public class SpyFactory {
     }
 
     public Set<Integer> createFdcDelayedPickupTestData(final FdcTestType testType, final int recordsToUpdate) {
-        return fdcTestDataCreatorService.createDelayedPickupTestData (testType, recordsToUpdate);
+        return fdcTestDataService.createDelayedPickupTestData (testType, recordsToUpdate);
+    }
+
+    public FdcContribution getFdcContribution(int fdcId){
+        return fdcTestDataService.getFdcContribution(fdcId);
+    }
+    public ContributionFileResponse getContributionsFile(int fileId){
+        return fdcTestDataService.getContributionsFile(fileId);
     }
 
 }

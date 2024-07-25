@@ -42,6 +42,14 @@ class NewIntegrationTest {
         response.assertThat().statusCode(200);
         response.body("", not(empty()));
     }
+
+    @Test
+    void testGetFdcContribution() {
+        ValidatableResponse response = maatApiClient.getFdcContribution(5);
+
+        response.assertThat().statusCode(200);
+        response.body("", not(empty()));
+    }
     @Test
     void testFdcDelay_ApiClient() {
         LocalDate date = LocalDate.of(2011,12,12);
@@ -57,6 +65,8 @@ class NewIntegrationTest {
         List<Fdc> fdcList = fdcService.getFdcList();
         log.info(fdcList.stream().map(x->x.getId().toString()).collect(Collectors.joining(",")));
     }
+
+
 
 
 }
