@@ -97,12 +97,10 @@ public class TestDataService {
         }
         FdcItemBuilder fdcItemBuilder = FdcItem.builder().fdcId(fdcId).userCreated("DCES").dateCreated(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS));
         if (fdcAccelerationType.equals(FdcAccelerationType.NEGATIVE)) {
-          fdcItemBuilder.itemType(FdcItemType.LGFS).paidAsClaimed("Y").latestCostInd("Current");
-//          testDataClient.createFdcItems(fdcItemBuilder.build());
+          fdcItemBuilder = fdcItemBuilder.itemType(FdcItemType.LGFS).paidAsClaimed("Y").latestCostInd("Current");
           createFdcItem(fdcItemBuilder.build());
-          fdcItemBuilder.itemType(FdcItemType.AGFS).adjustmentReason("Pre AGFS Transfer").paidAsClaimed("N").latestCostInd("Current");
+          fdcItemBuilder = fdcItemBuilder.itemType(FdcItemType.AGFS).adjustmentReason("Pre AGFS Transfer").paidAsClaimed("N").latestCostInd("Current");
         }
-//        testDataClient.createFdcItems(fdcItemBuilder.build());
         createFdcItem(fdcItemBuilder.build());
         processNegativeTests(testType, repOrderId, fdcId, -7);
       });
