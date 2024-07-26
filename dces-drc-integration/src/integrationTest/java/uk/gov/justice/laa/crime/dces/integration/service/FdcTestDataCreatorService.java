@@ -1,5 +1,7 @@
 package uk.gov.justice.laa.crime.dces.integration.service;
 
+import java.util.HashMap;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,6 +28,7 @@ import static uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcCon
 @RequiredArgsConstructor
 public class FdcTestDataCreatorService {
   private final TestDataClient testDataClient;
+  private enum PickupType {DELAYED_PICKUP, FAST_TRACK}
 
   /**
    * Create test data required for testing the FDC Delayed Pickup logic.
@@ -44,7 +47,7 @@ public class FdcTestDataCreatorService {
         final int fdcId = fdcContribution.getId();
         fdcIds.add(fdcId);
         testDataClient.createFdcItems(FdcItem.builder().fdcId(fdcId).userCreated("DCES").dateCreated(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)).build());
-        processNegativeTests(testType, repOrderId, fdcId, 3);
+        processNegativeTests(testType, repOrderId, fdcId, PickupType.DELAYED_PICKUP);
       });
     } else {
       throw new RuntimeException("No candidate rep orders found for delayed pickup test type " + testType);
@@ -83,7 +86,7 @@ public class FdcTestDataCreatorService {
           fdcItemBuilder = fdcItemBuilder.itemType(FdcItemType.AGFS).adjustmentReason("Pre AGFS Transfer").paidAsClaimed("N").latestCostInd("Current");
         }
         testDataClient.createFdcItems(fdcItemBuilder.build());
-        processNegativeTests(testType, repOrderId, fdcId, -7);
+        processNegativeTests(testType, repOrderId, fdcId, PickupType.FAST_TRACK);
       });
     } else {
       throw new RuntimeException("No candidate rep orders found for fast track test type " + testType);
@@ -92,10 +95,19 @@ public class FdcTestDataCreatorService {
   }
 
   private void processNegativeTests(
-          final FdcTestType testType, final Integer repOrderId, final Integer fdcId, final int monthsAfterSysDate) {
+          final FdcTestType testType, final Integer repOrderId, final Integer fdcId, final PickupType pickupType) {
     switch (testType) {
-      case NEGATIVE_SOD -> testDataClient.updateRepOrderSentenceOrderDate(UpdateRepOrder.builder()
-              .repId(repOrderId).sentenceOrderDate(LocalDate.now().plusMonths(monthsAfterSysDate)).build());
+      case NEGATIVE_SOD -> {
+        switch (pickupType) {
+          case DELAYED_PICKUP -> {
+            Map<String, Object> repOrderWithNullSOD = new HashMap<>();
+            repOrderWithNullSOD.put("sentenceOrderDate", null);
+            testDataClient.updateRepOrderSentenceOrderDateToNull(repOrderId, repOrderWithNullSOD);
+          }
+          case FAST_TRACK -> testDataClient.updateRepOrderSentenceOrderDate(UpdateRepOrder.builder()
+              .repId(repOrderId).sentenceOrderDate(LocalDate.now().plusMonths(-7)).build());
+        }
+      }
       case NEGATIVE_CCO -> testDataClient.deleteCrownCourtOutcomes(repOrderId);
       case NEGATIVE_FDC_ITEM -> testDataClient.deleteFdcItems(fdcId);
       case NEGATIVE_PREVIOUS_FDC -> testDataClient.updateFdcContribution(

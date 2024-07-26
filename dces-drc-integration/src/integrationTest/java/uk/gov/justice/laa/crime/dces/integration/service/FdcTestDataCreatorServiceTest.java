@@ -86,17 +86,17 @@ class FdcTestDataCreatorServiceTest {
 
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
         "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
-    checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(3)+"\"}");
+    checkRequestAndBody("PATCH", "/assessment/rep-orders/1", "{\"sentenceOrderDate\":null}");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
         "{\"repId\":2,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
         "{\"fdcId\":1002,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
-    checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":2,\"sentenceOrderDate\":\""+getDateAfterMonths(3)+"\"}");
+    checkRequestAndBody("PATCH", "/assessment/rep-orders/2", "{\"sentenceOrderDate\":null}");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
         "{\"repId\":3,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
         "{\"fdcId\":1003,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
-    checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":3,\"sentenceOrderDate\":\""+getDateAfterMonths(3)+"\"}");
+    checkRequestAndBody("PATCH", "/assessment/rep-orders/3", "{\"sentenceOrderDate\":null}");
   }
 
   @Test
@@ -311,7 +311,6 @@ class FdcTestDataCreatorServiceTest {
 
     private int mockFdcId = 1001;
 
-    public void resetMockFdcId() {mockFdcId = 1001;}
     @SneakyThrows
     @NotNull
     @Override
