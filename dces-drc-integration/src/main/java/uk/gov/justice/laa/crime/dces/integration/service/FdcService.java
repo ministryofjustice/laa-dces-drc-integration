@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.crime.dces.integration.service;
 
+import io.github.resilience4j.retry.annotation.Retry;
 import io.micrometer.core.annotation.Timed;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,7 @@ import java.util.Objects;
 @Slf4j
 public class FdcService implements FileService{
 
+    private static final String SERVICE_NAME = "FdcService";
     public static final String REQUESTED_STATUS = "REQUESTED";
     private final FdcMapperUtils fdcMapperUtils;
     private final FdcClient fdcClient;
@@ -59,8 +61,10 @@ public class FdcService implements FileService{
         logNumberDiscepancies(globalUpdateResult, fdcList.size(), successfulFdcs.size());
         return updateFdcAndCreateFile(successfulFdcs, failedFdcs);
     }
+
+    @Retry(name=SERVICE_NAME)
     @SuppressWarnings("squid:S2583") // ignore the can only be true warning. As this is placeholder.
-    private void sendFdcToDrc(List<Fdc> fdcList, List<Fdc> successfulFdcs, Map<String,String> failedFdcs){
+    void sendFdcToDrc(List<Fdc> fdcList, List<Fdc> successfulFdcs, Map<String,String> failedFdcs){
         fdcList.forEach(currentFdc -> {
             Boolean updateSuccessful = drcClient.sendFdcUpdate(buildSendFdcFileDataToExternalRequest(currentFdc.getId().intValue()));
             if (Boolean.TRUE.equals(updateSuccessful)) {
@@ -112,7 +116,7 @@ public class FdcService implements FileService{
         return contributionFileId != null;
     }
 
-    void logNumberDiscepancies(int globalUpdateCount, int getFdcCount, int successfullySentFdcCount){
+    public void logNumberDiscepancies(int globalUpdateCount, int getFdcCount, int successfullySentFdcCount){
         if ( globalUpdateCount != getFdcCount ){
             log.info("Fdc number discrepancy: {} affected by global update, {} from getFdcs", globalUpdateCount, getFdcCount);
         }
@@ -121,7 +125,9 @@ public class FdcService implements FileService{
         }
     }
 
-    List<Fdc> getFdcList() throws HttpServerErrorException{
+
+    @Retry(name=SERVICE_NAME)
+    public List<Fdc> getFdcList() throws HttpServerErrorException{
         FdcContributionsResponse response;
         try {
             response = fdcClient.getFdcContributions(REQUESTED_STATUS);
@@ -141,7 +147,8 @@ public class FdcService implements FileService{
     }
 
 
-    private FdcGlobalUpdateResponse callFdcGlobalUpdate(){
+    @Retry(name=SERVICE_NAME)
+    public FdcGlobalUpdateResponse callFdcGlobalUpdate(){
         try {
             return fdcClient.executeFdcGlobalUpdate();
         }
@@ -175,7 +182,9 @@ public class FdcService implements FileService{
         return 0;
     }
 
-    private Integer fdcUpdateRequest(String xmlContent, List<String> fdcIdList, int numberOfRecords, String fileName, String fileAckXML) throws HttpServerErrorException {
+
+    @Retry(name=SERVICE_NAME)
+    public Integer fdcUpdateRequest(String xmlContent, List<String> fdcIdList, int numberOfRecords, String fileName, String fileAckXML) throws HttpServerErrorException {
         FdcUpdateRequest request = FdcUpdateRequest.builder()
                 .recordsSent(numberOfRecords)
                 .xmlContent(xmlContent)

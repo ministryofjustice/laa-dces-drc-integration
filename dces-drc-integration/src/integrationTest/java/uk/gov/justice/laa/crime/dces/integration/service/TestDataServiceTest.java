@@ -36,6 +36,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
+import org.springframework.test.context.junit.jupiter.EnabledIf;
 import uk.gov.justice.laa.crime.dces.integration.client.MaatApiClient;
 import uk.gov.justice.laa.crime.dces.integration.client.TestDataClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.MaatApiClientFactory;
@@ -43,6 +44,7 @@ import uk.gov.justice.laa.crime.dces.integration.maatapi.MaatApiWebClientFactory
 import uk.gov.justice.laa.crime.dces.integration.maatapi.config.ServicesConfiguration;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcAccelerationType;
 
+@EnabledIf(expression = "#{environment['sentry.environment'] == 'development'}", loadContext = true)
 @Slf4j
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
