@@ -4,15 +4,12 @@ import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
-import uk.gov.justice.laa.crime.dces.integration.client.MaatApiClient;
-import uk.gov.justice.laa.crime.dces.integration.client.TestDataClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsStatus;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcAccelerationType;
@@ -36,11 +33,6 @@ class FdcIntegrationTest {
 
 	@Autowired
 	private FdcService fdcService;
-
-	@Autowired
-	private TestDataClient testDataClient;
-	@Autowired
-	private MaatApiClient maatApiClient;
 
 	@AfterEach
 	void afterTestAssertAll(){
@@ -82,8 +74,6 @@ class FdcIntegrationTest {
 	 *
 	 * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-356">DCES-356</a> for test specification.
 	 */
-	//TODO: Fix test with implementation of /assessment/ endpoint access.
-	@Disabled("Pending creation of /assessment/ handler")
 	@Test
 	void givenSomeDelayedPickupWaitingItemsFdcContributions_whenProcessDailyFilesRuns_thenTheyAreQueriedSentAndInCreatedFile() {
 		// Set up test data for the scenario:
@@ -107,8 +97,6 @@ class FdcIntegrationTest {
 	 *
 	 * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-357">DCES-357</a> for test specification.
 	 */
-	//TODO: Fix test with implementation of /assessment/ endpoint access.
-	@Disabled("Pending creation of /assessment/ handler")
 	@Test
 	void givenSomePositiveAcceleratedWaitingItemsFdcContributions_whenProcessDailyFilesRuns_thenTheyAreQueriedSentAndInCreatedFile() {
 		// Set up test data for the scenario:
@@ -132,8 +120,6 @@ class FdcIntegrationTest {
 	 *
 	 * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-358">DCES-358</a> for test specification.
 	 */
-	//TODO: Fix test with implementation of /assessment/ endpoint access.
-	@Disabled("Pending creation of /assessment/ handler")
 	@Test
 	void givenSomeNegativeAcceleratedWaitingItemsFdcContributions_whenProcessDailyFilesRuns_thenTheyAreQueriedSentAndInCreatedFile() {
 		// Set up test data for the scenario:
@@ -157,8 +143,6 @@ class FdcIntegrationTest {
 	 *
 	 * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-359">DCES-359</a> for test specification.
 	 */
-	//TODO: Fix test with implementation of /assessment/ endpoint access.
-	@Disabled("Pending creation of /assessment/ handler")
 	@Test
 	void givenSomeFastTrackPreviousFdcWaitingItemsFdcContributions_whenProcessDailyFilesRuns_thenTheyAreQueriedSentAndInCreatedFile() {
 		// Set up test data for the scenario:
@@ -279,8 +263,6 @@ class FdcIntegrationTest {
 	 *
 	 * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-360">DCES-360</a> for test specification.
 	 */
-	//TODO: Fix test with implementation of /assessment/ endpoint access.
-	@Disabled("Pending creation of /assessment/ handler")
 	@Test
 	void givenSomeSentFdcContributions_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
 		// Set up test data for the scenario:
@@ -298,7 +280,7 @@ class FdcIntegrationTest {
 		final FdcProcessSpy watched = watching.build();
 
 		// Fetch some items of information from the maat-api to use during validation:
-		final var fdcContributions = updatedIds.stream().map(testDataClient::getFdcContribution).toList();
+		final var fdcContributions = updatedIds.stream().map(spyFactory::getFdcContribution).toList();
 
 		softly.assertThat(watched.getGlobalUpdateResponse().isSuccessful()).isTrue(); // 1
 		softly.assertThat(updatedIds).hasSize(3).doesNotContainNull(); // 2.
@@ -345,8 +327,6 @@ class FdcIntegrationTest {
 	 *
 	 * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-360">DCES-360</a> for test specification.
 	 */
-	//TODO: Fix test with implementation of /assessment/ endpoint access.
-	@Disabled("Pending creation of /assessment/ handler")
 	@Test
 	void givenRequestedFdcContributions_whenProcessDailyFilesFailsToSend_thenTheirStatusIsNotUpdated() {
 		// Set up test data for the scenario:
@@ -364,7 +344,7 @@ class FdcIntegrationTest {
 		final FdcProcessSpy watched = watching.build();
 
 		// Fetch some items of information from the maat-api to use during validation:
-		final var fdcContributions = updatedIds.stream().map(testDataClient::getFdcContribution).toList();
+		final var fdcContributions = updatedIds.stream().map(spyFactory::getFdcContribution).toList();
 
 		softly.assertThat(watched.getGlobalUpdateResponse().isSuccessful()).isTrue(); // 1
 		softly.assertThat(updatedIds).hasSize(3).doesNotContainNull(); // 2.

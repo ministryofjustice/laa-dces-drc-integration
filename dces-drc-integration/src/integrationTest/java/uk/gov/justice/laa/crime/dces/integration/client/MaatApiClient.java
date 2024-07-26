@@ -162,11 +162,11 @@ public class MaatApiClient {
     //    @Valid
     //    ContributionFileResponse getContributionFile(@PathVariable int contributionFileId);
     public ValidatableResponse getContributionFile(int contributionFileId) {
-        String contributionIdParameter = "/{contributionFileId}";
+        String contributionIdUri = "/{contributionFileId}";
         return given()
                 .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
                 .pathParam("contributionFileId",contributionFileId)
-                .get(DCES_BASE_URL + CONTRIBUTION_FILE_URI +contributionIdParameter)
+                .get(DCES_BASE_URL + CONTRIBUTION_FILE_URI +contributionIdUri)
                 .then()
                 .log()
                 .all();
@@ -189,14 +189,28 @@ public class MaatApiClient {
     //    @Valid
     //    ConcorContributionResponseDTO getConcorContribution(@PathVariable Integer id);
     public ValidatableResponse getConcorContribution(int concorId) {
-        String contributionIdParameter = "/{concorId}";
+        String contributionIdUri = "/{concorId}";
         return given()
                 .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
                 .pathParam("concorId",concorId)
-                .get(DCES_BASE_URL + CONCOR_CONTRIBUTION_URI +contributionIdParameter)
+                .get(DCES_BASE_URL + CONCOR_CONTRIBUTION_URI +contributionIdUri)
                 .then()
                 .log()
                 .all();
     }
 
+    //    @GetExchange("/debt-collection-enforcement/contribution-file/{contributionFileId}/error/{contributionId}")
+    //    @Valid
+    //    ContributionFileErrorResponse getContributionFileError(@PathVariable int contributionFileId, @PathVariable int contributionId);
+    public ValidatableResponse getContributionFileError(int contributionFileId, int contributionId) {
+        String contributionFileIdUri = "/{contributionFileId}/error/{contributionId}";
+        return given()
+                .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
+                .pathParam("contributionFileId", contributionFileId)
+                .pathParam("contributionId", contributionId)
+                .get(DCES_BASE_URL + CONTRIBUTION_FILE_URI + contributionFileIdUri)
+                .then()
+                .log()
+                .all();
+    }
 }

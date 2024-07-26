@@ -5,7 +5,6 @@ import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,7 +14,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
 import org.springframework.test.web.servlet.MockMvc;
-import uk.gov.justice.laa.crime.dces.integration.client.TestDataClient;
 import uk.gov.justice.laa.crime.dces.integration.model.external.FdcContribution;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType;
@@ -48,9 +46,6 @@ class FdcLoggingIntegrationTest {
 
     @Autowired
     private FdcService fdcService;
-
-    @Autowired
-    private TestDataClient testDataClient;
 
     @Autowired
     private MockMvc mockMvc;
@@ -89,8 +84,6 @@ class FdcLoggingIntegrationTest {
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-362">DCES-362</a> for test specification.
      */
-    //TODO: Fix test with implementation of /assessment/ endpoint access.
-    @Disabled("Pending creation of /assessment/ handler")
     @Test
     void givenSomeRequestedFdcContributionsAndProcessDailyFilesRan_whenDrcRespondsToAcknowledge_thenContributionsAndFileAreUpdated() {
         // Update at least 3 fdc_contribution rows to REQUESTED:
@@ -118,7 +111,7 @@ class FdcLoggingIntegrationTest {
 
         // Fetch some items of information from the maat-api to use during validation:
         final int contributionFileId = watched.getXmlFileResult();
-        final var contributionFile = testDataClient.getContributionFile(contributionFileId);
+        final var contributionFile = spyFactory.getContributionsFile(contributionFileId);
         final var contributionFileErrors = updatedIds.stream().flatMap(id ->
                 spyFactory.getContributionFileErrorOptional(contributionFileId, id).stream()).toList();
 
@@ -166,8 +159,6 @@ class FdcLoggingIntegrationTest {
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-363">DCES-363</a> for test specification.
      */
-    //TODO: Fix test with implementation of /assessment/ endpoint access.
-    @Disabled("Pending creation of /assessment/ handler")
     @Test
     void givenSomeRequestedFdcContributionsAndProcessDailyFilesRan_whenDrcRespondsWithError_thenContributionFileIsNotUpdatedButErrorIsCreated() {
         // Update at least 3 fdc_contribution rows to REQUESTED:
@@ -194,9 +185,9 @@ class FdcLoggingIntegrationTest {
         final FdcLoggingProcessSpy logged = logging.build();
 
         // Fetch some items of information from the maat-api to use during validation:
-        final var repIds = updatedIds.stream().map(testDataClient::getFdcContribution).map(FdcContribution::getMaatId).toList();
+        final var repIds = updatedIds.stream().map(spyFactory::getFdcContribution).map(FdcContribution::getMaatId).toList();
         final int contributionFileId = watched.getXmlFileResult();
-        final var contributionFile = testDataClient.getContributionFile(contributionFileId);
+        final var contributionFile = spyFactory.getContributionsFile(contributionFileId);
         final var contributionFileErrors = updatedIds.stream().flatMap(id ->
                 spyFactory.getContributionFileErrorOptional(contributionFileId, id).stream()).toList();
 

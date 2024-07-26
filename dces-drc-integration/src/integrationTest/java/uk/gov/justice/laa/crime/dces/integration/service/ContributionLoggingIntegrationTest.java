@@ -14,7 +14,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
 import org.springframework.test.web.servlet.MockMvc;
-import uk.gov.justice.laa.crime.dces.integration.client.TestDataClient;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionResponseDTO;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
@@ -47,9 +46,6 @@ class ContributionLoggingIntegrationTest {
 
     @Autowired
     private ContributionService contributionService;
-
-    @Autowired
-    private TestDataClient testDataClient;
 
     @Autowired
     private MockMvc mockMvc;
@@ -114,7 +110,7 @@ class ContributionLoggingIntegrationTest {
 
         // Fetch some items of information from the maat-api to use during validation:
         final int contributionFileId = watched.getXmlFileResult();
-        final var contributionFile = testDataClient.getContributionFile(contributionFileId);
+        final var contributionFile = spyFactory.getContributionsFile(contributionFileId);
         final var contributionFileErrors = updatedIds.stream().flatMap(id ->
                 spyFactory.getContributionFileErrorOptional(contributionFileId, id).stream()).toList();
 
@@ -187,9 +183,9 @@ class ContributionLoggingIntegrationTest {
         final ContributionLoggingProcessSpy logged = logging.build();
 
         // Fetch some items of information from the maat-api to use during validation:
-        final var repIds = updatedIds.stream().map(testDataClient::getConcorContribution).map(ConcorContributionResponseDTO::getRepId).toList();
+        final var repIds = updatedIds.stream().map(spyFactory::getConcorContribution).map(ConcorContributionResponseDTO::getRepId).toList();
         final int contributionFileId = watched.getXmlFileResult();
-        final var contributionFile = testDataClient.getContributionFile(contributionFileId);
+        final var contributionFile = spyFactory.getContributionsFile(contributionFileId);
         final var contributionFileErrors = updatedIds.stream().flatMap(id ->
                 spyFactory.getContributionFileErrorOptional(contributionFileId, id).stream()).toList();
 

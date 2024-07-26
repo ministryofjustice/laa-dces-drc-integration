@@ -38,9 +38,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
 import uk.gov.justice.laa.crime.dces.integration.client.MaatApiClient;
-import uk.gov.justice.laa.crime.dces.integration.client.TestDataClient;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.MaatApiClientFactory;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.MaatApiWebClientFactory;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.config.ServicesConfiguration;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcAccelerationType;
 
@@ -68,10 +65,7 @@ class TestDataServiceTest {
     mockWebServer = new MockWebServer();
     mockWebServer.setDispatcher(dispatcher);
     configuration.getMaatApi().setBaseUrl(String.format("http://localhost:%s", mockWebServer.getPort()));
-    TestDataClient newTestDataClient = MaatApiClientFactory.maatApiClient(
-        (new MaatApiWebClientFactory()).maatApiWebClient(configuration, authorizedClientManager),
-        TestDataClient.class);
-    testDataService = new TestDataService(newTestDataClient,maatApiClient);
+    testDataService = new TestDataService(maatApiClient);
   }
 
   @AfterAll

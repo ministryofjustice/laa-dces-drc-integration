@@ -18,18 +18,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.crime.dces.integration.client.MaatApiClient;
-import uk.gov.justice.laa.crime.dces.integration.client.TestDataClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsStatus;
-import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionResponseDTO;
-import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
-import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionFileResponse;
-import uk.gov.justice.laa.crime.dces.integration.model.external.FdcContribution;
-import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateConcorContributionStatusRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateFdcContributionRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateRepOrder;
+import uk.gov.justice.laa.crime.dces.integration.model.external.*;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcAccelerationType;
-import uk.gov.justice.laa.crime.dces.integration.model.external.CreateFdcContributionRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.external.FdcItem;
 import uk.gov.justice.laa.crime.dces.integration.model.external.FdcItem.FdcItemBuilder;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcItemType;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType;
@@ -38,8 +29,6 @@ import uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType;
 @Service
 @RequiredArgsConstructor
 public class TestDataService {
-
-  private final TestDataClient testDataClient;
 
   private final MaatApiClient maatApiClient;
 
@@ -154,7 +143,7 @@ public class TestDataService {
     ValidatableResponse response = maatApiClient.getFdcContribution(fdcId);
     return response.extract().body().as(FdcContribution.class);
   }
-  public ContributionFileResponse getContributionsFile(int fdcId){
+  public ContributionFileResponse getContributionFile(int fdcId){
     ValidatableResponse response = maatApiClient.getContributionFile(fdcId);
     return response.extract().body().as(ContributionFileResponse.class);
   }
@@ -166,18 +155,21 @@ public class TestDataService {
     ValidatableResponse response = maatApiClient.updateConcorContributionStatus(request);
     return response.extract().body().as(List.class);
   }
-  public List<Integer> getConcorContributionStatus(final ConcorContributionStatus status, final int recordCount){
-    UpdateConcorContributionStatusRequest request = UpdateConcorContributionStatusRequest.builder()
-            .status(status)
-            .recordCount(recordCount)
-            .build();
-    ValidatableResponse response = maatApiClient.updateConcorContributionStatus(request);
-    return response.extract().body().as(List.class);
-  }
 
   public ConcorContributionResponseDTO getConcorContribution(int concorId){
     ValidatableResponse response = maatApiClient.getConcorContribution(concorId);
     return response.extract().body().as(ConcorContributionResponseDTO.class);
+  }
+
+  public ContributionFileErrorResponse getContributionFileError(final int contributionFileId, final int contributionId){
+    ValidatableResponse response = maatApiClient.getContributionFileError(contributionFileId, contributionId);
+    ContributionFileErrorResponse errorResponse = null;
+    try {
+        return response.extract().body().as(ContributionFileErrorResponse.class);
+    }
+    catch (RuntimeException e){
+      return null;
+    }
   }
 
 }

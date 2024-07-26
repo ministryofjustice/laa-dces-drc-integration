@@ -1,13 +1,10 @@
 package uk.gov.justice.laa.crime.dces.integration.testing;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.client.FdcClient;
-import uk.gov.justice.laa.crime.dces.integration.client.TestDataClient;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionResponseDTO;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionFileResponse;
@@ -44,9 +41,6 @@ public class SpyFactory {
     @SpyBean
     private TestDataService testDataService;
 
-    @Autowired
-    private TestDataClient testDataClient;
-
     public ContributionProcessSpy.ContributionProcessSpyBuilder newContributionProcessSpyBuilder() {
         return new ContributionProcessSpy.ContributionProcessSpyBuilder(contributionClientSpy, drcClientSpy);
     }
@@ -80,7 +74,7 @@ public class SpyFactory {
         return testDataService.getFdcContribution(fdcId);
     }
     public ContributionFileResponse getContributionsFile(int fileId){
-        return testDataService.getContributionsFile(fileId);
+        return testDataService.getContributionFile(fileId);
     }
 
     public ConcorContributionResponseDTO getConcorContribution(int concorId){
@@ -89,7 +83,7 @@ public class SpyFactory {
 
     public Set<Integer> createFastTrackTestData(
             final FdcAccelerationType fdcAccelerationType, final FdcTestType testType, final int recordsToUpdate) {
-        return fdcTestDataCreatorService.createFastTrackTestData(fdcAccelerationType, testType, recordsToUpdate);
+        return testDataService.createFastTrackTestData(fdcAccelerationType, testType, recordsToUpdate);
     }
 
     /**
@@ -98,10 +92,6 @@ public class SpyFactory {
      * Testing utility method.
      */
     public Optional<ContributionFileErrorResponse> getContributionFileErrorOptional(final int contributionFileId, final int contributionId) {
-        try {
-            return Optional.of(testDataClient.getContributionFileError(contributionFileId, contributionId));
-        } catch (WebClientResponseException.NotFound e) {
-            return Optional.empty();
-        }
+        return Optional.ofNullable(testDataService.getContributionFileError(contributionFileId, contributionId));
     }
 }
