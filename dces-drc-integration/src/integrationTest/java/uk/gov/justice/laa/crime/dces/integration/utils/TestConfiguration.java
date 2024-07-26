@@ -25,22 +25,19 @@ public class TestConfiguration {
 
     public static void initConfig() {
         String propertyFileName =
-                System.getenv("CHART_NAME") == null
+                System.getenv("HOST_ENV") == null
                         ? LOCAL_PROPERTIES_PREFIX + BASE_PROPERTIES_FILENAME
                         : BASE_PROPERTIES_FILENAME;
 
         Parameters params = new Parameters();
         File propertiesFile = new File(propertyFileName);
 
-        System.out.println("Loaded File: "+propertyFileName);
         FileBasedConfigurationBuilder<FileBasedConfiguration> builder =
                 new FileBasedConfigurationBuilder<FileBasedConfiguration>(PropertiesConfiguration.class)
                         .configure(params.fileBased().setFile(propertiesFile).setThrowExceptionOnMissing(true));
-        System.out.println("Configuration About To Load");
 
         try {
             configuration = builder.getConfiguration();
-            System.out.println("Configuration Loaded");
         } catch (ConfigurationException e) {
             throw new RuntimeException("Could not load properties file", e);
         }
