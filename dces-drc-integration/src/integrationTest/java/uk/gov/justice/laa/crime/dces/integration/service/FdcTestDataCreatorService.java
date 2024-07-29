@@ -72,7 +72,7 @@ public class FdcTestDataCreatorService {
     final var fdcIds = new HashSet<Integer>();
     if (repOrderIds != null && !repOrderIds.isEmpty()) {
       repOrderIds.forEach(repOrderId -> {
-        testDataClient.updateRepOrderSentenceOrderDate(UpdateRepOrder.builder().repId(repOrderId).sentenceOrderDate(LocalDate.now().plusMonths(-3)).build());
+        testDataClient.updateRepOrderSentenceOrderDate(UpdateRepOrder.builder().repId(repOrderId).sentenceOrderDate(LocalDate.now().minusMonths(3)).build());
         final String manualAcceleration = (fdcAccelerationType == FdcAccelerationType.POSITIVE) ? "Y" : null;
         final int fdcId = testDataClient.createFdcContribution(new CreateFdcContributionRequest(repOrderId, "Y", "Y", manualAcceleration, WAITING_ITEMS)).getId();
         fdcIds.add(fdcId);
@@ -105,7 +105,7 @@ public class FdcTestDataCreatorService {
             testDataClient.updateRepOrderSentenceOrderDateToNull(repOrderId, repOrderWithNullSOD);
           }
           case FAST_TRACK -> testDataClient.updateRepOrderSentenceOrderDate(UpdateRepOrder.builder()
-              .repId(repOrderId).sentenceOrderDate(LocalDate.now().plusMonths(-7)).build());
+              .repId(repOrderId).sentenceOrderDate(LocalDate.now().minusMonths(7)).build());
         }
       }
       case NEGATIVE_CCO -> testDataClient.deleteCrownCourtOutcomes(repOrderId);
