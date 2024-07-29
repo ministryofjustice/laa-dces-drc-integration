@@ -303,12 +303,13 @@ class FdcIntegrationTest {
 	 *       of the updated IDs is checked:<br>
 	 *       - Each remains at status REQUESTED.</p>
 	 *
-	 * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-407">DCES-407</a> for test specification.
+	 * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-360">DCES-360</a> for test specification.
 	 */
 	//TODO: Fix test with implementation of /assessment/ endpoint access.
 	@Disabled("Pending creation of /assessment/ handler")
 	@Test
-	void givenRequestedFdcContributions_whenProcessDailyFilesRuns_thenTheyAreNotProcessed() {
+	void givenRequestedFdcContributions_whenProcessDailyFilesFailsToSend_thenTheirStatusIsNotUpdated() {
+		// Set up test data for the scenario:
 		final var updatedIds = spyFactory.createFdcDelayedPickupTestData(FdcTestType.POSITIVE, 3);
 		runProcessDailyFilesAndCheckResults(updatedIds, false, true, true, true, FdcContributionsStatus.REQUESTED);
 	}
@@ -361,7 +362,7 @@ class FdcIntegrationTest {
 	 *       - Each remains at status WAITING_ITEMS<br>
 	 *       - Each has an unpopulated contribution_file ID.</p>
 	 *
-	 * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-407">DCES-407</a> for test specification.
+	 * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-408">DCES-408</a> for test specification.
 	 */
 	//TODO: Fix test with implementation of /assessment/ endpoint access.
 	@Disabled("Pending creation of /assessment/ handler")
