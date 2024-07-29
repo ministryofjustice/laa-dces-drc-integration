@@ -403,15 +403,15 @@ class FdcIntegrationTest {
 		// Fetch some items of information from the maat-api to use during validation:
 		final var fdcContributions = updatedIds.stream().map(testDataClient::getFdcContribution).toList();
 
-		softly.assertThat(watched.getGlobalUpdateResponse().isSuccessful()).isTrue(); // 1
-		softly.assertThat(updatedIds).hasSize(3).doesNotContainNull(); // 2.
+		softly.assertThat(watched.getGlobalUpdateResponse().isSuccessful()).isTrue();
+		softly.assertThat(updatedIds).hasSize(3).doesNotContainNull();
 
-		if (updatedIdsShouldBeRequested) // 3.
+		if (updatedIdsShouldBeRequested)
 			softly.assertThat(watched.getRequestedIds()).containsAll(updatedIds);
 		else
 			softly.assertThat(watched.getRequestedIds()).doesNotContainAnyElementsOf(updatedIds);
 
-		if (updatedIdsShouldBeSent) // 4.
+		if (updatedIdsShouldBeSent)
 			softly.assertThat(watched.getSentIds()).containsAll(updatedIds);
 		else
 			softly.assertThat(watched.getSentIds()).doesNotContainAnyElementsOf(updatedIds);
@@ -429,7 +429,7 @@ class FdcIntegrationTest {
 				softly.assertThat(watched.getXmlFileResult()).isNull();
 			}
 		}
-		fdcContributions.forEach(fdcContribution -> { // 5.
+		fdcContributions.forEach(fdcContribution -> {
 			softly.assertThat(fdcContribution.getStatus()).isEqualTo(fdcContributionsStatusExpected);
 			if (!checkContributionFile)
 				softly.assertThat(fdcContribution.getContFileId()).isNull();
