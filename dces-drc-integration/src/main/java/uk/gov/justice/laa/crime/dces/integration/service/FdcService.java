@@ -2,13 +2,16 @@ package uk.gov.justice.laa.crime.dces.integration.service;
 
 import io.github.resilience4j.retry.annotation.Retry;
 import io.micrometer.core.annotation.Timed;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import uk.gov.justice.laa.crime.dces.integration.client.FdcClient;
+import uk.gov.justice.laa.crime.dces.integration.aspect.Counted;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
+import uk.gov.justice.laa.crime.dces.integration.client.FdcClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionEntry;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsResponse;
@@ -30,6 +33,7 @@ import java.util.Objects;
 @Service
 @AllArgsConstructor
 @Slf4j
+@Counted
 public class FdcService implements FileService{
 
     private static final String SERVICE_NAME = "FdcService";
@@ -38,9 +42,20 @@ public class FdcService implements FileService{
     private final FdcClient fdcClient;
     private final DrcClient drcClient;
 
+    private final MeterRegistry meterRegistry;
+
     public String processFdcUpdate(UpdateLogFdcRequest updateLogFdcRequest) {
         try {
+
+            log.info("Service - Request received from DRC to update FDC {}", updateLogFdcRequest);
+
+            Counter counter = Counter.builder("processFdcUpdate_counter")
+                    .description("Number of calls to processFdcUpdate_counter")
+                    .register(meterRegistry);
+
+            counter.increment();
             fdcClient.sendLogFdcProcessed(updateLogFdcRequest);
+
             return "The request has been processed successfully";
         } catch (MaatApiClientException | WebClientResponseException | HttpServerErrorException e) {
             log.info("processFdcUpdate failed", e);
