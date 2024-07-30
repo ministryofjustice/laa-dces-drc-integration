@@ -388,7 +388,7 @@ class FdcIntegrationTest {
 	 * <p>4. The updated IDs are NOT included in the set of payloads sent to the DRC.</p>
 	 * <p>5. After the `processDailyFiles` method call returns, the fdc_contribution entities corresponding to each
 	 *       of the updated IDs is checked:<br>
-	 *       - Each remains at status SENT<br>
+	 *       - Each remains at status WAITING_ITEMS<br>
 	 *       - Each has an unpopulated contribution_file ID.</p>
 	 *
 	 * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-405">DCES-405</a> for test specification.
@@ -416,7 +416,7 @@ class FdcIntegrationTest {
 	 * <p>4. The updated IDs are NOT included in the set of payloads sent to the DRC.</p>
 	 * <p>5. After the `processDailyFiles` method call returns, the fdc_contribution entities corresponding to each
 	 *       of the updated IDs is checked:<br>
-	 *       - Each remains at status SENT<br>
+	 *       - Each remains at status WAITING_ITEMS<br>
 	 *       - Each has an unpopulated contribution_file ID.</p>
 	 *
 	 * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-406">DCES-406</a> for test specification.
@@ -425,7 +425,7 @@ class FdcIntegrationTest {
 	//@Disabled("Pending creation of /assessment/ handler")
 	@Test
 	void givenSomeFastTrackFdcContributionsWithNullSOD_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
-		final var updatedIds = spyFactory.createFdcDelayedPickupTestData(FdcTestType.NEGATIVE_SOD, 3);
+		final var updatedIds = spyFactory.createFastTrackTestData(FdcAccelerationType.POSITIVE, FdcTestType.NEGATIVE_SOD, 3);
 		runProcessDailyFilesAndCheckResults(updatedIds, true, false, false, false, FdcContributionsStatus.WAITING_ITEMS);
 	}
 
