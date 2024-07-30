@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.service;
+package uk.gov.justice.laa.crime.dces.integration.testing;
 
 import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
@@ -12,8 +12,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
-import uk.gov.justice.laa.crime.dces.integration.testing.ContributionProcessSpy;
-import uk.gov.justice.laa.crime.dces.integration.testing.SpyFactory;
+import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
+import uk.gov.justice.laa.crime.dces.integration.service.spy.ContributionProcessSpy;
+import uk.gov.justice.laa.crime.dces.integration.service.spy.SpyFactory;
 
 import java.time.LocalDate;
 import java.util.List;

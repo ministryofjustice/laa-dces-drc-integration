@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.testing;
+package uk.gov.justice.laa.crime.dces.integration.service.spy;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

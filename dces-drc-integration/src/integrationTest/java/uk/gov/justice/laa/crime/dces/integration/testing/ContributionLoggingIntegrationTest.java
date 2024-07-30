@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.service;
+package uk.gov.justice.laa.crime.dces.integration.testing;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.assertj.core.api.SoftAssertions;
@@ -17,9 +17,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionResponseDTO;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
-import uk.gov.justice.laa.crime.dces.integration.testing.ContributionLoggingProcessSpy;
-import uk.gov.justice.laa.crime.dces.integration.testing.ContributionProcessSpy;
-import uk.gov.justice.laa.crime.dces.integration.testing.SpyFactory;
+import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
+import uk.gov.justice.laa.crime.dces.integration.service.spy.ContributionLoggingProcessSpy;
+import uk.gov.justice.laa.crime.dces.integration.service.spy.ContributionProcessSpy;
+import uk.gov.justice.laa.crime.dces.integration.service.spy.SpyFactory;
 
 import java.time.LocalDate;
 import java.time.LocalTime;

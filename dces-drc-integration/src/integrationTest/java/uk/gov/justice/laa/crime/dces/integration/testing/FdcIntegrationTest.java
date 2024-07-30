@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.service;
+package uk.gov.justice.laa.crime.dces.integration.testing;
 
 import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
@@ -14,8 +14,9 @@ import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributi
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcAccelerationType;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType;
-import uk.gov.justice.laa.crime.dces.integration.testing.FdcProcessSpy;
-import uk.gov.justice.laa.crime.dces.integration.testing.SpyFactory;
+import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
+import uk.gov.justice.laa.crime.dces.integration.service.spy.FdcProcessSpy;
+import uk.gov.justice.laa.crime.dces.integration.service.spy.SpyFactory;
 
 import java.time.LocalDate;
 import java.util.Set;
@@ -231,8 +232,8 @@ class FdcIntegrationTest {
 		softly.assertThat(contributionFile.getRecordsSent()).isGreaterThanOrEqualTo(3);
 		softly.assertThat(contributionFile.getDateCreated()).isBetween(startDate, endDate);
 		softly.assertThat(contributionFile.getUserCreated()).isEqualTo("DCES");
-		// TODO uncomment after fix null actual: softly.assertThat(contributionFile.getDateModified()).isBetween(startDate, endDate);
-		// TODO uncomment after fix null actual: softly.assertThat(contributionFile.getUserModified()).isEqualTo("DCES");
+		softly.assertThat(contributionFile.getDateModified()).isBetween(startDate, endDate);
+		softly.assertThat(contributionFile.getUserModified()).isEqualTo("DCES");
 		softly.assertThat(contributionFile.getDateSent()).isBetween(startDate, endDate);
 		fdcContributions.forEach(fdcContribution -> {
 			softly.assertThat(contributionFile.getXmlContent()).contains("<fdc id=\""+fdcContribution.getId()+"\">");

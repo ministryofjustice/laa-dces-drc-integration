@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.service;
+package uk.gov.justice.laa.crime.dces.integration.testing;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -40,6 +40,7 @@ import org.springframework.test.context.junit.jupiter.EnabledIf;
 import uk.gov.justice.laa.crime.dces.integration.client.MaatApiClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.config.ServicesConfiguration;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcAccelerationType;
+import uk.gov.justice.laa.crime.dces.integration.service.TestDataService;
 
 @EnabledIf(expression = "#{environment['sentry.environment'] == 'development'}", loadContext = true)
 @Slf4j
@@ -250,7 +251,13 @@ class TestDataServiceTest {
   @Test
   void test_whenCreateFastTrackTestDataPrevFdcNegative_thenShouldCreateTwoWaitingContributions()
       throws InterruptedException {
-    Set<Integer> refIds = testDataService.createFastTrackTestData(FdcAccelerationType.PREVIOUS_FDC, NEGATIVE_PREVIOUS_FDC, 1);
+    Set<Integer> refIds = null;
+    try{
+      refIds = testDataService.createFastTrackTestData(FdcAccelerationType.PREVIOUS_FDC, NEGATIVE_PREVIOUS_FDC, 1);
+    }
+    catch (NullPointerException e){
+      log.info("We erroring?");
+    }
     assertEquals(1, refIds.size());
     checkRequest("GET", "/assessment/rep-orders?delay=-3&dateReceived=2015-01-01&numRecords=1&fdcDelayedPickup=false&fdcFastTrack=true");
     checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-3)+"\"}");
