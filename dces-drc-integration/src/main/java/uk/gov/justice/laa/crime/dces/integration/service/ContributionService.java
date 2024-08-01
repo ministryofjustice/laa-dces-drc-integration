@@ -28,7 +28,6 @@ import java.util.Objects;
 @AllArgsConstructor
 @Slf4j
 public class ContributionService implements FileService {
-
     private static final String SERVICE_NAME = "ContributionService";
     private final ContributionsMapperUtils contributionsMapperUtils;
     private final ContributionClient contributionClient;
@@ -39,7 +38,7 @@ public class ContributionService implements FileService {
             contributionClient.sendLogContributionProcessed(updateLogContributionRequest);
             return "The request has been processed successfully";
         } catch (MaatApiClientException | WebClientResponseException | HttpServerErrorException e) {
-            log.info("processContributionUpdate failed", e);
+            log.info("Failed to processContributionUpdate", e);
             return "The request has failed to process";
         }
     }
@@ -47,27 +46,26 @@ public class ContributionService implements FileService {
     @Timed(value = "laa_dces_drc_service_process_contributions_daily_files",
             description = "Time taken to process the daily contributions files from DRC and passing this for downstream processing.")
     public boolean processDailyFiles() {
-        List<ConcurContribEntry> contributionsList;
         Map<String, CONTRIBUTIONS> successfulContributions = new HashMap<>();
         Map<String, String> failedContributions = new HashMap<>();
         // get all the values to process via maat call
-        contributionsList = contributionClient.getContributions("ACTIVE");
+        List<ConcurContribEntry> contributionsList = contributionClient.getContributions("ACTIVE");
         sendContributionsToDrc(contributionsList, successfulContributions, failedContributions);
 
-        return updateContributionsAndCreateFile(successfulContributions, failedContributions);
+        return updateContributionsAndCreateFile(successfulContributions, failedContributions) != null;
     }
 
 
-    @Retry(name=SERVICE_NAME)
+    @Retry(name = SERVICE_NAME)
     public void sendContributionsToDrc(List<ConcurContribEntry> contributionsList, Map<String, CONTRIBUTIONS> successfulContributions, Map<String,String> failedContributions){
         // for each contribution sent by MAAT API
-        for ( ConcurContribEntry contribEntry : contributionsList) {
+        for (ConcurContribEntry contribEntry : contributionsList) {
             // convert string into objects
             CONTRIBUTIONS currentContribution;
             try {
                 currentContribution = contributionsMapperUtils.mapLineXMLToObject(contribEntry.getXmlContent());
             } catch (JAXBException e) {
-                log.error("Invalid line XML encountered");
+                log.error("Invalid line XML encountered [" + e.getClass() + " (" + e.getMessage() + ")]");
                 failedContributions.put(String.valueOf(contribEntry.getConcorContributionId()), "Invalid format.");
                 continue;
             }
@@ -77,22 +75,25 @@ public class ContributionService implements FileService {
 
             if (Boolean.TRUE.equals(updateSuccessful)) {
                 successfulContributions.put(contributionId, currentContribution);
+                log.info("Sent update to DRC for Concor contribution ID {}", contributionId);
             } else {
                 // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
                 failedContributions.put(contributionId, "failure reason");
+                log.warn("Failed to send update to DRC for Concor contribution ID {} [{}]", contributionId, "failure reason");
             }
         }
     }
 
     private SendContributionFileDataToDrcRequest createDrcDataRequest(ConcurContribEntry contribEntry) {
-        return SendContributionFileDataToDrcRequest.builder().contributionId(contribEntry.getConcorContributionId()).build();
+        return SendContributionFileDataToDrcRequest.builder().
+                contributionId(contribEntry.getConcorContributionId())
+                .build();
     }
 
-    private boolean updateContributionsAndCreateFile(Map<String, CONTRIBUTIONS> successfulContributions, Map<String,String> failedContributions){
-        // if >1 contribution was sent
-        // create xml file
+    private Integer updateContributionsAndCreateFile(Map<String, CONTRIBUTIONS> successfulContributions, Map<String, String> failedContributions) {
+        // If any contributions were sent, then create XML file:
         Integer contributionFileId = null;
-        if ( Objects.nonNull(successfulContributions) && !successfulContributions.isEmpty() ) {
+        if (Objects.nonNull(successfulContributions) && !successfulContributions.isEmpty()) {
             // Setup and make MAAT API "ATOMIC UPDATE" REST call below:
             LocalDateTime dateGenerated = LocalDateTime.now();
             String fileName = contributionsMapperUtils.generateFileName(dateGenerated);
@@ -100,26 +101,26 @@ public class ContributionService implements FileService {
             String ackXml = contributionsMapperUtils.generateAckXML(fileName, dateGenerated.toLocalDate(), failedContributions.size(), successfulContributions.size());
             List<String> successfulIdList = successfulContributions.keySet().stream().toList();
 
-
             // Failed XML lines to be logged. Need to use this to set the ATOMIC UPDATE's ack field.
-            if(!failedContributions.isEmpty()){
-                log.info("Contributions failed to send: {}", failedContributions.size());
+            if (!failedContributions.isEmpty()) {
+                log.info("Failed to send {} Concor contributions", failedContributions.size());
             }
             try {
-                contributionFileId = contributionUpdateRequest(xmlFile, successfulIdList, successfulIdList.size(),fileName,ackXml);
-            }
-            catch (MaatApiClientException | WebClientResponseException | HttpServerErrorException e){
+                contributionFileId = contributionUpdateRequest(xmlFile, successfulIdList, successfulIdList.size(), fileName, ackXml);
+                // Explicitly log the Concor contribution IDs that were updated:
+                log.info("Created Concor contribution-file ID {} from {} Concor contribution IDs [{}]", contributionFileId, successfulIdList.size(), String.join(", ", successfulIdList));
+            } catch (MaatApiClientException | WebClientResponseException | HttpServerErrorException e) {
+                // We're rethrowing the exception, therefore avoid logging the stack trace to prevent logging the same trace multiple times.
+                log.error("Failed to create Concor contribution-file. Investigation needed. State of files will be out of sync! [" + e.getClass().getName() + "(" + e.getMessage() + ")]");
                 // If failed, we want to handle this. As it will mean the whole process failed for current day.
-                log.error("Contributions file failed to send! Investigation needed. State of files will be out of sync!");
                 // TODO: Need to figure how we're going to log a failed call to the ATOMIC UPDATE.
                 throw e;
             }
         }
-        return contributionFileId != null;
+        return contributionFileId;
     }
 
-
-    @Retry(name=SERVICE_NAME)
+    @Retry(name = SERVICE_NAME)
     public Integer contributionUpdateRequest(String xmlContent, List<String> concorContributionIdList, int numberOfRecords, String fileName, String fileAckXML) throws HttpServerErrorException {
         ContributionUpdateRequest request = ContributionUpdateRequest.builder()
                 .recordsSent(numberOfRecords)
@@ -129,5 +130,4 @@ public class ContributionService implements FileService {
                 .ackXmlContent(fileAckXML).build();
         return contributionClient.updateContributions(request);
     }
-
 }
