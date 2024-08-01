@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.crime.dces.integration.service;
 
+import lombok.Builder;
 import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
@@ -38,6 +39,14 @@ class FdcIntegrationTest {
 
 	@Autowired
 	private TestDataClient testDataClient;
+
+	@Builder
+	private static class CheckOptions {
+		boolean drcStubShouldSucceed;
+		boolean updatedIdsShouldBeRequested;
+		boolean updatedIdsShouldBeSent;
+		boolean contributionFileExpected;
+	}
 
 	@AfterEach
 	void afterTestAssertAll(){
@@ -281,7 +290,8 @@ class FdcIntegrationTest {
 	@Test
 	void givenSomeSentFdcContributions_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
 		final var updatedIds = spyFactory.createFdcDelayedPickupTestData(FdcTestType.NEGATIVE_FDC_STATUS, 3);
-		runProcessDailyFilesAndCheckResults(updatedIds, true, false, false, true, FdcContributionsStatus.SENT);
+		CheckOptions checkOptions = CheckOptions.builder().drcStubShouldSucceed(true).updatedIdsShouldBeRequested(false).updatedIdsShouldBeSent(false).contributionFileExpected(true).build();
+		runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.SENT);
 	}
 
 	/**
@@ -311,7 +321,8 @@ class FdcIntegrationTest {
 	void givenRequestedFdcContributions_whenProcessDailyFilesFailsToSend_thenTheirStatusIsNotUpdated() {
 		// Set up test data for the scenario:
 		final var updatedIds = spyFactory.createFdcDelayedPickupTestData(FdcTestType.POSITIVE, 3);
-		runProcessDailyFilesAndCheckResults(updatedIds, false, true, true, true, FdcContributionsStatus.REQUESTED);
+		CheckOptions checkOptions = CheckOptions.builder().drcStubShouldSucceed(false).updatedIdsShouldBeRequested(true).updatedIdsShouldBeSent(true).contributionFileExpected(true).build();
+		runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.REQUESTED);
 	}
 
 	/**
@@ -340,7 +351,8 @@ class FdcIntegrationTest {
 	@Test
 	void givenDelayedPickupFdcContributionsWithMissingCCO_whenProcessDailyFilesRuns_thenTheirStatusIsNotUpdated() {
 		final var updatedIds = spyFactory.createFdcDelayedPickupTestData(FdcTestType.NEGATIVE_CCO, 3);
-		runProcessDailyFilesAndCheckResults(updatedIds, true, false, false, false, FdcContributionsStatus.WAITING_ITEMS);
+		CheckOptions checkOptions = CheckOptions.builder().drcStubShouldSucceed(true).updatedIdsShouldBeRequested(false).updatedIdsShouldBeSent(false).contributionFileExpected(false).build();
+		runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.WAITING_ITEMS);
 	}
 
 	/**
@@ -369,30 +381,25 @@ class FdcIntegrationTest {
 	@Test
 	void givenFastTrackFdcContributionsWithMissingCCO_whenProcessDailyFilesRuns_thenTheirStatusIsNotUpdated() {
 		final var updatedIds = spyFactory.createFastTrackTestData(FdcAccelerationType.POSITIVE, FdcTestType.NEGATIVE_CCO, 3);
-		runProcessDailyFilesAndCheckResults(updatedIds, true, false, false, false, FdcContributionsStatus.WAITING_ITEMS);
+		CheckOptions checkOptions = CheckOptions.builder().drcStubShouldSucceed(true).updatedIdsShouldBeRequested(false).updatedIdsShouldBeSent(false).contributionFileExpected(false).build();
+		runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.WAITING_ITEMS);
 	}
 
 	/**
 	 * Private method to run the method under test and check the outcome with the provided criteria
 	 * @param updatedIds The IDs for the test data created before running the test (the Given bit)
-	 * @param stubDrcSuccessFlag Do we want to stubbed DRC client to succeed or fail for this test
-	 * @param updatedIdsShouldBeRequested Are the updated IDs expected to be requested for this test
-	 * @param updatedIdsShouldBeSent Are the updated IDs expected to be sent for this test
-	 * @param checkContributionFile Is the contribution file to be checked for this test
+	 * @param checkOptions Object specifying different test options to set or checks to perform
 	 * @param fdcContributionsStatusExpected The status expected at the end of this test
 	 */
 	private void runProcessDailyFilesAndCheckResults(
 			Set<Integer> updatedIds,
-			boolean stubDrcSuccessFlag,
-			boolean updatedIdsShouldBeRequested,
-			boolean updatedIdsShouldBeSent,
-			boolean checkContributionFile,
+			CheckOptions checkOptions,
 			FdcContributionsStatus fdcContributionsStatusExpected
 	) {
 		final FdcProcessSpy.FdcProcessSpyBuilder watching = spyFactory.newFdcProcessSpyBuilder()
 				.traceExecuteFdcGlobalUpdate()
 				.traceAndFilterGetFdcContributions(updatedIds)
-				.traceAndStubSendFdcUpdate(id -> stubDrcSuccessFlag)
+				.traceAndStubSendFdcUpdate(id -> checkOptions.drcStubShouldSucceed)
 				.traceUpdateFdcs();
 
 		// Call the processDailyFiles() method under test:
@@ -406,17 +413,21 @@ class FdcIntegrationTest {
 		softly.assertThat(watched.getGlobalUpdateResponse().isSuccessful()).isTrue();
 		softly.assertThat(updatedIds).hasSize(3).doesNotContainNull();
 
-		if (updatedIdsShouldBeRequested)
+		if (checkOptions.updatedIdsShouldBeRequested) {
 			softly.assertThat(watched.getRequestedIds()).containsAll(updatedIds);
-		else
+		}
+		else {
 			softly.assertThat(watched.getRequestedIds()).doesNotContainAnyElementsOf(updatedIds);
+		}
 
-		if (updatedIdsShouldBeSent)
+		if (checkOptions.updatedIdsShouldBeSent) {
 			softly.assertThat(watched.getSentIds()).containsAll(updatedIds);
-		else
+		}
+		else {
 			softly.assertThat(watched.getSentIds()).doesNotContainAnyElementsOf(updatedIds);
+		}
 
-		if (checkContributionFile) {
+		if (checkOptions.contributionFileExpected) {
 			if (watched.getRecordsSent() != 0) {
 				// contribution_file got created:
 				softly.assertThat(watched.getRecordsSent()).isPositive();
@@ -431,8 +442,12 @@ class FdcIntegrationTest {
 		}
 		fdcContributions.forEach(fdcContribution -> {
 			softly.assertThat(fdcContribution.getStatus()).isEqualTo(fdcContributionsStatusExpected);
-			if (!checkContributionFile)
+			if (checkOptions.contributionFileExpected) {
+				softly.assertThat(fdcContribution.getContFileId()).isEqualTo(watched.getXmlFileResult());
+			}
+			else {
 				softly.assertThat(fdcContribution.getContFileId()).isNull();
+			}
 		});
 	}
 
