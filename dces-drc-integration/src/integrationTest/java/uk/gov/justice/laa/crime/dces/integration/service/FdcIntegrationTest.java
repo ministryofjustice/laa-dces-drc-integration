@@ -386,6 +386,66 @@ class FdcIntegrationTest {
 	}
 
 	/**
+	 * <h4>Scenario:</h4>
+	 * <p>A negative FDC Contributions test which checks that FDC Contribution records do not get picked up for processing by the Delayed pickup logic,
+	 * 	if there are no related FDC items.</p>
+	 * <h4>Given:</h4>
+	 * <p>* 3 fdc_contributions record IDs that would normally get picked up by the Delayed pickup logic,
+	 * 		but their FDC items are missing</p>
+	 * <h4>When</h4>
+	 * <p>* The {@link FdcService#processDailyFiles()} method is called</p>
+	 * <h4>Then:</h4>
+	 * <p>1. The call to the callGlobalUpdate is successful i.e. MAAT API returned a successful response
+	 * <p>2. The IDs of the 3 updated records are NOT returned.</p>
+	 * <p>3. The updated IDs are NOT included in the list of IDs returned by the call to retrieve 'REQUESTED' FDC Contributions.</p>
+	 * <p>4. The updated IDs are NOT included in the set of payloads sent to the DRC.</p>
+	 * <p>5. After the `processDailyFiles` method call returns, the fdc_contribution entities corresponding to each
+	 *       of the updated IDs is checked:<br>
+	 *       - Each remains at status WAITING_ITEMS<br>
+	 *       - Each has an unpopulated contribution_file ID.</p>
+	 *
+	 * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-409">DCES-409</a> for test specification.
+	 */
+	//TODO: Fix test with implementation of /assessment/ endpoint access.
+	@Disabled("Pending creation of /assessment/ handler")
+	@Test
+	void givenDelayedPickupFdcContributionsWithMissingFdcItems_whenProcessDailyFilesRuns_thenTheirStatusIsNotUpdated() {
+		final var updatedIds = spyFactory.createFdcDelayedPickupTestData(FdcTestType.NEGATIVE_FDC_ITEM, 3);
+		CheckOptions checkOptions = CheckOptions.builder().drcStubShouldSucceed(true).updatedIdsShouldBeRequested(false).updatedIdsShouldBeSent(false).contributionFileExpected(false).build();
+		runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.WAITING_ITEMS);
+	}
+
+	/**
+	 * <h4>Scenario:</h4>
+	 * <p>A negative FDC Contributions test which checks that FDC Contribution records do not get picked up for processing by the Fast Track pickup logic,
+	 * 	if there are no related FDC items.</p>
+	 * <h4>Given:</h4>
+	 * <p>* 3 fdc_contributions record IDs that would normally get picked up by the Fast Track pickup logic,
+	 * 		but their Rep Orders are missing the corresponding Crown Court Outcomes</p>
+	 * <h4>When</h4>
+	 * <p>* The {@link FdcService#processDailyFiles()} method is called</p>
+	 * <h4>Then:</h4>
+	 * <p>1. The call to the callGlobalUpdate is successful i.e. MAAT API returned a successful response
+	 * <p>2. The IDs of the 3 updated records are NOT returned.</p>
+	 * <p>3. The updated IDs are NOT included in the list of IDs returned by the call to retrieve 'REQUESTED' FDC Contributions.</p>
+	 * <p>4. The updated IDs are NOT included in the set of payloads sent to the DRC.</p>
+	 * <p>5. After the `processDailyFiles` method call returns, the fdc_contribution entities corresponding to each
+	 *       of the updated IDs is checked:<br>
+	 *       - Each remains at status WAITING_ITEMS<br>
+	 *       - Each has an unpopulated contribution_file ID.</p>
+	 *
+	 * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-410">DCES-410</a> for test specification.
+	 */
+	//TODO: Fix test with implementation of /assessment/ endpoint access.
+	@Disabled("Pending creation of /assessment/ handler")
+	@Test
+	void givenFastTrackFdcContributionsWithMissingFdcItems_whenProcessDailyFilesRuns_thenTheirStatusIsNotUpdated() {
+		final var updatedIds = spyFactory.createFastTrackTestData(FdcAccelerationType.POSITIVE, FdcTestType.NEGATIVE_FDC_ITEM, 3);
+		CheckOptions checkOptions = CheckOptions.builder().drcStubShouldSucceed(true).updatedIdsShouldBeRequested(false).updatedIdsShouldBeSent(false).contributionFileExpected(false).build();
+		runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.WAITING_ITEMS);
+	}
+
+	/**
 	 * Private method to run the method under test and check the outcome with the provided criteria
 	 * @param updatedIds The IDs for the test data created before running the test (the Given bit)
 	 * @param checkOptions Object specifying different test options to set or checks to perform
