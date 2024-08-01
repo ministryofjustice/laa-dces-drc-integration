@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.crime.dces.integration.service;
 
+import lombok.Builder;
 import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
@@ -38,6 +39,14 @@ class FdcIntegrationTest {
 
 	@Autowired
 	private TestDataClient testDataClient;
+
+	@Builder
+	private static class CheckOptions {
+		boolean drcStubShouldSucceed;
+		boolean updatedIdsShouldBeRequested;
+		boolean updatedIdsShouldBeSent;
+		boolean contributionFileExpected;
+	}
 
 	@AfterEach
 	void afterTestAssertAll(){
@@ -281,7 +290,8 @@ class FdcIntegrationTest {
 	@Test
 	void givenSomeSentFdcContributions_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
 		final var updatedIds = spyFactory.createFdcDelayedPickupTestData(FdcTestType.NEGATIVE_FDC_STATUS, 3);
-		runProcessDailyFilesAndCheckResults(updatedIds, true, false, false, true, FdcContributionsStatus.SENT);
+		CheckOptions checkOptions = CheckOptions.builder().drcStubShouldSucceed(true).updatedIdsShouldBeRequested(false).updatedIdsShouldBeSent(false).contributionFileExpected(true).build();
+		runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.SENT);
 	}
 
 	/**
@@ -311,7 +321,8 @@ class FdcIntegrationTest {
 	void givenRequestedFdcContributions_whenProcessDailyFilesFailsToSend_thenTheirStatusIsNotUpdated() {
 		// Set up test data for the scenario:
 		final var updatedIds = spyFactory.createFdcDelayedPickupTestData(FdcTestType.POSITIVE, 3);
-		runProcessDailyFilesAndCheckResults(updatedIds, false, true, true, true, FdcContributionsStatus.REQUESTED);
+		CheckOptions checkOptions = CheckOptions.builder().drcStubShouldSucceed(false).updatedIdsShouldBeRequested(true).updatedIdsShouldBeSent(true).contributionFileExpected(true).build();
+		runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.REQUESTED);
 	}
 
 	/**
@@ -340,7 +351,8 @@ class FdcIntegrationTest {
 	@Test
 	void givenDelayedPickupFdcContributionsWithMissingCCO_whenProcessDailyFilesRuns_thenTheirStatusIsNotUpdated() {
 		final var updatedIds = spyFactory.createFdcDelayedPickupTestData(FdcTestType.NEGATIVE_CCO, 3);
-		runProcessDailyFilesAndCheckResults(updatedIds, true, false, false, false, FdcContributionsStatus.WAITING_ITEMS);
+		CheckOptions checkOptions = CheckOptions.builder().drcStubShouldSucceed(true).updatedIdsShouldBeRequested(false).updatedIdsShouldBeSent(false).contributionFileExpected(false).build();
+		runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.WAITING_ITEMS);
 	}
 
 	/**
@@ -369,88 +381,25 @@ class FdcIntegrationTest {
 	@Test
 	void givenFastTrackFdcContributionsWithMissingCCO_whenProcessDailyFilesRuns_thenTheirStatusIsNotUpdated() {
 		final var updatedIds = spyFactory.createFastTrackTestData(FdcAccelerationType.POSITIVE, FdcTestType.NEGATIVE_CCO, 3);
-		runProcessDailyFilesAndCheckResults(updatedIds, true, false, false, false, FdcContributionsStatus.WAITING_ITEMS);
-	}
-
-	/**
-	 * <h4>Scenario:</h4>
-	 * <p>A negative FDC Contributions test which checks that FDC Contribution records do not get picked up for processing by the Delayed pickup logic,
-	 * 	if there are no related FDC items.</p>
-	 * <h4>Given:</h4>
-	 * <p>* 3 fdc_contributions record IDs that would normally get picked up by the Delayed pickup logic,
-	 * 		but their FDC items are missing</p>
-	 * <h4>When</h4>
-	 * <p>* The {@link FdcService#processDailyFiles()} method is called</p>
-	 * <h4>Then:</h4>
-	 * <p>1. The call to the callGlobalUpdate is successful i.e. MAAT API returned a successful response
-	 * <p>2. The IDs of the 3 updated records are NOT returned.</p>
-	 * <p>3. The updated IDs are NOT included in the list of IDs returned by the call to retrieve 'REQUESTED' FDC Contributions.</p>
-	 * <p>4. The updated IDs are NOT included in the set of payloads sent to the DRC.</p>
-	 * <p>5. After the `processDailyFiles` method call returns, the fdc_contribution entities corresponding to each
-	 *       of the updated IDs is checked:<br>
-	 *       - Each remains at status WAITING_ITEMS<br>
-	 *       - Each has an unpopulated contribution_file ID.</p>
-	 *
-	 * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-409">DCES-409</a> for test specification.
-	 */
-	//TODO: Fix test with implementation of /assessment/ endpoint access.
-	@Disabled("Pending creation of /assessment/ handler")
-	@Test
-	void givenDelayedPickupFdcContributionsWithMissingFdcItems_whenProcessDailyFilesRuns_thenTheirStatusIsNotUpdated() {
-		final var updatedIds = spyFactory.createFdcDelayedPickupTestData(FdcTestType.NEGATIVE_FDC_ITEM, 3);
-		runProcessDailyFilesAndCheckResults(updatedIds, true, false, false, false, FdcContributionsStatus.WAITING_ITEMS);
-	}
-
-	/**
-	 * <h4>Scenario:</h4>
-	 * <p>A negative FDC Contributions test which checks that FDC Contribution records do not get picked up for processing by the Fast Track pickup logic,
-	 * 	if there are no related FDC items.</p>
-	 * <h4>Given:</h4>
-	 * <p>* 3 fdc_contributions record IDs that would normally get picked up by the Fast Track pickup logic,
-	 * 		but their Rep Orders are missing the corresponding Crown Court Outcomes</p>
-	 * <h4>When</h4>
-	 * <p>* The {@link FdcService#processDailyFiles()} method is called</p>
-	 * <h4>Then:</h4>
-	 * <p>1. The call to the callGlobalUpdate is successful i.e. MAAT API returned a successful response
-	 * <p>2. The IDs of the 3 updated records are NOT returned.</p>
-	 * <p>3. The updated IDs are NOT included in the list of IDs returned by the call to retrieve 'REQUESTED' FDC Contributions.</p>
-	 * <p>4. The updated IDs are NOT included in the set of payloads sent to the DRC.</p>
-	 * <p>5. After the `processDailyFiles` method call returns, the fdc_contribution entities corresponding to each
-	 *       of the updated IDs is checked:<br>
-	 *       - Each remains at status WAITING_ITEMS<br>
-	 *       - Each has an unpopulated contribution_file ID.</p>
-	 *
-	 * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-410">DCES-410</a> for test specification.
-	 */
-	//TODO: Fix test with implementation of /assessment/ endpoint access.
-	@Disabled("Pending creation of /assessment/ handler")
-	@Test
-	void givenFastTrackFdcContributionsWithMissingFdcItems_whenProcessDailyFilesRuns_thenTheirStatusIsNotUpdated() {
-		final var updatedIds = spyFactory.createFastTrackTestData(FdcAccelerationType.POSITIVE, FdcTestType.NEGATIVE_FDC_ITEM, 3);
-		runProcessDailyFilesAndCheckResults(updatedIds, true, false, false, false, FdcContributionsStatus.WAITING_ITEMS);
+		CheckOptions checkOptions = CheckOptions.builder().drcStubShouldSucceed(true).updatedIdsShouldBeRequested(false).updatedIdsShouldBeSent(false).contributionFileExpected(false).build();
+		runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.WAITING_ITEMS);
 	}
 
 	/**
 	 * Private method to run the method under test and check the outcome with the provided criteria
 	 * @param updatedIds The IDs for the test data created before running the test (the Given bit)
-	 * @param stubDrcSuccessFlag Do we want to stubbed DRC client to succeed or fail for this test
-	 * @param updatedIdsShouldBeRequested Are the updated IDs expected to be requested for this test
-	 * @param updatedIdsShouldBeSent Are the updated IDs expected to be sent for this test
-	 * @param checkContributionFile Is the contribution file to be checked for this test
+	 * @param checkOptions Object specifying different test options to set or checks to perform
 	 * @param fdcContributionsStatusExpected The status expected at the end of this test
 	 */
 	private void runProcessDailyFilesAndCheckResults(
 			Set<Integer> updatedIds,
-			boolean stubDrcSuccessFlag,
-			boolean updatedIdsShouldBeRequested,
-			boolean updatedIdsShouldBeSent,
-			boolean checkContributionFile,
+			CheckOptions checkOptions,
 			FdcContributionsStatus fdcContributionsStatusExpected
 	) {
 		final FdcProcessSpy.FdcProcessSpyBuilder watching = spyFactory.newFdcProcessSpyBuilder()
 				.traceExecuteFdcGlobalUpdate()
 				.traceAndFilterGetFdcContributions(updatedIds)
-				.traceAndStubSendFdcUpdate(id -> stubDrcSuccessFlag)
+				.traceAndStubSendFdcUpdate(id -> checkOptions.drcStubShouldSucceed)
 				.traceUpdateFdcs();
 
 		// Call the processDailyFiles() method under test:
@@ -464,17 +413,21 @@ class FdcIntegrationTest {
 		softly.assertThat(watched.getGlobalUpdateResponse().isSuccessful()).isTrue();
 		softly.assertThat(updatedIds).hasSize(3).doesNotContainNull();
 
-		if (updatedIdsShouldBeRequested)
+		if (checkOptions.updatedIdsShouldBeRequested) {
 			softly.assertThat(watched.getRequestedIds()).containsAll(updatedIds);
-		else
+		}
+		else {
 			softly.assertThat(watched.getRequestedIds()).doesNotContainAnyElementsOf(updatedIds);
+		}
 
-		if (updatedIdsShouldBeSent)
+		if (checkOptions.updatedIdsShouldBeSent) {
 			softly.assertThat(watched.getSentIds()).containsAll(updatedIds);
-		else
+		}
+		else {
 			softly.assertThat(watched.getSentIds()).doesNotContainAnyElementsOf(updatedIds);
+		}
 
-		if (checkContributionFile) {
+		if (checkOptions.contributionFileExpected) {
 			if (watched.getRecordsSent() != 0) {
 				// contribution_file got created:
 				softly.assertThat(watched.getRecordsSent()).isPositive();
@@ -489,8 +442,12 @@ class FdcIntegrationTest {
 		}
 		fdcContributions.forEach(fdcContribution -> {
 			softly.assertThat(fdcContribution.getStatus()).isEqualTo(fdcContributionsStatusExpected);
-			if (!checkContributionFile)
+			if (checkOptions.contributionFileExpected) {
+				softly.assertThat(fdcContribution.getContFileId()).isEqualTo(watched.getXmlFileResult());
+			}
+			else {
 				softly.assertThat(fdcContribution.getContFileId()).isNull();
+			}
 		});
 	}
 
