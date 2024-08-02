@@ -262,7 +262,6 @@ class FdcIntegrationTest {
 			//      endpoint /debt-collection-enforcement/fdc-contribution returns the maatId as null.
 			// softly.assertThat(contributionFile.getXmlContent()).contains("<maat_id>" + fdcContribution.getMaatId() + "</maat_id>");
 		});
-
 	}
 
 	/**
@@ -351,7 +350,8 @@ class FdcIntegrationTest {
   @Test
   void givenSomeDelayedFdcContributionsWithNullSOD_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
     final var updatedIds = spyFactory.createFdcDelayedPickupTestData(FdcTestType.NEGATIVE_SOD, 3);
-    runProcessDailyFilesAndCheckResults(updatedIds, true, false, false, false, FdcContributionsStatus.WAITING_ITEMS);
+		CheckOptions checkOptions = CheckOptions.builder().drcStubShouldSucceed(true).updatedIdsShouldBeRequested(false).updatedIdsShouldBeSent(false).contributionFileExpected(false).build();
+		runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.WAITING_ITEMS);
   }
 
   /**
@@ -379,7 +379,8 @@ class FdcIntegrationTest {
   @Test
   void givenSomeFastTrackFdcContributionsWithNullSOD_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
     final var updatedIds = spyFactory.createFastTrackTestData(FdcAccelerationType.POSITIVE, FdcTestType.NEGATIVE_SOD, 3);
-    runProcessDailyFilesAndCheckResults(updatedIds, true, false, false, false, FdcContributionsStatus.WAITING_ITEMS);
+		CheckOptions checkOptions = CheckOptions.builder().drcStubShouldSucceed(true).updatedIdsShouldBeRequested(false).updatedIdsShouldBeSent(false).contributionFileExpected(false).build();
+		runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.WAITING_ITEMS);
   }
 
   /**
