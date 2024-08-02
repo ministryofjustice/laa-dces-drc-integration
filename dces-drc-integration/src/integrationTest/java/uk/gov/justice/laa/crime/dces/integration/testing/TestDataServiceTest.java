@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
+
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.mockwebserver.Dispatcher;
@@ -41,6 +42,15 @@ import uk.gov.justice.laa.crime.dces.integration.client.MaatApiClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.config.ServicesConfiguration;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcAccelerationType;
 import uk.gov.justice.laa.crime.dces.integration.service.TestDataService;
+import uk.gov.justice.laa.crime.dces.integration.utils.RequestSpecificationBuilder;
+
+
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
+
 
 @EnabledIf(expression = "#{environment['sentry.environment'] == 'development'}", loadContext = true)
 @Slf4j
@@ -55,10 +65,6 @@ class TestDataServiceTest {
 
   TestDataService testDataService;
 
-  @MockBean
-  OAuth2AuthorizedClientManager authorizedClientManager;
-
-  @MockBean
   MaatApiClient maatApiClient;
 
   @BeforeAll
@@ -75,8 +81,17 @@ class TestDataServiceTest {
   }
 
   @Test
+  void test_whenCreateDelayedPickupTestDataCalled_ThenShouldSetToRightState(){
+    Set<Integer> refIds = testDataService.createDelayedPickupTestData(NEGATIVE_SOD, 3);
+  }
+
+  @Test
   void test_whenCreateDelayedPickupTestDataNegativeSod_thenShouldUpdateSod()
       throws InterruptedException {
+
+    int recordsToUpdate = 3;
+    LocalDate date = LocalDate.of(2015,1,1);
+
     Set<Integer> refIds = testDataService.createDelayedPickupTestData(NEGATIVE_SOD, 3);
     assertEquals(3, refIds.size());
     checkRequest("GET", "/assessment/rep-orders?delay=5&dateReceived=2015-01-01&numRecords=3&fdcDelayedPickup=true&fdcFastTrack=false");
@@ -258,6 +273,8 @@ class TestDataServiceTest {
     catch (NullPointerException e){
       log.info("We erroring?");
     }
+
+
     assertEquals(1, refIds.size());
     checkRequest("GET", "/assessment/rep-orders?delay=-3&dateReceived=2015-01-01&numRecords=1&fdcDelayedPickup=false&fdcFastTrack=true");
     checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-3)+"\"}");

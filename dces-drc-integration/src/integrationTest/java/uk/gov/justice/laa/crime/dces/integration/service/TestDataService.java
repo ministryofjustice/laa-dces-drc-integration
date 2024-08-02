@@ -111,65 +111,43 @@ public class TestDataService {
   }
 
   private FdcContribution createFdcContribution(int repOrderId, String lgfsComplete, String agfsComplete, String manualAcceleration, FdcContributionsStatus status){
-    ValidatableResponse response = maatApiClient.createFdcContribution(new CreateFdcContributionRequest(repOrderId, lgfsComplete, agfsComplete, manualAcceleration, status));
-    return response.extract().body().as(FdcContribution.class);
+    return maatApiClient.createFdcContribution(new CreateFdcContributionRequest(repOrderId, lgfsComplete, agfsComplete, manualAcceleration, status));
   }
 
   private Set<Integer> getFdcDelayCandidateRepOrderIds(int delay, LocalDate dateReceived, int recordsToUpdate){
-    ValidatableResponse repOrderResponse = maatApiClient.getFdcDelayedRepOrderIdList(delay, dateReceived, recordsToUpdate);
-    return repOrderResponse.extract().body().as(Set.class);
+    return maatApiClient.getFdcDelayedRepOrderIdList(delay, dateReceived, recordsToUpdate);
   }
 
 
   private Set<Integer> getFdcFastTrackCandidateRepOrderIds(int delay, LocalDate dateReceived, int recordsToUpdate){
-    ValidatableResponse repOrderResponse = maatApiClient.getFdcFastTrackRepOrderIdList(delay, dateReceived, recordsToUpdate);
-    return repOrderResponse.extract().body().as(Set.class);
+    return maatApiClient.getFdcFastTrackRepOrderIdList(delay, dateReceived, recordsToUpdate);
   }
 
   private FdcItem createFdcItem(FdcItem fdcItem){
-    ValidatableResponse response = maatApiClient.createFdcItem(fdcItem);
-    // map the LocalDate returned back into a LocalDateTime, as rest-assured exceptions with the returned format.
-    ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    FdcItem responseFdcItem = null;
-    try {
-      responseFdcItem = objectMapper.readValue(response.extract().body().asString(), FdcItem.class);
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
-    }
-    return responseFdcItem;
+    return maatApiClient.createFdcItem(fdcItem);
   }
 
   public FdcContribution getFdcContribution(int fdcId){
-    ValidatableResponse response = maatApiClient.getFdcContribution(fdcId);
-    return response.extract().body().as(FdcContribution.class);
+    return maatApiClient.getFdcContribution(fdcId);
   }
   public ContributionFileResponse getContributionFile(int fdcId){
-    ValidatableResponse response = maatApiClient.getContributionFile(fdcId);
-    return response.extract().body().as(ContributionFileResponse.class);
+    return maatApiClient.getContributionFile(fdcId);
   }
   public List<Integer> updateConcorContributionStatus(final ConcorContributionStatus status, final int recordCount){
     UpdateConcorContributionStatusRequest request = UpdateConcorContributionStatusRequest.builder()
             .status(status)
             .recordCount(recordCount)
             .build();
-    ValidatableResponse response = maatApiClient.updateConcorContributionStatus(request);
-    return response.extract().body().as(List.class);
+    return maatApiClient.updateConcorContributionStatus(request);
   }
 
   public ConcorContributionResponseDTO getConcorContribution(int concorId){
-    ValidatableResponse response = maatApiClient.getConcorContribution(concorId);
-    return response.extract().body().as(ConcorContributionResponseDTO.class);
+    return maatApiClient.getConcorContribution(concorId);
   }
 
   public ContributionFileErrorResponse getContributionFileError(final int contributionFileId, final int contributionId){
-    ValidatableResponse response = maatApiClient.getContributionFileError(contributionFileId, contributionId);
-    ContributionFileErrorResponse errorResponse = null;
-    try {
-        return response.extract().body().as(ContributionFileErrorResponse.class);
-    }
-    catch (RuntimeException e){
-      return null;
-    }
+    return maatApiClient.getContributionFileError(contributionFileId, contributionId);
+
   }
 
 }

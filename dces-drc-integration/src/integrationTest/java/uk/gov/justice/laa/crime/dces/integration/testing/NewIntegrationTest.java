@@ -6,15 +6,17 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import uk.gov.justice.laa.crime.dces.integration.client.MaatApiClient;
+import uk.gov.justice.laa.crime.dces.integration.model.external.FdcContribution;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.Matchers.empty;
+import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
 @SpringBootTest
@@ -29,35 +31,29 @@ class NewIntegrationTest {
     @Test
     void testFDCList_ApiClient() {
 
-        ValidatableResponse response = maatApiClient.getFdcList("REQUESTED");
+        List<FdcContribution> response = maatApiClient.getFdcList("REQUESTED");
 
-        response.assertThat().statusCode(200);
-        response.body("fdcContributions", not(empty()));
+        assertFalse(response.isEmpty());
     }
     @Test
     void testFdcFastTrack_ApiClient() {
 
         LocalDate date = LocalDate.of(2011,12,12);
-        ValidatableResponse response = maatApiClient.getFdcFastTrackRepOrderIdList(5, date,5);
-
-        response.assertThat().statusCode(200);
-        response.body("", not(empty()));
+        Set<Integer> response = maatApiClient.getFdcFastTrackRepOrderIdList(5, date,5);
+        assertEquals(5,response.size());
     }
 
     @Test
     void testGetFdcContribution() {
-        ValidatableResponse response = maatApiClient.getFdcContribution(5);
-
-        response.assertThat().statusCode(200);
-        response.body("", not(empty()));
+        FdcContribution contribution = maatApiClient.getFdcContribution(5);
+        assertTrue(Objects.nonNull(contribution));
     }
+
     @Test
     void testFdcDelay_ApiClient() {
         LocalDate date = LocalDate.of(2011,12,12);
-        ValidatableResponse response = maatApiClient.getFdcDelayedRepOrderIdList(5, date,5);
-
-        response.assertThat().statusCode(200);
-        response.body("", not(empty()));
+        Set<Integer> response = maatApiClient.getFdcDelayedRepOrderIdList(5, date,5);
+        assertEquals(5,response.size());
 
     }
 
