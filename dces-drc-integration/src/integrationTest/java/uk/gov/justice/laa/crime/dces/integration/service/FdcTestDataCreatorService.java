@@ -98,15 +98,9 @@ public class FdcTestDataCreatorService {
           final FdcTestType testType, final Integer repOrderId, final Integer fdcId, final PickupType pickupType) {
     switch (testType) {
       case NEGATIVE_SOD -> {
-        switch (pickupType) {
-          case DELAYED_PICKUP -> {
-            Map<String, Object> repOrderWithNullSOD = new HashMap<>();
-            repOrderWithNullSOD.put("sentenceOrderDate", null);
-            testDataClient.updateRepOrderSentenceOrderDateToNull(repOrderId, repOrderWithNullSOD);
-          }
-          case FAST_TRACK -> testDataClient.updateRepOrderSentenceOrderDate(UpdateRepOrder.builder()
-              .repId(repOrderId).sentenceOrderDate(LocalDate.now().minusMonths(7)).build());
-        }
+        Map<String, Object> repOrderWithNullSOD = new HashMap<>();
+        repOrderWithNullSOD.put("sentenceOrderDate", null);
+        testDataClient.updateRepOrderSentenceOrderDateToNull(repOrderId, repOrderWithNullSOD);
       }
       case NEGATIVE_CCO -> testDataClient.deleteCrownCourtOutcomes(repOrderId);
       case NEGATIVE_FDC_ITEM -> testDataClient.deleteFdcItems(fdcId);
