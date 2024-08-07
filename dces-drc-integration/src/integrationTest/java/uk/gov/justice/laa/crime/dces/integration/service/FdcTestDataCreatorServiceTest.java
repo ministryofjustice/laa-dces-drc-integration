@@ -173,7 +173,7 @@ class FdcTestDataCreatorServiceTest {
         "{\"repId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"manualAcceleration\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
         "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
-    checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-7)+"\"}");
+    checkRequestAndBody("PATCH", "/assessment/rep-orders/1", "{\"sentenceOrderDate\":null}");
   }
 
   @Test
@@ -261,7 +261,7 @@ class FdcTestDataCreatorServiceTest {
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
         "{\"repId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"SENT\"}");
     checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
+        "{\"fdcId\":1001,\"adjustmentReason\":\"Other\",\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
     checkRequestAndBody("PATCH", "/debt-collection-enforcement/fdc-contribution",
         "{\"fdcContributionId\":1001,\"repId\":1,\"previousStatus\":\"SENT\",\"newStatus\":\"WAITING_ITEMS\"}");
   }

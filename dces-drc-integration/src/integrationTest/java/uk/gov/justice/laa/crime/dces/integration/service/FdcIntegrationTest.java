@@ -375,7 +375,7 @@ class FdcIntegrationTest {
    * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-406">DCES-406</a> for test specification.
    */
   //TODO: Fix test with implementation of /assessment/ endpoint access.
-  //@Disabled("Pending creation of /assessment/ handler")
+  @Disabled("Pending creation of /assessment/ handler")
   @Test
   void givenSomeFastTrackFdcContributionsWithNullSOD_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
     final var updatedIds = spyFactory.createFastTrackTestData(FdcAccelerationType.POSITIVE, FdcTestType.NEGATIVE_SOD, 3);
@@ -467,7 +467,13 @@ class FdcIntegrationTest {
 	@Test
 	void givenDelayedPickupFdcContributionsWithSentStatus_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
 		final var updatedIds = spyFactory.createFdcDelayedPickupTestData(FdcTestType.NEGATIVE_FDC_STATUS, 3);
-		runProcessDailyFilesAndCheckResults(updatedIds, true, false, false, false, FdcContributionsStatus.SENT);
+
+		final var checkOptions = CheckOptions.builder()
+				.drcStubShouldSucceed(true)
+				.updatedIdsShouldBeRequested(false)
+				.updatedIdsShouldBeSent(false)
+				.contributionFileExpected(false).build();
+		runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.SENT);
 	}
 
 	/**
@@ -496,7 +502,13 @@ class FdcIntegrationTest {
 	@Test
 	void givenFastTrackFdcContributionsWithNoPrevSentFdc_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
 		final var updatedIds = spyFactory.createFastTrackTestData(FdcAccelerationType.PREVIOUS_FDC, FdcTestType.NEGATIVE_PREVIOUS_FDC, 3);
-		runProcessDailyFilesAndCheckResults(updatedIds, true, false, false, false, FdcContributionsStatus.WAITING_ITEMS);
+
+		final var checkOptions = CheckOptions.builder()
+				.drcStubShouldSucceed(true)
+				.updatedIdsShouldBeRequested(false)
+				.updatedIdsShouldBeSent(false)
+				.contributionFileExpected(false).build();
+		runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.WAITING_ITEMS);
 	}
 
 	/**
@@ -624,5 +636,4 @@ class FdcIntegrationTest {
 			}
 		});
 	}
-
 }
