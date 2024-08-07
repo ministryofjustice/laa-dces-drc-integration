@@ -1,3 +1,5 @@
+import org.springframework.boot.gradle.plugin.SpringBootPlugin
+
 plugins {
 	id 'java'
 	id 'jacoco'
@@ -80,6 +82,8 @@ dependencies {
 	// Sentry
 	implementation 'io.sentry:sentry-spring-boot-starter-jakarta:7.13.0'
 	implementation platform('io.sentry:sentry-bom:7.13.0')
+	implementation platform(SpringBootPlugin.BOM_COORDINATES)
+
 	implementation('io.sentry:sentry-spring-boot-starter')
 	implementation('io.sentry:sentry-logback')
 
@@ -88,13 +92,12 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	implementation 'org.springframework.boot:spring-boot-starter-aop'
 
-
 	// oAuth
-	implementation "org.springframework.security:spring-security-config:$versions.springSecurityConfig"
-	implementation "org.springframework.security:spring-security-web:$versions.springSecurityWeb"
-	implementation "org.springframework.boot:spring-boot-starter-oauth2-resource-server:$versions.springOAuthResource"
+	implementation "org.springframework.security:spring-security-config"
+	implementation "org.springframework.security:spring-security-web"
+	implementation "org.springframework.boot:spring-boot-starter-oauth2-resource-server"
 	implementation "org.springframework.boot:spring-boot-starter-oauth2-client"
-	implementation "org.springframework.security:spring-security-oauth2-jose:$versions.springOAuthJose"
+	implementation "org.springframework.security:spring-security-oauth2-jose"
 
 	implementation "net.logstash.logback:logstash-logback-encoder:$versions.logbackEncoderVersion"
 	implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:$versions.springdocVersion"
