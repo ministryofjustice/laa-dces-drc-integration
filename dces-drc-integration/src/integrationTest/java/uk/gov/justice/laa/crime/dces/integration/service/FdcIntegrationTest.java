@@ -313,7 +313,7 @@ class FdcIntegrationTest {
 	 *       of the updated IDs is checked:<br>
 	 *       - Each remains at status REQUESTED.</p>
 	 *
-	 * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-360">DCES-360</a> for test specification.
+	 * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-361">DCES-361</a> for test specification.
 	 */
 	//TODO: Fix test with implementation of /assessment/ endpoint access.
 	@Disabled("Pending creation of /assessment/ handler")
@@ -325,7 +325,65 @@ class FdcIntegrationTest {
 		runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.REQUESTED);
 	}
 
-	/**
+  /**
+   * <h4>Scenario:</h4>
+   * <p>A negative integration test to check that delayed pickup rep orders having a null SOD (Sentence Order Date) are NOT picked up and are not
+   *    processed.</p>
+   * <h4>Given:</h4>
+   * <p>* 3 fdc_contributions record IDs that have been updated to have SOD 3 months in the future.</p>
+   * <h4>When</h4>
+   * <p>* The {@link FdcService#processDailyFiles()} method is called.</p>
+   * <h4>Then:</h4>
+   * <p>1. The call to the callGlobalUpdate is successful i.e. MAAT API returned a successful response
+   * <p>2. The IDs of the 3 updated records are returned.</p>
+   * <p>3. The updated IDs are NOT included in the list of IDs returned by the call to retrieve 'REQUESTED' FDC Contributions.</p>
+   * <p>4. The updated IDs are NOT included in the set of payloads sent to the DRC.</p>
+   * <p>5. After the `processDailyFiles` method call returns, the fdc_contribution entities corresponding to each
+   *       of the updated IDs is checked:<br>
+   *       - Each remains at status WAITING_ITEMS<br>
+   *       - Each has an unpopulated contribution_file ID.</p>
+   *
+   * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-405">DCES-405</a> for test specification.
+   */
+  //TODO: Fix test with implementation of /assessment/ endpoint access.
+  @Disabled("Pending creation of /assessment/ handler")
+  @Test
+  void givenSomeDelayedFdcContributionsWithNullSOD_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
+    final var updatedIds = spyFactory.createFdcDelayedPickupTestData(FdcTestType.NEGATIVE_SOD, 3);
+		CheckOptions checkOptions = CheckOptions.builder().drcStubShouldSucceed(true).updatedIdsShouldBeRequested(false).updatedIdsShouldBeSent(false).contributionFileExpected(false).build();
+		runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.WAITING_ITEMS);
+  }
+
+  /**
+   * <h4>Scenario:</h4>
+   * <p>A negative integration test to check that fast track rep orders having a null SOD (Sentence Order Date) are NOT picked up and are not
+   *    processed.</p>
+   * <h4>Given:</h4>
+   * <p>* 3 fdc_contributions record IDs that have been updated to have SOD 3 months in the future.</p>
+   * <h4>When</h4>
+   * <p>* The {@link FdcService#processDailyFiles()} method is called.</p>
+   * <h4>Then:</h4>
+   * <p>1. The call to the callGlobalUpdate is successful i.e. MAAT API returned a successful response
+   * <p>2. The IDs of the 3 updated records are returned.</p>
+   * <p>3. The updated IDs are NOT included in the list of IDs returned by the call to retrieve 'REQUESTED' FDC Contributions.</p>
+   * <p>4. The updated IDs are NOT included in the set of payloads sent to the DRC.</p>
+   * <p>5. After the `processDailyFiles` method call returns, the fdc_contribution entities corresponding to each
+   *       of the updated IDs is checked:<br>
+   *       - Each remains at status WAITING_ITEMS<br>
+   *       - Each has an unpopulated contribution_file ID.</p>
+   *
+   * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-406">DCES-406</a> for test specification.
+   */
+  //TODO: Fix test with implementation of /assessment/ endpoint access.
+  //@Disabled("Pending creation of /assessment/ handler")
+  @Test
+  void givenSomeFastTrackFdcContributionsWithNullSOD_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
+    final var updatedIds = spyFactory.createFastTrackTestData(FdcAccelerationType.POSITIVE, FdcTestType.NEGATIVE_SOD, 3);
+		CheckOptions checkOptions = CheckOptions.builder().drcStubShouldSucceed(true).updatedIdsShouldBeRequested(false).updatedIdsShouldBeSent(false).contributionFileExpected(false).build();
+		runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.WAITING_ITEMS);
+  }
+
+  /**
 	 * <h4>Scenario:</h4>
 	 * <p>A negative FDC Contributions test which checks that FDC Contribution records do not get picked up for processing by the Delayed pickup logic,
 	 * 	if there are no Rep Order Crown Court Outcomes linked to the Rep Orders on which the FDC Contribution records are based.</p>
