@@ -85,6 +85,8 @@ public class FdcTestDataCreatorService {
           testDataClient.createFdcItems(fdcItemBuilder.build());
           fdcItemBuilder = fdcItemBuilder.itemType(FdcItemType.AGFS).adjustmentReason("Pre AGFS Transfer").paidAsClaimed("N").latestCostInd("Current");
         }
+        if (fdcAccelerationType.equals(FdcAccelerationType.PREVIOUS_FDC) && testType.equals(FdcTestType.NEGATIVE_PREVIOUS_FDC))
+          fdcItemBuilder.adjustmentReason("Other");
         testDataClient.createFdcItems(fdcItemBuilder.build());
         processNegativeTests(testType, repOrderId, fdcId, PickupType.FAST_TRACK);
       });
