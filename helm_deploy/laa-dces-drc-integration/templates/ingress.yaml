@@ -42,7 +42,7 @@ spec:
                 name: {{ $fullName }}
                 port:
                   number: {{ $svcPort }}
-          - path: {{ $.Values.actuator.health.path }}
+          - path: {{ $.Values.actuator.metrics.path }}
             pathType: "Exact"
             backend:
               service:
