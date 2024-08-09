@@ -5,7 +5,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Data;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcItemType;
-import java.time.LocalDateTime;
+
+import java.time.LocalDate;
 
 @Data
 @Builder
@@ -15,7 +16,7 @@ public class FdcItem {
   private FdcItemType itemType;
   private String adjustmentReason;
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
-  private LocalDateTime dateCreated;
+  private LocalDate dateCreated;
   private String paidAsClaimed;
   private String latestCostInd;
   private String userCreated;
