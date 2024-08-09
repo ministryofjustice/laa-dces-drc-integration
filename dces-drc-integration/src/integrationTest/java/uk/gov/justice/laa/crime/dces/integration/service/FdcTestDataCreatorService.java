@@ -13,8 +13,6 @@ import uk.gov.justice.laa.crime.dces.integration.model.local.FdcItemType;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -59,7 +57,9 @@ public class FdcTestDataCreatorService {
                         new CreateFdcContributionRequest(repOrderId, "Y", "Y", null, WAITING_ITEMS));
                 final int fdcId = fdcContribution.getId();
                 fdcIds.add(fdcId);
-                testDataClient.createFdcItems(FdcItem.builder().fdcId(fdcId).userCreated(USER_AUDIT).dateCreated(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)).build());
+                testDataClient.createFdcItems(FdcItem.builder().fdcId(fdcId).userCreated(USER_AUDIT)
+                        .dateCreated(LocalDate.now())
+                        .build());
                 createAdditionalNegativeTypeTestData(testType, repOrderId, fdcId, PickupType.DELAYED_PICKUP);
             });
         } else {
@@ -93,7 +93,7 @@ public class FdcTestDataCreatorService {
                 if (fdcAccelerationType.equals(FdcAccelerationType.PREVIOUS_FDC)) {
                     testDataClient.createFdcContribution(new CreateFdcContributionRequest(repOrderId, "Y", "Y", null, SENT));
                 }
-                var fdcItemBuilder = FdcItem.builder().fdcId(fdcId).userCreated(USER_AUDIT).dateCreated(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS));
+                var fdcItemBuilder = FdcItem.builder().fdcId(fdcId).userCreated(USER_AUDIT).dateCreated(LocalDate.now());
                 if (fdcAccelerationType.equals(FdcAccelerationType.NEGATIVE)) {
                     fdcItemBuilder = fdcItemBuilder.itemType(FdcItemType.LGFS).paidAsClaimed("Y").latestCostInd("Current");
                     testDataClient.createFdcItems(fdcItemBuilder.build());
