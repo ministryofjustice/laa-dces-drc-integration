@@ -27,10 +27,19 @@ import static uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcCon
 @Service
 @RequiredArgsConstructor
 public class FdcTestDataCreatorService {
+    private static final String USER_AUDIT = "DCES";
+    private static final String DATE_RECEIVED = "2015-01-01";
+
     private final TestDataClient testDataClient;
 
     private enum PickupType {
         DELAYED_PICKUP, FAST_TRACK
+    }
+
+    public static class FdcTestDataCreationException extends RuntimeException {
+        public FdcTestDataCreationException(String message) {
+            super(message);
+        }
     }
 
     /**
@@ -42,7 +51,7 @@ public class FdcTestDataCreatorService {
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-365">DCES-365</a> for test data specification.
      */
     public Set<Integer> createDelayedPickupTestData(final FdcTestType testType, final int recordsToUpdate) {
-        final var repOrderIds = testDataClient.getRepOrders(5, "2015-01-01", recordsToUpdate, true, false);
+        final var repOrderIds = testDataClient.getRepOrders(5, DATE_RECEIVED, recordsToUpdate, true, false);
         final var fdcIds = new HashSet<Integer>();
         if (repOrderIds != null && !repOrderIds.isEmpty()) {
             repOrderIds.forEach(repOrderId -> {
@@ -50,11 +59,11 @@ public class FdcTestDataCreatorService {
                         new CreateFdcContributionRequest(repOrderId, "Y", "Y", null, WAITING_ITEMS));
                 final int fdcId = fdcContribution.getId();
                 fdcIds.add(fdcId);
-                testDataClient.createFdcItems(FdcItem.builder().fdcId(fdcId).userCreated("DCES").dateCreated(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)).build());
-                processNegativeTests(testType, repOrderId, fdcId, PickupType.DELAYED_PICKUP);
+                testDataClient.createFdcItems(FdcItem.builder().fdcId(fdcId).userCreated(USER_AUDIT).dateCreated(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)).build());
+                createAdditionalNegativeTypeTestData(testType, repOrderId, fdcId, PickupType.DELAYED_PICKUP);
             });
         } else {
-            throw new RuntimeException("No candidate rep orders found for delayed pickup test type " + testType);
+            throw new FdcTestDataCreationException("No candidate rep orders found for delayed pickup test type " + testType);
         }
         return fdcIds;
     }
@@ -73,7 +82,7 @@ public class FdcTestDataCreatorService {
      */
     public Set<Integer> createFastTrackTestData(final FdcAccelerationType fdcAccelerationType,
                                                 final FdcTestType testType, final int recordsToUpdate) {
-        final var repOrderIds = testDataClient.getRepOrders(-3, "2015-01-01", recordsToUpdate, false, true);
+        final var repOrderIds = testDataClient.getRepOrders(-3, DATE_RECEIVED, recordsToUpdate, false, true);
         final var fdcIds = new HashSet<Integer>();
         if (repOrderIds != null && !repOrderIds.isEmpty()) {
             repOrderIds.forEach(repOrderId -> {
@@ -84,7 +93,7 @@ public class FdcTestDataCreatorService {
                 if (fdcAccelerationType.equals(FdcAccelerationType.PREVIOUS_FDC)) {
                     testDataClient.createFdcContribution(new CreateFdcContributionRequest(repOrderId, "Y", "Y", null, SENT));
                 }
-                var fdcItemBuilder = FdcItem.builder().fdcId(fdcId).userCreated("DCES").dateCreated(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS));
+                var fdcItemBuilder = FdcItem.builder().fdcId(fdcId).userCreated(USER_AUDIT).dateCreated(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS));
                 if (fdcAccelerationType.equals(FdcAccelerationType.NEGATIVE)) {
                     fdcItemBuilder = fdcItemBuilder.itemType(FdcItemType.LGFS).paidAsClaimed("Y").latestCostInd("Current");
                     testDataClient.createFdcItems(fdcItemBuilder.build());
@@ -94,7 +103,7 @@ public class FdcTestDataCreatorService {
                     fdcItemBuilder = fdcItemBuilder.adjustmentReason("Other");
                 }
                 testDataClient.createFdcItems(fdcItemBuilder.build());
-                processNegativeTests(testType, repOrderId, fdcId, PickupType.FAST_TRACK);
+                createAdditionalNegativeTypeTestData(testType, repOrderId, fdcId, PickupType.FAST_TRACK);
             });
         } else {
             throw new RuntimeException("No candidate rep orders found for fast track test type " + testType);
@@ -102,8 +111,8 @@ public class FdcTestDataCreatorService {
         return fdcIds;
     }
 
-    private void processNegativeTests(final FdcTestType testType, final Integer repOrderId, final Integer fdcId,
-                                      final PickupType pickupType) {
+    private void createAdditionalNegativeTypeTestData(final FdcTestType testType, final Integer repOrderId,
+                                                      final Integer fdcId, final PickupType pickupType) {
         switch (testType) {
             case NEGATIVE_SOD -> {
                 Map<String, Object> repOrderWithNullSOD = new HashMap<>();
