@@ -10,6 +10,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PostExchange;
+import uk.gov.justice.laa.crime.dces.integration.aspect.Counted;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.MaatApiClientFactory;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.client.MaatApiClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsResponse;
@@ -20,6 +21,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequ
 import java.time.LocalDate;
 import java.util.List;
 
+@Counted
 @HttpExchange("/debt-collection-enforcement")
 public interface FdcClient extends MaatApiClient {
   @PostExchange("/prepare-fdc-contributions-files")
