@@ -30,8 +30,7 @@ import java.util.Objects;
 @Service
 @AllArgsConstructor
 @Slf4j
-public class FdcService implements FileService{
-
+public class FdcService implements FileService {
     private static final String SERVICE_NAME = "FdcService";
     public static final String REQUESTED_STATUS = "REQUESTED";
     private final FdcMapperUtils fdcMapperUtils;
@@ -43,14 +42,14 @@ public class FdcService implements FileService{
             fdcClient.sendLogFdcProcessed(updateLogFdcRequest);
             return "The request has been processed successfully";
         } catch (MaatApiClientException | WebClientResponseException | HttpServerErrorException e) {
-            log.info("processFdcUpdate failed", e);
+            log.info("Failed to processFdcUpdate", e);
             return "The request has failed to process";
         }
     }
 
     // TODO Change all Objects to the actual object type.
     @Timed(value = "laa_dces_drc_service_process_fdc_daily_files",
-            description = "Time taken to process the daily fdc files from DRC and passing this for downstream processing.")
+            description = "Time taken to process the daily FDC files from DRC and passing this for downstream processing.")
     public boolean processDailyFiles() throws WebClientResponseException {
         List<Fdc> successfulFdcs = new ArrayList<>();
         Map<String,String> failedFdcs = new HashMap<>();
@@ -59,21 +58,21 @@ public class FdcService implements FileService{
         sendFdcToDrc(fdcList, successfulFdcs, failedFdcs);
         // check numbers.
         logNumberDiscepancies(globalUpdateResult, fdcList.size(), successfulFdcs.size());
-        return updateFdcAndCreateFile(successfulFdcs, failedFdcs);
+        return updateFdcAndCreateFile(successfulFdcs, failedFdcs) != null;
     }
 
-    @Retry(name=SERVICE_NAME)
+    @Retry(name = SERVICE_NAME)
     @SuppressWarnings("squid:S2583") // ignore the can only be true warning. As this is placeholder.
-    void sendFdcToDrc(List<Fdc> fdcList, List<Fdc> successfulFdcs, Map<String,String> failedFdcs){
+    void sendFdcToDrc(List<Fdc> fdcList, List<Fdc> successfulFdcs, Map<String,String> failedFdcs) {
         fdcList.forEach(currentFdc -> {
             Boolean updateSuccessful = drcClient.sendFdcUpdate(buildSendFdcFileDataToExternalRequest(currentFdc.getId().intValue()));
             if (Boolean.TRUE.equals(updateSuccessful)) {
                 successfulFdcs.add(currentFdc);
-                log.info("FDC update successful for ID: {}", currentFdc.getId());
+                log.info("Sent update to DRC for FDC contribution ID {}", currentFdc.getId());
             } else {
                 // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
                 failedFdcs.put(String.valueOf(currentFdc.getId()), "failure reason");
-                log.warn("FDC update failed for ID: {}. Reason: {}", currentFdc.getId(), "failure reason");
+                log.warn("Failed to send update to DRC for FDC contribution ID {} [{}]", currentFdc.getId(), "failure reason");
             }
         });
     }
@@ -84,11 +83,10 @@ public class FdcService implements FileService{
                 .build();
     }
 
-    private boolean updateFdcAndCreateFile(List<Fdc> successfulFdcs, Map<String,String> failedFdcs){
-        // if >1 contribution was sent
-        // finish off with updates and create the file.
+    private Integer updateFdcAndCreateFile(List<Fdc> successfulFdcs, Map<String, String> failedFdcs) {
+        // If any contributions were sent, then finish off with updates and create the file:
         Integer contributionFileId = null;
-        if ( Objects.nonNull(successfulFdcs) && !successfulFdcs.isEmpty() ) {
+        if (Objects.nonNull(successfulFdcs) && !successfulFdcs.isEmpty()) {
             // Construct other parameters for the "ATOMIC UPDATE" call.
             LocalDateTime dateGenerated = LocalDateTime.now();
             String fileName = fdcMapperUtils.generateFileName(dateGenerated);
@@ -101,39 +99,41 @@ public class FdcService implements FileService{
 
             // Failed XML lines to be logged. Need to use this to set the ATOMIC UPDATE's ack field.
             if (!failedFdcs.isEmpty()) {
-                log.info("Contributions failed to send: {}", failedFdcs.size());
+                log.info("Failed to send {} FDC contributions", failedFdcs.size());
             }
             // Setup and make MAAT API "ATOMIC UPDATE" REST call below:
             try {
                 contributionFileId = fdcUpdateRequest(xmlFile, successfulIdList, successfulIdList.size(), fileName, ackXml);
-            } catch (MaatApiClientException | WebClientResponseException| HttpServerErrorException e){
-                // TODO: If failed, we want to handle this. As it will mean the whole process failed for current day.
-                log.error("Fdc file failed to send! Investigation needed.");
-                throw e;
+                // Explicitly log the FDC contribution IDs that were updated:
+                log.info("Created FDC contribution-file ID {} from {} FDC contribution IDs [{}]", contributionFileId, successfulIdList.size(), String.join(", ", successfulIdList));
+            } catch (MaatApiClientException | WebClientResponseException| HttpServerErrorException e) {
+                // We're rethrowing the exception, therefore avoid logging the stack trace to prevent logging the same trace multiple times.
+                log.error("Failed to create FDC contribution-file. Investigation needed. State of files will be out of sync! [" + e.getClass().getName() + "(" + e.getMessage() + ")]");
+                // If failed, we want to handle this. As it will mean the whole process failed for current day.
                 // TODO: Need to figure how we're going to log a failed call to the ATOMIC UPDATE.
+                throw e;
             }
         }
-        return contributionFileId != null;
+        return contributionFileId;
     }
 
-    public void logNumberDiscepancies(int globalUpdateCount, int getFdcCount, int successfullySentFdcCount){
-        if ( globalUpdateCount != getFdcCount ){
-            log.info("Fdc number discrepancy: {} affected by global update, {} from getFdcs", globalUpdateCount, getFdcCount);
+    public void logNumberDiscepancies(int globalUpdateCount, int getFdcCount, int successfullySentFdcCount) {
+        if (globalUpdateCount != getFdcCount) {
+            log.info("FDC contribution count discrepancy: {} affected by FDC global update, {} from getFdcs", globalUpdateCount, getFdcCount);
         }
-        if ( getFdcCount != successfullySentFdcCount ){
-            log.info("Fdc number discrepancy: {} from getFdcs, {} successfully sent", getFdcCount, successfullySentFdcCount);
+        if (getFdcCount != successfullySentFdcCount) {
+            log.info("FDC contribution count discrepancy: {} from getFdcs, {} successfully sent", getFdcCount, successfullySentFdcCount);
         }
     }
 
-
-    @Retry(name=SERVICE_NAME)
+    @Retry(name = SERVICE_NAME)
     public List<Fdc> getFdcList() throws HttpServerErrorException{
         FdcContributionsResponse response;
         try {
             response = fdcClient.getFdcContributions(REQUESTED_STATUS);
-        }
-        catch ( HttpServerErrorException e ) {
-            log.error("Fdc Get Failed. The Global Update was successful!");
+        } catch (HttpServerErrorException e) {
+            // We're rethrowing the exception, therefore avoid logging the stack trace to prevent logging the same trace multiple times.
+            log.error("Failed to retrieve FDC contributions, after the FDC global update completed [" + e.getClass().getName() + "(" + e.getMessage() + ")]");
             throw e;
         }
         List<Fdc> fdcList = new ArrayList<>();
@@ -146,30 +146,27 @@ public class FdcService implements FileService{
         return fdcList;
     }
 
-
-    @Retry(name=SERVICE_NAME)
+    @Retry(name = SERVICE_NAME)
     public FdcGlobalUpdateResponse callFdcGlobalUpdate(){
         try {
             return fdcClient.executeFdcGlobalUpdate();
-        }
-        catch (HttpServerErrorException e){
-            log.error("Fdc Global Update threw an exception");
+        } catch (HttpServerErrorException e) {
+            // We're rethrowing the exception, therefore avoid logging the stack trace to prevent logging the same trace multiple times.
+            log.error("FDC global update threw an exception [" + e.getClass().getName() + "(" + e.getMessage() + ")]");
             throw e;
         }
     }
 
-
-    private int callGlobalUpdate(){
+    private int callGlobalUpdate() {
         FdcGlobalUpdateResponse globalUpdateResponse;
         try {
             globalUpdateResponse = callFdcGlobalUpdate();
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             return logGlobalUpdateFailure(e.getMessage());
         }
         // handle response
-        if(!globalUpdateResponse.isSuccessful()){
-            return logGlobalUpdateFailure("Failure Returned from Endpoint");
+        if (!globalUpdateResponse.isSuccessful()) {
+            return logGlobalUpdateFailure("endpoint response has successful==false");
         }
         return globalUpdateResponse.getNumberOfUpdates();
     }
@@ -177,13 +174,12 @@ public class FdcService implements FileService{
     private int logGlobalUpdateFailure(String errorMessage){
         // We've failed to do a global update.
         // TODO: Flag here for sentry
-        log.error("FDC Global Update failure: {}", errorMessage);
+        log.error("Failed to complete FDC global update [{}]", errorMessage);
         // continue processing, as can still have data to deal with.
         return 0;
     }
 
-
-    @Retry(name=SERVICE_NAME)
+    @Retry(name = SERVICE_NAME)
     public Integer fdcUpdateRequest(String xmlContent, List<String> fdcIdList, int numberOfRecords, String fileName, String fileAckXML) throws HttpServerErrorException {
         FdcUpdateRequest request = FdcUpdateRequest.builder()
                 .recordsSent(numberOfRecords)
@@ -191,9 +187,6 @@ public class FdcService implements FileService{
                 .fdcIds(fdcIdList)
                 .xmlFileName(fileName)
                 .ackXmlContent(fileAckXML).build();
-
-    return fdcClient.updateFdcs(request);
+        return fdcClient.updateFdcs(request);
     }
-
-
 }

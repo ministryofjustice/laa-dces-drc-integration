@@ -2,6 +2,7 @@ package uk.gov.justice.laa.crime.dces.integration.client;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import java.util.Map;
 import java.util.Set;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -56,6 +57,10 @@ public interface TestDataClient extends MaatApiClient {
     @PutExchange("/assessment/rep-orders")
     @Valid
     void updateRepOrderSentenceOrderDate(@RequestBody UpdateRepOrder updateRepOrder);
+
+    @PatchExchange("/assessment/rep-orders/{repId}")
+    @Valid
+    void updateRepOrderSentenceOrderDateToNull(@PathVariable Integer repId, @RequestBody Map<String, Object> repOrder);
 
     @PostExchange("/debt-collection-enforcement/fdc-contribution")
     @Valid
