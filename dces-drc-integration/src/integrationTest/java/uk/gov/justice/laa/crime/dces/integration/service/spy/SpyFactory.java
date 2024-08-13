@@ -10,7 +10,6 @@ import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributi
 import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionFileResponse;
 import uk.gov.justice.laa.crime.dces.integration.model.external.FdcContribution;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionFileErrorResponse;
-import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateConcorContributionStatusRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcAccelerationType;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType;
 import uk.gov.justice.laa.crime.dces.integration.service.TestDataService;
@@ -58,11 +57,6 @@ public class SpyFactory {
     }
 
     public List<Integer> updateConcorContributionStatus(final ConcorContributionStatus status, final int recordCount) {
-        final var request = UpdateConcorContributionStatusRequest.builder()
-                .status(status)
-                .recordCount(recordCount)
-                .build();
-//        return testDataClient.updateConcorContributionStatus(request);
         return testDataService.updateConcorContributionStatus(status, recordCount);
     }
 

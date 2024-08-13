@@ -1,12 +1,17 @@
 package uk.gov.justice.laa.crime.dces.integration.testing;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsStatus.SENT;
+import static uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsStatus.WAITING_ITEMS;
 import static uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType.NEGATIVE_CCO;
 import static uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType.NEGATIVE_FDC_ITEM;
 import static uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType.NEGATIVE_FDC_STATUS;
 import static uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType.NEGATIVE_PREVIOUS_FDC;
 import static uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType.NEGATIVE_SOD;
 import static uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType.POSITIVE;
+
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
@@ -21,6 +26,8 @@ import uk.gov.justice.laa.crime.dces.integration.model.external.CreateFdcContrib
 import uk.gov.justice.laa.crime.dces.integration.model.external.FdcContribution;
 import uk.gov.justice.laa.crime.dces.integration.model.external.FdcItem;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateFdcContributionRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.local.FdcAccelerationType;
+import uk.gov.justice.laa.crime.dces.integration.model.local.FdcItemType;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType;
 import uk.gov.justice.laa.crime.dces.integration.service.TestDataService;
 
@@ -65,6 +72,62 @@ class TestDataServiceTest {
     when(maatApiClient.createFdcItem(any())).thenReturn(new FdcItem());
   }
 
+
+  // Fast Track FDC
+  private void baseFdcFastTrackVerification(FdcAccelerationType accelerationType, Set<Integer> idList, FdcTestType testType, int recordsToUpdate){
+    when(maatApiClient.getFdcFastTrackRepOrderIdList(anyInt(),any(),anyInt())).thenReturn(idList);
+    when(maatApiClient.updateRepOrder(any())).thenReturn(null);
+    mockCreateFdcContribution();
+    mockCreateFdcItem();
+
+    Set<Integer> returnedIds = testDataService.createFastTrackTestData(accelerationType, testType, recordsToUpdate);
+
+    assertEquals(idList.size(), returnedIds.size());
+    assertEquals(idList, returnedIds);
+    verify(maatApiClient).getFdcFastTrackRepOrderIdList(anyInt(),any(),anyInt());
+    int fdcItemCreationCount = (FdcAccelerationType.NEGATIVE.equals(accelerationType)?idList.size()*2:idList.size());
+    verify(maatApiClient, times(fdcItemCreationCount)).createFdcItem(any());
+
+    verify(maatApiClient, times(idList.size())).updateRepOrder(any());
+
+    // check the base fdcContribution created on all paths.
+    String expectedAccel = (FdcAccelerationType.POSITIVE.equals(accelerationType)?"Y":null);
+    for(Integer id: idList){
+      verify(maatApiClient).createFdcContribution(new CreateFdcContributionRequest(id, "Y", "Y", expectedAccel, WAITING_ITEMS));
+    }
+  }
+
+  @Test
+  void whenPositiveCreateFastTrackPickupTestDataCalled_ThenShouldCallEndpoints(){
+    baseFdcFastTrackVerification(FdcAccelerationType.POSITIVE, Set.of(1,2,3,4), POSITIVE, 3);
+  }
+
+  @Test
+  void whenPreviousCreateFastTrackPickupTestDataCalled_ThenShouldCallEndpoints(){
+    Set<Integer> idList = Set.of(1,2,3,4);
+    baseFdcFastTrackVerification(FdcAccelerationType.PREVIOUS_FDC, idList, POSITIVE, 3);
+    for(Integer id: idList){
+      verify(maatApiClient).createFdcContribution(new CreateFdcContributionRequest(id, "Y", "Y", null, SENT));
+    }
+  }
+
+  @Test
+  void whenNegativeCreateFastTrackPickupTestDataCalled_ThenShouldCallEndpoints(){
+    Set<Integer> idList = Set.of(1,2,3,4);
+    baseFdcFastTrackVerification(FdcAccelerationType.NEGATIVE, idList, POSITIVE, 3);
+    for(Integer id: idList){
+      FdcItem baseItem =     FdcItem.builder().fdcId(id).userCreated("DCES").dateCreated(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS))
+              .itemType(FdcItemType.LGFS).paidAsClaimed("Y").latestCostInd("Current").build();
+      FdcItem negativeItem =     FdcItem.builder().fdcId(id).userCreated("DCES").dateCreated(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS))
+              .itemType(FdcItemType.AGFS).adjustmentReason("Pre AGFS Transfer").paidAsClaimed("N").latestCostInd("Current").build();
+
+      verify(maatApiClient).createFdcItem(baseItem);
+      verify(maatApiClient).createFdcItem(negativeItem);
+    }
+  }
+  
+  // Delayed FDC
+  // Method to do base checks and mocks for fast track calls.
   private void baseFdcDelayedVerification(Set<Integer> idList, FdcTestType testType, int recordsToUpdate){
     when(maatApiClient.getFdcDelayedRepOrderIdList(anyInt(),any(),anyInt())).thenReturn(idList);
     mockCreateFdcContribution();
@@ -79,14 +142,6 @@ class TestDataServiceTest {
     verify(maatApiClient, times(idList.size())).createFdcContribution(any());
 
   }
-
-  //   case NEGATIVE_SOD -> maatApiClient.updateRepOrder(UpdateRepOrder.builder().repId(repOrderId)
-  //          .sentenceOrderDate(LocalDate.now().plusMonths(monthsAfterSysDate)).build());
-  //      case NEGATIVE_CCO -> maatApiClient.deleteCrownCourtOutcomes(repOrderId);
-  //      case NEGATIVE_FDC_ITEM -> maatApiClient.deleteFdcItem(fdcId);
-  //      case NEGATIVE_PREVIOUS_FDC -> maatApiClient.updateFdcContribution(new UpdateFdcContributionRequest(fdcId, repOrderId, SENT.name(), WAITING_ITEMS));
-  //      case NEGATIVE_FDC_STATUS -> maatApiClient.updateFdcContribution(new UpdateFdcContributionRequest(fdcId, repOrderId, null, SENT));
-  //
 
   @Test
   void whenPositiveCreateDelayedPickupTestDataCalled_ThenShouldCallEndpoints(){
@@ -117,8 +172,6 @@ class TestDataServiceTest {
     verify(maatApiClient, times(idSet.size())).deleteFdcItem(anyInt());
   }
 
-  //case NEGATIVE_PREVIOUS_FDC -> maatApiClient.updateFdcContribution(
-  // new UpdateFdcContributionRequest(fdcId, repOrderId, SENT.name(), WAITING_ITEMS));
   @Test
   void whenNegativePreviousFDC_DoBaseAndCallUpdateRepOrder(){
     UpdateFdcContributionRequest expectedRequest = new UpdateFdcContributionRequest(1,1,FdcContributionsStatus.SENT.name(), FdcContributionsStatus.WAITING_ITEMS);
@@ -127,7 +180,6 @@ class TestDataServiceTest {
     verify(maatApiClient, times(1)).updateFdcContribution(expectedRequest);
   }
 
-  // case NEGATIVE_FDC_STATUS -> maatApiClient.updateFdcContribution(new UpdateFdcContributionRequest(fdcId, repOrderId, null, SENT));
   @Test
   void whenNegativeFdcStatus_DoBaseAndCallUpdateRepOrder(){
     UpdateFdcContributionRequest expectedRequest = new UpdateFdcContributionRequest(1,1,null, FdcContributionsStatus.SENT);
@@ -135,247 +187,5 @@ class TestDataServiceTest {
     baseFdcDelayedVerification(Set.of(1), NEGATIVE_FDC_STATUS, 3);
     verify(maatApiClient, times(1)).updateFdcContribution(expectedRequest);
   }
-
-//
-//  @Test
-//  void test_whenCreateDelayedPickupTestDataNegativeSod_thenShouldUpdateSod()
-//      throws InterruptedException {
-//
-//    int recordsToUpdate = 3;
-//    LocalDate date = LocalDate.of(2015,1,1);
-//
-//    Set<Integer> refIds = testDataService.createDelayedPickupTestData(NEGATIVE_SOD, 3);
-//    assertEquals(3, refIds.size());
-//    checkRequest("GET", "/assessment/rep-orders?delay=5&dateReceived=2015-01-01&numRecords=3&fdcDelayedPickup=true&fdcFastTrack=false");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
-//        "{\"repId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
-//
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-//        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
-//    checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(3)+"\"}");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
-//        "{\"repId\":2,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-//        "{\"fdcId\":1002,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
-//    checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":2,\"sentenceOrderDate\":\""+getDateAfterMonths(3)+"\"}");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
-//        "{\"repId\":3,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-//        "{\"fdcId\":1003,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
-//    checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":3,\"sentenceOrderDate\":\""+getDateAfterMonths(3)+"\"}");
-//  }
-//
-//  @Test
-//  void test_whenCreateDelayedPickupTestDataNegativeCco_thenShouldDeleteCco()
-//      throws InterruptedException {
-//    Set<Integer> refIds = testDataService.createDelayedPickupTestData(NEGATIVE_CCO, 3);
-//    assertEquals(3, refIds.size());
-//    checkRequest("GET", "/assessment/rep-orders?delay=5&dateReceived=2015-01-01&numRecords=3&fdcDelayedPickup=true&fdcFastTrack=false");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
-//        "{\"repId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-//        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
-//    checkRequest("DELETE", "/assessment/rep-orders/cc-outcome/rep-order/1");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
-//        "{\"repId\":2,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-//        "{\"fdcId\":1002,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
-//    checkRequest("DELETE", "/assessment/rep-orders/cc-outcome/rep-order/2");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
-//        "{\"repId\":3,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-//        "{\"fdcId\":1003,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
-//    checkRequest("DELETE", "/assessment/rep-orders/cc-outcome/rep-order/3");
-//  }
-//
-//  @Test
-//  void test_whenCreateDelayedPickupTestDataNegativeFdcStatus_thenShouldUpdateFdcContributionToSent()
-//      throws InterruptedException {
-//    Set<Integer> refIds = testDataService.createDelayedPickupTestData(NEGATIVE_FDC_STATUS, 1);
-//    assertEquals(1, refIds.size());
-//    checkRequest("GET", "/assessment/rep-orders?delay=5&dateReceived=2015-01-01&numRecords=1&fdcDelayedPickup=true&fdcFastTrack=false");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
-//        "{\"repId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-//        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
-//    checkRequestAndBody("PATCH", "/debt-collection-enforcement/fdc-contribution",
-//        "{\"fdcContributionId\":1001,\"repId\":1,\"previousStatus\":null,\"newStatus\":\"SENT\"}");
-//  }
-//
-//  @Test
-//  void test_whenCreateDelayedPickupTestDataNegativeFdcItem_thenShouldDeleteFdcItems()
-//      throws InterruptedException {
-//    Set<Integer> refIds = testDataService.createDelayedPickupTestData(NEGATIVE_FDC_ITEM, 1);
-//    assertEquals(1, refIds.size());
-//    checkRequest("GET", "/assessment/rep-orders?delay=5&dateReceived=2015-01-01&numRecords=1&fdcDelayedPickup=true&fdcFastTrack=false");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
-//        "{\"repId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-//        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
-//    checkRequest("DELETE", "/debt-collection-enforcement/fdc-items/fdc-id/1001");
-//  }
-//
-//  @Test
-//  void test_whenCreateFastTrackTestDataPositiveAcceleration_thenShouldCreateContributionAndFdcItem()
-//      throws InterruptedException {
-//    Set<Integer> refIds = testDataService.createFastTrackTestData(FdcAccelerationType.POSITIVE,  POSITIVE, 1);
-//    assertEquals(1, refIds.size());
-//    checkRequest("GET", "/assessment/rep-orders?delay=-3&dateReceived=2015-01-01&numRecords=1&fdcDelayedPickup=false&fdcFastTrack=true");
-//    checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-3)+"\"}");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
-//        "{\"repId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"manualAcceleration\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-//        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
-//  }
-//
-//  @Test
-//  void test_whenCreateFastTrackTestDataPositiveAccelerationNegSod_thenShouldDoSevenMonths()
-//      throws InterruptedException {
-//    Set<Integer> refIds = testDataService.createFastTrackTestData(FdcAccelerationType.POSITIVE,  NEGATIVE_SOD, 1);
-//    assertEquals(1, refIds.size());
-//    checkRequest("GET", "/assessment/rep-orders?delay=-3&dateReceived=2015-01-01&numRecords=1&fdcDelayedPickup=false&fdcFastTrack=true");
-//    checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-3)+"\"}");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
-//        "{\"repId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"manualAcceleration\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-//        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
-//    checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-7)+"\"}");
-//  }
-//
-//  @Test
-//  void test_whenCreateFastTrackTestDataPositiveAccelerationNegCco_thenShouldDeleteCco()
-//      throws InterruptedException {
-//    Set<Integer> refIds = testDataService.createFastTrackTestData(FdcAccelerationType.POSITIVE,  NEGATIVE_CCO, 1);
-//    assertEquals(1, refIds.size());
-//    checkRequest("GET", "/assessment/rep-orders?delay=-3&dateReceived=2015-01-01&numRecords=1&fdcDelayedPickup=false&fdcFastTrack=true");
-//    checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-3)+"\"}");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
-//        "{\"repId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"manualAcceleration\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-//        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
-//    checkRequest("DELETE", "/assessment/rep-orders/cc-outcome/rep-order/1");
-//  }
-//
-//  @Test
-//  void test_whenCreateFastTrackTestDataPositiveAccelerationNegFdcStatus_thenShouldUpdateFdcContributionsToSent()
-//      throws InterruptedException {
-//    Set<Integer> refIds = testDataService.createFastTrackTestData(FdcAccelerationType.POSITIVE,  NEGATIVE_FDC_STATUS, 1);
-//    assertEquals(1, refIds.size());
-//    checkRequest("GET", "/assessment/rep-orders?delay=-3&dateReceived=2015-01-01&numRecords=1&fdcDelayedPickup=false&fdcFastTrack=true");
-//    checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-3)+"\"}");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
-//        "{\"repId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"manualAcceleration\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-//        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
-//    checkRequestAndBody("PATCH", "/debt-collection-enforcement/fdc-contribution",
-//        "{\"fdcContributionId\":1001,\"repId\":1,\"previousStatus\":null,\"newStatus\":\"SENT\"}");
-//  }
-//
-//  @Test
-//  void test_whenCreateFastTrackTestDataPositiveAccelerationNegFdcItem_thenShouldDeleteFdcItem()
-//      throws InterruptedException {
-//    Set<Integer> refIds = testDataService.createFastTrackTestData(FdcAccelerationType.POSITIVE,  NEGATIVE_FDC_ITEM, 1);
-//    assertEquals(1, refIds.size());
-//    checkRequest("GET", "/assessment/rep-orders?delay=-3&dateReceived=2015-01-01&numRecords=1&fdcDelayedPickup=false&fdcFastTrack=true");
-//    checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-3)+"\"}");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
-//        "{\"repId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"manualAcceleration\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-//        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
-//    checkRequest("DELETE", "/debt-collection-enforcement/fdc-items/fdc-id/1001");
-//  }
-//
-//  @Test
-//  void test_whenCreateFastTrackTestDataNegativeAcceleration_thenShouldCreateTwoFdcItems()
-//      throws InterruptedException {
-//    Set<Integer> refIds = testDataService.createFastTrackTestData(FdcAccelerationType.NEGATIVE,  POSITIVE, 1);
-//    assertEquals(1, refIds.size());
-//    checkRequest("GET", "/assessment/rep-orders?delay=-3&dateReceived=2015-01-01&numRecords=1&fdcDelayedPickup=false&fdcFastTrack=true");
-//    checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-3)+"\"}");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
-//        "{\"repId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-//        "{\"fdcId\":1001,\"itemType\":\"LGFS\",\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"paidAsClaimed\":\"Y\",\"latestCostInd\":\"Current\",\"userCreated\":\"DCES\"}");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-//        "{\"fdcId\":1001,\"itemType\":\"AGFS\",\"adjustmentReason\":\"Pre AGFS Transfer\",\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"paidAsClaimed\":\"N\",\"latestCostInd\":\"Current\",\"userCreated\":\"DCES\"}");
-//  }
-//
-//  @Test
-//  void test_whenCreateFastTrackTestDataPrevFdc_thenShouldCreateTwoContributions()
-//      throws InterruptedException {
-//    Set<Integer> refIds = testDataService.createFastTrackTestData(FdcAccelerationType.PREVIOUS_FDC,  POSITIVE, 1);
-//    assertEquals(1, refIds.size());
-//    checkRequest("GET", "/assessment/rep-orders?delay=-3&dateReceived=2015-01-01&numRecords=1&fdcDelayedPickup=false&fdcFastTrack=true");
-//    checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-3)+"\"}");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
-//        "{\"repId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
-//        "{\"repId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"SENT\"}");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-//        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
-//  }
-//
-//  @Test
-//  void test_whenCreateFastTrackTestDataPrevFdcNegative_thenShouldCreateTwoWaitingContributions()
-//      throws InterruptedException {
-//    Set<Integer> refIds = null;
-//    try{
-//      refIds = testDataService.createFastTrackTestData(FdcAccelerationType.PREVIOUS_FDC, NEGATIVE_PREVIOUS_FDC, 1);
-//    }
-//    catch (NullPointerException e){
-//      log.info("We erroring?");
-//    }
-//
-//
-//    assertEquals(1, refIds.size());
-//    checkRequest("GET", "/assessment/rep-orders?delay=-3&dateReceived=2015-01-01&numRecords=1&fdcDelayedPickup=false&fdcFastTrack=true");
-//    checkRequestAndBody("PUT", "/assessment/rep-orders", "{\"repId\":1,\"sentenceOrderDate\":\""+getDateAfterMonths(-3)+"\"}");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
-//        "{\"repId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"WAITING_ITEMS\"}");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-contribution",
-//        "{\"repId\":1,\"lgfsComplete\":\"Y\",\"agfsComplete\":\"Y\",\"status\":\"SENT\"}");
-//    checkRequestAndBody("POST", "/debt-collection-enforcement/fdc-items",
-//        "{\"fdcId\":1001,\"dateCreated\":\""+getDateAfterMonths(0)+"T00:00:00.000\",\"userCreated\":\"DCES\"}");
-//    checkRequestAndBody("PATCH", "/debt-collection-enforcement/fdc-contribution",
-//        "{\"fdcContributionId\":1001,\"repId\":1,\"previousStatus\":\"SENT\",\"newStatus\":\"WAITING_ITEMS\"}");
-//  }
-//
-//  /**
-//   * Utility method to take the next request received by the mock web server and test it against the expected request
-//   * @param expectedMethod expected HTTP method type such as GET, PUT, POST or DELETE
-//   * @param expectedRequestPath expected full request path
-//   * @throws InterruptedException Thrown by mockWebServer.takeRequest
-//   */
-//  private RecordedRequest checkRequest(String expectedMethod, String expectedRequestPath)
-//      throws InterruptedException {
-////    RecordedRequest recordedRequest = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
-////    assertNotNull(recordedRequest);
-////    assertEquals(expectedMethod, recordedRequest.getMethod());
-////    assertEquals(expectedRequestPath, recordedRequest.getPath());
-////    return recordedRequest;
-//  }
-//
-//  /**
-//   * Utility method to check that no more requests are received by the mock server (to ensure that the next test can proceed)
-//   * @throws InterruptedException Thrown by mockWebServer.takeRequest
-//   */
-//  @AfterEach
-//  public void checkNullRequest()
-//      throws InterruptedException {
-////    RecordedRequest recordedRequest = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
-////    assertNull(recordedRequest);
-//  }
-//
-//  /**
-//   * Utility method to take the next request received by the mock web server and test it against the expected request
-//   * @param expectedMethod expected HTTP method type such as GET, PUT, POST or DELETE
-//   * @param expectedRequestPath expected full request path
-//   * @throws InterruptedException Thrown by checkRequest
-//   */
-//  private void checkRequestAndBody(String expectedMethod, String expectedRequestPath, String expectedRequestBody)
-//      throws InterruptedException {
-////    RecordedRequest recordedRequest = checkRequest(expectedMethod, expectedRequestPath);
-////    assertEquals(expectedRequestBody, recordedRequest.getBody().readUtf8());
-//  }
 
 }

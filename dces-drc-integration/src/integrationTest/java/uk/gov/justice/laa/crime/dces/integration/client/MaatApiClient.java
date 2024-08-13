@@ -79,10 +79,6 @@ public class MaatApiClient {
         return response.extract().body().as(Set.class);
     }
 
-    // TODO: Remove commented code, and swap to useful comments.
-    //@PostExchange("/debt-collection-enforcement/fdc-contribution")
-    //    @Valid
-    //    FdcContribution createFdcContribution(@RequestBody CreateFdcContributionRequest fdcContribution);
     public FdcContribution createFdcContribution(CreateFdcContributionRequest requestBody) {
         ValidatableResponse response = given()
                 .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
@@ -94,9 +90,6 @@ public class MaatApiClient {
         return response.extract().body().as(FdcContribution.class);
     }
 
-    //    @PostExchange("/debt-collection-enforcement/fdc-items")
-    //    @Valid
-    //    void createFdcItems(@Valid @RequestBody final FdcItem fdcItemDTO);
     public FdcItem createFdcItem(FdcItem requestBody) {
         ValidatableResponse response = given()
                 .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
@@ -116,9 +109,6 @@ public class MaatApiClient {
         return responseFdcItem;
     }
 
-    //    @DeleteExchange("/debt-collection-enforcement/fdc-items/fdc-id/{fdcId}")
-    //    @Valid
-    //    void deleteFdcItems(@NotNull @PathVariable final Integer fdcId);
     public ValidatableResponse deleteFdcItem(int fdcId) {
         return given()
                 .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
@@ -130,9 +120,6 @@ public class MaatApiClient {
                 .assertThat().statusCode(200);
     }
 
-//    @DeleteExchange("/assessment/rep-orders/cc-outcome/rep-order/{repId}")
-//    @Valid
-//    void deleteCrownCourtOutcomes(@PathVariable Integer repId);
     public ValidatableResponse deleteCrownCourtOutcomes(int repId) {
         return given()
                 .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
@@ -144,9 +131,6 @@ public class MaatApiClient {
                 .assertThat().statusCode(200);
     }
 
-    //    @PatchExchange("/debt-collection-enforcement/fdc-contribution")
-    //    @Valid
-    //    int updateFdcContribution(@RequestBody UpdateFdcContributionRequest fdcContribution);
     public ValidatableResponse updateFdcContribution(UpdateFdcContributionRequest fdcContribution) {
         return given()
                 .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
@@ -158,9 +142,6 @@ public class MaatApiClient {
                 .assertThat().statusCode(200);
     }
 
-    //     @GetExchange("/debt-collection-enforcement/fdc-contribution/{fdcContributionId}")
-    //    @Valid
-    //    FdcContribution getFdcContribution(@PathVariable Integer fdcContributionId);
     public FdcContribution getFdcContribution(int fdcContributionId) {
         String contributionIdParameter = "/{fdcContributionId}";
         ValidatableResponse response =  given()
@@ -169,15 +150,11 @@ public class MaatApiClient {
                 .get(DCES_BASE_URL + FDC_CONTRIBUTION_URI+contributionIdParameter)
                 .then()
                 .log()
-                .all()
-                .assertThat().statusCode(200);
+                .all();
 
         return response.extract().body().as(FdcContribution.class);
     }
 
-    //    @PutExchange("/assessment/rep-orders")
-    //    @Valid
-    //    void updateRepOrderSentenceOrderDate(@RequestBody UpdateRepOrder updateRepOrder);
     public ValidatableResponse updateRepOrder(UpdateRepOrder updateRepOrder) {
         return given()
                 .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
@@ -189,9 +166,6 @@ public class MaatApiClient {
                 .assertThat().statusCode(200);
     }
 
-    //    @GetExchange("/debt-collection-enforcement/contribution-file/{contributionFileId}")
-    //    @Valid
-    //    ContributionFileResponse getContributionFile(@PathVariable int contributionFileId);
     public ContributionFileResponse getContributionFile(int contributionFileId) {
         String contributionIdUri = "/{contributionFileId}";
         ValidatableResponse response = given()
@@ -205,9 +179,6 @@ public class MaatApiClient {
         return response.extract().body().as(ContributionFileResponse.class);
     }
 
-    //    @PutExchange("/debt-collection-enforcement/concor-contribution-status")
-    //    @Valid
-    //    List<Integer> updateConcorContributionStatus(@RequestBody UpdateConcorContributionStatusRequest updateConcorContributionStatusRequest);
     public List<Integer> updateConcorContributionStatus(UpdateConcorContributionStatusRequest concorContributionRequest) {
         ValidatableResponse response = given()
                 .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
@@ -221,9 +192,6 @@ public class MaatApiClient {
         return response.extract().body().as(List.class);
     }
 
-    //    @GetExchange("/debt-collection-enforcement/concor-contribution/{id}")
-    //    @Valid
-    //    ConcorContributionResponseDTO getConcorContribution(@PathVariable Integer id);
     public ConcorContributionResponseDTO getConcorContribution(int concorId) {
         String contributionIdUri = "/{concorId}";
         ValidatableResponse response = given()
@@ -237,9 +205,6 @@ public class MaatApiClient {
         return response.extract().body().as(ConcorContributionResponseDTO.class);
     }
 
-    //    @GetExchange("/debt-collection-enforcement/contribution-file/{contributionFileId}/error/{contributionId}")
-    //    @Valid
-    //    ContributionFileErrorResponse getContributionFileError(@PathVariable int contributionFileId, @PathVariable int contributionId);
     public ContributionFileErrorResponse getContributionFileError(int contributionFileId, int contributionId) {
         String contributionFileIdUri = "/{contributionFileId}/error/{contributionId}";
         ValidatableResponse response = given()
