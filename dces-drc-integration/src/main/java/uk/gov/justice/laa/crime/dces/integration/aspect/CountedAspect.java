@@ -21,20 +21,21 @@ public class CountedAspect {
     }
 
     @Pointcut("@within(Counted)")
-    public void countedClasses() {
+    public void classCounter() {
     }
 
-    @After("countedClasses()")
-    public void afterCountedMethod(JoinPoint joinPoint) {
+    @After("classCounter()")
+    public void classMethodCounter(JoinPoint joinPoint) {
         String methodName = joinPoint.getSignature().toShortString();
-        log.info("Method name is {}", methodName);
-        Counter counter = Counter.builder("allAPIsCalls")
+        String className = joinPoint.getSignature().getDeclaringTypeName();
+        String parentClassName = joinPoint.getSignature().getDeclaringType().getSuperclass().getName();
+
+        Counter counter = Counter.builder(methodName)
+                .tags(methodName, className, parentClassName)
                 .description("Number of calls to " + methodName)
                 .register(registry);
-
         counter.increment();
 
-        log.info("Method {} was called, current count is {}", methodName, counter.count());
     }
 
 }
