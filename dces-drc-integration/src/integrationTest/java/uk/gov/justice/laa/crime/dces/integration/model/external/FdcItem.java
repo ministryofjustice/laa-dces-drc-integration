@@ -15,7 +15,7 @@ public class FdcItem {
   private int fdcId;
   private FdcItemType itemType;
   private String adjustmentReason;
-  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
   private LocalDate dateCreated;
   private String paidAsClaimed;
   private String latestCostInd;
