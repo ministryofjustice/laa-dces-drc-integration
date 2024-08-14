@@ -292,9 +292,6 @@ class FdcTestDataCreatorServiceTest {
     private void checkRequestAndBody(String expectedMethod, String expectedRequestPath, String expectedRequestBody) throws InterruptedException {
         RecordedRequest recordedRequest = checkRequest(expectedMethod, expectedRequestPath);
         String actualRequestBody = recordedRequest.getBody().readUtf8();
-        log.info("Expected Request Body: " + expectedRequestBody);
-        log.info("Actual Request Body: " + actualRequestBody);
-
         assertEquals(expectedRequestBody, actualRequestBody);
     }
 
