@@ -8,9 +8,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcItemType;
-import uk.gov.justice.laa.crime.dces.integration.utils.JsonLocalDateDeserializer;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Data
 @Builder
@@ -22,9 +21,8 @@ public class FdcItem {
   private int fdcId;
   private FdcItemType itemType;
   private String adjustmentReason;
-  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
-  @JsonDeserialize(using= JsonLocalDateDeserializer.class)
-  private LocalDateTime dateCreated;
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+  private LocalDate dateCreated;
   private String paidAsClaimed;
   private String latestCostInd;
   private String userCreated;
