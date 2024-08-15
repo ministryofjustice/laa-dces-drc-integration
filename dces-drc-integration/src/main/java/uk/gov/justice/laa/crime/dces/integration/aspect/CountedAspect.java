@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class CountedAspect {
 
-    public static final String METRIC_PREFIX = "maat_cd_api_client_calls_count";
+    public static final String METRIC_PREFIX = "api_calls_count";
 
     @Pointcut("@within(Counted)")
     public void classCounter() {
