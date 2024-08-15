@@ -1,6 +1,7 @@
 package uk.gov.justice.laa.crime.dces.integration.testing;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsStatus.SENT;
 import static uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsStatus.WAITING_ITEMS;
 import static uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType.NEGATIVE_CCO;
@@ -74,6 +75,14 @@ class TestDataServiceTest {
 
 
   // Fast Track FDC
+  @Test
+  void given_NothingFound_whenFdcFastTrackCalled_thenErrors(){
+    when(maatApiClient.getFdcFastTrackRepOrderIdList(anyInt(),any(),anyInt())).thenReturn(null);
+    Exception exception = assertThrows(RuntimeException.class, () ->
+      testDataService.createFastTrackTestData(FdcAccelerationType.POSITIVE, POSITIVE, 5));
+    assertEquals("No candidate rep orders found for fast-track pickup test type POSITIVE", exception.getMessage());
+  }
+
   private void baseFdcFastTrackVerification(FdcAccelerationType accelerationType, Set<Integer> idList, FdcTestType testType, int recordsToUpdate){
     when(maatApiClient.getFdcFastTrackRepOrderIdList(anyInt(),any(),anyInt())).thenReturn(idList);
     when(maatApiClient.updateRepOrder(any())).thenReturn(null);
@@ -127,6 +136,14 @@ class TestDataServiceTest {
   }
   
   // Delayed FDC
+  @Test
+  void given_NothingFound_whenFdcDelayCalled_thenErrors(){
+    when(maatApiClient.getFdcDelayedRepOrderIdList(anyInt(),any(),anyInt())).thenReturn(null);
+    Exception exception = assertThrows(RuntimeException.class, () ->
+            testDataService.createDelayedPickupTestData(POSITIVE, 5));
+    assertEquals("No candidate rep orders found for delayed pickup test type POSITIVE", exception.getMessage());
+  }
+
   // Method to do base checks and mocks for fast track calls.
   private void baseFdcDelayedVerification(Set<Integer> idList, FdcTestType testType, int recordsToUpdate){
     when(maatApiClient.getFdcDelayedRepOrderIdList(anyInt(),any(),anyInt())).thenReturn(idList);

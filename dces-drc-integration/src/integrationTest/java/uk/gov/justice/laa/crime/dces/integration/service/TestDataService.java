@@ -10,10 +10,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.restassured.response.ValidatableResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -94,7 +90,7 @@ public class TestDataService {
         processNegativeTests(testType, repOrderId, fdcId, -7);
       });
     } else {
-      throw new RuntimeException("No candidate rep orders found for delayed pickup test type " + testType);
+      throw new RuntimeException("No candidate rep orders found for fast-track pickup test type " + testType);
     }
     return fdcIds;
   }
