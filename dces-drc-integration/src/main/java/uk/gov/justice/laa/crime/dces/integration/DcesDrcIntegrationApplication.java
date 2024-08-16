@@ -11,10 +11,10 @@ import uk.gov.justice.laa.crime.dces.integration.utils.EnvironmentLoggingListene
 public class DcesDrcIntegrationApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(DcesDrcIntegrationApplication.class, args);
 		SpringApplication app = new SpringApplication(DcesDrcIntegrationApplication.class);
 		app.addListeners(new EnvironmentLoggingListener());
-		app.run(args);	}
+		app.run(args);
+	}
 
 
 
