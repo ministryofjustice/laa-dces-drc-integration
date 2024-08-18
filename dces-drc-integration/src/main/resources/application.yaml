@@ -13,6 +13,8 @@ server:
 management:
   server:
     port: 8188
+    ssl:
+      enabled: false
   endpoints:
     web:
       exposure:
