@@ -49,6 +49,13 @@ spec:
                 name: {{ $fullName }}
                 port:
                   number: {{ $.Values.actuator.port }}
+          - path: {{ $.Values.drc.test.path }}
+            pathType: "Exact"
+            backend:
+              service:
+                name: {{ $fullName }}
+                port:
+                  number: {{ $.Values.service.port }}
           - path: {{ $.Values.actuator.mappings.path }}
             pathType: "Exact"
             backend:
