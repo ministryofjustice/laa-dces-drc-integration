@@ -47,4 +47,11 @@ public class DrcStubRestController {
         return "Test Get Success";
     }
 
+    @PostMapping(value = "/test")
+    public String test(@NotNull @RequestBody final SendContributionFileDataToDrcRequest dataRequest) {
+        log.info("Request received from DRC to test FDC {}", dataRequest);
+        return "Request received from DRC to test FDC " + dataRequest;
+    }
+
+
 }
