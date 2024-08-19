@@ -11,8 +11,7 @@ import static uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType.
 import static uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType.NEGATIVE_SOD;
 import static uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType.POSITIVE;
 
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
+import java.time.LocalDate;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
@@ -125,9 +124,9 @@ class TestDataServiceTest {
     Set<Integer> idList = Set.of(1,2,3,4);
     baseFdcFastTrackVerification(FdcAccelerationType.NEGATIVE, idList, POSITIVE, 3);
     for(Integer id: idList){
-      FdcItem baseItem =     FdcItem.builder().fdcId(id).userCreated("DCES").dateCreated(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS))
+      FdcItem baseItem =     FdcItem.builder().fdcId(id).userCreated("DCES").dateCreated(LocalDate.now())
               .itemType(FdcItemType.LGFS).paidAsClaimed("Y").latestCostInd("Current").build();
-      FdcItem negativeItem =     FdcItem.builder().fdcId(id).userCreated("DCES").dateCreated(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS))
+      FdcItem negativeItem =     FdcItem.builder().fdcId(id).userCreated("DCES").dateCreated(LocalDate.now())
               .itemType(FdcItemType.AGFS).adjustmentReason("Pre AGFS Transfer").paidAsClaimed("N").latestCostInd("Current").build();
 
       verify(maatApiClient).createFdcItem(baseItem);
@@ -168,9 +167,9 @@ class TestDataServiceTest {
   @Test
   void whenNegativeSOD_DoBaseAndCallUpdateRepOrder(){
     Set<Integer> idSet = Set.of(1,2,3,4);
-    when(maatApiClient.updateRepOrder(any())).thenReturn(null);
+    when(maatApiClient.updateRepOrderSentenceOrderDateToNull(anyInt(), any())).thenReturn(null);
     baseFdcDelayedVerification(idSet, NEGATIVE_SOD, 3);
-    verify(maatApiClient, times(idSet.size())).updateRepOrder(any());
+    verify(maatApiClient, times(idSet.size())).updateRepOrderSentenceOrderDateToNull(anyInt(), any());
   }
 
   @Test

@@ -373,8 +373,6 @@ class FdcIntegrationTest {
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-405">DCES-405</a> for test specification.
      */
-    //TODO: Fix test with implementation of /assessment/ endpoint access.
-    @Disabled("Pending creation of /assessment/ handler")
     @Test
     void givenSomeDelayedFdcContributionsWithNullSOD_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
         final var updatedIds = spyFactory.createFdcDelayedPickupTestData(FdcTestType.NEGATIVE_SOD, 3);
@@ -408,8 +406,6 @@ class FdcIntegrationTest {
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-406">DCES-406</a> for test specification.
      */
-    //TODO: Fix test with implementation of /assessment/ endpoint access.
-    @Disabled("Pending creation of /assessment/ handler")
     @Test
     void givenSomeFastTrackFdcContributionsWithNullSOD_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
         final var updatedIds = spyFactory.createFastTrackTestData(FdcAccelerationType.POSITIVE, FdcTestType.NEGATIVE_SOD, 3);
@@ -445,8 +441,6 @@ class FdcIntegrationTest {
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-407">DCES-407</a> for test specification.
      */
-    //TODO: Fix test with implementation of /assessment/ endpoint access.
-    @Disabled("Pending creation of /assessment/ handler")
     @Test
     void givenDelayedPickupFdcContributionsWithMissingCCO_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
         final var updatedIds = spyFactory.createFdcDelayedPickupTestData(FdcTestType.NEGATIVE_CCO, 3);
@@ -482,8 +476,6 @@ class FdcIntegrationTest {
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-408">DCES-408</a> for test specification.
      */
-    //TODO: Fix test with implementation of /assessment/ endpoint access.
-    @Disabled("Pending creation of /assessment/ handler")
     @Test
     void givenFastTrackFdcContributionsWithMissingCCO_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
         final var updatedIds = spyFactory.createFastTrackTestData(FdcAccelerationType.POSITIVE, FdcTestType.NEGATIVE_CCO, 3);
@@ -516,8 +508,6 @@ class FdcIntegrationTest {
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-412">DCES-412</a> for test specification.
      */
-    //TODO: Fix test with implementation of /assessment/ endpoint access.
-    @Disabled("Pending creation of /assessment/ handler")
     @Test
     void givenDelayedPickupFdcContributionsWithSentStatus_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
         final var updatedIds = spyFactory.createFdcDelayedPickupTestData(FdcTestType.NEGATIVE_FDC_STATUS, 3);
@@ -552,8 +542,6 @@ class FdcIntegrationTest {
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-411">DCES-411</a> for test specification.
      */
-    //TODO: Fix test with implementation of /assessment/ endpoint access.
-    @Disabled("Pending creation of /assessment/ handler")
     @Test
     void givenFastTrackFdcContributionsWithNoPrevSentFdc_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
         final var updatedIds = spyFactory.createFastTrackTestData(FdcAccelerationType.PREVIOUS_FDC, FdcTestType.NEGATIVE_PREVIOUS_FDC, 3);
@@ -588,8 +576,6 @@ class FdcIntegrationTest {
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-409">DCES-409</a> for test specification.
      */
-    //TODO: Fix test with implementation of /assessment/ endpoint access.
-    @Disabled("Pending creation of /assessment/ handler")
     @Test
     void givenDelayedPickupFdcContributionsWithMissingFdcItems_whenProcessDailyFilesRuns_thenTheirStatusIsNotUpdated() {
         final var updatedIds = spyFactory.createFdcDelayedPickupTestData(FdcTestType.NEGATIVE_FDC_ITEM, 3);
@@ -623,8 +609,6 @@ class FdcIntegrationTest {
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-410">DCES-410</a> for test specification.
      */
-    //TODO: Fix test with implementation of /assessment/ endpoint access.
-    @Disabled("Pending creation of /assessment/ handler")
     @Test
     void givenFastTrackFdcContributionsWithMissingFdcItems_whenProcessDailyFilesRuns_thenTheirStatusIsNotUpdated() {
         final var updatedIds = spyFactory.createFastTrackTestData(FdcAccelerationType.POSITIVE, FdcTestType.NEGATIVE_FDC_ITEM, 3);

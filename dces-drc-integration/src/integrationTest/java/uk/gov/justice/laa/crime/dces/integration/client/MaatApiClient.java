@@ -19,6 +19,7 @@ import uk.gov.justice.laa.crime.dces.integration.utils.RequestSpecificationBuild
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static net.serenitybdd.rest.SerenityRest.given;
@@ -34,7 +35,9 @@ public class MaatApiClient {
     private static final String FDC_ITEMS_URI = "/fdc-items";
     private static final String FDC_CONTRIBUTION_URI = "/fdc-contribution";
     private static final String REP_ORDERS_BASE_URL = "assessment/rep-orders";
-    private static final String CCOUTCOME_URI = "/cc-outcome";
+    private static final String CCOUTCOME_URI = "/cc-outcome/rep-order/{repId}";
+
+    private static final ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).findAndRegisterModules();
 
     public List<FdcContribution> getFdcList(String status) {
 
@@ -49,6 +52,20 @@ public class MaatApiClient {
 
         return response.extract().body().jsonPath().getList("fdcContributions", FdcContribution.class);
     }
+
+    public ValidatableResponse updateRepOrderSentenceOrderDateToNull(int repOrderId, Map<String, Object> repOrderFields) {
+        String repOrderIdParameter = "/{repId}";
+        return given()
+                .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
+                .body(repOrderFields)
+                .pathParam("repId", repOrderId)
+                .patch(REP_ORDERS_BASE_URL + repOrderIdParameter)
+                .then()
+                .log()
+                .all()
+                .assertThat().statusCode(200);
+    }
+
 
     public Set<Integer> getFdcFastTrackRepOrderIdList(int delay, LocalDate dateRecieved, int numRecords) {
         ValidatableResponse response = given()
@@ -99,7 +116,6 @@ public class MaatApiClient {
                 .log()
                 .all()
                 .assertThat().statusCode(200);
-        ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         FdcItem responseFdcItem = null;
         try {
             responseFdcItem = objectMapper.readValue(response.extract().body().asString(), FdcItem.class);
@@ -110,10 +126,11 @@ public class MaatApiClient {
     }
 
     public ValidatableResponse deleteFdcItem(int fdcId) {
+        String params = "/fdc-id/{fdc-id}";
         return given()
                 .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
                 .pathParam("fdc-id", fdcId)
-                .delete(DCES_BASE_URL + FDC_ITEMS_URI)
+                .delete(DCES_BASE_URL + FDC_ITEMS_URI + params)
                 .then()
                 .log()
                 .all()
@@ -123,7 +140,7 @@ public class MaatApiClient {
     public ValidatableResponse deleteCrownCourtOutcomes(int repId) {
         return given()
                 .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
-                .pathParam("rep-order", repId)
+                .pathParam("repId", repId)
                 .delete(REP_ORDERS_BASE_URL + CCOUTCOME_URI)
                 .then()
                 .log()
