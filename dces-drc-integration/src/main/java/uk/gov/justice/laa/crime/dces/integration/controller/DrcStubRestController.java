@@ -3,6 +3,7 @@ package uk.gov.justice.laa.crime.dces.integration.controller;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,4 +40,11 @@ public class DrcStubRestController {
         log.info("DrcStubRestController Stub returing a response for input {}", dataRequest);
         return getRandomZeroOrOne() == 0;
     }
+
+    @GetMapping(value = "/test")
+    public String test() {
+        log.info("Get Request received from DRC to test FDC");
+        return "Test Get Success";
+    }
+
 }
