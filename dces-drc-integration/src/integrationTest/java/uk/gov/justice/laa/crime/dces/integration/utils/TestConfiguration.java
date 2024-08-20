@@ -2,7 +2,7 @@ package uk.gov.justice.laa.crime.dces.integration.utils;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.FileBasedConfiguration;
-import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.YAMLConfiguration;
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -11,8 +11,7 @@ import java.io.File;
 
 public class TestConfiguration {
 
-    private static final String BASE_PROPERTIES_FILENAME = "config.properties";
-    private static final String LOCAL_PROPERTIES_PREFIX = "local.";
+    private static final String PROPERTIES_FILENAME = "application.yaml";
     private static Configuration configuration;
 
     static {
@@ -24,16 +23,11 @@ public class TestConfiguration {
     }
 
     public static void initConfig() {
-        String propertyFileName =
-                System.getenv("HOST_ENV") == null
-                        ? LOCAL_PROPERTIES_PREFIX + BASE_PROPERTIES_FILENAME
-                        : BASE_PROPERTIES_FILENAME;
-
         Parameters params = new Parameters();
-        File propertiesFile = new File(propertyFileName);
+        File propertiesFile = new File(PROPERTIES_FILENAME);
 
         FileBasedConfigurationBuilder<FileBasedConfiguration> builder =
-                new FileBasedConfigurationBuilder<FileBasedConfiguration>(PropertiesConfiguration.class)
+                new FileBasedConfigurationBuilder<FileBasedConfiguration>(YAMLConfiguration.class)
                         .configure(params.fileBased().setFile(propertiesFile).setThrowExceptionOnMissing(true));
 
         try {

@@ -59,6 +59,7 @@ spring:
         provider:
           maatapi:
             token-uri: ${MAAT_API_OAUTH_URL}
+            token-base-uri: ${MAAT_API_OAUTH_BASE_URL}
         registration:
           maatapi:
             client-id: ${MAAT_API_OAUTH_CLIENT_ID}
