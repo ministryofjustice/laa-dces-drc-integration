@@ -31,7 +31,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType;
 public class TestDataService {
 
     private static final String USER_AUDIT = "DCES";
-    private static final String DATE_RECEIVED = "2015-01-01";
+    private static final LocalDate DATE_RECEIVED = LocalDate.of(2015,1,1);
 
     private final MaatApiClient maatApiClient;
 
@@ -49,7 +49,7 @@ public class TestDataService {
    * @return A set of FDC IDs updated as required
    */
   public Set<Integer> createDelayedPickupTestData(FdcTestType testType, int recordsToUpdate){
-    Set<Integer> repOrderIds = getFdcDelayCandidateRepOrderIds(5, LocalDate.of(2015,1,1), recordsToUpdate);
+    Set<Integer> repOrderIds = getFdcDelayCandidateRepOrderIds(5, DATE_RECEIVED, recordsToUpdate);
     Set<Integer> fdcIds = new HashSet<>();
     if (repOrderIds != null && !repOrderIds.isEmpty()) {
       repOrderIds.forEach(repOrderId -> {
@@ -58,7 +58,7 @@ public class TestDataService {
         fdcIds.add(fdcId);
         FdcItem fdcItem = FdcItem.builder()
                 .fdcId(fdcId)
-                .userCreated("DCES")
+                .userCreated(USER_AUDIT)
                 .dateCreated(LocalDate.now())
                 .build();
         createFdcItem(fdcItem);
@@ -82,7 +82,7 @@ public class TestDataService {
    */
 
   public Set<Integer> createFastTrackTestData( FdcAccelerationType fdcAccelerationType, FdcTestType testType, int recordsToUpdate){
-    Set<Integer> repOrderIds = getFdcFastTrackCandidateRepOrderIds(-3, LocalDate.of(2015,1,1), recordsToUpdate);
+    Set<Integer> repOrderIds = getFdcFastTrackCandidateRepOrderIds(-3, DATE_RECEIVED, recordsToUpdate);
     Set<Integer> fdcIds = new HashSet<>();
     if(repOrderIds == null || repOrderIds.isEmpty() ){
       throw new TestDataServiceException("No candidate rep orders found for fast-track pickup test type " + testType);
@@ -93,7 +93,7 @@ public class TestDataService {
       int fdcId = createFdcContribution(repOrderId, "Y", "Y", manualAcceleration, WAITING_ITEMS).getId();
       fdcIds.add(fdcId);
 
-      FdcItemBuilder fdcItemBuilder = FdcItem.builder().fdcId(fdcId).userCreated("DCES").dateCreated(LocalDate.now());
+      FdcItemBuilder fdcItemBuilder = FdcItem.builder().fdcId(fdcId).userCreated(USER_AUDIT).dateCreated(LocalDate.now());
       if (fdcAccelerationType.equals(FdcAccelerationType.NEGATIVE)) {
         fdcItemBuilder = fdcItemBuilder.itemType(FdcItemType.LGFS).paidAsClaimed("Y").latestCostInd("Current");
         createFdcItem(fdcItemBuilder.build());

@@ -279,42 +279,12 @@ class FdcIntegrationTest {
 	void givenSomeSentFdcContributions_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
         final var updatedIds = spyFactory.createFdcDelayedPickupTestData(FdcTestType.NEGATIVE_FDC_STATUS, 3);
 
-		final FdcProcessSpy.FdcProcessSpyBuilder watching = spyFactory.newFdcProcessSpyBuilder()
-				.traceExecuteFdcGlobalUpdate()
-				.traceAndFilterGetFdcContributions(updatedIds)
-				.traceAndStubSendFdcUpdate(id -> Boolean.TRUE)
-				.traceUpdateFdcs();
-
-		// Call the processDailyFiles() method under test:
-		fdcService.processDailyFiles();
-
-		final FdcProcessSpy watched = watching.build();
-
-		// Fetch some items of information from the maat-api to use during validation:
-		final var fdcContributions = updatedIds.stream().map(spyFactory::getFdcContribution).toList();
-
-		softly.assertThat(watched.getGlobalUpdateResponse().isSuccessful()).isTrue(); // 1
-		softly.assertThat(updatedIds).hasSize(3).doesNotContainNull(); // 2.
-		softly.assertThat(watched.getRequestedIds()).doesNotContainAnyElementsOf(updatedIds); // 3.
-		softly.assertThat(watched.getSentIds()).doesNotContainAnyElementsOf(updatedIds); // 4.
-
-		if (!watched.getRequestedIds().isEmpty()) { // 5.
-			// contribution_file got created:
-			softly.assertThat(watched.getRecordsSent()).isPositive();
-			softly.assertThat(watched.getXmlCcIds()).doesNotContainAnyElementsOf(updatedIds);
-			softly.assertThat(watched.getXmlFileName()).isNotBlank();
-			softly.assertThat(watched.getXmlFileResult()).isNotNull();
-		} else {
-			softly.assertThat(watched.getRecordsSent()).isZero();
-			softly.assertThat(watched.getXmlCcIds()).isNull();
-			softly.assertThat(watched.getXmlFileName()).isNull();
-			softly.assertThat(watched.getXmlFileResult()).isNull();
-		}
-
-		fdcContributions.forEach(fdcContribution -> { // 6.
-			softly.assertThat(fdcContribution.getStatus()).isEqualTo(FdcContributionsStatus.SENT);
-			softly.assertThat(fdcContribution.getContFileId()).isNull();
-		});
+        final var checkOptions = CheckOptions.builder()
+                .drcStubShouldSucceed(true)
+                .updatedIdsShouldBeRequested(false)
+                .updatedIdsShouldBeSent(false)
+                .contributionFileExpected(true).build();
+        runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.SENT);
     }
 
     /**
