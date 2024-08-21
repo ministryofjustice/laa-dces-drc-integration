@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.response.ValidatableResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionResponseDTO;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionFileErrorResponse;
@@ -37,12 +38,15 @@ public class MaatApiClient {
     private static final String REP_ORDERS_BASE_URL = "assessment/rep-orders";
     private static final String CCOUTCOME_URI = "/cc-outcome/rep-order/{repId}";
 
+    @Autowired
+    private RequestSpecificationBuilder builder;
+
     private static final ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).findAndRegisterModules();
 
     public List<FdcContribution> getFdcList(String status) {
 
         ValidatableResponse response = given()
-                .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
+                .spec(builder.getMaatAPICrimeApplyReqSpec())
                 .param("status", status)
                 .get(DCES_BASE_URL + FDC_CONTRIBUTION_FILES_URI)
                 .then()
@@ -56,7 +60,7 @@ public class MaatApiClient {
     public ValidatableResponse updateRepOrderSentenceOrderDateToNull(int repOrderId, Map<String, Object> repOrderFields) {
         String repOrderIdParameter = "/{repId}";
         return given()
-                .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
+                .spec(builder.getMaatAPICrimeApplyReqSpec())
                 .body(repOrderFields)
                 .pathParam("repId", repOrderId)
                 .patch(REP_ORDERS_BASE_URL + repOrderIdParameter)
@@ -69,7 +73,7 @@ public class MaatApiClient {
 
     public Set<Integer> getFdcFastTrackRepOrderIdList(int delay, LocalDate dateRecieved, int numRecords) {
         ValidatableResponse response = given()
-                .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
+                .spec(builder.getMaatAPICrimeApplyReqSpec())
                 .param("fdcFastTrack", "true")
                 .param("delay", delay)
                 .param("dateReceived", dateRecieved.format(DateTimeFormatter.ISO_DATE))
@@ -84,7 +88,7 @@ public class MaatApiClient {
 
     public Set<Integer> getFdcDelayedRepOrderIdList(int delay, LocalDate dateRecieved, int numRecords) {
         ValidatableResponse response = given()
-                .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
+                .spec(builder.getMaatAPICrimeApplyReqSpec())
                 .param("fdcDelayedPickup", "true")
                 .param("delay", delay)
                 .param("dateReceived", dateRecieved.format(DateTimeFormatter.ISO_DATE))
@@ -98,7 +102,7 @@ public class MaatApiClient {
 
     public FdcContribution createFdcContribution(CreateFdcContributionRequest requestBody) {
         ValidatableResponse response = given()
-                .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
+                .spec(builder.getMaatAPICrimeApplyReqSpec())
                 .body(requestBody)
                 .post(DCES_BASE_URL + FDC_CONTRIBUTION_URI)
                 .then()
@@ -109,7 +113,7 @@ public class MaatApiClient {
 
     public FdcItem createFdcItem(FdcItem requestBody) {
         ValidatableResponse response = given()
-                .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
+                .spec(builder.getMaatAPICrimeApplyReqSpec())
                 .body(requestBody)
                 .post(DCES_BASE_URL + FDC_ITEMS_URI)
                 .then()
@@ -128,7 +132,7 @@ public class MaatApiClient {
     public ValidatableResponse deleteFdcItem(int fdcId) {
         String params = "/fdc-id/{fdc-id}";
         return given()
-                .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
+                .spec(builder.getMaatAPICrimeApplyReqSpec())
                 .pathParam("fdc-id", fdcId)
                 .delete(DCES_BASE_URL + FDC_ITEMS_URI + params)
                 .then()
@@ -139,7 +143,7 @@ public class MaatApiClient {
 
     public ValidatableResponse deleteCrownCourtOutcomes(int repId) {
         return given()
-                .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
+                .spec(builder.getMaatAPICrimeApplyReqSpec())
                 .pathParam("repId", repId)
                 .delete(REP_ORDERS_BASE_URL + CCOUTCOME_URI)
                 .then()
@@ -150,7 +154,7 @@ public class MaatApiClient {
 
     public ValidatableResponse updateFdcContribution(UpdateFdcContributionRequest fdcContribution) {
         return given()
-                .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
+                .spec(builder.getMaatAPICrimeApplyReqSpec())
                 .body(fdcContribution)
                 .patch(DCES_BASE_URL + FDC_CONTRIBUTION_URI)
                 .then()
@@ -162,7 +166,7 @@ public class MaatApiClient {
     public FdcContribution getFdcContribution(int fdcContributionId) {
         String contributionIdParameter = "/{fdcContributionId}";
         ValidatableResponse response =  given()
-                .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
+                .spec(builder.getMaatAPICrimeApplyReqSpec())
                 .pathParam("fdcContributionId",fdcContributionId)
                 .get(DCES_BASE_URL + FDC_CONTRIBUTION_URI+contributionIdParameter)
                 .then()
@@ -174,7 +178,7 @@ public class MaatApiClient {
 
     public ValidatableResponse updateRepOrder(UpdateRepOrder updateRepOrder) {
         return given()
-                .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
+                .spec(builder.getMaatAPICrimeApplyReqSpec())
                 .body(updateRepOrder)
                 .put(REP_ORDERS_BASE_URL)
                 .then()
@@ -186,7 +190,7 @@ public class MaatApiClient {
     public ContributionFileResponse getContributionFile(int contributionFileId) {
         String contributionIdUri = "/{contributionFileId}";
         ValidatableResponse response = given()
-                .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
+                .spec(builder.getMaatAPICrimeApplyReqSpec())
                 .pathParam("contributionFileId",contributionFileId)
                 .get(DCES_BASE_URL + CONTRIBUTION_FILE_URI +contributionIdUri)
                 .then()
@@ -198,7 +202,7 @@ public class MaatApiClient {
 
     public List<Integer> updateConcorContributionStatus(UpdateConcorContributionStatusRequest concorContributionRequest) {
         ValidatableResponse response = given()
-                .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
+                .spec(builder.getMaatAPICrimeApplyReqSpec())
                 .body(concorContributionRequest)
                 .put(DCES_BASE_URL+ CONCOR_CONTRIBUTION_STATUS_URI)
                 .then()
@@ -212,7 +216,7 @@ public class MaatApiClient {
     public ConcorContributionResponseDTO getConcorContribution(int concorId) {
         String contributionIdUri = "/{concorId}";
         ValidatableResponse response = given()
-                .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
+                .spec(builder.getMaatAPICrimeApplyReqSpec())
                 .pathParam("concorId",concorId)
                 .get(DCES_BASE_URL + CONCOR_CONTRIBUTION_URI +contributionIdUri)
                 .then()
@@ -225,7 +229,7 @@ public class MaatApiClient {
     public ContributionFileErrorResponse getContributionFileError(int contributionFileId, int contributionId) {
         String contributionFileIdUri = "/{contributionFileId}/error/{contributionId}";
         ValidatableResponse response = given()
-                .spec(RequestSpecificationBuilder.getMaatAPICrimeApplyReqSpec())
+                .spec(builder.getMaatAPICrimeApplyReqSpec())
                 .pathParam("contributionFileId", contributionFileId)
                 .pathParam("contributionId", contributionId)
                 .get(DCES_BASE_URL + CONTRIBUTION_FILE_URI + contributionFileIdUri)
