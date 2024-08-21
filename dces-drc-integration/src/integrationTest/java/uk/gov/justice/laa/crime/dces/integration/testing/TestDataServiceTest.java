@@ -183,9 +183,9 @@ class TestDataServiceTest {
   @Test
   void whenNegativeFDCItem_DoBaseAndCallUpdateRepOrder(){
     Set<Integer> idSet = Set.of(1,2,3,4);
-    when(maatApiClient.deleteFdcItem(anyInt())).thenReturn(null);
+    when(maatApiClient.deleteFdcItems(anyInt())).thenReturn(null);
     baseFdcDelayedVerification(idSet, NEGATIVE_FDC_ITEM, 3);
-    verify(maatApiClient, times(idSet.size())).deleteFdcItem(anyInt());
+    verify(maatApiClient, times(idSet.size())).deleteFdcItems(anyInt());
   }
 
   @Test

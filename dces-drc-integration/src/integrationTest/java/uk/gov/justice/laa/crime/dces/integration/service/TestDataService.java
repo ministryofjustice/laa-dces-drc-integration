@@ -119,7 +119,7 @@ public class TestDataService {
             maatApiClient.updateRepOrderSentenceOrderDateToNull(repOrderId, repOrderWithNullSOD);
         }
       case NEGATIVE_CCO -> maatApiClient.deleteCrownCourtOutcomes(repOrderId);
-      case NEGATIVE_FDC_ITEM -> maatApiClient.deleteFdcItem(fdcId);
+      case NEGATIVE_FDC_ITEM -> maatApiClient.deleteFdcItems(fdcId);
       case NEGATIVE_PREVIOUS_FDC -> maatApiClient.updateFdcContribution(new UpdateFdcContributionRequest(fdcId, repOrderId, SENT.name(), WAITING_ITEMS));
       case NEGATIVE_FDC_STATUS -> maatApiClient.updateFdcContribution(new UpdateFdcContributionRequest(fdcId, repOrderId, null, SENT));
     }

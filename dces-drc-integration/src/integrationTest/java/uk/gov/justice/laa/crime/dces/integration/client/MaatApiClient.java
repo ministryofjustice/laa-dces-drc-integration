@@ -129,7 +129,7 @@ public class MaatApiClient {
         return responseFdcItem;
     }
 
-    public ValidatableResponse deleteFdcItem(int fdcId) {
+    public ValidatableResponse deleteFdcItems(int fdcId) {
         String params = "/fdc-id/{fdc-id}";
         return given()
                 .spec(builder.getMaatAPICrimeApplyReqSpec())
