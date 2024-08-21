@@ -38,16 +38,6 @@ def versions = [
 
 group = 'uk.gov.justice.laa.crime'
 
-
-dependencyManagement {
-	dependencies {
-		dependencySet(group: 'io.sentry', version: versions.sentryVersion) {
-			entry 'sentry-spring-boot-starter'
-			entry 'sentry-logback'
-		}
-	}
-}
-
 java {
 	sourceCompatibility = JavaVersion.VERSION_17
 	targetCompatibility = JavaVersion.VERSION_17
@@ -73,19 +63,14 @@ configurations {
 	}
 }
 
-
 repositories {
 	mavenCentral()
 }
 
 dependencies {
-	// Sentry
-	implementation 'io.sentry:sentry-spring-boot-starter-jakarta:7.13.0'
-	implementation platform('io.sentry:sentry-bom:7.13.0')
+	// Import Maven bills-of-materials (BOM) files as Gradle platforms:
 	implementation platform(SpringBootPlugin.BOM_COORDINATES)
-
-	implementation('io.sentry:sentry-spring-boot-starter')
-	implementation('io.sentry:sentry-logback')
+	implementation platform("io.sentry:sentry-bom:$versions.sentryVersion")
 
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
@@ -98,6 +83,9 @@ dependencies {
 	implementation "org.springframework.boot:spring-boot-starter-oauth2-resource-server"
 	implementation "org.springframework.boot:spring-boot-starter-oauth2-client"
 	implementation "org.springframework.security:spring-security-oauth2-jose"
+
+	implementation 'io.sentry:sentry-spring-boot-starter-jakarta'
+	implementation 'io.sentry:sentry-logback'
 
 	implementation "net.logstash.logback:logstash-logback-encoder:$versions.logbackEncoderVersion"
 	implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:$versions.springdocVersion"
@@ -168,12 +156,10 @@ jacocoTestReport {
 
 sonar {
 	properties {
-
 		property "sonar.projectName", "laa-dces-drc-integration"
 		property "sonar.host.url", "https://sonarcloud.io"
 		property "sonar.organization", "ministryofjustice"
 		property "sonar.projectKey", "ministryofjustice_laa-dces-drc-integration"
-
 		property "sonar.exclusions", "**/entity/**.java , **/model/**.java , **/dto/**.java , **/config/**.java, **/jms/**.java,**/exception/**.java,**/handler/**.java,**/maatapi/**Client**.java,**/generated/**, **/listener/stub/DrcStubRestController.java"
 		property "sonar.coverage.exclusions", "**/DcesDrcIntegrationApplication.java, **/controller/DrcStubRestController.java"
 		property "sonar.coverage.jacoco.xmlReportPaths",
