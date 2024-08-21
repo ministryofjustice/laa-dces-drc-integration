@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.service;
+package uk.gov.justice.laa.crime.dces.integration.testing;
 
 import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
@@ -10,11 +10,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
-import uk.gov.justice.laa.crime.dces.integration.client.TestDataClient;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
-import uk.gov.justice.laa.crime.dces.integration.testing.ContributionProcessSpy;
-import uk.gov.justice.laa.crime.dces.integration.testing.SpyFactory;
+import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
+import uk.gov.justice.laa.crime.dces.integration.service.spy.ContributionProcessSpy;
+import uk.gov.justice.laa.crime.dces.integration.service.spy.SpyFactory;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -34,9 +34,6 @@ class ContributionIntegrationTest {
 
     @Autowired
     private ContributionService contributionService;
-
-    @Autowired
-    private TestDataClient testDataClient;
 
     @AfterEach
     void assertAll() {
@@ -114,9 +111,9 @@ class ContributionIntegrationTest {
         final ContributionProcessSpy watched = watching.build();
 
         // Fetch some items of information from the maat-api to use during validation:
-        final var concorContributions = updatedIds.stream().map(testDataClient::getConcorContribution).toList();
+        final var concorContributions = updatedIds.stream().map(spyFactory::getConcorContribution).toList();
         final int contributionFileId = watched.getXmlFileResult();
-        final var contributionFile = testDataClient.getContributionFile(contributionFileId);
+        final var contributionFile = spyFactory.getContributionsFile(contributionFileId);
 
         softly.assertThat(updatedIds).hasSize(3).doesNotContainNull(); // 1.
         softly.assertThat(watched.getActiveIds()).containsAll(updatedIds); // 2.
@@ -186,7 +183,7 @@ class ContributionIntegrationTest {
         final ContributionProcessSpy watched = watching.build();
 
         // Fetch some items of information from the maat-api to use during validation:
-        final var concorContributions = updatedIds.stream().map(testDataClient::getConcorContribution).toList();
+        final var concorContributions = updatedIds.stream().map(spyFactory::getConcorContribution).toList();
 
         softly.assertThat(updatedIds).hasSize(2).doesNotContainNull(); // 1.
         softly.assertThat(watched.getActiveIds()).doesNotContainAnyElementsOf(updatedIds); // 2.
@@ -249,9 +246,9 @@ class ContributionIntegrationTest {
         final ContributionProcessSpy watched = watching.build();
 
         // Fetch some items of information from the maat-api to use during validation:
-        final var concorContributions = updatedIds.stream().map(testDataClient::getConcorContribution).toList();
+        final var concorContributions = updatedIds.stream().map(spyFactory::getConcorContribution).toList();
         final int contributionFileId = watched.getXmlFileResult();
-        final var contributionFile = testDataClient.getContributionFile(contributionFileId);
+        final var contributionFile = spyFactory.getContributionsFile(contributionFileId);
 
         softly.assertThat(updatedIds).hasSize(3).doesNotContainNull(); // 1.
         softly.assertThat(watched.getActiveIds()).containsAll(updatedIds); // 2.

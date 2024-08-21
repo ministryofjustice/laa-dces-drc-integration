@@ -1,24 +1,23 @@
-package uk.gov.justice.laa.crime.dces.integration.service;
+package uk.gov.justice.laa.crime.dces.integration.testing;
 
 import lombok.Builder;
 import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
-import uk.gov.justice.laa.crime.dces.integration.client.TestDataClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsStatus;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcAccelerationType;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType;
-import uk.gov.justice.laa.crime.dces.integration.testing.FdcProcessSpy;
-import uk.gov.justice.laa.crime.dces.integration.testing.SpyFactory;
+import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
+import uk.gov.justice.laa.crime.dces.integration.service.spy.FdcProcessSpy;
+import uk.gov.justice.laa.crime.dces.integration.service.spy.SpyFactory;
 
 import java.time.LocalDate;
 import java.util.Set;
@@ -28,17 +27,16 @@ import java.util.Set;
 @ExtendWith(SoftAssertionsExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FdcIntegrationTest {
-    @InjectSoftAssertions
-    private SoftAssertions softly;
+	@InjectSoftAssertions
+	private SoftAssertions softly;
 
-    @Autowired
-    private SpyFactory spyFactory;
+	@Autowired
+	private SpyFactory spyFactory;
 
-    @Autowired
-    private FdcService fdcService;
+	@Autowired
+	private FdcService fdcService;
 
-    @Autowired
-    private TestDataClient testDataClient;
+	private static final String USER_AUDIT = "DCES";
 
     @Builder
     private record CheckOptions(
@@ -48,30 +46,30 @@ class FdcIntegrationTest {
             boolean contributionFileExpected) {
     }
 
-    @AfterEach
-    void afterTestAssertAll() {
-        softly.assertAll();
-    }
+	@AfterEach
+	void afterTestAssertAll(){
+		softly.assertAll();
+	}
 
-    @Test
-    void testProcessFdcUpdateWhenFound() {
-        final var updateLogFdcRequest = UpdateLogFdcRequest.builder()
-                .fdcId(31774046)
-                .build();
-        final String response = fdcService.processFdcUpdate(updateLogFdcRequest);
-        softly.assertThat(response).isEqualTo("The request has been processed successfully");
-    }
+	@Test
+	void testProcessFdcUpdateWhenFound() {
+		final var updateLogFdcRequest = UpdateLogFdcRequest.builder()
+				.fdcId(31774046)
+				.build();
+		final String response = fdcService.processFdcUpdate(updateLogFdcRequest);
+		softly.assertThat(response).isEqualTo("The request has been processed successfully");
+	}
 
-    @Test
-    void testProcessFdcUpdateWhenNotFound() {
-        final String errorText = "Error Text updated successfully.";
-        final var updateLogFdcRequest = UpdateLogFdcRequest.builder()
-                .fdcId(9)
-                .errorText(errorText)
-                .build();
-        final String response = fdcService.processFdcUpdate(updateLogFdcRequest);
-        softly.assertThat(response).isEqualTo("The request has failed to process");
-    }
+	@Test
+	void testProcessFdcUpdateWhenNotFound() {
+		final String errorText = "Error Text updated successfully.";
+		final var updateLogFdcRequest = UpdateLogFdcRequest.builder()
+				.fdcId(9)
+				.errorText(errorText)
+				.build();
+		final String response = fdcService.processFdcUpdate(updateLogFdcRequest);
+		softly.assertThat(response).isEqualTo("The request has failed to process");
+	}
 
     /**
      * <h4>Scenario:</h4>
@@ -88,15 +86,13 @@ class FdcIntegrationTest {
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-356">DCES-356</a> for test specification.
      */
-    //TODO: Fix test with implementation of /assessment/ endpoint access.
-    @Disabled("Pending creation of /assessment/ handler")
-    @Test
-    void givenSomeDelayedPickupWaitingItemsFdcContributions_whenProcessDailyFilesRuns_thenTheyAreQueriedSentAndInCreatedFile() {
-        // Set up test data for the scenario:
-        final var updatedIds = spyFactory.createFdcDelayedPickupTestData(FdcTestType.POSITIVE, 3);
+	@Test
+	void givenSomeDelayedPickupWaitingItemsFdcContributions_whenProcessDailyFilesRuns_thenTheyAreQueriedSentAndInCreatedFile() {
+		// Set up test data for the scenario:
+		final var updatedIds = spyFactory.createFdcDelayedPickupTestData(FdcTestType.POSITIVE, 3);
 
-        whenProcessDailyFilesRuns_thenTheyAreQueriedSentAndInCreatedFile(updatedIds);
-    }
+		whenProcessDailyFilesRuns_thenTheyAreQueriedSentAndInCreatedFile(updatedIds);
+	}
 
     /**
      * <h4>Scenario:</h4>
@@ -113,15 +109,13 @@ class FdcIntegrationTest {
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-357">DCES-357</a> for test specification.
      */
-    //TODO: Fix test with implementation of /assessment/ endpoint access.
-    @Disabled("Pending creation of /assessment/ handler")
-    @Test
-    void givenSomePositiveAcceleratedWaitingItemsFdcContributions_whenProcessDailyFilesRuns_thenTheyAreQueriedSentAndInCreatedFile() {
-        // Set up test data for the scenario:
-        final var updatedIds = spyFactory.createFastTrackTestData(FdcAccelerationType.POSITIVE, FdcTestType.POSITIVE, 3);
+	@Test
+	void givenSomePositiveAcceleratedWaitingItemsFdcContributions_whenProcessDailyFilesRuns_thenTheyAreQueriedSentAndInCreatedFile() {
+		// Set up test data for the scenario:
+		final var updatedIds = spyFactory.createFastTrackTestData(FdcAccelerationType.POSITIVE, FdcTestType.POSITIVE, 3);
 
-        whenProcessDailyFilesRuns_thenTheyAreQueriedSentAndInCreatedFile(updatedIds);
-    }
+		whenProcessDailyFilesRuns_thenTheyAreQueriedSentAndInCreatedFile(updatedIds);
+	}
 
     /**
      * <h4>Scenario:</h4>
@@ -138,15 +132,13 @@ class FdcIntegrationTest {
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-358">DCES-358</a> for test specification.
      */
-    //TODO: Fix test with implementation of /assessment/ endpoint access.
-    @Disabled("Pending creation of /assessment/ handler")
-    @Test
-    void givenSomeNegativeAcceleratedWaitingItemsFdcContributions_whenProcessDailyFilesRuns_thenTheyAreQueriedSentAndInCreatedFile() {
-        // Set up test data for the scenario:
-        final var updatedIds = spyFactory.createFastTrackTestData(FdcAccelerationType.NEGATIVE, FdcTestType.POSITIVE, 3);
+	@Test
+	void givenSomeNegativeAcceleratedWaitingItemsFdcContributions_whenProcessDailyFilesRuns_thenTheyAreQueriedSentAndInCreatedFile() {
+		// Set up test data for the scenario:
+		final var updatedIds = spyFactory.createFastTrackTestData(FdcAccelerationType.NEGATIVE, FdcTestType.POSITIVE, 3);
 
-        whenProcessDailyFilesRuns_thenTheyAreQueriedSentAndInCreatedFile(updatedIds);
-    }
+		whenProcessDailyFilesRuns_thenTheyAreQueriedSentAndInCreatedFile(updatedIds);
+	}
 
     /**
      * <h4>Scenario:</h4>
@@ -163,15 +155,13 @@ class FdcIntegrationTest {
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-359">DCES-359</a> for test specification.
      */
-    //TODO: Fix test with implementation of /assessment/ endpoint access.
-    @Disabled("Pending creation of /assessment/ handler")
-    @Test
-    void givenSomeFastTrackPreviousFdcWaitingItemsFdcContributions_whenProcessDailyFilesRuns_thenTheyAreQueriedSentAndInCreatedFile() {
-        // Set up test data for the scenario:
-        final var updatedIds = spyFactory.createFastTrackTestData(FdcAccelerationType.PREVIOUS_FDC, FdcTestType.POSITIVE, 3);
+	@Test
+	void givenSomeFastTrackPreviousFdcWaitingItemsFdcContributions_whenProcessDailyFilesRuns_thenTheyAreQueriedSentAndInCreatedFile() {
+		// Set up test data for the scenario:
+		final var updatedIds = spyFactory.createFastTrackTestData(FdcAccelerationType.PREVIOUS_FDC, FdcTestType.POSITIVE, 3);
 
-        whenProcessDailyFilesRuns_thenTheyAreQueriedSentAndInCreatedFile(updatedIds);
-    }
+		whenProcessDailyFilesRuns_thenTheyAreQueriedSentAndInCreatedFile(updatedIds);
+	}
 
     /**
      * <p>Test utility method for the when/then processing of positive FDC contribution integration tests.</p>
@@ -215,25 +205,25 @@ class FdcIntegrationTest {
                 .traceAndStubSendFdcUpdate(id -> Boolean.TRUE)
                 .traceUpdateFdcs();
 
-        // Call the processDailyFiles() method under test:
-        final var startDate = LocalDate.now();
-        fdcService.processDailyFiles();
-        final var endDate = LocalDate.now();
+		// Call the processDailyFiles() method under test:
+		final var startDate = LocalDate.now();
+		fdcService.processDailyFiles();
+		final var endDate = LocalDate.now();
 
-        final FdcProcessSpy watched = watching.build();
+		final FdcProcessSpy watched = watching.build();
 
         // Fetch some items of information from the maat-api to use during validation:
-        final var fdcContributions = updatedIds.stream().map(testDataClient::getFdcContribution).toList();
-        final int contributionFileId = watched.getXmlFileResult();
-        final var contributionFile = testDataClient.getContributionFile(contributionFileId);
+		final var fdcContributions = updatedIds.stream().map(spyFactory::getFdcContribution).toList();
+		final int contributionFileId = watched.getXmlFileResult();
+		final var contributionFile = spyFactory.getContributionsFile(contributionFileId);
 
-        softly.assertThat(watched.getGlobalUpdateResponse().isSuccessful()).isTrue(); // 1
-        softly.assertThat(updatedIds).hasSize(3).doesNotContainNull(); // 2.
-        softly.assertThat(watched.getRequestedIds()).containsAll(updatedIds); // 3.
-        softly.assertThat(watched.getSentIds()).containsAll(updatedIds); // 4.
+		softly.assertThat(watched.getGlobalUpdateResponse().isSuccessful()).isTrue(); // 1
+		softly.assertThat(updatedIds).hasSize(3).doesNotContainNull(); // 2.
+		softly.assertThat(watched.getRequestedIds()).containsAll(updatedIds); // 3.
+		softly.assertThat(watched.getSentIds()).containsAll(updatedIds); // 4.
 
-        softly.assertThat(watched.getRecordsSent()).isGreaterThanOrEqualTo(3); // 5.
-        softly.assertThat(watched.getXmlCcIds()).containsAll(updatedIds);
+		softly.assertThat(watched.getRecordsSent()).isGreaterThanOrEqualTo(3); // 5.
+		softly.assertThat(watched.getXmlCcIds()).containsAll(updatedIds);
 
         fdcContributions.forEach(fdcContribution -> { // 6.
             softly.assertThat(watched.getXmlContent()).contains("<fdc id=\"" + fdcContribution.getId() + "\">");
@@ -242,28 +232,28 @@ class FdcIntegrationTest {
             // softly.assertThat(watched.getXmlContent()).contains("<maat_id>" + fdcContribution.getMaatId() + "</maat_id>");
         });
 
-        fdcContributions.forEach(fdcContribution -> { // 7.
-            softly.assertThat(fdcContribution.getStatus()).isEqualTo(FdcContributionsStatus.SENT);
-            softly.assertThat(fdcContribution.getContFileId()).isEqualTo(contributionFileId);
-            softly.assertThat(fdcContribution.getUserModified()).isEqualTo("DCES");
-            softly.assertThat(fdcContribution.getDateModified()).isBetween(startDate, endDate);
-        });
+		fdcContributions.forEach(fdcContribution -> { // 7.
+			softly.assertThat(fdcContribution.getStatus()).isEqualTo(FdcContributionsStatus.SENT);
+			softly.assertThat(fdcContribution.getContFileId()).isEqualTo(contributionFileId);
+			softly.assertThat(fdcContribution.getUserModified()).isEqualTo(USER_AUDIT);
+			softly.assertThat(fdcContribution.getDateModified()).isBetween(startDate, endDate);
+		});
 
-        softly.assertThat(contributionFile.getXmlFileName()).isEqualTo(watched.getXmlFileName()); // 8.
-        softly.assertThat(contributionFile.getId()).isEqualTo(watched.getXmlFileResult());
-        softly.assertThat(contributionFile.getRecordsSent()).isGreaterThanOrEqualTo(3);
-        softly.assertThat(contributionFile.getDateCreated()).isBetween(startDate, endDate);
-        softly.assertThat(contributionFile.getUserCreated()).isEqualTo("DCES");
-        softly.assertThat(contributionFile.getDateModified()).isBetween(startDate, endDate);
-        softly.assertThat(contributionFile.getUserModified()).isEqualTo("DCES");
-        softly.assertThat(contributionFile.getDateSent()).isBetween(startDate, endDate);
-        fdcContributions.forEach(fdcContribution -> {
-            softly.assertThat(contributionFile.getXmlContent()).contains("<fdc id=\"" + fdcContribution.getId() + "\">");
-            // TODO uncomment the following line - it should work but doesn't at the moment because maat API
-            //      endpoint /debt-collection-enforcement/fdc-contribution returns the maatId as null.
-            // softly.assertThat(contributionFile.getXmlContent()).contains("<maat_id>" + fdcContribution.getMaatId() + "</maat_id>");
-        });
-    }
+		softly.assertThat(contributionFile.getXmlFileName()).isEqualTo(watched.getXmlFileName()); // 8.
+		softly.assertThat(contributionFile.getId()).isEqualTo(watched.getXmlFileResult());
+		softly.assertThat(contributionFile.getRecordsSent()).isGreaterThanOrEqualTo(3);
+		softly.assertThat(contributionFile.getDateCreated()).isBetween(startDate, endDate);
+		softly.assertThat(contributionFile.getUserCreated()).isEqualTo(USER_AUDIT);
+		softly.assertThat(contributionFile.getDateModified()).isBetween(startDate, endDate);
+		softly.assertThat(contributionFile.getUserModified()).isEqualTo(USER_AUDIT);
+		softly.assertThat(contributionFile.getDateSent()).isBetween(startDate, endDate);
+		fdcContributions.forEach(fdcContribution -> {
+			softly.assertThat(contributionFile.getXmlContent()).contains("<fdc id=\""+fdcContribution.getId()+"\">");
+			// TODO uncomment the following line - it should work but doesn't at the moment because maat API
+			//      endpoint /debt-collection-enforcement/fdc-contribution returns the maatId as null.
+			// softly.assertThat(contributionFile.getXmlContent()).contains("<maat_id>" + fdcContribution.getMaatId() + "</maat_id>");
+		});
+	}
 
     /**
      * <h4>Scenario:</h4>
@@ -287,10 +277,8 @@ class FdcIntegrationTest {
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-360">DCES-360</a> for test specification.
      */
-    //TODO: Fix test with implementation of /assessment/ endpoint access.
-    @Disabled("Pending creation of /assessment/ handler")
-    @Test
-    void givenSomeSentFdcContributions_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
+	@Test
+	void givenSomeSentFdcContributions_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
         final var updatedIds = spyFactory.createFdcDelayedPickupTestData(FdcTestType.NEGATIVE_FDC_STATUS, 3);
 
         final var checkOptions = CheckOptions.builder()
@@ -323,8 +311,6 @@ class FdcIntegrationTest {
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-361">DCES-361</a> for test specification.
      */
-    //TODO: Fix test with implementation of /assessment/ endpoint access.
-    @Disabled("Pending creation of /assessment/ handler")
     @Test
     void givenRequestedFdcContributions_whenProcessDailyFilesFailsToSend_thenTheirStatusIsNotUpdated() {
         // Set up test data for the scenario:
@@ -359,8 +345,6 @@ class FdcIntegrationTest {
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-405">DCES-405</a> for test specification.
      */
-    //TODO: Fix test with implementation of /assessment/ endpoint access.
-    @Disabled("Pending creation of /assessment/ handler")
     @Test
     void givenSomeDelayedFdcContributionsWithNullSOD_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
         final var updatedIds = spyFactory.createFdcDelayedPickupTestData(FdcTestType.NEGATIVE_SOD, 3);
@@ -394,8 +378,6 @@ class FdcIntegrationTest {
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-406">DCES-406</a> for test specification.
      */
-    //TODO: Fix test with implementation of /assessment/ endpoint access.
-    @Disabled("Pending creation of /assessment/ handler")
     @Test
     void givenSomeFastTrackFdcContributionsWithNullSOD_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
         final var updatedIds = spyFactory.createFastTrackTestData(FdcAccelerationType.POSITIVE, FdcTestType.NEGATIVE_SOD, 3);
@@ -431,8 +413,6 @@ class FdcIntegrationTest {
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-407">DCES-407</a> for test specification.
      */
-    //TODO: Fix test with implementation of /assessment/ endpoint access.
-    @Disabled("Pending creation of /assessment/ handler")
     @Test
     void givenDelayedPickupFdcContributionsWithMissingCCO_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
         final var updatedIds = spyFactory.createFdcDelayedPickupTestData(FdcTestType.NEGATIVE_CCO, 3);
@@ -468,8 +448,6 @@ class FdcIntegrationTest {
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-408">DCES-408</a> for test specification.
      */
-    //TODO: Fix test with implementation of /assessment/ endpoint access.
-    @Disabled("Pending creation of /assessment/ handler")
     @Test
     void givenFastTrackFdcContributionsWithMissingCCO_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
         final var updatedIds = spyFactory.createFastTrackTestData(FdcAccelerationType.POSITIVE, FdcTestType.NEGATIVE_CCO, 3);
@@ -502,8 +480,6 @@ class FdcIntegrationTest {
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-412">DCES-412</a> for test specification.
      */
-    //TODO: Fix test with implementation of /assessment/ endpoint access.
-    @Disabled("Pending creation of /assessment/ handler")
     @Test
     void givenDelayedPickupFdcContributionsWithSentStatus_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
         final var updatedIds = spyFactory.createFdcDelayedPickupTestData(FdcTestType.NEGATIVE_FDC_STATUS, 3);
@@ -538,8 +514,6 @@ class FdcIntegrationTest {
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-411">DCES-411</a> for test specification.
      */
-    //TODO: Fix test with implementation of /assessment/ endpoint access.
-    @Disabled("Pending creation of /assessment/ handler")
     @Test
     void givenFastTrackFdcContributionsWithNoPrevSentFdc_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
         final var updatedIds = spyFactory.createFastTrackTestData(FdcAccelerationType.PREVIOUS_FDC, FdcTestType.NEGATIVE_PREVIOUS_FDC, 3);
@@ -574,8 +548,6 @@ class FdcIntegrationTest {
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-409">DCES-409</a> for test specification.
      */
-    //TODO: Fix test with implementation of /assessment/ endpoint access.
-    @Disabled("Pending creation of /assessment/ handler")
     @Test
     void givenDelayedPickupFdcContributionsWithMissingFdcItems_whenProcessDailyFilesRuns_thenTheirStatusIsNotUpdated() {
         final var updatedIds = spyFactory.createFdcDelayedPickupTestData(FdcTestType.NEGATIVE_FDC_ITEM, 3);
@@ -609,8 +581,6 @@ class FdcIntegrationTest {
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-410">DCES-410</a> for test specification.
      */
-    //TODO: Fix test with implementation of /assessment/ endpoint access.
-    @Disabled("Pending creation of /assessment/ handler")
     @Test
     void givenFastTrackFdcContributionsWithMissingFdcItems_whenProcessDailyFilesRuns_thenTheirStatusIsNotUpdated() {
         final var updatedIds = spyFactory.createFastTrackTestData(FdcAccelerationType.POSITIVE, FdcTestType.NEGATIVE_FDC_ITEM, 3);
@@ -644,7 +614,7 @@ class FdcIntegrationTest {
         final FdcProcessSpy watched = watching.build();
 
         // Fetch some items of information from the maat-api to use during validation:
-        final var fdcContributions = updatedIds.stream().map(testDataClient::getFdcContribution).toList();
+		final var fdcContributions = updatedIds.stream().map(spyFactory::getFdcContribution).toList();
 
         softly.assertThat(watched.getGlobalUpdateResponse().isSuccessful()).isTrue();
         softly.assertThat(updatedIds).hasSize(3).doesNotContainNull();

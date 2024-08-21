@@ -1,19 +1,18 @@
-package uk.gov.justice.laa.crime.dces.integration.testing;
+package uk.gov.justice.laa.crime.dces.integration.service.spy;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.client.FdcClient;
-import uk.gov.justice.laa.crime.dces.integration.client.TestDataClient;
+import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionResponseDTO;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
+import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionFileResponse;
+import uk.gov.justice.laa.crime.dces.integration.model.external.FdcContribution;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionFileErrorResponse;
-import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateConcorContributionStatusRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcAccelerationType;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType;
-import uk.gov.justice.laa.crime.dces.integration.service.FdcTestDataCreatorService;
+import uk.gov.justice.laa.crime.dces.integration.service.TestDataService;
 
 import java.util.List;
 import java.util.Optional;
@@ -39,10 +38,7 @@ public class SpyFactory {
     private FdcClient fdcClientSpy;
 
     @SpyBean
-    private FdcTestDataCreatorService fdcTestDataCreatorService;
-
-    @Autowired
-    private TestDataClient testDataClient;
+    private TestDataService testDataService;
 
     public ContributionProcessSpy.ContributionProcessSpyBuilder newContributionProcessSpyBuilder() {
         return new ContributionProcessSpy.ContributionProcessSpyBuilder(contributionClientSpy, drcClientSpy);
@@ -61,20 +57,27 @@ public class SpyFactory {
     }
 
     public List<Integer> updateConcorContributionStatus(final ConcorContributionStatus status, final int recordCount) {
-        final var request = UpdateConcorContributionStatusRequest.builder()
-                .status(status)
-                .recordCount(recordCount)
-                .build();
-        return testDataClient.updateConcorContributionStatus(request);
+        return testDataService.updateConcorContributionStatus(status, recordCount);
     }
 
     public Set<Integer> createFdcDelayedPickupTestData(final FdcTestType testType, final int recordsToUpdate) {
-        return fdcTestDataCreatorService.createDelayedPickupTestData(testType, recordsToUpdate);
+        return testDataService.createDelayedPickupTestData (testType, recordsToUpdate);
+    }
+
+    public FdcContribution getFdcContribution(int fdcId){
+        return testDataService.getFdcContribution(fdcId);
+    }
+    public ContributionFileResponse getContributionsFile(int fileId){
+        return testDataService.getContributionFile(fileId);
+    }
+
+    public ConcorContributionResponseDTO getConcorContribution(int concorId){
+        return testDataService.getConcorContribution(concorId);
     }
 
     public Set<Integer> createFastTrackTestData(
             final FdcAccelerationType fdcAccelerationType, final FdcTestType testType, final int recordsToUpdate) {
-        return fdcTestDataCreatorService.createFastTrackTestData(fdcAccelerationType, testType, recordsToUpdate);
+        return testDataService.createFastTrackTestData(fdcAccelerationType, testType, recordsToUpdate);
     }
 
     /**
@@ -83,10 +86,6 @@ public class SpyFactory {
      * Testing utility method.
      */
     public Optional<ContributionFileErrorResponse> getContributionFileErrorOptional(final int contributionFileId, final int contributionId) {
-        try {
-            return Optional.of(testDataClient.getContributionFileError(contributionFileId, contributionId));
-        } catch (WebClientResponseException.NotFound e) {
-            return Optional.empty();
-        }
+        return Optional.ofNullable(testDataService.getContributionFileError(contributionFileId, contributionId));
     }
 }
