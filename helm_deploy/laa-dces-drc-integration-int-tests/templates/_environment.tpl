@@ -16,8 +16,6 @@ env:
     value: {{ .Values.maatApi.registrationId }}
   - name: MAAT_API_OAUTH_URL
     value: {{ .Values.maatApi.oauthUrl }}
-  - name: MAAT_API_OAUTH_BASE_URL
-    value: {{ .Values.maatApi.oauthBaseUrl }}
   - name: MAAT_API_OAUTH_CLIENT_ID
     valueFrom:
         secretKeyRef:

@@ -11,8 +11,8 @@ import static io.restassured.http.ContentType.JSON;
 public class RequestSpecificationBuilder {
 
     private static final String MAAT_CD_BASE_URL = TestConfiguration.get("services.maat-api.baseUrl");
-    private static final String MAAT_CD_AUTH_BASE_URL =
-            TestConfiguration.get("spring.security.oauth2.client.provider.maatapi.token-base-uri");
+    private static final String MAAT_CD_AUTH_BASE_URL = getTokenBaseUri();
+
     private static final String MAAT_CD_AUTH_CAA_CLIENT_ID =
             TestConfiguration.get("spring.security.oauth2.client.registration.maatapi.client-id");
     private static final String MAAT_CD_AUTH_CAA_CLIENT_SECRET =
@@ -23,6 +23,10 @@ public class RequestSpecificationBuilder {
     private RequestSpecificationBuilder() {
     }
 
+    private static String getTokenBaseUri(){
+        String fullUri = TestConfiguration.get("spring.security.oauth2.client.provider.maatapi.token-uri");
+        return fullUri.replaceAll("\\/token$", "");
+    }
 
     public static RequestSpecification getMaatAPICrimeApplyReqSpec() {
         return getMaatApiReqSpec(
