@@ -293,6 +293,9 @@ jobs:
       - deploy-to:
           environment: uat
           token: ${CIRCLE_CI_TOKEN_UAT}
+      - run-integration-tests:
+          environment: uat
+          token: ${CIRCLE_CI_TOKEN_DEV}
 
   deploy-staging:
     executor: cloud-platform-executor
