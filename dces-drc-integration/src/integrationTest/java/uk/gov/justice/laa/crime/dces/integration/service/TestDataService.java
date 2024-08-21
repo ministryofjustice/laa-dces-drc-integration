@@ -73,8 +73,8 @@ public class TestDataService {
   /**
    * Create test data required for testing the FDC Fast Track  logic
    * (	 * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-356">DCES-367</a>,
-   * <a href="https://dsdmoj.atlassian.net/browse/DCES-356">DCES-377</a> and
-   * <a href="https://dsdmoj.atlassian.net/browse/DCES-356">DCES-378</a>for test specification (this one method caters to all of them).)
+   * <a href="https://dsdmoj.atlassian.net/browse/DCES-377">DCES-377</a> and
+   * <a href="https://dsdmoj.atlassian.net/browse/DCES-378">DCES-378</a>for test specification (this one method caters to all of them).)
    * @param fdcAccelerationType: One of the acceleration types defined in enum FdcAccelerationType
    * @param testType: One of the test types defined in enum FdcTestType
    * @param recordsToUpdate Number of records to update

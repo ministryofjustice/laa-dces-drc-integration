@@ -36,6 +36,8 @@ class FdcIntegrationTest {
 	@Autowired
 	private FdcService fdcService;
 
+	private static final String USER_AUDIT = "DCES";
+
     @Builder
     private record CheckOptions(
             boolean drcStubShouldSucceed,
@@ -233,7 +235,7 @@ class FdcIntegrationTest {
 		fdcContributions.forEach(fdcContribution -> { // 7.
 			softly.assertThat(fdcContribution.getStatus()).isEqualTo(FdcContributionsStatus.SENT);
 			softly.assertThat(fdcContribution.getContFileId()).isEqualTo(contributionFileId);
-			softly.assertThat(fdcContribution.getUserModified()).isEqualTo("DCES");
+			softly.assertThat(fdcContribution.getUserModified()).isEqualTo(USER_AUDIT);
 			softly.assertThat(fdcContribution.getDateModified()).isBetween(startDate, endDate);
 		});
 
@@ -241,9 +243,9 @@ class FdcIntegrationTest {
 		softly.assertThat(contributionFile.getId()).isEqualTo(watched.getXmlFileResult());
 		softly.assertThat(contributionFile.getRecordsSent()).isGreaterThanOrEqualTo(3);
 		softly.assertThat(contributionFile.getDateCreated()).isBetween(startDate, endDate);
-		softly.assertThat(contributionFile.getUserCreated()).isEqualTo("DCES");
+		softly.assertThat(contributionFile.getUserCreated()).isEqualTo(USER_AUDIT);
 		softly.assertThat(contributionFile.getDateModified()).isBetween(startDate, endDate);
-		softly.assertThat(contributionFile.getUserModified()).isEqualTo("DCES");
+		softly.assertThat(contributionFile.getUserModified()).isEqualTo(USER_AUDIT);
 		softly.assertThat(contributionFile.getDateSent()).isBetween(startDate, endDate);
 		fdcContributions.forEach(fdcContribution -> {
 			softly.assertThat(contributionFile.getXmlContent()).contains("<fdc id=\""+fdcContribution.getId()+"\">");
