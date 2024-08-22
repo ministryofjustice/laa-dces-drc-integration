@@ -3,7 +3,7 @@
 server:
   port: 8089
   ssl:
-    enabled: true
+    enabled: false
     key-store: classpath:mTLS/keystore.jks
     key-store-password: ${KEY_STORE_PASSWORD}
     key-alias: server
