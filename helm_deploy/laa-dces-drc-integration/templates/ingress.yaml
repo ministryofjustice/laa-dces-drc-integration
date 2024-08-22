@@ -49,7 +49,14 @@ spec:
                 name: {{ $fullName }}
                 port:
                   number: {{ $.Values.actuator.port }}
-          - path: {{ $.Values.drc.test.path }}
+          - path: {{ $.Values.drc.testSecure.path }}
+            pathType: "Exact"
+            backend:
+              service:
+                name: {{ $fullName }}
+                port:
+                  number: {{ $.Values.service.port }}
+          - path: {{ $.Values.drc.testInsecure.path }}
             pathType: "Exact"
             backend:
               service:
