@@ -21,6 +21,8 @@ spec:
   ingressClassName: {{ .Values.ingress.className }}
   {{- if .Values.ingress.tls }}
   tls:
+    - hosts:
+        - modules.apps.laa-dces-drc-integration-uat.cloud-platform.service.justice.gov.uk
     {{- range .Values.ingress.tls }}
     - hosts:
         {{- range .hosts }}
