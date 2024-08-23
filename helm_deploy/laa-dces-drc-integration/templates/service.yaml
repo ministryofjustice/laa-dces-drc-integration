@@ -7,8 +7,8 @@ metadata:
 spec:
   type: {{ .Values.service.type }}
   ports:
-    - port: {{ .Values.service.port }}
-      targetPort: http
+    - port: 443
+      targetPort: {{ .Values.service.port }}
       protocol: TCP
       name: http
     {{- if not (eq (toString .Values.actuator.port) "http") }}
