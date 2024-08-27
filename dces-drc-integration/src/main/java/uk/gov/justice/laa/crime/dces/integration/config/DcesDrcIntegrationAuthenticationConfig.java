@@ -24,7 +24,6 @@ public class DcesDrcIntegrationAuthenticationConfig {
                     .requestMatchers("/api-docs/**").permitAll()
                     .requestMatchers("/actuator/**").permitAll()
                     .requestMatchers("/error").permitAll()
-                    .requestMatchers("/api/external/v1/drc/insecure/**").permitAll()
                     .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -2,24 +2,14 @@
 
 server:
   port: 8089
-#  ssl:
-#    enabled: true
-#    key-store: classpath:mTLS/keystore.jks
-#    key-store-password: ${KEY_STORE_PASSWORD}
-#    key-alias: server
-#    trust-store: classpath:mTLS/truststore.jks
-#    trust-store-password: ${TRUST_STORE_PASSWORD}
-#    client-auth: need
 
 management:
   server:
     port: 8188
-#    ssl:
-#      enabled: false
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus,mappings
+        include: health,info,metrics,prometheus
   endpoint:
     health:
       show-details: always

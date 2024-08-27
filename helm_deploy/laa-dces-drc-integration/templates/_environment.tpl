@@ -30,15 +30,4 @@ env:
     value: {{ .Values.maatApi.oauthScope }}
   - name: LAA_DCES_DRC_INTEGRATION_RESOURCE_SERVER_ISSUER_URI
     value: {{ .Values.resource_server }}
-  - name: KEY_STORE_PASSWORD
-    valueFrom:
-        secretKeyRef:
-            name: key-store-password
-            key: KEY_STORE_PASSWORD
-  - name: TRUST_STORE_PASSWORD
-    valueFrom:
-        secretKeyRef:
-            name: trust-store-password
-            key: TRUST_STORE_PASSWORD
-
 {{- end -}}

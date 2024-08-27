@@ -41,13 +41,7 @@ public class DrcStubRestController {
         return getRandomZeroOrOne() == 0;
     }
 
-    @GetMapping(value = "insecure/test")
-    public String testInsecure() {
-        log.info("Get Request received to insecure test");
-        return "Open (insecure) Test Get Success";
-    }
-
-    @GetMapping(value = "secure/test")
+    @GetMapping(value = "/test")
     public String testSecure() {
         log.info("Get Request received to secure test");
         return "mTLS (secure) Test Get Success";
