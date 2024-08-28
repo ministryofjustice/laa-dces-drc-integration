@@ -1,8 +1,9 @@
 package uk.gov.justice.laa.crime.dces.integration.controller;
 
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,7 +19,7 @@ import java.util.Random;
 @Slf4j
 @RestController
 @AllArgsConstructor
-@RequestMapping("/api/v1/drc/external")
+@RequestMapping("/api/external/v1/drc")
 @SuppressWarnings("squid:S2245") // Safe to use random here, as it's not being used in any fashion beyond a return value.
 public class DrcStubRestController {
 
@@ -29,14 +30,21 @@ public class DrcStubRestController {
     }
 
     @PostMapping(value = "/fdc")
-    public Boolean fdc(@NotEmpty @RequestBody final SendContributionFileDataToDrcRequest dataRequest) {
+    public Boolean fdc(@NotNull @RequestBody final SendContributionFileDataToDrcRequest dataRequest) {
         log.info("Request received from DRC to update FDC {}", dataRequest);
         return getRandomZeroOrOne() == 0;
     }
 
     @PostMapping(value = "/contribution")
-    public Boolean contribution(@NotEmpty @RequestBody final SendContributionFileDataToDrcRequest dataRequest) {
+    public Boolean contribution(@NotNull @RequestBody final SendContributionFileDataToDrcRequest dataRequest) {
         log.info("DrcStubRestController Stub returing a response for input {}", dataRequest);
         return getRandomZeroOrOne() == 0;
     }
+
+    @GetMapping(value = "/test")
+    public String testSecure() {
+        log.info("Get Request received to secure test");
+        return "GET Test Successful";
+    }
+
 }

@@ -56,7 +56,6 @@ spec:
                 name: {{ $fullName }}
                 port:
                   number: {{ $.Values.actuator.port }}
-
           {{- end }}
     {{- end }}
   {{- end }}
