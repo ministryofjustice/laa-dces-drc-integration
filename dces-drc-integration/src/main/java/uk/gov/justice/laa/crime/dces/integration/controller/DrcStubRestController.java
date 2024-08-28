@@ -44,14 +44,7 @@ public class DrcStubRestController {
     @GetMapping(value = "/test")
     public String testSecure() {
         log.info("Get Request received to secure test");
-        return "mTLS (secure) Test Get Success";
+        return "GET Test Successful";
     }
-
-    @PostMapping(value = "/test")
-    public String test(@NotNull @RequestBody final SendContributionFileDataToDrcRequest dataRequest) {
-        log.info("Request received from DRC to test FDC {}", dataRequest);
-        return "Request received from DRC to test FDC " + dataRequest;
-    }
-
 
 }
