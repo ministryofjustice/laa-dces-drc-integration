@@ -2,6 +2,7 @@ package uk.gov.justice.laa.crime.dces.integration.config;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -12,15 +13,11 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.util.Objects;
 
+@RequiredArgsConstructor
 public class WebClientMetricsFilter implements ExchangeFilterFunction {
 
     private final MeterRegistry meterRegistry;
     private final String metricsName;
-
-    public WebClientMetricsFilter(MeterRegistry meterRegistry, String metricsName) {
-        this.meterRegistry = meterRegistry;
-        this.metricsName = metricsName;
-    }
 
     @Override
     public Mono<ClientResponse> filter(ClientRequest request, ExchangeFunction next) {
