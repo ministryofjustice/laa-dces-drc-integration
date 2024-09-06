@@ -79,7 +79,7 @@ public class ContributionProcessSpy {
 
         public ContributionProcessSpyBuilder traceAndStubSendContributionUpdate(final Predicate<Integer> stubResults) {
             doAnswer(invocation -> {
-                var contributionId = ((SendContributionFileDataToDrcRequest) invocation.getArgument(0)).getContributionId();
+                var contributionId = ((SendContributionFileDataToDrcRequest) invocation.getArgument(0)).getData().getId().intValue();
                 sentId(contributionId);
                 return stubResults.test(contributionId);
             }).when(drcClientSpy).sendContributionUpdate(any());

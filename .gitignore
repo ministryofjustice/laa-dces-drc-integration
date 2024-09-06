@@ -1,4 +1,6 @@
 dces-drc-integration/.gradle
+dces-drc-integration/src/main/java/uk/gov/justice/laa/crime/dces/integration/model/generated/
+
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
@@ -24,6 +26,7 @@ bin/
 *.iml
 *.ipr
 out/
+.run/
 !**/src/main/**/out/
 !**/src/test/**/out/
 

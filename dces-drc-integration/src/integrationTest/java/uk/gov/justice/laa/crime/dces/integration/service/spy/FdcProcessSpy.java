@@ -78,7 +78,7 @@ public class FdcProcessSpy {
 
     public FdcProcessSpyBuilder traceAndStubSendFdcUpdate(final Predicate<Integer> stubResults) {
       doAnswer(invocation -> {
-        final var fdcId = ((SendFdcFileDataToDrcRequest) invocation.getArgument(0)).getFdcId();
+        final var fdcId = ((SendFdcFileDataToDrcRequest) invocation.getArgument(0)).getData().getId().intValue();
         sentId(fdcId);
         return stubResults.test(fdcId);
       }).when(drcClientSpy).sendFdcUpdate(any());

@@ -60,33 +60,32 @@ public class ContributionService implements FileService {
     public void sendContributionsToDrc(List<ConcurContribEntry> contributionsList, Map<String, CONTRIBUTIONS> successfulContributions, Map<String,String> failedContributions){
         // for each contribution sent by MAAT API
         for (ConcurContribEntry contribEntry : contributionsList) {
+            final String contributionIdStr = String.valueOf(contribEntry.getConcorContributionId());
             // convert string into objects
             CONTRIBUTIONS currentContribution;
             try {
                 currentContribution = contributionsMapperUtils.mapLineXMLToObject(contribEntry.getXmlContent());
             } catch (JAXBException e) {
-                log.error("Invalid line XML encountered [" + e.getClass() + " (" + e.getMessage() + ")]");
-                failedContributions.put(String.valueOf(contribEntry.getConcorContributionId()), "Invalid format.");
+                log.error("Failed to unmarshal XML for Concor contribution ID {}", contributionIdStr, e);
+                failedContributions.put(contributionIdStr, e.getClass().getName() + ": " + e.getMessage());
                 continue;
             }
 
-            String contributionId = String.valueOf(contribEntry.getConcorContributionId());
-            Boolean updateSuccessful = drcClient.sendContributionUpdate(createDrcDataRequest(contribEntry));
-
-            if (Boolean.TRUE.equals(updateSuccessful)) {
-                successfulContributions.put(contributionId, currentContribution);
-                log.info("Sent update to DRC for Concor contribution ID {}", contributionId);
-            } else {
+            try {
+                drcClient.sendContributionUpdate(createDrcDataRequest(currentContribution));
+                log.info("Sent update to DRC for Concor contribution ID {}", contributionIdStr);
+                successfulContributions.put(contributionIdStr, currentContribution);
+            } catch (Exception e) {
+                log.warn("Failed to send update to DRC for Concor contribution ID {}", contributionIdStr, e);
                 // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
-                failedContributions.put(contributionId, "failure reason");
-                log.warn("Failed to send update to DRC for Concor contribution ID {} [{}]", contributionId, "failure reason");
+                failedContributions.put(contributionIdStr, e.getClass().getName() + ": " + e.getMessage());
             }
         }
     }
 
-    private SendContributionFileDataToDrcRequest createDrcDataRequest(ConcurContribEntry contribEntry) {
-        return SendContributionFileDataToDrcRequest.builder().
-                contributionId(contribEntry.getConcorContributionId())
+    private SendContributionFileDataToDrcRequest createDrcDataRequest(CONTRIBUTIONS contribution) {
+        return SendContributionFileDataToDrcRequest.builder()
+                .data(contribution)
                 .build();
     }
 

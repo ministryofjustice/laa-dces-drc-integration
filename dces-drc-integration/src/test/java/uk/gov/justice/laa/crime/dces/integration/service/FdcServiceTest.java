@@ -22,12 +22,21 @@ import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.ok;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.serverError;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ExtendWith(SoftAssertionsExtension.class)
@@ -68,7 +77,7 @@ class FdcServiceTest {
 		when(fdcMapperUtils.generateFileXML(any())).thenReturn("<xml>ValidXML</xml>");
 		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
 		when(fdcMapperUtils.generateAckXML(any(),any(),any(),any())).thenReturn("<xml>ValidAckXML</xml>");
-		when(drcClient.sendFdcUpdate(any())).thenReturn(true);
+		doNothing().when(drcClient).sendFdcUpdate(any());
 		// run
 		boolean successful = fdcService.processDailyFiles();
 		// test
@@ -89,7 +98,7 @@ class FdcServiceTest {
 		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
 		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
 		when(fdcMapperUtils.generateAckXML(any(),any(),any(),any())).thenReturn("<xml>ValidAckXML</xml>");
-		when(drcClient.sendFdcUpdate(any())).thenReturn(true);
+		doNothing().when(drcClient).sendFdcUpdate(any());
 		customStubs.add(stubFor(post(PREPARE_URL).atPriority(1)
 				.willReturn(serverError())));
 		// run
@@ -114,7 +123,7 @@ class FdcServiceTest {
 		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
 		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
 		when(fdcMapperUtils.generateAckXML(any(),any(),any(),any())).thenReturn("<xml>ValidAckXML</xml>");
-		when(drcClient.sendFdcUpdate(any())).thenReturn(true);
+		doNothing().when(drcClient).sendFdcUpdate(any());
 		customStubs.add(stubFor(post(PREPARE_URL).atPriority(1)
 				.willReturn(serverError())));
 		// run
@@ -177,7 +186,7 @@ class FdcServiceTest {
 		when(fdcMapperUtils.generateFileXML(any())).thenReturn("<xml>ValidXML</xml>");
 		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
 		when(fdcMapperUtils.generateAckXML(any(),any(),any(),any())).thenReturn("<xml>ValidAckXML</xml>");
-		when(drcClient.sendFdcUpdate(any())).thenReturn(true);
+		doNothing().when(drcClient).sendFdcUpdate(any());
 
 		// do
 		assertThrows(HttpServerErrorException.class, () -> {

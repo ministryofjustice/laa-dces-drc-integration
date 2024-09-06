@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import org.jetbrains.annotations.Nullable;
+import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -14,22 +14,28 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.config.DrcApiWebClientConfiguration;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.config.ServicesConfiguration;
 import uk.gov.justice.laa.crime.dces.integration.model.SendContributionFileDataToDrcRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.SendFdcFileDataToDrcRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
+import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile;
 
 import java.io.IOException;
+import java.math.BigInteger;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.failBecauseExceptionWasNotThrown;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DrcApiClientTest {
-
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static MockWebServer mockWebServer;
     DrcApiWebClientConfiguration drcApiWebClientConfiguration;
@@ -51,7 +57,7 @@ class DrcApiClientTest {
     }
 
     @Test
-    void test_whenWebClientIsRequested_thenShouldDrcWebClientIsReturned() {
+    void test_whenWebClientIsRequested_thenDrcWebClientIsReturned() {
 
         WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(configuration);
 
@@ -60,73 +66,106 @@ class DrcApiClientTest {
     }
 
     @Test
-    void test_whenWebClientIsInvoked_thenShouldReturnedValidResponse() throws JsonProcessingException {
+    void test_whenWebClientIsInvoked_thenSuccessfulResponse() throws InterruptedException {
 
         SendContributionFileDataToDrcRequest sendContributionFileDataToDrcRequest = SendContributionFileDataToDrcRequest.builder()
-                .contributionId(99)
+                .data(fakeCONTRIBUTIONS())
                 .build();
-        Boolean expectedResponse = true;
-        setupValidResponse(expectedResponse);
+        setupSuccessfulResponse();
         WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(configuration);
 
-        Boolean response = callDrcClient(actualWebClient, sendContributionFileDataToDrcRequest);
-        assertThat(response).isTrue();
+        ResponseEntity<Void> response = callDrcClient(actualWebClient, sendContributionFileDataToDrcRequest);
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        assertThat(recordedRequest.getBody().readUtf8()).matches("\\{\"data\":\\{.+},\"meta\":\\{}}");
+        assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
     }
 
     @Test
-    void test_whenWebClientIsInvokedWithNull_thenShouldReturnedFalseResponse() throws JsonProcessingException {
+    void test_whenWebClientIsInvokedWithNull_thenErrorResponse() throws JsonProcessingException, InterruptedException {
 
         SendContributionFileDataToDrcRequest sendContributionFileDataToDrcRequest = SendContributionFileDataToDrcRequest.builder().build();
-        Boolean expectedResponse = false;
-        setupValidResponse(expectedResponse);
+        setupProblemDetailResponse(fakeProblemDetail());
         WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(configuration);
-
-        Boolean response = callDrcClient(actualWebClient, sendContributionFileDataToDrcRequest);
-        assertThat(response).isFalse();
+        try {
+            callDrcClient(actualWebClient, sendContributionFileDataToDrcRequest);
+            failBecauseExceptionWasNotThrown(WebClientResponseException.class);
+        } catch (WebClientResponseException e) {
+            RecordedRequest recordedRequest = mockWebServer.takeRequest();
+            assertThat(recordedRequest.getBody().readUtf8()).isEqualTo("{\"data\":null,\"meta\":{}}");
+            assertThat(e.getStatusCode().is4xxClientError() || e.getStatusCode().is5xxServerError()).isTrue();
+        }
     }
 
     @Test
-    void test_whenFdcWebClientIsInvoked_thenShouldReturnedValidResponse() throws JsonProcessingException {
+    void test_whenFdcWebClientIsInvoked_thenSuccessfulResponse() throws InterruptedException {
 
         SendFdcFileDataToDrcRequest request = SendFdcFileDataToDrcRequest.builder()
-                .fdcId(12)
+                .data(fakeFdc())
                 .build();
-        Boolean expectedResponse = true;
-        setupValidResponse(expectedResponse);
+        setupSuccessfulResponse();
         WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(configuration);
 
-        Boolean response = callDrcClient(actualWebClient, request);
-        assertThat(response).isTrue();
+        ResponseEntity<Void> response = callDrcClient(actualWebClient, request);
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        assertThat(recordedRequest.getBody().readUtf8()).matches("\\{\"data\":\\{.+},\"meta\":\\{}}");
+        assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
     }
 
     @Test
-    void test_whenFdcWebClientIsInvokedWithNull_thenShouldReturnedFalseResponse() throws JsonProcessingException {
+    void test_whenFdcWebClientIsInvokedWithNull_thenErrorResponse() throws JsonProcessingException, InterruptedException {
 
         SendFdcFileDataToDrcRequest request = SendFdcFileDataToDrcRequest.builder().build();
-        Boolean expectedResponse = false;
-        setupValidResponse(expectedResponse);
+        setupProblemDetailResponse(fakeProblemDetail());
         WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(configuration);
 
-        Boolean response = callDrcClient(actualWebClient, request);
-        assertThat(response).isFalse();
+        try {
+            callDrcClient(actualWebClient, request);
+            failBecauseExceptionWasNotThrown(WebClientResponseException.class);
+        } catch (WebClientResponseException e) {
+            RecordedRequest recordedRequest = mockWebServer.takeRequest();
+            assertThat(recordedRequest.getBody().readUtf8()).isEqualTo("{\"data\":null,\"meta\":{}}");
+            assertThat(e.getStatusCode().is4xxClientError() || e.getStatusCode().is5xxServerError()).isTrue();
+        }
     }
 
-
-    private <T> @Nullable Boolean callDrcClient(WebClient actualWebClient, T request) {
+    private <T> ResponseEntity<Void> callDrcClient(WebClient actualWebClient, T request) {
         return actualWebClient
                 .post()
                 .uri(configuration.getDrcClientApi().getBaseUrl())
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .retrieve()
-                .bodyToMono(Boolean.class)
+                .toBodilessEntity()
                 .block();
     }
 
-    private <T> void setupValidResponse(T returnBody) throws JsonProcessingException {
-        String responseBody = OBJECT_MAPPER.writeValueAsString(returnBody);
+    private CONTRIBUTIONS fakeCONTRIBUTIONS() {
+        CONTRIBUTIONS contributions = new CONTRIBUTIONS();
+        contributions.setId(BigInteger.valueOf(99));
+        return contributions;
+    }
+
+    private FdcFile.FdcList.Fdc fakeFdc() {
+        FdcFile.FdcList.Fdc fdc = new FdcFile.FdcList.Fdc();
+        fdc.setId(BigInteger.valueOf(12));
+        return fdc;
+    }
+
+    private ProblemDetail fakeProblemDetail() {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Invalid request");
+    }
+
+    private void setupSuccessfulResponse() {
         mockWebServer.enqueue(new MockResponse()
                 .setResponseCode(HttpStatus.OK.value())
+                .setBody("")
+                .addHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE));
+    }
+
+    private void setupProblemDetailResponse(final ProblemDetail problemDetail) throws JsonProcessingException {
+        final String responseBody = OBJECT_MAPPER.writeValueAsString(problemDetail);
+        mockWebServer.enqueue(new MockResponse()
+                .setResponseCode(problemDetail.getStatus())
                 .setBody(responseBody)
                 .addHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE));
     }

@@ -26,12 +26,19 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.serverError;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ExtendWith(SoftAssertionsExtension.class)
@@ -71,7 +78,7 @@ class ContributionServiceTest {
 		when(contributionsMapperUtilsMock.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtilsMock.generateFileName(any())).thenReturn("TestFilename.xml");
 		when(contributionsMapperUtilsMock.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
-		when(drcClient.sendContributionUpdate(any())).thenReturn(true);
+		doNothing().when(drcClient).sendContributionUpdate(any());
 
 		boolean result = contributionService.processDailyFiles();
 		verify(contributionsMapperUtilsMock,times(2)).mapLineXMLToObject(any());
@@ -84,7 +91,7 @@ class ContributionServiceTest {
 		when(contributionsMapperUtilsMock.generateFileXML(any(), any())).thenReturn("InvalidXML");
 		when(contributionsMapperUtilsMock.generateAckXML(any(),any(),any(),any())).thenReturn("AckXML");
 		when(contributionsMapperUtilsMock.generateFileName(any())).thenReturn("FileName");
-		when(drcClient.sendContributionUpdate(any())).thenReturn(true);
+		doNothing().when(drcClient).sendContributionUpdate(any());
 
 		Exception exception = assertThrows(HttpServerErrorException.class, () -> {
 			contributionService.processDailyFiles();
@@ -119,7 +126,7 @@ class ContributionServiceTest {
 		when(contributionsMapperUtilsMock.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtilsMock.generateFileName(any())).thenReturn("TestFilename.xml");
 		when(contributionsMapperUtilsMock.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
-		when(drcClient.sendContributionUpdate(any())).thenReturn(true);
+		doNothing().when(drcClient).sendContributionUpdate(any());
 		// do
 		Exception exception = Assert.assertThrows(HttpServerErrorException.class, () -> {
 			contributionService.processDailyFiles();

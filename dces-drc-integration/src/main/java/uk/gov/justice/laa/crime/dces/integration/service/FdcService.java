@@ -65,21 +65,22 @@ public class FdcService implements FileService {
     @SuppressWarnings("squid:S2583") // ignore the can only be true warning. As this is placeholder.
     void sendFdcToDrc(List<Fdc> fdcList, List<Fdc> successfulFdcs, Map<String,String> failedFdcs) {
         fdcList.forEach(currentFdc -> {
-            Boolean updateSuccessful = drcClient.sendFdcUpdate(buildSendFdcFileDataToExternalRequest(currentFdc.getId().intValue()));
-            if (Boolean.TRUE.equals(updateSuccessful)) {
+            String fdcIdStr = currentFdc.getId().toString();
+            try {
+                drcClient.sendFdcUpdate(buildSendFdcFileDataToExternalRequest(currentFdc));
+                log.info("Sent update to DRC for FDC contribution ID {}", fdcIdStr);
                 successfulFdcs.add(currentFdc);
-                log.info("Sent update to DRC for FDC contribution ID {}", currentFdc.getId());
-            } else {
+            } catch (Exception e) {
+                log.warn("Failed to send update to DRC for FDC contribution ID {}", fdcIdStr, e);
                 // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
-                failedFdcs.put(String.valueOf(currentFdc.getId()), "failure reason");
-                log.warn("Failed to send update to DRC for FDC contribution ID {} [{}]", currentFdc.getId(), "failure reason");
+                failedFdcs.put(fdcIdStr, e.getClass().getName() + ": " + e.getMessage());
             }
         });
     }
 
-    private SendFdcFileDataToDrcRequest buildSendFdcFileDataToExternalRequest(Integer fdcId) {
+    private SendFdcFileDataToDrcRequest buildSendFdcFileDataToExternalRequest(Fdc fdc) {
         return SendFdcFileDataToDrcRequest.builder()
-                .fdcId(fdcId)
+                .data(fdc)
                 .build();
     }
 

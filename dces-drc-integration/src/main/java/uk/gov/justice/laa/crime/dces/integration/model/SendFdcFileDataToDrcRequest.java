@@ -1,14 +1,15 @@
 package uk.gov.justice.laa.crime.dces.integration.model;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class SendFdcFileDataToDrcRequest {
-    private Integer fdcId;
+    private final FdcFile.FdcList.Fdc data;
+    private final Map<String, String> meta = new HashMap<>();
 }
