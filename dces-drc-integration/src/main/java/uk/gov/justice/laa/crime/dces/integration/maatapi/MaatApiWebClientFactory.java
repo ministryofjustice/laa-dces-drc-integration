@@ -2,8 +2,8 @@ package uk.gov.justice.laa.crime.dces.integration.maatapi;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.netty.resolver.DefaultAddressResolverGroup;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -37,16 +37,12 @@ import java.util.UUID;
 
 @Slf4j
 @Configuration
+@RequiredArgsConstructor
 public class MaatApiWebClientFactory {
     private static final String LAA_TRANSACTION_ID = "LAA-TRANSACTION-ID";
     public static final String MAAT_API_WEBCLIENT_REQUESTS = "webclient_requests";
 
     private final MeterRegistry meterRegistry;
-
-    @Autowired
-    public MaatApiWebClientFactory(MeterRegistry meterRegistry) {
-        this.meterRegistry = meterRegistry;
-    }
 
     @Bean
     public WebClient maatApiWebClient(
