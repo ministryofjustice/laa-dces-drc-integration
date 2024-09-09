@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsStatus;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcAccelerationType;
@@ -56,8 +57,8 @@ class FdcIntegrationTest {
 		final var updateLogFdcRequest = UpdateLogFdcRequest.builder()
 				.fdcId(31774046)
 				.build();
-		final String response = fdcService.processFdcUpdate(updateLogFdcRequest);
-		softly.assertThat(response).isEqualTo("The request has been processed successfully");
+		final Integer response = fdcService.processFdcUpdate(updateLogFdcRequest);
+		softly.assertThat(response).isPositive();
 	}
 
 	@Test
@@ -67,8 +68,8 @@ class FdcIntegrationTest {
 				.fdcId(9)
 				.errorText(errorText)
 				.build();
-		final String response = fdcService.processFdcUpdate(updateLogFdcRequest);
-		softly.assertThat(response).isEqualTo("The request has failed to process");
+		softly.assertThatThrownBy(() -> fdcService.processFdcUpdate(updateLogFdcRequest))
+				.isInstanceOf(WebClientResponseException.class);
 	}
 
     /**

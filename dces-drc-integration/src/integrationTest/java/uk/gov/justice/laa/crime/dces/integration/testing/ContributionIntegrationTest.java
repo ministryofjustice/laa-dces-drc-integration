@@ -10,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
@@ -47,8 +48,8 @@ class ContributionIntegrationTest {
                 .concorId(9)
                 .errorText(errorText)
                 .build();
-        final String response = contributionService.processContributionUpdate(updateLogContributionRequest);
-        softly.assertThat(response).isEqualTo("The request has failed to process");
+        softly.assertThatThrownBy(() -> contributionService.processContributionUpdate(updateLogContributionRequest))
+                .isInstanceOf(WebClientResponseException.class);
     }
 
     @Test
@@ -58,8 +59,8 @@ class ContributionIntegrationTest {
                 .concorId(47959912)
                 .errorText(errorText)
                 .build();
-        final String response = contributionService.processContributionUpdate(updateLogContributionRequest);
-        softly.assertThat(response).isEqualTo("The request has been processed successfully");
+        final Integer response = contributionService.processContributionUpdate(updateLogContributionRequest);
+        softly.assertThat(response).isPositive();
     }
 
     /**

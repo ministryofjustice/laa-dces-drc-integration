@@ -20,8 +20,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.config.DrcApiWebClientConfiguration;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.config.ServicesConfiguration;
-import uk.gov.justice.laa.crime.dces.integration.model.SendContributionFileDataToDrcRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.SendFdcFileDataToDrcRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.ContributionDataForDrc;
+import uk.gov.justice.laa.crime.dces.integration.model.FdcDataForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile;
 
@@ -68,30 +68,28 @@ class DrcApiClientTest {
     @Test
     void test_whenWebClientIsInvoked_thenSuccessfulResponse() throws InterruptedException {
 
-        SendContributionFileDataToDrcRequest sendContributionFileDataToDrcRequest = SendContributionFileDataToDrcRequest.builder()
-                .data(fakeCONTRIBUTIONS())
-                .build();
+        ContributionDataForDrc contributionDataForDrc = ContributionDataForDrc.of("99", fakeCONTRIBUTIONS());
         setupSuccessfulResponse();
         WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(configuration);
 
-        ResponseEntity<Void> response = callDrcClient(actualWebClient, sendContributionFileDataToDrcRequest);
+        ResponseEntity<Void> response = callDrcClient(actualWebClient, contributionDataForDrc);
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
-        assertThat(recordedRequest.getBody().readUtf8()).matches("\\{\"data\":\\{.+},\"meta\":\\{}}");
+        assertThat(recordedRequest.getBody().readUtf8()).matches("\\{\"data\":\\{.+},\"meta\":\\{\"contributionId\":\"99\"}}");
         assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
     }
 
     @Test
     void test_whenWebClientIsInvokedWithNull_thenErrorResponse() throws JsonProcessingException, InterruptedException {
 
-        SendContributionFileDataToDrcRequest sendContributionFileDataToDrcRequest = SendContributionFileDataToDrcRequest.builder().build();
+        ContributionDataForDrc contributionDataForDrc = ContributionDataForDrc.of(null, null);
         setupProblemDetailResponse(fakeProblemDetail());
         WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(configuration);
         try {
-            callDrcClient(actualWebClient, sendContributionFileDataToDrcRequest);
+            callDrcClient(actualWebClient, contributionDataForDrc);
             failBecauseExceptionWasNotThrown(WebClientResponseException.class);
         } catch (WebClientResponseException e) {
             RecordedRequest recordedRequest = mockWebServer.takeRequest();
-            assertThat(recordedRequest.getBody().readUtf8()).isEqualTo("{\"data\":null,\"meta\":{}}");
+            assertThat(recordedRequest.getBody().readUtf8()).matches("\\{\"data\":null,\"meta\":\\{}}");
             assertThat(e.getStatusCode().is4xxClientError() || e.getStatusCode().is5xxServerError()).isTrue();
         }
     }
@@ -99,22 +97,21 @@ class DrcApiClientTest {
     @Test
     void test_whenFdcWebClientIsInvoked_thenSuccessfulResponse() throws InterruptedException {
 
-        SendFdcFileDataToDrcRequest request = SendFdcFileDataToDrcRequest.builder()
-                .data(fakeFdc())
-                .build();
+        FdcDataForDrc request = FdcDataForDrc.of("99", fakeFdc());
         setupSuccessfulResponse();
         WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(configuration);
 
         ResponseEntity<Void> response = callDrcClient(actualWebClient, request);
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
-        assertThat(recordedRequest.getBody().readUtf8()).matches("\\{\"data\":\\{.+},\"meta\":\\{}}");
+        assertThat(recordedRequest.getBody().readUtf8()).matches("\\{\"data\":\\{.+},\"meta\":\\{\"fdcId\":\"99\"}}");
+
         assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
     }
 
     @Test
     void test_whenFdcWebClientIsInvokedWithNull_thenErrorResponse() throws JsonProcessingException, InterruptedException {
 
-        SendFdcFileDataToDrcRequest request = SendFdcFileDataToDrcRequest.builder().build();
+        FdcDataForDrc request = FdcDataForDrc.of(null, null);
         setupProblemDetailResponse(fakeProblemDetail());
         WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(configuration);
 
@@ -123,7 +120,7 @@ class DrcApiClientTest {
             failBecauseExceptionWasNotThrown(WebClientResponseException.class);
         } catch (WebClientResponseException e) {
             RecordedRequest recordedRequest = mockWebServer.takeRequest();
-            assertThat(recordedRequest.getBody().readUtf8()).isEqualTo("{\"data\":null,\"meta\":{}}");
+            assertThat(recordedRequest.getBody().readUtf8()).matches("\\{\"data\":null,\"meta\":\\{}}");
             assertThat(e.getStatusCode().is4xxClientError() || e.getStatusCode().is5xxServerError()).isTrue();
         }
     }

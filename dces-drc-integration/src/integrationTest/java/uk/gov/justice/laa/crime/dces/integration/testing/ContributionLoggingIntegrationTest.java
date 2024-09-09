@@ -14,9 +14,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
 import org.springframework.test.web.servlet.MockMvc;
+import uk.gov.justice.laa.crime.dces.integration.model.ContributionAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionResponseDTO;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
-import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
 import uk.gov.justice.laa.crime.dces.integration.service.spy.ContributionLoggingProcessSpy;
 import uk.gov.justice.laa.crime.dces.integration.service.spy.ContributionProcessSpy;
@@ -220,15 +220,15 @@ class ContributionLoggingIntegrationTest {
      * Testing utility method.
      */
     private void acknowledgeContribution(final int concorContributionId, final String errorText) throws Exception {
-        final var request = UpdateLogContributionRequest.builder().concorId(concorContributionId).errorText(errorText).build();
+        final var request = ContributionAckFromDrc.of(concorContributionId, errorText);
         String json = mapper.writeValueAsString(request);
-        mockMvc.perform(post("/api/internal/v1/dces-drc-integration/process-drc-update/contribution")
+        mockMvc.perform(post("/api/dces/v1/contribution")
                         .with(csrf())
                         .with(oauth2Login())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
-                .andExpect(content().string("The request has been processed successfully"));
+                .andExpect(content().string(""));
     }
 
     private void successfulContribution(final int concorContributionId) {
