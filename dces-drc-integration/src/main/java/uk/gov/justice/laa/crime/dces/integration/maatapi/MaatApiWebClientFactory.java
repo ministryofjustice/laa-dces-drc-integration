@@ -1,7 +1,8 @@
 package uk.gov.justice.laa.crime.dces.integration.maatapi;
 
-import io.netty.handler.logging.LogLevel;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.netty.resolver.DefaultAddressResolverGroup;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,15 +11,24 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
-import org.springframework.security.oauth2.client.*;
+import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction;
 import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.reactive.function.client.*;
+import org.springframework.web.reactive.function.client.ClientRequest;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
-import reactor.netty.transport.logging.AdvancedByteBufFormat;
+import uk.gov.justice.laa.crime.dces.integration.config.WebClientMetricsFilter;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.config.ServicesConfiguration;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
 
@@ -27,8 +37,12 @@ import java.util.UUID;
 
 @Slf4j
 @Configuration
+@RequiredArgsConstructor
 public class MaatApiWebClientFactory {
     private static final String LAA_TRANSACTION_ID = "LAA-TRANSACTION-ID";
+    public static final String MAAT_API_WEBCLIENT_REQUESTS = "webclient_requests";
+
+    private final MeterRegistry meterRegistry;
 
     @Bean
     public WebClient maatApiWebClient(
@@ -49,6 +63,7 @@ public class MaatApiWebClientFactory {
             .filter(addLaaTransactionIdToRequest())
             .filter(logClientResponse())
             .filter(handleErrorResponse())
+                .filter(new WebClientMetricsFilter(meterRegistry, MAAT_API_WEBCLIENT_REQUESTS))
             .clientConnector(new ReactorClientHttpConnector(
                 HttpClient.create(provider)
                     .resolver(DefaultAddressResolverGroup.INSTANCE)

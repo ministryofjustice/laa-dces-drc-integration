@@ -2,6 +2,7 @@ package uk.gov.justice.laa.crime.dces.integration.maatapi;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.MeterRegistry;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterAll;
@@ -32,6 +33,10 @@ class MaatApiWebClientFactoryTest {
     private static MockWebServer mockWebServer;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
+
+    @Autowired
+    private MeterRegistry meterRegistry;
+
     @Qualifier("servicesConfiguration")
     @Autowired
     private ServicesConfiguration configuration;
@@ -41,11 +46,12 @@ class MaatApiWebClientFactoryTest {
 
     @BeforeAll
     public void setup() throws IOException {
+
         mockWebServer = new MockWebServer();
         mockWebServer.start();
         configuration.getMaatApi().setBaseUrl(String.format("http://localhost:%s", mockWebServer.getPort()));
 
-        maatApiWebClientFactory = new MaatApiWebClientFactory();
+        maatApiWebClientFactory = new MaatApiWebClientFactory(meterRegistry);
     }
 
     @AfterAll
