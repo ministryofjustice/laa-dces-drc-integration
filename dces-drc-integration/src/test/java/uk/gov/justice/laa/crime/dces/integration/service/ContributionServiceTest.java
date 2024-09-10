@@ -7,7 +7,6 @@ import jakarta.xml.bind.JAXBException;
 import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
-import org.junit.Assert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -17,6 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.web.client.HttpServerErrorException;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
+import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.ObjectFactory;
@@ -26,12 +26,18 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.serverError;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static org.assertj.core.api.AssertionsForClassTypes.catchThrowableOfType;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ExtendWith(SoftAssertionsExtension.class)
@@ -59,7 +65,7 @@ class ContributionServiceTest {
 	@AfterEach
 	void afterTestAssertAll(){
 		softly.assertAll();
-		for(StubMapping stub: customStubs ){
+		for (StubMapping stub: customStubs) {
 			WireMock.removeStub(stub);
 			WireMock.resetAllRequests();
 		}
@@ -71,7 +77,7 @@ class ContributionServiceTest {
 		when(contributionsMapperUtilsMock.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtilsMock.generateFileName(any())).thenReturn("TestFilename.xml");
 		when(contributionsMapperUtilsMock.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
-		when(drcClient.sendContributionUpdate(any())).thenReturn(true);
+		doNothing().when(drcClient).sendContributionDataToDrc(any());
 
 		boolean result = contributionService.processDailyFiles();
 		verify(contributionsMapperUtilsMock,times(2)).mapLineXMLToObject(any());
@@ -84,20 +90,15 @@ class ContributionServiceTest {
 		when(contributionsMapperUtilsMock.generateFileXML(any(), any())).thenReturn("InvalidXML");
 		when(contributionsMapperUtilsMock.generateAckXML(any(),any(),any(),any())).thenReturn("AckXML");
 		when(contributionsMapperUtilsMock.generateFileName(any())).thenReturn("FileName");
-		when(drcClient.sendContributionUpdate(any())).thenReturn(true);
+		doNothing().when(drcClient).sendContributionDataToDrc(any());
 
-		Exception exception = assertThrows(HttpServerErrorException.class, () -> {
-			contributionService.processDailyFiles();
-		});
+		softly.assertThatThrownBy(() -> contributionService.processDailyFiles())
+				.isInstanceOf(HttpServerErrorException.class)
+				.hasMessageContaining("INTERNAL_SERVER_ERROR");
 		verify(contributionsMapperUtilsMock,times(2)).mapLineXMLToObject(any());
 		// failure to generate the xml should return a null xmlString.
 		verify(contributionsMapperUtilsMock).generateFileXML(any(), any());
 		// failure should be the result of file generation
-
-		String expectedMessage = "500 Received error 500 INTERNAL_SERVER_ERROR due to Internal Server Error";
-		String actualMessage = exception.getMessage();
-
-		softly.assertThat(actualMessage.contains(expectedMessage)).isTrue();
 	}
 
 	@Test
@@ -119,34 +120,34 @@ class ContributionServiceTest {
 		when(contributionsMapperUtilsMock.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtilsMock.generateFileName(any())).thenReturn("TestFilename.xml");
 		when(contributionsMapperUtilsMock.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
-		when(drcClient.sendContributionUpdate(any())).thenReturn(true);
+		doNothing().when(drcClient).sendContributionDataToDrc(any());
 		// do
-		Exception exception = Assert.assertThrows(HttpServerErrorException.class, () -> {
-			contributionService.processDailyFiles();
-		});
+		softly.assertThatThrownBy(() -> contributionService.processDailyFiles())
+				.isInstanceOf(HttpServerErrorException.class);
 		// test
 		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
 		WireMock.verify(1, postRequestedFor(urlEqualTo(UPDATE_URL)));
 	}
 
 	@Test
-	void testProcessContributionUpdateWhenReturnedTrue() {
+	void testProcessContributionUpdateWhenSuccessful() {
 		UpdateLogContributionRequest dataRequest = UpdateLogContributionRequest.builder()
 				.concorId(911)
 				.build();
-		String response = contributionService.processContributionUpdate(dataRequest);
-		assertEquals("The request has been processed successfully", response);
+		Integer response = contributionService.processContributionUpdate(dataRequest);
+		softly.assertThat(response).isEqualTo(1111);
 	}
 
 	@Test
-	void testProcessContributionUpdateWhenReturnedFalse() {
+	void testProcessContributionUpdateWhenFailed() {
 		String errorText = "The request has failed to process";
 		UpdateLogContributionRequest dataRequest = UpdateLogContributionRequest.builder()
 				.concorId(9)
 				.errorText(errorText)
 				.build();
-		String response = contributionService.processContributionUpdate(dataRequest);
-		assertEquals("The request has failed to process", response);
+		var exception = catchThrowableOfType(() -> contributionService.processContributionUpdate(dataRequest), MaatApiClientException.class);
+		softly.assertThat(exception).isNotNull();
+		softly.assertThat(exception.getStatusCode().is4xxClientError()).isTrue();
 	}
 
 	CONTRIBUTIONS createTestContribution(){

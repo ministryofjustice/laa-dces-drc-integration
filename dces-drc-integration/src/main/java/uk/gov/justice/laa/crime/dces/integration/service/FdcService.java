@@ -13,8 +13,8 @@ import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClient
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionEntry;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsResponse;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcGlobalUpdateResponse;
+import uk.gov.justice.laa.crime.dces.integration.model.FdcDataForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcUpdateRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.SendFdcFileDataToDrcRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
@@ -37,13 +37,12 @@ public class FdcService implements FileService {
     private final FdcClient fdcClient;
     private final DrcClient drcClient;
 
-    public String processFdcUpdate(UpdateLogFdcRequest updateLogFdcRequest) {
+    public Integer processFdcUpdate(UpdateLogFdcRequest updateLogFdcRequest) {
         try {
-            fdcClient.sendLogFdcProcessed(updateLogFdcRequest);
-            return "The request has been processed successfully";
+            return fdcClient.sendLogFdcProcessed(updateLogFdcRequest);
         } catch (MaatApiClientException | WebClientResponseException | HttpServerErrorException e) {
             log.info("Failed to processFdcUpdate", e);
-            return "The request has failed to process";
+            throw e;
         }
     }
 
@@ -65,22 +64,17 @@ public class FdcService implements FileService {
     @SuppressWarnings("squid:S2583") // ignore the can only be true warning. As this is placeholder.
     void sendFdcToDrc(List<Fdc> fdcList, List<Fdc> successfulFdcs, Map<String,String> failedFdcs) {
         fdcList.forEach(currentFdc -> {
-            Boolean updateSuccessful = drcClient.sendFdcUpdate(buildSendFdcFileDataToExternalRequest(currentFdc.getId().intValue()));
-            if (Boolean.TRUE.equals(updateSuccessful)) {
+            String fdcIdStr = currentFdc.getId().toString();
+            try {
+                drcClient.sendFdcDataToDrc(FdcDataForDrc.of(fdcIdStr, currentFdc));
+                log.info("Sent FDC data to DRC, fdcId = {}", fdcIdStr);
                 successfulFdcs.add(currentFdc);
-                log.info("Sent update to DRC for FDC contribution ID {}", currentFdc.getId());
-            } else {
+            } catch (Exception e) {
+                log.warn("Failed to send FDC data to DRC. fdcId = {}", fdcIdStr, e);
                 // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
-                failedFdcs.put(String.valueOf(currentFdc.getId()), "failure reason");
-                log.warn("Failed to send update to DRC for FDC contribution ID {} [{}]", currentFdc.getId(), "failure reason");
+                failedFdcs.put(fdcIdStr, e.getClass().getName() + ": " + e.getMessage());
             }
         });
-    }
-
-    private SendFdcFileDataToDrcRequest buildSendFdcFileDataToExternalRequest(Integer fdcId) {
-        return SendFdcFileDataToDrcRequest.builder()
-                .fdcId(fdcId)
-                .build();
     }
 
     private Integer updateFdcAndCreateFile(List<Fdc> successfulFdcs, Map<String, String> failedFdcs) {

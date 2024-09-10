@@ -14,8 +14,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
 import org.springframework.test.web.servlet.MockMvc;
+import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.external.FdcContribution;
-import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
 import uk.gov.justice.laa.crime.dces.integration.service.spy.FdcLoggingProcessSpy;
@@ -222,15 +222,15 @@ class FdcLoggingIntegrationTest {
      * Testing utility method.
      */
     private void acknowledgeFdc(final int fdcContributionId, final String errorText) throws Exception {
-        final var request = UpdateLogFdcRequest.builder().fdcId(fdcContributionId).errorText(errorText).build();
+        final var request = FdcAckFromDrc.of(fdcContributionId, errorText);
         String json = mapper.writeValueAsString(request);
-        mockMvc.perform(post("/api/internal/v1/dces-drc-integration/process-drc-update/fdc")
+        mockMvc.perform(post("/api/dces/v1/fdc")
                         .with(csrf())
                         .with(oauth2Login())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
-                .andExpect(content().string("The request has been processed successfully"));
+                .andExpect(content().string(""));
     }
 
     private void successfulFdc(final int fdcContributionId) {

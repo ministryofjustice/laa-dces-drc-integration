@@ -5,13 +5,15 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
+import org.springframework.http.HttpStatus;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.client.FdcClient;
+import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionEntry;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsResponse;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcGlobalUpdateResponse;
+import uk.gov.justice.laa.crime.dces.integration.model.FdcDataForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcUpdateRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.SendFdcFileDataToDrcRequest;
 
 import java.util.Set;
 import java.util.function.Predicate;
@@ -78,10 +80,14 @@ public class FdcProcessSpy {
 
     public FdcProcessSpyBuilder traceAndStubSendFdcUpdate(final Predicate<Integer> stubResults) {
       doAnswer(invocation -> {
-        final var fdcId = ((SendFdcFileDataToDrcRequest) invocation.getArgument(0)).getFdcId();
+        final var fdcIdStr = ((FdcDataForDrc) invocation.getArgument(0)).getMeta().get("fdcId");
+        final int fdcId = Integer.parseInt(fdcIdStr);
         sentId(fdcId);
-        return stubResults.test(fdcId);
-      }).when(drcClientSpy).sendFdcUpdate(any());
+        if (!stubResults.test(fdcId)) {
+          throw new MaatApiClientException(HttpStatus.BAD_REQUEST, "BAD_REQUEST");
+        }
+        return null;
+      }).when(drcClientSpy).sendFdcDataToDrc(any());
       return this;
     }
 

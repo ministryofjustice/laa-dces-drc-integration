@@ -5,11 +5,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
+import org.springframework.http.HttpStatus;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
+import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
+import uk.gov.justice.laa.crime.dces.integration.model.ContributionDataForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.SendContributionFileDataToDrcRequest;
 
 import java.util.List;
 import java.util.Set;
@@ -79,10 +81,14 @@ public class ContributionProcessSpy {
 
         public ContributionProcessSpyBuilder traceAndStubSendContributionUpdate(final Predicate<Integer> stubResults) {
             doAnswer(invocation -> {
-                var contributionId = ((SendContributionFileDataToDrcRequest) invocation.getArgument(0)).getContributionId();
+                final var contributionIdStr = ((ContributionDataForDrc) invocation.getArgument(0)).getMeta().get("contributionId");
+                final int contributionId = Integer.parseInt(contributionIdStr);
                 sentId(contributionId);
-                return stubResults.test(contributionId);
-            }).when(drcClientSpy).sendContributionUpdate(any());
+                if (!stubResults.test(contributionId)) {
+                    throw new MaatApiClientException(HttpStatus.BAD_REQUEST, "BAD_REQUEST");
+                }
+                return null;
+            }).when(drcClientSpy).sendContributionDataToDrc(any());
             return this;
         }
 

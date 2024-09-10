@@ -12,8 +12,8 @@ import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
+import uk.gov.justice.laa.crime.dces.integration.model.ContributionDataForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.SendContributionFileDataToDrcRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
@@ -33,13 +33,12 @@ public class ContributionService implements FileService {
     private final ContributionClient contributionClient;
     private final DrcClient drcClient;
 
-    public String processContributionUpdate(UpdateLogContributionRequest updateLogContributionRequest) {
+    public Integer processContributionUpdate(UpdateLogContributionRequest updateLogContributionRequest) {
         try {
-            contributionClient.sendLogContributionProcessed(updateLogContributionRequest);
-            return "The request has been processed successfully";
+            return contributionClient.sendLogContributionProcessed(updateLogContributionRequest);
         } catch (MaatApiClientException | WebClientResponseException | HttpServerErrorException e) {
             log.info("Failed to processContributionUpdate", e);
-            return "The request has failed to process";
+            throw e;
         }
     }
 
@@ -60,34 +59,27 @@ public class ContributionService implements FileService {
     public void sendContributionsToDrc(List<ConcurContribEntry> contributionsList, Map<String, CONTRIBUTIONS> successfulContributions, Map<String,String> failedContributions){
         // for each contribution sent by MAAT API
         for (ConcurContribEntry contribEntry : contributionsList) {
+            final String contributionIdStr = String.valueOf(contribEntry.getConcorContributionId());
             // convert string into objects
             CONTRIBUTIONS currentContribution;
             try {
                 currentContribution = contributionsMapperUtils.mapLineXMLToObject(contribEntry.getXmlContent());
             } catch (JAXBException e) {
-                log.error("Invalid line XML encountered [" + e.getClass() + " (" + e.getMessage() + ")]");
-                failedContributions.put(String.valueOf(contribEntry.getConcorContributionId()), "Invalid format.");
+                log.error("Failed to unmarshal contribution data XML, contributionId = {}", contributionIdStr, e);
+                failedContributions.put(contributionIdStr, e.getClass().getName() + ": " + e.getMessage());
                 continue;
             }
 
-            String contributionId = String.valueOf(contribEntry.getConcorContributionId());
-            Boolean updateSuccessful = drcClient.sendContributionUpdate(createDrcDataRequest(contribEntry));
-
-            if (Boolean.TRUE.equals(updateSuccessful)) {
-                successfulContributions.put(contributionId, currentContribution);
-                log.info("Sent update to DRC for Concor contribution ID {}", contributionId);
-            } else {
+            try {
+                drcClient.sendContributionDataToDrc(ContributionDataForDrc.of(contributionIdStr, currentContribution));
+                log.info("Sent contribution data to DRC, contributionId = {}", contributionIdStr);
+                successfulContributions.put(contributionIdStr, currentContribution);
+            } catch (Exception e) {
+                log.warn("Failed to send contribution data to DRC, contributionId = {}", contributionIdStr, e);
                 // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
-                failedContributions.put(contributionId, "failure reason");
-                log.warn("Failed to send update to DRC for Concor contribution ID {} [{}]", contributionId, "failure reason");
+                failedContributions.put(contributionIdStr, e.getClass().getName() + ": " + e.getMessage());
             }
         }
-    }
-
-    private SendContributionFileDataToDrcRequest createDrcDataRequest(ConcurContribEntry contribEntry) {
-        return SendContributionFileDataToDrcRequest.builder().
-                contributionId(contribEntry.getConcorContributionId())
-                .build();
     }
 
     private Integer updateContributionsAndCreateFile(Map<String, CONTRIBUTIONS> successfulContributions, Map<String, String> failedContributions) {

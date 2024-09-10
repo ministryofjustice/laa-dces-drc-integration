@@ -16,18 +16,27 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.web.client.HttpServerErrorException;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
+import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.junit.Assert.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.ok;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.serverError;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static org.assertj.core.api.AssertionsForClassTypes.catchThrowableOfType;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ExtendWith(SoftAssertionsExtension.class)
@@ -68,7 +77,7 @@ class FdcServiceTest {
 		when(fdcMapperUtils.generateFileXML(any())).thenReturn("<xml>ValidXML</xml>");
 		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
 		when(fdcMapperUtils.generateAckXML(any(),any(),any(),any())).thenReturn("<xml>ValidAckXML</xml>");
-		when(drcClient.sendFdcUpdate(any())).thenReturn(true);
+		doNothing().when(drcClient).sendFdcDataToDrc(any());
 		// run
 		boolean successful = fdcService.processDailyFiles();
 		// test
@@ -89,7 +98,7 @@ class FdcServiceTest {
 		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
 		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
 		when(fdcMapperUtils.generateAckXML(any(),any(),any(),any())).thenReturn("<xml>ValidAckXML</xml>");
-		when(drcClient.sendFdcUpdate(any())).thenReturn(true);
+		doNothing().when(drcClient).sendFdcDataToDrc(any());
 		customStubs.add(stubFor(post(PREPARE_URL).atPriority(1)
 				.willReturn(serverError())));
 		// run
@@ -114,7 +123,7 @@ class FdcServiceTest {
 		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
 		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
 		when(fdcMapperUtils.generateAckXML(any(),any(),any(),any())).thenReturn("<xml>ValidAckXML</xml>");
-		when(drcClient.sendFdcUpdate(any())).thenReturn(true);
+		doNothing().when(drcClient).sendFdcDataToDrc(any());
 		customStubs.add(stubFor(post(PREPARE_URL).atPriority(1)
 				.willReturn(serverError())));
 		// run
@@ -138,9 +147,8 @@ class FdcServiceTest {
 		customStubs.add(stubFor(get(GET_URL).atPriority(1)
 				.willReturn(serverError())));
 		// do
-		assertThrows(HttpServerErrorException.class, () -> {
-			fdcService.processDailyFiles();
-		});
+		softly.assertThatThrownBy(() -> fdcService.processDailyFiles())
+				.isInstanceOf(HttpServerErrorException.class);
 		// test
 		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
 		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
@@ -177,12 +185,11 @@ class FdcServiceTest {
 		when(fdcMapperUtils.generateFileXML(any())).thenReturn("<xml>ValidXML</xml>");
 		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
 		when(fdcMapperUtils.generateAckXML(any(),any(),any(),any())).thenReturn("<xml>ValidAckXML</xml>");
-		when(drcClient.sendFdcUpdate(any())).thenReturn(true);
+		doNothing().when(drcClient).sendFdcDataToDrc(any());
 
 		// do
-		assertThrows(HttpServerErrorException.class, () -> {
-			fdcService.processDailyFiles();
-		});
+		softly.assertThatThrownBy(() -> fdcService.processDailyFiles())
+				.isInstanceOf(HttpServerErrorException.class);
 		// test
 		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
 		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
@@ -190,23 +197,23 @@ class FdcServiceTest {
 	}
 
 	@Test
-	void testProcessFdcUpdateWhenReturnedTrue() {
+	void testProcessFdcUpdateWhenSuccessful() {
 		UpdateLogFdcRequest dataRequest = UpdateLogFdcRequest.builder()
 				.fdcId(911)
 				.build();
-		String response = fdcService.processFdcUpdate(dataRequest);
-		assertEquals("The request has been processed successfully", response);
+		Integer response = fdcService.processFdcUpdate(dataRequest);
+		softly.assertThat(response).isEqualTo(1111);
 	}
 
 	@Test
-	void testProcessFdcUpdateWhenReturnedFalse() {
+	void testProcessFdcUpdateWhenFailed() {
 		String errorText = "The request has failed to process";
 		UpdateLogFdcRequest dataRequest = UpdateLogFdcRequest.builder()
 				.fdcId(9)
 				.errorText(errorText)
 				.build();
-		String response = fdcService.processFdcUpdate(dataRequest);
-		assertEquals("The request has failed to process", response);
+		var exception = catchThrowableOfType(() -> fdcService.processFdcUpdate(dataRequest), MaatApiClientException.class);
+		softly.assertThat(exception).isNotNull();
+		softly.assertThat(exception.getStatusCode().is4xxClientError()).isTrue();
 	}
-
 }
