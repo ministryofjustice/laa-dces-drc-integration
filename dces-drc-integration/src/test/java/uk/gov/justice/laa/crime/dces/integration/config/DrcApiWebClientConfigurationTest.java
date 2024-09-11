@@ -10,6 +10,8 @@ import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.config.ServicesConfiguration;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 
@@ -18,6 +20,9 @@ class DrcApiWebClientConfigurationTest {
 
     @Mock
     private ServicesConfiguration servicesConfiguration;
+
+    @Mock
+    private WebClient.Builder webClientBuilder;
 
     @Mock
     private WebClient webClient;
@@ -32,11 +37,15 @@ class DrcApiWebClientConfigurationTest {
     void setUp() {
         when(servicesConfiguration.getDrcClientApi()).thenReturn(drcClientApi);
         when(servicesConfiguration.getDrcClientApi().getBaseUrl()).thenReturn("http://localhost:8080");
+        when(webClientBuilder.baseUrl(anyString())).thenReturn(webClientBuilder);
+        when(webClientBuilder.filter(any())).thenReturn(webClientBuilder);
+        when(webClientBuilder.clientConnector(any())).thenReturn(webClientBuilder);
+        when(webClientBuilder.build()).thenReturn(webClient);
     }
 
     @Test
     void shouldReturnWebClientWhenDrcApiWebClientIsCalled() {
-        WebClient result = drcApiWebClientConfiguration.drcApiWebClient(servicesConfiguration);
+        WebClient result = drcApiWebClientConfiguration.drcApiWebClient(webClientBuilder, servicesConfiguration);
         assertNotNull(result);
     }
 

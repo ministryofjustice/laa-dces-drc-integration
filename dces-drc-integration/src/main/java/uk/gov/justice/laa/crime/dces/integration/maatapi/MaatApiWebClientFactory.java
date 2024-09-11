@@ -46,6 +46,7 @@ public class MaatApiWebClientFactory {
 
     @Bean
     public WebClient maatApiWebClient(
+            WebClient.Builder webClientBuilder,
             ServicesConfiguration servicesConfiguration,
             OAuth2AuthorizedClientManager authorizedClientManager
     ) {
@@ -58,7 +59,7 @@ public class MaatApiWebClientFactory {
                 .evictInBackground(Duration.ofSeconds(120))
                 .build();
 
-        WebClient.Builder clientBuilder = WebClient.builder()
+        webClientBuilder // customize Spring Boot's auto-configured WebClient.Builder bean.
             .baseUrl(servicesConfiguration.getMaatApi().getBaseUrl())
             .filter(addLaaTransactionIdToRequest())
             .filter(logClientResponse())
@@ -82,7 +83,7 @@ public class MaatApiWebClientFactory {
                     servicesConfiguration.getMaatApi().getRegistrationId()
             );
 
-            clientBuilder.filter(oauth2Client);
+            webClientBuilder.filter(oauth2Client);
         }
 
         final ExchangeStrategies strategies = ExchangeStrategies.builder()
@@ -90,9 +91,9 @@ public class MaatApiWebClientFactory {
                 convertMaxBufferSize(servicesConfiguration.getMaatApi().getMaxBufferSize())
                 ))
             .build();
-        clientBuilder.exchangeStrategies(strategies);
+        webClientBuilder.exchangeStrategies(strategies);
 
-        return clientBuilder.build();
+        return webClientBuilder.build();
     }
 
     @Bean
