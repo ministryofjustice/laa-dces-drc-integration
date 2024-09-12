@@ -37,6 +37,7 @@ class DrcApiWebClientConfigurationTest {
     void setUp() {
         when(servicesConfiguration.getDrcClientApi()).thenReturn(drcClientApi);
         when(servicesConfiguration.getDrcClientApi().getBaseUrl()).thenReturn("http://localhost:8080");
+        when(webClientBuilder.clone()).thenReturn(webClientBuilder);
         when(webClientBuilder.baseUrl(anyString())).thenReturn(webClientBuilder);
         when(webClientBuilder.filter(any())).thenReturn(webClientBuilder);
         when(webClientBuilder.clientConnector(any())).thenReturn(webClientBuilder);
