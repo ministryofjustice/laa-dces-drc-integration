@@ -46,7 +46,7 @@ public class DrcApiWebClientConfiguration {
                 .evictInBackground(Duration.ofSeconds(120))
                 .build();
 
-        return webClientBuilder // customize Spring Boot's auto-configured WebClient.Builder bean.
+        return webClientBuilder.clone() // clone Boot's auto-config WebClient.Builder, then add our customizations before build().
                 .baseUrl(servicesConfiguration.getDrcClientApi().getBaseUrl())
                 .clientConnector(
                         new ReactorClientHttpConnector(
@@ -55,7 +55,6 @@ public class DrcApiWebClientConfiguration {
                                         .compress(true)
                                         .responseTimeout(Duration.ofSeconds(30))))
                 .build();
-
     }
 
     @Bean
