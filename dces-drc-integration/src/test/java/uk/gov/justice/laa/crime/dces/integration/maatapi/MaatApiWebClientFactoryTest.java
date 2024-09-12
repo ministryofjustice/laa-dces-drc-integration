@@ -31,8 +31,12 @@ class MaatApiWebClientFactoryTest {
 
     MaatApiWebClientFactory maatApiWebClientFactory;
     private static MockWebServer mockWebServer;
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
+    @Autowired
+    private ObjectMapper mapper;
+
+    @Autowired
+    private WebClient.Builder webClientBuilder;
 
     @Autowired
     private MeterRegistry meterRegistry;
@@ -66,9 +70,7 @@ class MaatApiWebClientFactoryTest {
         expectedResponse.setXmlContent("xmlContent");
         setupValidResponse(expectedResponse);
 
-        WebClient actualWebClient = maatApiWebClientFactory.maatApiWebClient(configuration,
-                authorizedClientManager
-        );
+        WebClient actualWebClient = maatApiWebClientFactory.maatApiWebClient(webClientBuilder, configuration, authorizedClientManager);
 
         assertThat(actualWebClient).isNotNull();
         assertThat(actualWebClient).isInstanceOf(WebClient.class);
@@ -80,7 +82,7 @@ class MaatApiWebClientFactoryTest {
     }
 
     private <T> void setupValidResponse(T returnBody) throws JsonProcessingException {
-        String responseBody = OBJECT_MAPPER.writeValueAsString(returnBody);
+        String responseBody = mapper.writeValueAsString(returnBody);
         mockWebServer.enqueue(new MockResponse()
                 .setResponseCode(HttpStatus.OK.value())
                 .setBody(responseBody)

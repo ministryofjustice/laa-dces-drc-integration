@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -25,7 +24,10 @@ import uk.gov.justice.laa.crime.dces.integration.model.FdcDataForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile;
 
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -36,9 +38,15 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DrcApiClientTest {
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static MockWebServer mockWebServer;
     DrcApiWebClientConfiguration drcApiWebClientConfiguration;
+
+    @Autowired
+    private WebClient.Builder webClientBuilder;
+
+    @Autowired
+    private ObjectMapper mapper;
+
     @Qualifier("servicesConfiguration")
     @Autowired
     private ServicesConfiguration configuration;
@@ -59,22 +67,22 @@ class DrcApiClientTest {
     @Test
     void test_whenWebClientIsRequested_thenDrcWebClientIsReturned() {
 
-        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(configuration);
+        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(webClientBuilder, configuration);
 
         assertThat(actualWebClient).isNotNull();
         assertThat(actualWebClient).isInstanceOf(WebClient.class);
     }
 
     @Test
-    void test_whenWebClientIsInvoked_thenSuccessfulResponse() throws InterruptedException {
+    void test_whenWebClientIsInvoked_thenSuccessfulResponse() throws InterruptedException, DatatypeConfigurationException {
 
         ContributionDataForDrc contributionDataForDrc = ContributionDataForDrc.of("99", fakeCONTRIBUTIONS());
         setupSuccessfulResponse();
-        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(configuration);
+        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(webClientBuilder, configuration);
 
         ResponseEntity<Void> response = callDrcClient(actualWebClient, contributionDataForDrc);
-        RecordedRequest recordedRequest = mockWebServer.takeRequest();
-        assertThat(recordedRequest.getBody().readUtf8()).matches("\\{\"data\":\\{.+},\"meta\":\\{\"contributionId\":\"99\"}}");
+        String body = mockWebServer.takeRequest().getBody().readUtf8();
+        assertThat(body).matches("\\{\"data\":\\{.+},\"meta\":\\{\"contributionId\":\"99\"}}");
         assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
     }
 
@@ -83,27 +91,27 @@ class DrcApiClientTest {
 
         ContributionDataForDrc contributionDataForDrc = ContributionDataForDrc.of(null, null);
         setupProblemDetailResponse(fakeProblemDetail());
-        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(configuration);
+        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(webClientBuilder, configuration);
         try {
             callDrcClient(actualWebClient, contributionDataForDrc);
             failBecauseExceptionWasNotThrown(WebClientResponseException.class);
         } catch (WebClientResponseException e) {
-            RecordedRequest recordedRequest = mockWebServer.takeRequest();
-            assertThat(recordedRequest.getBody().readUtf8()).matches("\\{\"data\":null,\"meta\":\\{}}");
+            String body = mockWebServer.takeRequest().getBody().readUtf8();
+            assertThat(body).matches("\\{\"data\":null,\"meta\":\\{}}");
             assertThat(e.getStatusCode().is4xxClientError() || e.getStatusCode().is5xxServerError()).isTrue();
         }
     }
 
     @Test
-    void test_whenFdcWebClientIsInvoked_thenSuccessfulResponse() throws InterruptedException {
+    void test_whenFdcWebClientIsInvoked_thenSuccessfulResponse() throws InterruptedException, DatatypeConfigurationException {
 
         FdcDataForDrc request = FdcDataForDrc.of("99", fakeFdc());
         setupSuccessfulResponse();
-        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(configuration);
+        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(webClientBuilder, configuration);
 
         ResponseEntity<Void> response = callDrcClient(actualWebClient, request);
-        RecordedRequest recordedRequest = mockWebServer.takeRequest();
-        assertThat(recordedRequest.getBody().readUtf8()).matches("\\{\"data\":\\{.+},\"meta\":\\{\"fdcId\":\"99\"}}");
+        String body = mockWebServer.takeRequest().getBody().readUtf8();
+        assertThat(body).matches("\\{\"data\":\\{.+},\"meta\":\\{\"fdcId\":\"99\"}}");
 
         assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
     }
@@ -113,14 +121,14 @@ class DrcApiClientTest {
 
         FdcDataForDrc request = FdcDataForDrc.of(null, null);
         setupProblemDetailResponse(fakeProblemDetail());
-        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(configuration);
+        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(webClientBuilder, configuration);
 
         try {
             callDrcClient(actualWebClient, request);
             failBecauseExceptionWasNotThrown(WebClientResponseException.class);
         } catch (WebClientResponseException e) {
-            RecordedRequest recordedRequest = mockWebServer.takeRequest();
-            assertThat(recordedRequest.getBody().readUtf8()).matches("\\{\"data\":null,\"meta\":\\{}}");
+            String body = mockWebServer.takeRequest().getBody().readUtf8();
+            assertThat(body).matches("\\{\"data\":null,\"meta\":\\{}}");
             assertThat(e.getStatusCode().is4xxClientError() || e.getStatusCode().is5xxServerError()).isTrue();
         }
     }
@@ -136,15 +144,39 @@ class DrcApiClientTest {
                 .block();
     }
 
-    private CONTRIBUTIONS fakeCONTRIBUTIONS() {
-        CONTRIBUTIONS contributions = new CONTRIBUTIONS();
-        contributions.setId(BigInteger.valueOf(99));
-        return contributions;
+    private CONTRIBUTIONS fakeCONTRIBUTIONS() throws DatatypeConfigurationException {
+        var factory = new uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.ObjectFactory();
+        var contribution = factory.createCONTRIBUTIONS();
+        contribution.setId(BigInteger.valueOf(3333));
+        contribution.setMaatId(3338);
+        contribution.setFlag("NEW");
+        var applicant = factory.createCONTRIBUTIONSApplicant();
+        applicant.setFirstName("John");
+        applicant.setLastName("Smith");
+        var cal = DatatypeFactory.newInstance().newXMLGregorianCalendar("1970-12-31");
+        applicant.setDob(cal);
+        applicant.setNiNumber("QQ999999Q");
+        contribution.setApplicant(applicant);
+        var assessment = factory.createCONTRIBUTIONSAssessment();
+        assessment.setAssessmentDate(cal);
+        assessment.setEffectiveDate(cal);
+        assessment.setUpliftAppliedDate(cal);
+        assessment.setUpliftRemovedDate(cal);
+        contribution.setAssessment(assessment);
+        return contribution;
     }
 
-    private FdcFile.FdcList.Fdc fakeFdc() {
-        FdcFile.FdcList.Fdc fdc = new FdcFile.FdcList.Fdc();
+    private FdcFile.FdcList.Fdc fakeFdc() throws DatatypeConfigurationException {
+        var factory = new uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.ObjectFactory();
+        var fdc = factory.createFdcFileFdcListFdc();
         fdc.setId(BigInteger.valueOf(12));
+        fdc.setMaatId(BigInteger.valueOf(16));
+        fdc.setAgfsTotal(BigDecimal.valueOf(1000.00));
+        fdc.setLgfsTotal(BigDecimal.valueOf(2000.00));
+        fdc.setFinalCost(BigDecimal.valueOf(3000.00));
+        var cal = DatatypeFactory.newInstance().newXMLGregorianCalendar("2024-09-25");
+        fdc.setSentenceDate(cal);
+        fdc.setCalculationDate(cal);
         return fdc;
     }
 
@@ -160,7 +192,7 @@ class DrcApiClientTest {
     }
 
     private void setupProblemDetailResponse(final ProblemDetail problemDetail) throws JsonProcessingException {
-        final String responseBody = OBJECT_MAPPER.writeValueAsString(problemDetail);
+        final String responseBody = mapper.writeValueAsString(problemDetail);
         mockWebServer.enqueue(new MockResponse()
                 .setResponseCode(problemDetail.getStatus())
                 .setBody(responseBody)

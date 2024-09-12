@@ -32,6 +32,9 @@ class AckFromDrcControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private ObjectMapper mapper;
+
     @MockBean
     private TraceService traceService;
 
@@ -56,8 +59,7 @@ class AckFromDrcControllerTest {
         when(contributionService.processContributionUpdate(updateLogContributionRequest)).thenReturn(serviceResponse);
 
         ContributionAckFromDrc contributionAckFromDrc = ContributionAckFromDrc.of(99, "error 99");
-        final ObjectMapper objectMapper = new ObjectMapper();
-        final String requestBody = objectMapper.writeValueAsString(contributionAckFromDrc);
+        final String requestBody = mapper.writeValueAsString(contributionAckFromDrc);
 
         mockMvc.perform(MockMvcRequestBuilders.post(String.format(CONTRIBUTION_URL))
                         .content(requestBody)
@@ -77,8 +79,7 @@ class AckFromDrcControllerTest {
         when(contributionService.processContributionUpdate(updateLogContributionRequest)).thenThrow(serviceResponse);
 
         ContributionAckFromDrc contributionAckFromDrc = ContributionAckFromDrc.of(9, "Failed to process");
-        final ObjectMapper objectMapper = new ObjectMapper();
-        final String requestBody = objectMapper.writeValueAsString(contributionAckFromDrc);
+        final String requestBody = mapper.writeValueAsString(contributionAckFromDrc);
 
         mockMvc.perform(MockMvcRequestBuilders.post(String.format(CONTRIBUTION_URL))
                         .content(requestBody)
@@ -98,8 +99,7 @@ class AckFromDrcControllerTest {
 
         FdcAckFromDrc fdcAckFromDrc = FdcAckFromDrc.of(99, null);
 
-        final ObjectMapper objectMapper = new ObjectMapper();
-        final String requestBody = objectMapper.writeValueAsString(fdcAckFromDrc);
+        final String requestBody = mapper.writeValueAsString(fdcAckFromDrc);
 
         mockMvc.perform(MockMvcRequestBuilders.post(String.format(CONTRIBUTION_FDC_URL))
                         .content(requestBody)
@@ -119,8 +119,7 @@ class AckFromDrcControllerTest {
         when(fdcService.processFdcUpdate(updateLogFdcRequest)).thenThrow(serviceResponse);
 
         FdcAckFromDrc fdcAckFromDrc = FdcAckFromDrc.of(9, "Failed to process");
-        final ObjectMapper objectMapper = new ObjectMapper();
-        final String requestBody = objectMapper.writeValueAsString(fdcAckFromDrc);
+        final String requestBody = mapper.writeValueAsString(fdcAckFromDrc);
 
         mockMvc.perform(MockMvcRequestBuilders.post(String.format(CONTRIBUTION_FDC_URL))
                         .content(requestBody)
