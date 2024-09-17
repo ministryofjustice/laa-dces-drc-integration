@@ -1,17 +1,28 @@
 package uk.gov.justice.laa.crime.dces.integration.handler;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
+import org.springframework.context.MessageSourceResolvable;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.ErrorResponse;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import uk.gov.justice.laa.crime.dces.integration.model.exception.ErrorResponse;
-import uk.gov.justice.laa.crime.dces.integration.model.exception.ErrorSubMessage;
+import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.exception.DcesDrcValidationException;
 import uk.gov.justice.laa.crime.dces.integration.service.TraceService;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
@@ -20,46 +31,68 @@ import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 @RestControllerAdvice
 @RequiredArgsConstructor
 public class GlobalExceptionHandler {
-
-    public static final String VALIDATION_ERROR = "VALIDATION_ERROR";
-
     private final TraceService traceService;
 
-
     @ExceptionHandler(DcesDrcValidationException.class)
-    public ResponseEntity<?> handleValidationException(final DcesDrcValidationException ex) {
-        log.error("DcesDrcValidationException occurred.", ex);
-        final ErrorResponse errorResponse = initiateBasicErrorBuilder(BAD_REQUEST, ex.getMessage())
-                .subMessages(getSubMessages(ex))
-                .build();
-        return new ResponseEntity<>(errorResponse, BAD_REQUEST);
+    @ResponseStatus(BAD_REQUEST)
+    public ProblemDetail handleValidationException(final DcesDrcValidationException ex) {
+        log.info("DcesDrcValidationException occurred.", ex);
+        return addTraceId(validationProblemDetail(ex, ex.getValidationErrors()));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(BAD_REQUEST)
+    public ProblemDetail handleValidationException(final MethodArgumentNotValidException ex) {
+        log.info("MethodArgumentNotValidException occurred.", ex);
+        return addTraceId(validationProblemDetail(ex, ex.getFieldErrors().stream()
+                .collect(Collectors.groupingBy(FieldError::getField,
+                        Collectors.mapping(FieldError::getDefaultMessage, Collectors.toList())))));
+    }
+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    @ResponseStatus(BAD_REQUEST)
+    public ProblemDetail handleValidationException(final HandlerMethodValidationException ex) {
+        log.info("HandlerMethodValidationException occurred.", ex);
+        return addTraceId(validationProblemDetail(ex, ex.getAllValidationResults().stream()
+                .collect(Collectors.groupingBy(pvr -> pvr.getMethodParameter().getParameterName(),
+                        Collectors.flatMapping(pvr -> pvr.getResolvableErrors().stream()
+                                .map(MessageSourceResolvable::getDefaultMessage), Collectors.toList())))));
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(BAD_REQUEST)
+    public ProblemDetail handleValidationException(final ConstraintViolationException ex) {
+        log.info("ConstraintViolationException occurred.", ex);
+        return addTraceId(validationProblemDetail(ex, ex.getConstraintViolations().stream()
+                .collect(Collectors.groupingBy(cv -> cv.getPropertyPath().toString(),
+                        Collectors.mapping(ConstraintViolation::getMessage, Collectors.toList())))));
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleException(final Exception ex) {
-        log.error("Unexpected exception {} of instance {}", ex.getMessage(), ex.getClass(), ex);
-        final ErrorResponse errorResponse = initiateBasicErrorBuilder(INTERNAL_SERVER_ERROR, ex.getMessage()).build();
-        return new ResponseEntity<>(errorResponse, INTERNAL_SERVER_ERROR);
+    public ResponseEntity<ProblemDetail> handleGenericException(final Exception ex) {
+        log.warn("Unexpected {} occurred.", ex.getClass().getName(), ex);
+        ProblemDetail pd = null;
+        if (ex instanceof ErrorResponse resp) { // includes ResponseStatusException and MaatApiClientException.
+            pd = resp.getBody();
+        } else if (ex instanceof RestClientResponseException resp) { // includes HttpServerErrorException.
+            pd = ProblemDetail.forStatusAndDetail(resp.getStatusCode(), resp.getMessage());
+        } else if (ex instanceof WebClientResponseException resp) {
+            pd = ProblemDetail.forStatusAndDetail(resp.getStatusCode(), resp.getMessage());
+        }
+        if (pd == null) {
+            pd = ProblemDetail.forStatusAndDetail(INTERNAL_SERVER_ERROR, ex.getMessage());
+        }
+        return ResponseEntity.status(pd.getStatus()).body(addTraceId(pd));
     }
 
-    private ErrorResponse.ErrorResponseBuilder initiateBasicErrorBuilder(final HttpStatus status,
-                                                                         final String message) {
-        return ErrorResponse.builder()
-                .statusCode(status.value())
-                .message(message)
-                .traceId(traceService.getTraceId());
+    private ProblemDetail validationProblemDetail(final Exception ex, final Map<String, List<String>> validationErrors) {
+        final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(BAD_REQUEST, ex.getMessage());
+        problemDetail.setProperty("validationErrors", validationErrors);
+        return problemDetail;
     }
 
-    private static List<ErrorSubMessage> getSubMessages(final DcesDrcValidationException ex) {
-        return ex.getValidationErrors()
-                .entrySet().stream()
-                .map(entry -> entry.getValue().stream()
-                        .map(message -> ErrorSubMessage.builder()
-                                .errorCode(VALIDATION_ERROR)
-                                .field(entry.getKey())
-                                .message(message).build())
-                        .toList())
-                .flatMap(List::stream)
-                .toList();
+    private ProblemDetail addTraceId(ProblemDetail problemDetail) {
+        problemDetail.setProperty("traceId", traceService.getTraceId());
+        return problemDetail;
     }
 }

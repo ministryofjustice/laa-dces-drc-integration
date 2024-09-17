@@ -1,54 +1,39 @@
 package uk.gov.justice.laa.crime.dces.integration.controller;
 
 import io.micrometer.core.annotation.Timed;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.boot.web.error.ErrorAttributeOptions;
-import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController;
+import org.springframework.boot.autoconfigure.web.servlet.error.ErrorViewResolver;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
-import org.springframework.boot.web.servlet.error.ErrorController;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.context.request.WebRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.exception.ErrorResponse;
-import uk.gov.justice.laa.crime.dces.integration.service.TraceService;
 
+import java.util.List;
 import java.util.Map;
 
-
-@Slf4j
 @RestController
-@AllArgsConstructor
-public class DcesDrcErrorController implements ErrorController {
-
-    private final TraceService traceService;
-    public static final String MESSAGE_KEY = "message";
-    public static final String STATUS_KEY = "status";
-    public static final String ERROR_KEY = "error";
-    public static final String PATH_KEY = "path";
-
-    private final ErrorAttributes errorAttributes = new DefaultErrorAttributes();
-
-    @Timed(value = "laa_dces_drc_service_error_handler",
-            description = "Time taken to handle the error occurred while processing the web request.")
-    @RequestMapping("/error")
-    public ErrorResponse handleError(final WebRequest webRequest, final Exception exception) {
-        log.error("Error occurred while processing web request ", exception);
-        final Map<String, Object> errorAttributesMap = errorAttributes.getErrorAttributes(webRequest, ErrorAttributeOptions.defaults());
-        return createErrorResponse(errorAttributesMap);
+@RequestMapping("/error")
+public class DcesDrcErrorController extends BasicErrorController {
+    /**
+     * Injectable parameters differ slightly from BasicController, which is created as an auto-config bean.
+     * This ErrorController class only exists so that we can annotate its #error() method with @Timed annotation.
+     * Excepting that, we could just rely on Spring MVC's built-in auto-configured BasicErrorController class.
+     */
+    public DcesDrcErrorController(ErrorAttributes errorAttributes, ServerProperties serverProperties,
+                                List<ErrorViewResolver> errorViewResolvers) {
+        super(errorAttributes, serverProperties.getError(), errorViewResolvers);
     }
 
-    private ErrorResponse createErrorResponse(final Map<String, Object> errorAttributes) {
-        final int statusCode = (Integer) errorAttributes.get(STATUS_KEY);
-        final String errorMessage = errorAttributes.getOrDefault(MESSAGE_KEY, StringUtils.EMPTY).toString();
-        final String errorCode = errorAttributes.getOrDefault(ERROR_KEY, StringUtils.EMPTY).toString();
-        final String path = errorAttributes.getOrDefault(PATH_KEY, StringUtils.EMPTY).toString();
-
-        return ErrorResponse.builder()
-                .statusCode(statusCode)
-                .traceId(traceService.getTraceId())
-                .message(errorCode + " for path (" + path + "). " + errorMessage)
-                .build();
+    /**
+     * Override the built-in BasicErrorController#error() method so we can time it.
+     */
+    @Timed(value = "laa_dces_drc_service_error_handler",
+            description = "Time taken to handle the error occurred while processing the web request.")
+    @RequestMapping
+    @Override
+    public ResponseEntity<Map<String, Object>> error(HttpServletRequest request) {
+        return super.error(request);
     }
 }
