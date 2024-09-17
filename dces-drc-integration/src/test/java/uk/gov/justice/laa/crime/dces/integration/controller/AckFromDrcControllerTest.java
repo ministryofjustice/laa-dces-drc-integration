@@ -84,8 +84,8 @@ class AckFromDrcControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.post(String.format(CONTRIBUTION_URL))
                         .content(requestBody)
                         .contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.statusCode").value(500));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
     }
 
     @Test
@@ -124,7 +124,7 @@ class AckFromDrcControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.post(String.format(CONTRIBUTION_FDC_URL))
                         .content(requestBody)
                         .contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.statusCode").value(500));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
     }
 }

@@ -15,18 +15,16 @@ import static uk.gov.justice.laa.crime.dces.integration.utils.RestTestUtils.getH
 @SpringBootTest
 @AutoConfigureMockMvc
 @AutoConfigureObservability
-class CustomErrorControllerTest {
+class DcesDrcErrorControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @Test
     void verifyUsingErrorResponseWhenHittingBadRequestOnErrorController() throws Exception {
+        // traceid is added to the response by the GlobalExceptionHandler.
         mockMvc.perform(get("/error").headers(getHttpHeaders()))
-                .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.statusCode").value(999))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.traceId").isNotEmpty())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.correlationId").isEmpty())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("None for path (). "));
+                .andExpect(status().isInternalServerError())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.status").value(999));
     }
 }
