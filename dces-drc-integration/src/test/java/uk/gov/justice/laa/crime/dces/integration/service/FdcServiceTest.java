@@ -77,7 +77,7 @@ class FdcServiceTest {
 		when(fdcMapperUtils.generateFileXML(any())).thenReturn("<xml>ValidXML</xml>");
 		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
 		when(fdcMapperUtils.generateAckXML(any(),any(),any(),any())).thenReturn("<xml>ValidAckXML</xml>");
-		doNothing().when(drcClient).sendFdcDataToDrc(any());
+		doNothing().when(drcClient).sendFdcReqToDrc(any());
 		// run
 		boolean successful = fdcService.processDailyFiles();
 		// test
@@ -98,7 +98,7 @@ class FdcServiceTest {
 		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
 		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
 		when(fdcMapperUtils.generateAckXML(any(),any(),any(),any())).thenReturn("<xml>ValidAckXML</xml>");
-		doNothing().when(drcClient).sendFdcDataToDrc(any());
+		doNothing().when(drcClient).sendFdcReqToDrc(any());
 		customStubs.add(stubFor(post(PREPARE_URL).atPriority(1)
 				.willReturn(serverError())));
 		// run
@@ -123,7 +123,7 @@ class FdcServiceTest {
 		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
 		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
 		when(fdcMapperUtils.generateAckXML(any(),any(),any(),any())).thenReturn("<xml>ValidAckXML</xml>");
-		doNothing().when(drcClient).sendFdcDataToDrc(any());
+		doNothing().when(drcClient).sendFdcReqToDrc(any());
 		customStubs.add(stubFor(post(PREPARE_URL).atPriority(1)
 				.willReturn(serverError())));
 		// run
@@ -185,7 +185,7 @@ class FdcServiceTest {
 		when(fdcMapperUtils.generateFileXML(any())).thenReturn("<xml>ValidXML</xml>");
 		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
 		when(fdcMapperUtils.generateAckXML(any(),any(),any(),any())).thenReturn("<xml>ValidAckXML</xml>");
-		doNothing().when(drcClient).sendFdcDataToDrc(any());
+		doNothing().when(drcClient).sendFdcReqToDrc(any());
 
 		// do
 		softly.assertThatThrownBy(() -> fdcService.processDailyFiles())

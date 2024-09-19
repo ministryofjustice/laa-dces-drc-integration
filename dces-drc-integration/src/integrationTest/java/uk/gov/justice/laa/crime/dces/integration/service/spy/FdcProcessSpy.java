@@ -12,7 +12,7 @@ import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClient
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionEntry;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsResponse;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcGlobalUpdateResponse;
-import uk.gov.justice.laa.crime.dces.integration.model.FdcDataForDrc;
+import uk.gov.justice.laa.crime.dces.integration.model.FdcReqForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcUpdateRequest;
 
 import java.util.Set;
@@ -80,14 +80,13 @@ public class FdcProcessSpy {
 
     public FdcProcessSpyBuilder traceAndStubSendFdcUpdate(final Predicate<Integer> stubResults) {
       doAnswer(invocation -> {
-        final var fdcIdStr = ((FdcDataForDrc) invocation.getArgument(0)).getMeta().get("fdcId");
-        final int fdcId = Integer.parseInt(fdcIdStr);
+        final int fdcId = ((FdcReqForDrc) invocation.getArgument(0)).getData().getFdcId();
         sentId(fdcId);
         if (!stubResults.test(fdcId)) {
           throw new MaatApiClientException(HttpStatus.BAD_REQUEST, "BAD_REQUEST");
         }
         return null;
-      }).when(drcClientSpy).sendFdcDataToDrc(any());
+      }).when(drcClientSpy).sendFdcReqToDrc(any());
       return this;
     }
 
