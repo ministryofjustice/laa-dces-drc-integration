@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import uk.gov.justice.laa.crime.dces.integration.model.ContributionAckFromDrc;
+import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.exception.ErrorResponse;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
@@ -52,16 +52,16 @@ public class AckFromDrcController {
     public void fdc(@NotNull @RequestBody final FdcAckFromDrc fdcAckFromDrc) {
         log.info("Received FDC acknowledgement from DRC {}", fdcAckFromDrc);
         UpdateLogFdcRequest updateLogFdcRequest = UpdateLogFdcRequest.builder()
-                .fdcId(fdcAckFromDrc.data().id())
+                .fdcId(fdcAckFromDrc.data().fdcId())
                 .errorText(fdcAckFromDrc.data().errorText())
                 .build();
         fdcService.processFdcUpdate(updateLogFdcRequest);
     }
 
     @Timed(value = "laa_dces_drc_service_process_drc_update_contributions",
-            description = "Time taken to process the updates for Contribution from DRC and passing this for downstream processing.")
+            description = "Time taken to process the updates for concorContribution from DRC and passing this for downstream processing.")
     @PostMapping(value = "/contribution")
-    @Operation(description = "Processing the updates for Contribution from DRC and passing this for downstream processing.")
+    @Operation(description = "Processing the updates for concorContribution from DRC and passing this for downstream processing.")
     @ApiResponse(responseCode = "200",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = String.class)))
@@ -73,11 +73,11 @@ public class AckFromDrcController {
             description = "Server Error.",
             content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
                     schema = @Schema(implementation = ErrorResponse.class)))
-    public void contribution(@NotNull @RequestBody final ContributionAckFromDrc contributionAckFromDrc) {
-        log.info("Received contribution acknowledgement from DRC {}", contributionAckFromDrc);
+    public void concorContribution(@NotNull @RequestBody final ConcorContributionAckFromDrc concorContributionAckFromDrc) {
+        log.info("Received concorContribution acknowledgement from DRC {}", concorContributionAckFromDrc);
         UpdateLogContributionRequest updateLogContributionRequest = UpdateLogContributionRequest.builder()
-                .concorId(contributionAckFromDrc.data().id())
-                .errorText(contributionAckFromDrc.data().errorText())
+                .concorId(concorContributionAckFromDrc.data().concorContributionId())
+                .errorText(concorContributionAckFromDrc.data().errorText())
                 .build();
         contributionService.processContributionUpdate(updateLogContributionRequest);
     }

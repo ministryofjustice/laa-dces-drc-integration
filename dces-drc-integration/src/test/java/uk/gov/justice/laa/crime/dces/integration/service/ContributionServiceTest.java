@@ -77,7 +77,7 @@ class ContributionServiceTest {
 		when(contributionsMapperUtilsMock.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtilsMock.generateFileName(any())).thenReturn("TestFilename.xml");
 		when(contributionsMapperUtilsMock.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
-		doNothing().when(drcClient).sendContributionDataToDrc(any());
+		doNothing().when(drcClient).sendConcorContributionReqToDrc(any());
 
 		boolean result = contributionService.processDailyFiles();
 		verify(contributionsMapperUtilsMock,times(2)).mapLineXMLToObject(any());
@@ -90,7 +90,7 @@ class ContributionServiceTest {
 		when(contributionsMapperUtilsMock.generateFileXML(any(), any())).thenReturn("InvalidXML");
 		when(contributionsMapperUtilsMock.generateAckXML(any(),any(),any(),any())).thenReturn("AckXML");
 		when(contributionsMapperUtilsMock.generateFileName(any())).thenReturn("FileName");
-		doNothing().when(drcClient).sendContributionDataToDrc(any());
+		doNothing().when(drcClient).sendConcorContributionReqToDrc(any());
 
 		softly.assertThatThrownBy(() -> contributionService.processDailyFiles())
 				.isInstanceOf(HttpServerErrorException.class)
@@ -120,7 +120,7 @@ class ContributionServiceTest {
 		when(contributionsMapperUtilsMock.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtilsMock.generateFileName(any())).thenReturn("TestFilename.xml");
 		when(contributionsMapperUtilsMock.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
-		doNothing().when(drcClient).sendContributionDataToDrc(any());
+		doNothing().when(drcClient).sendConcorContributionReqToDrc(any());
 		// do
 		softly.assertThatThrownBy(() -> contributionService.processDailyFiles())
 				.isInstanceOf(HttpServerErrorException.class);

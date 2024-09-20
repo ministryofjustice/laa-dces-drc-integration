@@ -11,7 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
-import uk.gov.justice.laa.crime.dces.integration.model.ContributionAckFromDrc;
+import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
@@ -58,8 +58,8 @@ class AckFromDrcControllerTest {
         Integer serviceResponse = 1111;
         when(contributionService.processContributionUpdate(updateLogContributionRequest)).thenReturn(serviceResponse);
 
-        ContributionAckFromDrc contributionAckFromDrc = ContributionAckFromDrc.of(99, "error 99");
-        final String requestBody = mapper.writeValueAsString(contributionAckFromDrc);
+        ConcorContributionAckFromDrc concorContributionAckFromDrc = ConcorContributionAckFromDrc.of(99, "error 99");
+        final String requestBody = mapper.writeValueAsString(concorContributionAckFromDrc);
 
         mockMvc.perform(MockMvcRequestBuilders.post(String.format(CONTRIBUTION_URL))
                         .content(requestBody)
@@ -78,8 +78,8 @@ class AckFromDrcControllerTest {
         var serviceResponse = new MaatApiClientException(HttpStatus.BAD_REQUEST, "BAD_REQUEST");
         when(contributionService.processContributionUpdate(updateLogContributionRequest)).thenThrow(serviceResponse);
 
-        ContributionAckFromDrc contributionAckFromDrc = ContributionAckFromDrc.of(9, "Failed to process");
-        final String requestBody = mapper.writeValueAsString(contributionAckFromDrc);
+        ConcorContributionAckFromDrc concorContributionAckFromDrc = ConcorContributionAckFromDrc.of(9, "Failed to process");
+        final String requestBody = mapper.writeValueAsString(concorContributionAckFromDrc);
 
         mockMvc.perform(MockMvcRequestBuilders.post(String.format(CONTRIBUTION_URL))
                         .content(requestBody)
