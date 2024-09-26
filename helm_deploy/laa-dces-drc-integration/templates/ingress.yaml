@@ -40,6 +40,14 @@ spec:
                 name: {{ $fullName }}
                 port:
                   number: {{ $svcPort }}
+            nginx.ingress.kubernetes.io/auth-tls-secret: "laa-dces-drc-integration-uat/ca-secret"
+            nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
+            nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
+            nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: "true"
+{{/*            {{- range .Values.ingress.mTlsAnnotations }}*/}}
+{{/*              {{ . | quote }}*/}}
+{{/*            {{- end }}*/}}
+
     - host: {{ .Values.ingress.hosts.mon.host | quote }}
       http:
         paths:
