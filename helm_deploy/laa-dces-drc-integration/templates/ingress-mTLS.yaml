@@ -10,7 +10,7 @@ apiVersion: extensions/v1beta1
 {{- end }}
 kind: Ingress
 metadata:
-  name: {{ $fullName }}_mTLS
+  name: {{ $fullName }}-mtls
   labels:
     {{- include "laa-dces-drc-integration.labels" . | nindent 4 }}
   {{- with .Values.ingress.annotations }}
