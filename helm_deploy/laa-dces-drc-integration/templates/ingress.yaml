@@ -30,18 +30,19 @@ spec:
     {{- end }}
   {{- end }}
   rules:
-    {{- range .Values.ingress.hosts }}
-    - host: {{ .host | quote }}
+    - host: {{ .Values.ingress.hosts.api.host | quote }}
       http:
         paths:
-          {{- range .paths }}
-          - path: {{ . }}
+          - path: "/"
             pathType: "Prefix"
             backend:
               service:
                 name: {{ $fullName }}
                 port:
                   number: {{ $svcPort }}
+    - host: {{ .Values.ingress.hosts.mon.host | quote }}
+      http:
+        paths:
           - path: {{ $.Values.actuator.metrics.path }}
             pathType: "Exact"
             backend:
@@ -56,6 +57,4 @@ spec:
                 name: {{ $fullName }}
                 port:
                   number: {{ $.Values.actuator.port }}
-          {{- end }}
-    {{- end }}
   {{- end }}
