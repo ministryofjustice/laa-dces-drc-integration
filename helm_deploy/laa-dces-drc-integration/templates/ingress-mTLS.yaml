@@ -10,11 +10,14 @@ apiVersion: extensions/v1beta1
 {{- end }}
 kind: Ingress
 metadata:
-  name: {{ $fullName }}
+  name: {{ $fullName }}_mTLS
   labels:
     {{- include "laa-dces-drc-integration.labels" . | nindent 4 }}
   {{- with .Values.ingress.annotations }}
   annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.ingress.mTlsAnnotations }}
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
@@ -30,21 +33,14 @@ spec:
     {{- end }}
   {{- end }}
   rules:
-    - host: {{ .Values.ingress.hosts.mon.host | quote }}
+    - host: {{ .Values.ingress.hosts.api.host | quote }}
       http:
         paths:
-          - path: {{ $.Values.actuator.metrics.path }}
-            pathType: "Exact"
+          - path: "/"
+            pathType: "Prefix"
             backend:
               service:
                 name: {{ $fullName }}
                 port:
-                  number: {{ $.Values.actuator.port }}
-          - path: {{ $.Values.actuator.health.path }}
-            pathType: "Exact"
-            backend:
-              service:
-                name: {{ $fullName }}
-                port:
-                  number: {{ $.Values.actuator.port }}
+                  number: {{ $svcPort }}
   {{- end }}
