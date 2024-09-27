@@ -18,7 +18,6 @@ public class DcesDrcIntegrationAuthenticationConfig {
         http.csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(
                 authorizeHttpRequests -> authorizeHttpRequests
-                    .requestMatchers("/token/**").permitAll()
                     .requestMatchers("/swagger-ui-custom.html").permitAll()
                     .requestMatchers("/swagger-ui/**").permitAll()
                     .requestMatchers("/api-docs/**").permitAll()
