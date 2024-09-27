@@ -36,7 +36,7 @@ spec:
     - host: {{ .Values.ingress.hosts.api.host | quote }}
       http:
         paths:
-          - path: "/"
+          - path: "/api/dces/"
             pathType: "Prefix"
             backend:
               service:
