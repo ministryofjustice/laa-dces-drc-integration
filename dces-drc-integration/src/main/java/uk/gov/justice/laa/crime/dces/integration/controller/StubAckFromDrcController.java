@@ -20,7 +20,7 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.server.ResponseStatusException;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
-import uk.gov.justice.laa.crime.dces.integration.model.ContributionAckFromDrc;
+import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
 
 import java.util.Random;
@@ -50,8 +50,8 @@ public class StubAckFromDrcController {
     }
 
     @PostMapping(value = "/contribution")
-    public void contribution(@NotNull @RequestBody final ContributionAckFromDrc contributionAckFromDrc) {
-        log.info("Received contribution acknowledgement from DRC {}", contributionAckFromDrc);
+    public void concorContribution(@NotNull @RequestBody final ConcorContributionAckFromDrc concorContributionAckFromDrc) {
+        log.info("Received concorContribution acknowledgement from DRC {}", concorContributionAckFromDrc);
         if (getRandomZeroOrOne() != 0) {
             throw new MaatApiClientException(HttpStatus.BAD_REQUEST, "Bad Request");
         }

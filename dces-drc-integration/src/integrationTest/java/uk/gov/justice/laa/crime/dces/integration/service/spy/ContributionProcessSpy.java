@@ -10,7 +10,7 @@ import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
-import uk.gov.justice.laa.crime.dces.integration.model.ContributionDataForDrc;
+import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionReqForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
 
 import java.util.List;
@@ -81,14 +81,13 @@ public class ContributionProcessSpy {
 
         public ContributionProcessSpyBuilder traceAndStubSendContributionUpdate(final Predicate<Integer> stubResults) {
             doAnswer(invocation -> {
-                final var contributionIdStr = ((ContributionDataForDrc) invocation.getArgument(0)).getMeta().get("contributionId");
-                final int contributionId = Integer.parseInt(contributionIdStr);
-                sentId(contributionId);
-                if (!stubResults.test(contributionId)) {
+                final int concorContributionId = ((ConcorContributionReqForDrc) invocation.getArgument(0)).getData().getConcorContributionId();
+                sentId(concorContributionId);
+                if (!stubResults.test(concorContributionId)) {
                     throw new MaatApiClientException(HttpStatus.BAD_REQUEST, "BAD_REQUEST");
                 }
                 return null;
-            }).when(drcClientSpy).sendContributionDataToDrc(any());
+            }).when(drcClientSpy).sendConcorContributionReqToDrc(any());
             return this;
         }
 

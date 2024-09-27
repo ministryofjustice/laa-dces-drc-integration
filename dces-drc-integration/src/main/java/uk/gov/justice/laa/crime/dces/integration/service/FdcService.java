@@ -13,7 +13,7 @@ import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClient
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionEntry;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsResponse;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcGlobalUpdateResponse;
-import uk.gov.justice.laa.crime.dces.integration.model.FdcDataForDrc;
+import uk.gov.justice.laa.crime.dces.integration.model.FdcReqForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcUpdateRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
@@ -64,15 +64,15 @@ public class FdcService implements FileService {
     @SuppressWarnings("squid:S2583") // ignore the can only be true warning. As this is placeholder.
     void sendFdcToDrc(List<Fdc> fdcList, List<Fdc> successfulFdcs, Map<String,String> failedFdcs) {
         fdcList.forEach(currentFdc -> {
-            String fdcIdStr = currentFdc.getId().toString();
+            int fdcId = currentFdc.getId().intValue();
             try {
-                drcClient.sendFdcDataToDrc(FdcDataForDrc.of(fdcIdStr, currentFdc));
-                log.info("Sent FDC data to DRC, fdcId = {}", fdcIdStr);
+                drcClient.sendFdcReqToDrc(FdcReqForDrc.of(fdcId, currentFdc));
+                log.info("Sent FDC data to DRC, fdcId = {}", fdcId);
                 successfulFdcs.add(currentFdc);
             } catch (Exception e) {
-                log.warn("Failed to send FDC data to DRC. fdcId = {}", fdcIdStr, e);
+                log.warn("Failed to send FDC data to DRC. fdcId = {}", fdcId, e);
                 // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
-                failedFdcs.put(fdcIdStr, e.getClass().getName() + ": " + e.getMessage());
+                failedFdcs.put(Integer.toString(fdcId), e.getClass().getName() + ": " + e.getMessage());
             }
         });
     }

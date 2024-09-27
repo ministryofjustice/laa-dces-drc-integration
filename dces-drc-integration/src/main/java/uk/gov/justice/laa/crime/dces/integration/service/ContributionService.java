@@ -12,7 +12,7 @@ import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
-import uk.gov.justice.laa.crime.dces.integration.model.ContributionDataForDrc;
+import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionReqForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
@@ -59,25 +59,25 @@ public class ContributionService implements FileService {
     public void sendContributionsToDrc(List<ConcurContribEntry> contributionsList, Map<String, CONTRIBUTIONS> successfulContributions, Map<String,String> failedContributions){
         // for each contribution sent by MAAT API
         for (ConcurContribEntry contribEntry : contributionsList) {
-            final String contributionIdStr = String.valueOf(contribEntry.getConcorContributionId());
+            final int concorContributionId = contribEntry.getConcorContributionId();
             // convert string into objects
             CONTRIBUTIONS currentContribution;
             try {
                 currentContribution = contributionsMapperUtils.mapLineXMLToObject(contribEntry.getXmlContent());
             } catch (JAXBException e) {
-                log.error("Failed to unmarshal contribution data XML, contributionId = {}", contributionIdStr, e);
-                failedContributions.put(contributionIdStr, e.getClass().getName() + ": " + e.getMessage());
+                log.error("Failed to unmarshal contribution data XML, concorContributionId = {}", concorContributionId, e);
+                failedContributions.put(Integer.toString(concorContributionId), e.getClass().getName() + ": " + e.getMessage());
                 continue;
             }
 
             try {
-                drcClient.sendContributionDataToDrc(ContributionDataForDrc.of(contributionIdStr, currentContribution));
-                log.info("Sent contribution data to DRC, contributionId = {}", contributionIdStr);
-                successfulContributions.put(contributionIdStr, currentContribution);
+                drcClient.sendConcorContributionReqToDrc(ConcorContributionReqForDrc.of(concorContributionId, currentContribution));
+                log.info("Sent contribution data to DRC, concorContributionId = {}", concorContributionId);
+                successfulContributions.put(Integer.toString(concorContributionId), currentContribution);
             } catch (Exception e) {
-                log.warn("Failed to send contribution data to DRC, contributionId = {}", contributionIdStr, e);
+                log.warn("Failed to send contribution data to DRC, concorContributionId = {}", concorContributionId, e);
                 // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
-                failedContributions.put(contributionIdStr, e.getClass().getName() + ": " + e.getMessage());
+                failedContributions.put(Integer.toString(concorContributionId), e.getClass().getName() + ": " + e.getMessage());
             }
         }
     }
