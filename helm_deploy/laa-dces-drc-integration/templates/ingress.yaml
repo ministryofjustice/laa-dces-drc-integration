@@ -50,9 +50,6 @@ spec:
                 name: {{ $fullName }}
                 port:
                   number: {{ $.Values.actuator.port }}
-    - host: {{ .Values.ingress.hosts.api.host | quote }}
-      http:
-        paths:
           - path: "/api-docs"
             pathType: "Exact"
             backend:
