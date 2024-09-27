@@ -14,7 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
 import org.springframework.test.web.servlet.MockMvc;
-import uk.gov.justice.laa.crime.dces.integration.model.ContributionAckFromDrc;
+import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionResponseDTO;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
@@ -220,7 +220,7 @@ class ContributionLoggingIntegrationTest {
      * Testing utility method.
      */
     private void acknowledgeContribution(final int concorContributionId, final String errorText) throws Exception {
-        final var request = ContributionAckFromDrc.of(concorContributionId, errorText);
+        final var request = ConcorContributionAckFromDrc.of(concorContributionId, errorText);
         String json = mapper.writeValueAsString(request);
         mockMvc.perform(post("/api/dces/v1/contribution")
                         .with(csrf())
