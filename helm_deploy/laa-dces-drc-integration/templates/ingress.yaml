@@ -33,21 +33,20 @@ spec:
     {{- end }}
   rules:
     {{- range .Values.ingress.mon.hosts }}
-    - host:
-        {{- range .host }}
-        - {{ . }}
-        {{- end }}
-      http:
-        paths:
-        {{- range .paths }}
-          - backend:
-              service:
-                name: {{ $fullName }}
-                port:
-                  number: {{ .port}}
-            path: {{ .path }}
-            pathType: {{ .pathType}}
-        {{- end }}
+      {{- range .host }}
+      - host: {{ . }}
+        http:
+          paths:
+          {{- range $.Values.ingress.mon.paths }}
+            - backend:
+                service:
+                  name: {{ $fullName }}
+                  port:
+                    number: {{ .port}}
+              path: {{ .path }}
+              pathType: {{ .pathType}}
+          {{- end }}
+      {{- end }}
     {{- end }}
   {{- end }}
 {{- end }}

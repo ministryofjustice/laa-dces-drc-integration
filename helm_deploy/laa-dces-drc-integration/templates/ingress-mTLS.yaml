@@ -33,13 +33,11 @@ spec:
     {{- end }}
   rules:
     {{- range .Values.ingress.api.hosts }}
-    - host:
-        {{- range .host }}
-        - {{ . }}
-        {{- end }}
+      {{- range .host }}
+    - host: {{ . }}
       http:
         paths:
-        {{- range .paths }}
+          {{- range $.Values.ingress.api.paths }}
           - backend:
               service:
                 name: {{ $fullName }}
@@ -47,7 +45,8 @@ spec:
                   number: {{ .port}}
             path: {{ .path }}
             pathType: {{ .pathType}}
-        {{- end }}
+          {{- end }}
+      {{- end }}
     {{- end }}
   {{- end }}
 {{- end }}
