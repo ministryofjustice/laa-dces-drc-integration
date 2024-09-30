@@ -31,12 +31,12 @@ env:
   - name: LAA_DCES_DRC_INTEGRATION_RESOURCE_SERVER_ISSUER_URI
     value: {{ .Values.resource_server }}
   - name: CLIENT_AUTH_CERTIFICATE
-    value: /etc/laa-dces-drc-integration/tls.crt
+    value: {{ .Values.clientAuth.mountPath }}/tls.crt
   - name: CLIENT_AUTH_PRIVATE_KEY
-    value: /etc/laa-dces-drc-integration/tls.key
+    value: {{ .Values.clientAuth.mountPath }}/tls.key
   - name: CLIENT_AUTH_PRIVATE_KEY_PASSWORD
     valueFrom:
         secretKeyRef:
-            name: drc-client-auth-tls
+            name: {{ .Values.clientAuth.secretName }}
             key: private-key-password
 {{- end -}}
