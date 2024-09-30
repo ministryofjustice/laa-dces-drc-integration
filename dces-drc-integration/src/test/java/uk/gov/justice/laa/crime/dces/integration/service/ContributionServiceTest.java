@@ -87,6 +87,7 @@ class ContributionServiceTest {
 
 	@Test
 	void testFileXMLInvalid() throws JAXBException {
+		when(contributionsMapperUtilsMock.mapLineXMLToObject(any())).thenReturn(new CONTRIBUTIONS()); // mock returns null otherwise
 		when(contributionsMapperUtilsMock.generateFileXML(any(), any())).thenReturn("InvalidXML");
 		when(contributionsMapperUtilsMock.generateAckXML(any(),any(),any(),any())).thenReturn("AckXML");
 		when(contributionsMapperUtilsMock.generateFileName(any())).thenReturn("FileName");
