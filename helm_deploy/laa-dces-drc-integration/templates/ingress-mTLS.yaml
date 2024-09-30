@@ -33,7 +33,6 @@ spec:
     {{- end }}
   rules:
     {{- range .Values.ingress.api.hosts }}
-      {{- range .host }}
     - host: {{ . }}
       http:
         paths:
@@ -48,5 +47,4 @@ spec:
           {{- end }}
       {{- end }}
     {{- end }}
-  {{- end }}
 {{- end }}
