@@ -30,4 +30,13 @@ env:
     value: {{ .Values.maatApi.oauthScope }}
   - name: LAA_DCES_DRC_INTEGRATION_RESOURCE_SERVER_ISSUER_URI
     value: {{ .Values.resource_server }}
+  - name: CLIENT_AUTH_CERTIFICATE
+    value: /etc/laa-dces-drc-integration/tls.crt
+  - name: CLIENT_AUTH_PRIVATE_KEY
+    value: /etc/laa-dces-drc-integration/tls.key
+  - name: CLIENT_AUTH_PRIVATE_KEY_PASSWORD
+    valueFrom:
+        secretKeyRef:
+            name: drc-client-auth-tls
+            key: private-key-password
 {{- end -}}
