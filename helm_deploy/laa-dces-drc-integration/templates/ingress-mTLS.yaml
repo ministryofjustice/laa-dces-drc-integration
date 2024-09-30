@@ -24,23 +24,30 @@ spec:
   ingressClassName: {{ .Values.ingress.className }}
   {{- if .Values.ingress.tls }}
   tls:
-    {{- range .Values.ingress.tls }}
+    {{- range .Values.ingress.tls.hosts }}
     - hosts:
         {{- range .host }}
-        - {{ . | quote }}
+        - {{ . }}
         {{- end }}
       secretName: {{ .secretName }}
     {{- end }}
-  {{- end }}
   rules:
-    - host: {{ .Values.ingress.hosts.api.host | quote }}
+    {{- range .Values.ingress.api.hosts }}
+    - host:
+        {{- range .host }}
+        - {{ . }}
+        {{- end }}
       http:
         paths:
-          - path: "/"
-            pathType: "Prefix"
-            backend:
+        {{- range .paths }}
+          - backend:
               service:
                 name: {{ $fullName }}
                 port:
-                  number: {{ $svcPort }}
+                  number: {{ .port}}
+            path: {{ .path }}
+            pathType: {{ .pathType}}
+        {{- end }}
+    {{- end }}
   {{- end }}
+{{- end }}

@@ -24,51 +24,30 @@ spec:
   ingressClassName: {{ .Values.ingress.className }}
   {{- if .Values.ingress.tls }}
   tls:
-    {{- range .Values.ingress.tls }}
+    {{- range .Values.ingress.tls.hosts }}
     - hosts:
         {{- range .host }}
-        - {{ . | quote }}
+        - {{ . }}
         {{- end }}
       secretName: {{ .secretName }}
     {{- end }}
-  {{- end }}
   rules:
-    - host: {{ .Values.ingress.hosts.mon.host | quote }}
+    {{- range .Values.ingress.mon.hosts }}
+    - host:
+        {{- range .host }}
+        - {{ . }}
+        {{- end }}
       http:
         paths:
-          - path: {{ $.Values.actuator.metrics.path }}
-            pathType: "Exact"
-            backend:
+        {{- range .paths }}
+          - backend:
               service:
                 name: {{ $fullName }}
                 port:
-                  number: {{ $.Values.actuator.port }}
-          - path: {{ $.Values.actuator.health.path }}
-            pathType: "Exact"
-            backend:
-              service:
-                name: {{ $fullName }}
-                port:
-                  number: {{ $.Values.actuator.port }}
-          - path: "/api-docs"
-            pathType: "Prefix"
-            backend:
-              service:
-                name: {{ $fullName }}
-                port:
-                  number: {{ $svcPort }}
-          - path: "/swagger-ui"
-            pathType: "Prefix"
-            backend:
-              service:
-                name: {{ $fullName }}
-                port:
-                  number: {{ $svcPort }}
-          - path: "/error"
-            pathType: "Exact"
-            backend:
-              service:
-                name: {{ $fullName }}
-                port:
-                  number: {{ $svcPort }}
+                  number: {{ .port}}
+            path: {{ .path }}
+            pathType: {{ .pathType}}
+        {{- end }}
+    {{- end }}
   {{- end }}
+{{- end }}
