@@ -80,7 +80,7 @@ public class FdcProcessSpy {
 
     public FdcProcessSpyBuilder traceAndStubSendFdcUpdate(final Predicate<Integer> stubResults) {
       doAnswer(invocation -> {
-        final int fdcId = ((FdcReqForDrc) invocation.getArgument(0)).getData().getFdcId();
+        final int fdcId = ((FdcReqForDrc) invocation.getArgument(0)).data().fdcId();
         sentId(fdcId);
         if (!stubResults.test(fdcId)) {
           throw new MaatApiClientException(HttpStatus.BAD_REQUEST, "BAD_REQUEST");
