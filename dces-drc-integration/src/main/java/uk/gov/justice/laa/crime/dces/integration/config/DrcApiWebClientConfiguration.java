@@ -111,7 +111,7 @@ public class DrcApiWebClientConfiguration {
     }
 
     @Bean
-    DrcClient crimeApplyDatastoreClient(WebClient drcApiWebClient) {
+    DrcClient drcClient(WebClient drcApiWebClient) {
         HttpServiceProxyFactory httpServiceProxyFactory =
                 HttpServiceProxyFactory.builderFor(WebClientAdapter.create(drcApiWebClient)).build();
         return httpServiceProxyFactory.createClient(DrcClient.class);
