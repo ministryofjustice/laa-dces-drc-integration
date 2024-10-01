@@ -81,7 +81,7 @@ public class ContributionProcessSpy {
 
         public ContributionProcessSpyBuilder traceAndStubSendContributionUpdate(final Predicate<Integer> stubResults) {
             doAnswer(invocation -> {
-                final int concorContributionId = ((ConcorContributionReqForDrc) invocation.getArgument(0)).getData().getConcorContributionId();
+                final int concorContributionId = ((ConcorContributionReqForDrc) invocation.getArgument(0)).data().concorContributionId();
                 sentId(concorContributionId);
                 if (!stubResults.test(concorContributionId)) {
                     throw new MaatApiClientException(HttpStatus.BAD_REQUEST, "BAD_REQUEST");

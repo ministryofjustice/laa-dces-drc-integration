@@ -51,8 +51,8 @@ class DrcApiWebClientConfigurationTest {
     }
 
     @Test
-    void shouldReturnDrcClientWhenCrimeApplyDatastoreClientIsCalled() {
-        DrcClient result = drcApiWebClientConfiguration.crimeApplyDatastoreClient(webClient);
+    void shouldReturnDrcClientWhenDrcClientIsCalled() {
+        DrcClient result = drcApiWebClientConfiguration.drcClient(webClient);
         assertNotNull(result);
     }
 }

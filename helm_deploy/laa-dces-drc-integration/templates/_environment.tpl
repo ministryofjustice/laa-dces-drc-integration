@@ -30,4 +30,13 @@ env:
     value: {{ .Values.maatApi.oauthScope }}
   - name: LAA_DCES_DRC_INTEGRATION_RESOURCE_SERVER_ISSUER_URI
     value: {{ .Values.resource_server }}
+  - name: CLIENT_AUTH_CERTIFICATE
+    value: {{ .Values.clientAuth.mountPath }}/tls.crt
+  - name: CLIENT_AUTH_PRIVATE_KEY
+    value: {{ .Values.clientAuth.mountPath }}/tls.key
+  - name: CLIENT_AUTH_PRIVATE_KEY_PASSWORD
+    valueFrom:
+        secretKeyRef:
+            name: {{ .Values.clientAuth.secretName }}
+            key: private-key-password
 {{- end -}}
