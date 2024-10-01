@@ -125,6 +125,7 @@ public class TempTestController {
     /**
      * Throw one of a number of different exception types so the caller can check how it is reported to API consumers.
      * You csn also use a pseudoStatus out of range (e.g. 504) to check validation of controller method arguments.
+     * These should probably be unit tests to check that each response is an appropriate-looking ProblemDetail.
      */
     @GetMapping(value = "/error/{pseudoStatus}")
     public String getTestError(@PathVariable("pseudoStatus") @Min(400) @Max(503) int pseudoStatus) {
