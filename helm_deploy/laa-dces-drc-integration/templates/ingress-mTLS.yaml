@@ -10,11 +10,11 @@ apiVersion: extensions/v1beta1
 {{- end }}
 kind: Ingress
 metadata:
-  name: {{ $fullName }}
+  name: {{ $fullName }}-mtls
   labels:
     {{- include "laa-dces-drc-integration.labels" . | nindent 4 }}
   annotations:
-  {{- with .Values.ingress.annotations.nonMtls }}
+  {{- with .Values.ingress.annotations.mtls }}
     {{- toYaml . | nindent 4 }}
   {{- end }}
   {{- with .Values.ingress.annotations.common }}
@@ -32,19 +32,19 @@ spec:
       secretName: {{ .secretName }}
     {{- end }}
   rules:
-    {{- range .Values.ingress.mon.hosts }}
-      - host: {{ . }}
-        http:
-          paths:
-          {{- range $.Values.ingress.mon.paths }}
-            - backend:
-                service:
-                  name: {{ $fullName }}
-                  port:
-                    number: {{ .port}}
-              path: {{ .path }}
-              pathType: {{ .pathType}}
+    {{- range .Values.ingress.api.hosts }}
+    - host: {{ . }}
+      http:
+        paths:
+          {{- range $.Values.ingress.api.paths }}
+          - backend:
+              service:
+                name: {{ $fullName }}
+                port:
+                  number: {{ .port}}
+            path: {{ .path }}
+            pathType: {{ .pathType}}
           {{- end }}
       {{- end }}
-  {{- end }}
+    {{- end }}
 {{- end }}
