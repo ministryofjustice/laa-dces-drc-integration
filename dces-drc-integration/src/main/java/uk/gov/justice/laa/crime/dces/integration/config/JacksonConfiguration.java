@@ -39,7 +39,6 @@ public class JacksonConfiguration {
     @Bean
     public Jackson2ObjectMapperBuilderCustomizer jsonCustomizer() {
         return builder -> builder
-                .serializationInclusion()
                 .mixIns(Arrays.stream(NON_NULL_CLASSES)
                         .collect(Collectors.toMap(Function.identity(), clazz -> NonNullMixIn.class)))
                 .serializerByType(XMLGregorianCalendar.class, ToStringSerializer.instance);
