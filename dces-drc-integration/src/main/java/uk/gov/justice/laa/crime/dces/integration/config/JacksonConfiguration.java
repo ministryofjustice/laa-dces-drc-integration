@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionReqForDrc;
+import uk.gov.justice.laa.crime.dces.integration.model.FdcReqForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile;
 
@@ -55,6 +57,8 @@ public class JacksonConfiguration {
      * Array of classes to apply the NonNullMixIn MixIn to. See `jsonCustomizer()` method.
      */
     private static final Class<?>[] NON_NULL_CLASSES = {
+            ConcorContributionReqForDrc.class,
+            ConcorContributionReqForDrc.ConcorContributionReqData.class,
             CONTRIBUTIONS.class,
             CONTRIBUTIONS.Applicant.class,
             CONTRIBUTIONS.Applicant.BankDetails.class,
@@ -91,6 +95,8 @@ public class JacksonConfiguration {
             CONTRIBUTIONS.Passported.class,
             CONTRIBUTIONS.Passported.Reason.class,
             CONTRIBUTIONS.Passported.Result.class,
+            FdcReqForDrc.class,
+            FdcReqForDrc.FdcReqData.class,
             FdcFile.FdcList.Fdc.class,
     };
 }
