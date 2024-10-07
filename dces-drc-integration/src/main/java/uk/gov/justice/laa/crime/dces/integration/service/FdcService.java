@@ -158,8 +158,11 @@ public class FdcService implements FileService {
     @Retry(name = SERVICE_NAME)
     public FdcGlobalUpdateResponse callFdcGlobalUpdate(){
         try {
-            // Should this be prevented by `feature.outgoingIsolated()`?
-            return fdcClient.executeFdcGlobalUpdate();
+            if (!feature.outgoingIsolated()) {
+                return fdcClient.executeFdcGlobalUpdate();
+            } else {
+                return new FdcGlobalUpdateResponse(true, 0);
+            }
         } catch (HttpServerErrorException e) {
             // We're rethrowing the exception, therefore avoid logging the stack trace to prevent logging the same trace multiple times.
             log.error("FDC global update threw an exception [" + e.getClass().getName() + "(" + e.getMessage() + ")]");
