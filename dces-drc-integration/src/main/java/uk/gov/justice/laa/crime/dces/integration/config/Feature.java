@@ -1,6 +1,5 @@
 package uk.gov.justice.laa.crime.dces.integration.config;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -44,7 +43,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *                           This causes daily processing data to be anonymized before being sent to the DRC.
  */
 @ConfigurationProperties(prefix = "feature")
-@Slf4j
 public record Feature(boolean stubAckEndpoints   /* feature.stub-ack-endpoints */,
                       boolean tempTestEndpoints  /* feature.temp-test-endpoints */,
                       boolean incomingIsolated   /* feature.incoming-isolated */,

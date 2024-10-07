@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.crime.dces.integration.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.micrometer.core.annotation.Timed;
 import jakarta.xml.bind.JAXBException;
@@ -33,6 +34,7 @@ public class ContributionService implements FileService {
     private final ContributionsMapperUtils contributionsMapperUtils;
     private final ContributionClient contributionClient;
     private final DrcClient drcClient;
+    private final ObjectMapper objectMapper;
     private final Feature feature;
 
     public Integer processContributionUpdate(UpdateLogContributionRequest updateLogContributionRequest) {
@@ -77,11 +79,14 @@ public class ContributionService implements FileService {
             }
 
             try {
+                final var request = ConcorContributionReqForDrc.of(concorContributionId, currentContribution);
                 if (!feature.outgoingIsolated()) {
-                    drcClient.sendConcorContributionReqToDrc(ConcorContributionReqForDrc.of(concorContributionId, currentContribution));
-                    log.info("Sent contribution data to DRC, concorContributionId = {}", concorContributionId);
+                    drcClient.sendConcorContributionReqToDrc(request);
+                    log.info("Sent contribution data to DRC, concorContributionId = {}, maatId = {}", concorContributionId, currentContribution.getMaatId());
                 } else {
-                    log.info("Skipping contribution data to DRC, concorContributionId = {}", concorContributionId);
+                    log.info("Skipping contribution data to DRC, concorContributionId = {}, maatId = {}", concorContributionId, currentContribution.getMaatId());
+                    final var json = objectMapper.writeValueAsString(request);
+                    log.debug("Skipping contribution data to DRC, JSON = [{}]", json);
                 }
                 successfulContributions.put(Integer.toString(concorContributionId), currentContribution);
             } catch (Exception e) {
