@@ -16,6 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.web.client.HttpServerErrorException;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
+import uk.gov.justice.laa.crime.dces.integration.config.Feature;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
@@ -39,28 +40,30 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest
 @ExtendWith(SoftAssertionsExtension.class)
+@SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @WireMockTest(httpPort = 1111)
 class ContributionServiceTest {
+	private static final String GET_URL = "/debt-collection-enforcement/concor-contribution-files?status=ACTIVE";
+	private static final String UPDATE_URL = "/debt-collection-enforcement/create-contribution-file";
+
+	private static final List<StubMapping> customStubs = new ArrayList<>();
 
 	@InjectSoftAssertions
 	private SoftAssertions softly;
 
 	@MockBean
-	ContributionsMapperUtils contributionsMapperUtilsMock;
+	private ContributionsMapperUtils contributionsMapperUtils;
 
 	@MockBean
 	private DrcClient drcClient;
 
+	@MockBean
+	private Feature feature;
+
 	@Autowired
 	private ContributionService contributionService;
-
-	private static final List<StubMapping> customStubs = new ArrayList<>();
-
-	private static final String GET_URL = "/debt-collection-enforcement/concor-contribution-files?status=ACTIVE";
-	private static final String UPDATE_URL = "/debt-collection-enforcement/create-contribution-file";
 
 	@AfterEach
 	void afterTestAssertAll(){
@@ -70,44 +73,63 @@ class ContributionServiceTest {
 			WireMock.resetAllRequests();
 		}
 	}
+
 	@Test
 	void testXMLValid() throws JAXBException {
-
-		when(contributionsMapperUtilsMock.mapLineXMLToObject(any())).thenReturn(createTestContribution());
-		when(contributionsMapperUtilsMock.generateFileXML(any(), any())).thenReturn("ValidXML");
-		when(contributionsMapperUtilsMock.generateFileName(any())).thenReturn("TestFilename.xml");
-		when(contributionsMapperUtilsMock.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
+		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());
+		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
+		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
+		when(contributionsMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
 		doNothing().when(drcClient).sendConcorContributionReqToDrc(any());
 
 		boolean result = contributionService.processDailyFiles();
-		verify(contributionsMapperUtilsMock,times(2)).mapLineXMLToObject(any());
-		verify(contributionsMapperUtilsMock).generateFileXML(any(), any());
+
+		verify(contributionsMapperUtils, times(2)).mapLineXMLToObject(any());
+		verify(contributionsMapperUtils).generateFileXML(any(), any());
+		verify(drcClient, times(2)).sendConcorContributionReqToDrc(any());
+		softly.assertThat(result).isTrue();
+	}
+
+	@Test
+	void testXMLValidWhenOutgoingIsolated() throws JAXBException {
+		when(feature.outgoingIsolated()).thenReturn(true);
+		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());
+		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
+		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
+		when(contributionsMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
+		doNothing().when(drcClient).sendConcorContributionReqToDrc(any());
+
+		boolean result = contributionService.processDailyFiles();
+		verify(contributionsMapperUtils, times(2)).mapLineXMLToObject(any());
+		verify(contributionsMapperUtils).generateFileXML(any(), any());
+		verify(drcClient, times(0)).sendConcorContributionReqToDrc(any()); // not called when feature.outgoing-isolated=true.
 		softly.assertThat(result).isTrue();
 	}
 
 	@Test
 	void testFileXMLInvalid() throws JAXBException {
-		when(contributionsMapperUtilsMock.generateFileXML(any(), any())).thenReturn("InvalidXML");
-		when(contributionsMapperUtilsMock.generateAckXML(any(),any(),any(),any())).thenReturn("AckXML");
-		when(contributionsMapperUtilsMock.generateFileName(any())).thenReturn("FileName");
+		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(new CONTRIBUTIONS()); // mock returns null otherwise
+		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("InvalidXML");
+		when(contributionsMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("AckXML");
+		when(contributionsMapperUtils.generateFileName(any())).thenReturn("FileName");
 		doNothing().when(drcClient).sendConcorContributionReqToDrc(any());
 
 		softly.assertThatThrownBy(() -> contributionService.processDailyFiles())
 				.isInstanceOf(HttpServerErrorException.class)
 				.hasMessageContaining("INTERNAL_SERVER_ERROR");
-		verify(contributionsMapperUtilsMock,times(2)).mapLineXMLToObject(any());
+		verify(contributionsMapperUtils, times(2)).mapLineXMLToObject(any());
 		// failure to generate the xml should return a null xmlString.
-		verify(contributionsMapperUtilsMock).generateFileXML(any(), any());
+		verify(contributionsMapperUtils).generateFileXML(any(), any());
 		// failure should be the result of file generation
 	}
 
 	@Test
 	void testLineXMLInvalid() throws JAXBException {
-		when(contributionsMapperUtilsMock.mapLineXMLToObject(any())).thenThrow(JAXBException.class);
+		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenThrow(JAXBException.class);
 		contributionService.processDailyFiles();
-		verify(contributionsMapperUtilsMock,times(2)).mapLineXMLToObject(any());
+		verify(contributionsMapperUtils, times(2)).mapLineXMLToObject(any());
 		// with no successful xml, should not run the file generation.
-		verify(contributionsMapperUtilsMock, times(0)).generateFileXML(any(), any());
+		verify(contributionsMapperUtils, times(0)).generateFileXML(any(), any());
 	}
 
 	@Test
@@ -116,10 +138,10 @@ class ContributionServiceTest {
 		customStubs.add(stubFor(post(UPDATE_URL).atPriority(1)
 				.willReturn(serverError())));
 
-		when(contributionsMapperUtilsMock.mapLineXMLToObject(any())).thenReturn(createTestContribution());
-		when(contributionsMapperUtilsMock.generateFileXML(any(), any())).thenReturn("ValidXML");
-		when(contributionsMapperUtilsMock.generateFileName(any())).thenReturn("TestFilename.xml");
-		when(contributionsMapperUtilsMock.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
+		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());
+		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
+		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
+		when(contributionsMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
 		doNothing().when(drcClient).sendConcorContributionReqToDrc(any());
 		// do
 		softly.assertThatThrownBy(() -> contributionService.processDailyFiles())
@@ -137,6 +159,17 @@ class ContributionServiceTest {
 		Integer response = contributionService.processContributionUpdate(dataRequest);
 		softly.assertThat(response).isEqualTo(1111);
 	}
+
+	@Test
+	void testProcessContributionUpdateWhenIncomingIsolated() {
+		when(feature.incomingIsolated()).thenReturn(true);
+		UpdateLogContributionRequest dataRequest = UpdateLogContributionRequest.builder()
+				.concorId(911)
+				.build();
+		Integer response = contributionService.processContributionUpdate(dataRequest);
+		softly.assertThat(response).isEqualTo(0); // so MAAT DB not touched
+	}
+
 
 	@Test
 	void testProcessContributionUpdateWhenFailed() {

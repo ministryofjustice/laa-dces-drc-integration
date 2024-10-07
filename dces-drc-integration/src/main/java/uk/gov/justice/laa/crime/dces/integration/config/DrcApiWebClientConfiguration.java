@@ -1,10 +1,13 @@
 package uk.gov.justice.laa.crime.dces.integration.config;
 
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.resolver.DefaultAddressResolverGroup;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
+import org.springframework.boot.ssl.NoSuchSslBundleException;
+import org.springframework.boot.ssl.SslBundle;
+import org.springframework.boot.ssl.SslBundles;
+import org.springframework.boot.ssl.SslManagerBundle;
+import org.springframework.boot.ssl.SslOptions;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -16,51 +19,110 @@ import reactor.netty.resources.ConnectionProvider;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.config.ServicesConfiguration;
 
-import javax.xml.datatype.XMLGregorianCalendar;
+import javax.net.ssl.SSLException;
 import java.time.Duration;
+import java.util.Optional;
 
-@Slf4j
 @Configuration
-@AllArgsConstructor
+@Slf4j
 public class DrcApiWebClientConfiguration {
+    private static final String SSL_BUNDLE_NAME = "client-auth";
 
     @Bean
-    public Jackson2ObjectMapperBuilderCustomizer jsonCustomizer() {
-        // Default serialization of XMLGregorianCalendar calls #toCalendar() to convert it to a Calendar instance, then
-        // serializes that as a number or a full ISO8601 timestamp string (depending on  WRITE_DATES_AS_TIMESTAMPS).
-        // By overriding to use ToStringSerializer, #toString() calls #toXMLFormat(), which takes into account undefined
-        // fields, so does not include the 'T00:00:00Z' time part for dates, for example.
-        return builder -> builder.serializerByType(XMLGregorianCalendar.class, ToStringSerializer.instance);
+    DrcClient drcClient(final WebClient drcApiWebClient) {
+        final HttpServiceProxyFactory httpServiceProxyFactory =
+                HttpServiceProxyFactory.builderFor(WebClientAdapter.create(drcApiWebClient)).build();
+        return httpServiceProxyFactory.createClient(DrcClient.class);
     }
 
+    /**
+     * Constructs the managed Bean of class `WebClient` in the Spring context used to talk to the DRC API.
+     *
+     * @param webClientBuilder `WebClient.Builder` instance injected by Sprint Boot.
+     * @param servicesConfiguration Our services configuration (used to obtain the DRC API base URL).
+     * @param sslBundles `SslBundles` instance injected by Spring Boot.
+     * @return a configured `WebClient` instance.
+     */
     @Bean
-    public WebClient drcApiWebClient(
-            WebClient.Builder webClientBuilder,
-            ServicesConfiguration servicesConfiguration
-    ) {
-        ConnectionProvider provider = ConnectionProvider.builder("custom")
+    public WebClient drcApiWebClient(final WebClient.Builder webClientBuilder,
+                                     final ServicesConfiguration servicesConfiguration,
+                                     final SslBundles sslBundles) {
+        final ConnectionProvider provider = ConnectionProvider.builder("custom")
                 .maxConnections(500)
                 .maxIdleTime(Duration.ofSeconds(20))
                 .maxLifeTime(Duration.ofSeconds(60))
                 .pendingAcquireTimeout(Duration.ofSeconds(60))
                 .evictInBackground(Duration.ofSeconds(120))
                 .build();
-
         return webClientBuilder.clone() // clone Boot's auto-config WebClient.Builder, then add our customizations before build().
                 .baseUrl(servicesConfiguration.getDrcClientApi().getBaseUrl())
-                .clientConnector(
-                        new ReactorClientHttpConnector(
-                                HttpClient.create(provider)
-                                        .resolver(DefaultAddressResolverGroup.INSTANCE)
-                                        .compress(true)
-                                        .responseTimeout(Duration.ofSeconds(30))))
+                .clientConnector(new ReactorClientHttpConnector(createHttpClient(provider, sslBundles)))
                 .build();
     }
 
-    @Bean
-    DrcClient crimeApplyDatastoreClient(WebClient drcApiWebClient) {
-        HttpServiceProxyFactory httpServiceProxyFactory =
-                HttpServiceProxyFactory.builderFor(WebClientAdapter.create(drcApiWebClient)).build();
-        return httpServiceProxyFactory.createClient(DrcClient.class);
+    /**
+     * This method override doesn't create a managed Bean in the Spring context.
+     * It exists to keep the unit tests compiling without adding another required parameter to them all.
+     */
+    public WebClient drcApiWebClient(final WebClient.Builder webClientBuilder,
+                                     final ServicesConfiguration servicesConfiguration) {
+        return drcApiWebClient(webClientBuilder, servicesConfiguration, null);
+    }
+
+    /**
+     * Helper method to generate the netty `HttpClient` for the `WebClient` instance used to talk to the DRC API.
+     *
+     * @param provider Connection provider (specified the connection pooling for clients - if not for this we could have
+     *                 used `webClientBuilder.apply(webClientSsl.fromBundle(clientAuthBundle))` instead of all this.
+     * @param sslBundles Spring Boot's injected set of SSL bundles.
+     * @return a configured `HttpClient` instance ready to use with `WebClient.Builder`.
+     */
+    private static HttpClient createHttpClient(final ConnectionProvider provider, final SslBundles sslBundles) {
+        HttpClient httpClient = HttpClient.create(provider);
+        final Optional<SslBundle> optBundle = getClientAuthBundle(sslBundles);
+        if (optBundle.isPresent()) {
+            httpClient = httpClient.secure(spec -> {
+                SslOptions options = optBundle.get().getOptions();
+                SslManagerBundle managers = optBundle.get().getManagers();
+                SslContextBuilder builder = SslContextBuilder.forClient()
+                        .keyManager(managers.getKeyManagerFactory())
+                        .trustManager(managers.getTrustManagerFactory())
+                        .ciphers(SslOptions.asSet(options.getCiphers()))
+                        .protocols(options.getEnabledProtocols());
+                try {
+                    spec.sslContext(builder.build());
+                } catch (SSLException e) {
+                    throw new IllegalStateException(e);
+                }
+            });
+        }
+        return httpClient
+                .resolver(DefaultAddressResolverGroup.INSTANCE)
+                .compress(true)
+                .responseTimeout(Duration.ofSeconds(30));
+    }
+
+    /**
+     * Obtain the SslBundle used for client authentication if it exists.
+     *
+     * @param sslBundles Spring Boot's injected `SslBundles` instance.
+     * @return Optional containing the client authentication SslBundle if it exists.
+     */
+    private static Optional<SslBundle> getClientAuthBundle(final SslBundles sslBundles) {
+        if (sslBundles != null) {
+            try {
+                final SslBundle sslBundle = sslBundles.getBundle(SSL_BUNDLE_NAME);
+                if (sslBundle == null) { // This is currently unneeded, but in case the API changes in the future.
+                    throw new NoSuchSslBundleException(SSL_BUNDLE_NAME, "getBundle returned null");
+                }
+                log.info("SSL Bundle '{}' retrieved: {}", SSL_BUNDLE_NAME, sslBundle);
+                return Optional.of(sslBundle);
+            } catch (NoSuchSslBundleException e) {
+                log.info("SSL Bundle '{}' not available: {}", e.getBundleName(), e.getMessage());
+            }
+        } else {
+            log.info("SSL Bundles not available: sslBundles == null");
+        }
+        return Optional.empty();
     }
 }
