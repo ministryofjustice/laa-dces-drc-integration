@@ -1,14 +1,16 @@
 package uk.gov.justice.laa.crime.dces.integration.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.micrometer.core.annotation.Timed;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.client.FdcClient;
+import uk.gov.justice.laa.crime.dces.integration.config.Feature;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionEntry;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsResponse;
@@ -27,8 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+@RequiredArgsConstructor
 @Service
-@AllArgsConstructor
 @Slf4j
 public class FdcService implements FileService {
     private static final String SERVICE_NAME = "FdcService";
@@ -36,10 +38,16 @@ public class FdcService implements FileService {
     private final FdcMapperUtils fdcMapperUtils;
     private final FdcClient fdcClient;
     private final DrcClient drcClient;
+    private final ObjectMapper objectMapper;
+    private final Feature feature;
 
     public Integer processFdcUpdate(UpdateLogFdcRequest updateLogFdcRequest) {
         try {
-            return fdcClient.sendLogFdcProcessed(updateLogFdcRequest);
+            if (!feature.incomingIsolated()) {
+                return fdcClient.sendLogFdcProcessed(updateLogFdcRequest);
+            } else {
+                return 0; // avoid updating MAAT DB.
+            }
         } catch (MaatApiClientException | WebClientResponseException | HttpServerErrorException e) {
             log.info("Failed to processFdcUpdate", e);
             throw e;
@@ -66,8 +74,15 @@ public class FdcService implements FileService {
         fdcList.forEach(currentFdc -> {
             int fdcId = currentFdc.getId().intValue();
             try {
-                drcClient.sendFdcReqToDrc(FdcReqForDrc.of(fdcId, currentFdc));
-                log.info("Sent FDC data to DRC, fdcId = {}", fdcId);
+                final var request = FdcReqForDrc.of(fdcId, currentFdc);
+                if (!feature.outgoingIsolated()) {
+                    drcClient.sendFdcReqToDrc(request);
+                    log.info("Sent FDC data to DRC, fdcId = {}, maatId = {}", fdcId, currentFdc.getMaatId());
+                } else {
+                    log.info("Skipping FDC data to DRC, fdcId = {}, maatId = {}", fdcId, currentFdc.getMaatId());
+                    final var json = objectMapper.writeValueAsString(request);
+                    log.debug("Skipping FDC data to DRC, JSON = [{}]", json);
+                }
                 successfulFdcs.add(currentFdc);
             } catch (Exception e) {
                 log.warn("Failed to send FDC data to DRC. fdcId = {}", fdcId, e);
@@ -143,6 +158,7 @@ public class FdcService implements FileService {
     @Retry(name = SERVICE_NAME)
     public FdcGlobalUpdateResponse callFdcGlobalUpdate(){
         try {
+            // Should this be prevented by `feature.outgoingIsolated()`?
             return fdcClient.executeFdcGlobalUpdate();
         } catch (HttpServerErrorException e) {
             // We're rethrowing the exception, therefore avoid logging the stack trace to prevent logging the same trace multiple times.
@@ -181,6 +197,10 @@ public class FdcService implements FileService {
                 .fdcIds(fdcIdList)
                 .xmlFileName(fileName)
                 .ackXmlContent(fileAckXML).build();
-        return fdcClient.updateFdcs(request);
+        if (!feature.outgoingIsolated()) {
+            return fdcClient.updateFdcs(request);
+        } else {
+            return 0;
+        }
     }
 }

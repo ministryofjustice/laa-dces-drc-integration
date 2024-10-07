@@ -87,9 +87,9 @@ class DrcApiClientTest {
     }
 
     @Test
-    void test_whenWebClientIsInvokedWithNull_thenErrorResponse() throws JsonProcessingException, InterruptedException {
+    void test_whenWebClientIsInvokedWithMissingMaatId_thenErrorResponse() throws JsonProcessingException, InterruptedException {
 
-        ConcorContributionReqForDrc concorContributionReqForDrc = ConcorContributionReqForDrc.of(0, null);
+        ConcorContributionReqForDrc concorContributionReqForDrc = ConcorContributionReqForDrc.of(0, new CONTRIBUTIONS());
         setupProblemDetailResponse(fakeProblemDetail());
         WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(webClientBuilder, configuration);
         try {
@@ -97,7 +97,7 @@ class DrcApiClientTest {
             failBecauseExceptionWasNotThrown(WebClientResponseException.class);
         } catch (WebClientResponseException e) {
             String body = mockWebServer.takeRequest().getBody().readUtf8();
-            assertThat(body).matches("\\{\"data\":\\{\"concorContributionId\":0,\"concorContributionObj\":null},\"meta\":\\{}}");
+            assertThat(body).matches("\\{\"data\":\\{\"concorContributionId\":0,\"concorContributionObj\":\\{.*}},\"meta\":\\{}}");
             assertThat(e.getStatusCode().is4xxClientError() || e.getStatusCode().is5xxServerError()).isTrue();
         }
     }
@@ -116,9 +116,9 @@ class DrcApiClientTest {
     }
 
     @Test
-    void test_whenFdcWebClientIsInvokedWithNull_thenErrorResponse() throws JsonProcessingException, InterruptedException {
+    void test_whenFdcWebClientIsInvokedWithMissingMaatId_thenErrorResponse() throws JsonProcessingException, InterruptedException {
 
-        FdcReqForDrc request = FdcReqForDrc.of(0, null);
+        FdcReqForDrc request = FdcReqForDrc.of(0, new FdcFile.FdcList.Fdc());
         setupProblemDetailResponse(fakeProblemDetail());
         WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(webClientBuilder, configuration);
 
@@ -127,7 +127,7 @@ class DrcApiClientTest {
             failBecauseExceptionWasNotThrown(WebClientResponseException.class);
         } catch (WebClientResponseException e) {
             String body = mockWebServer.takeRequest().getBody().readUtf8();
-            assertThat(body).matches("\\{\"data\":\\{\"fdcId\":0,\"fdcObj\":null},\"meta\":\\{}}");
+            assertThat(body).matches("\\{\"data\":\\{\"fdcId\":0,\"fdcObj\":\\{.*}},\"meta\":\\{}}");
             assertThat(e.getStatusCode().is4xxClientError() || e.getStatusCode().is5xxServerError()).isTrue();
         }
     }
