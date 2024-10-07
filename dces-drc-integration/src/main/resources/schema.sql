@@ -49,8 +49,3 @@ comment on column case_submission.processed_date is 'Date and time of processing
 comment on column case_submission.event_type is 'Type of event, which part of the process we are in.';
 comment on column case_submission.http_status is 'Http Status related to the entry, if applicable.';
 comment on column case_submission.payload is 'Free text fields for entry of payload/json/etc related to the entry.';
-
--- initial values
-INSERT INTO record_type VALUES ('Contribution'), ('Fdc');
-INSERT INTO event_type (description) VALUES ('FetchedFomMAAT'),('SyncRequestResponseToDrc'),('SyncResponseLoggedToMAAT'),('AsyncRequestResponseFromDrc');
-
