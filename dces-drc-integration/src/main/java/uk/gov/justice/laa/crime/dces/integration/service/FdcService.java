@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.crime.dces.integration.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,7 @@ public class FdcService implements FileService {
     private final FdcMapperUtils fdcMapperUtils;
     private final FdcClient fdcClient;
     private final DrcClient drcClient;
+    private final ObjectMapper objectMapper;
     private final Feature feature;
 
     public Integer processFdcUpdate(UpdateLogFdcRequest updateLogFdcRequest) {
@@ -72,11 +74,14 @@ public class FdcService implements FileService {
         fdcList.forEach(currentFdc -> {
             int fdcId = currentFdc.getId().intValue();
             try {
+                final var request = FdcReqForDrc.of(fdcId, currentFdc);
                 if (!feature.outgoingIsolated()) {
-                    drcClient.sendFdcReqToDrc(FdcReqForDrc.of(fdcId, currentFdc));
-                    log.info("Sent FDC data to DRC, fdcId = {}", fdcId);
+                    drcClient.sendFdcReqToDrc(request);
+                    log.info("Sent FDC data to DRC, fdcId = {}, maatId = {}", fdcId, currentFdc.getMaatId());
                 } else {
-                    log.info("Skipping FDC data to DRC, fdcId = {}", fdcId);
+                    log.info("Skipping FDC data to DRC, fdcId = {}, maatId = {}", fdcId, currentFdc.getMaatId());
+                    final var json = objectMapper.writeValueAsString(request);
+                    log.debug("Skipping FDC data to DRC, JSON = [{}]", json);
                 }
                 successfulFdcs.add(currentFdc);
             } catch (Exception e) {
