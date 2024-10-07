@@ -112,11 +112,11 @@ class FdcServiceTest {
 		verify(fdcMapperUtils).generateFileName(any());
 		verify(fdcMapperUtils).generateAckXML(any(), any(), any(), any());
 		verify(fdcMapperUtils, times(12)).mapFdcEntry(any());
-		verify(drcClient, times(0)).sendConcorContributionReqToDrc(any());
+		verify(drcClient, times(0)).sendConcorContributionReqToDrc(any()); // nothing sent to DRC
 		softly.assertThat(successful).isTrue();
 		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
-		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
-		WireMock.verify(0, postRequestedFor(urlEqualTo(UPDATE_URL)));
+		WireMock.verify(0, postRequestedFor(urlEqualTo(PREPARE_URL))); // no FDC global update
+		WireMock.verify(0, postRequestedFor(urlEqualTo(UPDATE_URL))); // no changes to statuses or contribution_files
 	}
 
 	@Test
