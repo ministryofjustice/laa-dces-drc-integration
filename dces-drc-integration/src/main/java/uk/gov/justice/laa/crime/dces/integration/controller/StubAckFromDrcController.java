@@ -3,6 +3,7 @@ package uk.gov.justice.laa.crime.dces.integration.controller;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,10 +19,11 @@ import java.util.Random;
  * This is a stub to simulate the endpoint that the DRC would call to asynchronously acknowledge their receipt of an
  * FDC or Concor Contribution record (see class AckFromDrcController for the real thing).
  */
-@Slf4j
-@RestController
-@RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "feature", name = "stub-ack-endpoints")
 @RequestMapping("/api/dces/v1-stub")
+@RequiredArgsConstructor
+@RestController
+@Slf4j
 @SuppressWarnings("squid:S2245") // Safe to use random here, as it's not being used in any fashion beyond a return value.
 public class StubAckFromDrcController {
     private static final Random random = new Random();

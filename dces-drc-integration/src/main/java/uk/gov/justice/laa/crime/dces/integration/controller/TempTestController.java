@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -33,12 +34,13 @@ import java.math.BigInteger;
 
 /**
  * This is a simple temporary controller to handle some test endpoints.
- * TODO: Remove or disable this controller once we're happy with everything.
+ * This feature should not be enabled in production.
  */
-@Slf4j
-@RestController
-@RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "feature", name = "temp-test-endpoints")
 @RequestMapping(TempTestController.PREFIX)
+@RequiredArgsConstructor
+@RestController
+@Slf4j
 public class TempTestController {
     static final String PREFIX = "/api/dces/test";
     private final StubValidation stubValidation;
@@ -48,7 +50,7 @@ public class TempTestController {
     /**
      * Check we have connectivity with almost no side effects (just a log line).
      */
-    @GetMapping(value = "/")
+    @GetMapping(value = "")
     public String getTest() {
         log.info("Received GET {}", PREFIX);
         return "GET Test Successful";

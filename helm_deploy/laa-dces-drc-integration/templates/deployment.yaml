@@ -27,11 +27,12 @@ spec:
       serviceAccountName: {{ include "laa-dces-drc-integration.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      {{- if .Values.clientAuth.volumeName }}
+      {{- if .Values.clientAuth }}
       volumes:
         - name: {{ .Values.clientAuth.volumeName }}
           secret:
             secretName: {{ .Values.clientAuth.secretName }}
+            optional: true
       {{- end}}
       containers:
         - name: {{ .Chart.Name }}
@@ -48,10 +49,10 @@ spec:
               containerPort: {{ .Values.actuator.port }}
               protocol: TCP
             {{- end }}
-          {{- if .Values.clientAuth.volumeName }}
+          {{- if .Values.clientAuth }}
           volumeMounts:
-            - mountPath: {{ .Values.clientAuth.mountPath }}
-              name: {{ .Values.clientAuth.volumeName }}
+            - name: {{ .Values.clientAuth.volumeName }}
+              mountPath: {{ .Values.clientAuth.mountPath }}
               readOnly: true
           {{- end }}
           livenessProbe:
@@ -78,6 +79,10 @@ spec:
             periodSeconds: {{ .Values.actuator.readiness.periodSeconds }}
             timeoutSeconds: {{ .Values.actuator.readiness.timeoutSeconds }}
             failureThreshold: {{ .Values.actuator.readiness.failureThreshold }}
+          envFrom:
+            - secretRef:
+                name: feature
+                optional: true
           {{ include "laa-dces-drc-integration.env-vars" . | nindent 10 }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

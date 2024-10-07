@@ -3,13 +3,14 @@ package uk.gov.justice.laa.crime.dces.integration.service;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.micrometer.core.annotation.Timed;
 import jakarta.xml.bind.JAXBException;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
+import uk.gov.justice.laa.crime.dces.integration.config.Feature;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionReqForDrc;
@@ -24,18 +25,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+@RequiredArgsConstructor
 @Service
-@AllArgsConstructor
 @Slf4j
 public class ContributionService implements FileService {
     private static final String SERVICE_NAME = "ContributionService";
     private final ContributionsMapperUtils contributionsMapperUtils;
     private final ContributionClient contributionClient;
     private final DrcClient drcClient;
+    private final Feature feature;
 
     public Integer processContributionUpdate(UpdateLogContributionRequest updateLogContributionRequest) {
         try {
-            return contributionClient.sendLogContributionProcessed(updateLogContributionRequest);
+            if (!feature.incomingIsolated()) {
+                return contributionClient.sendLogContributionProcessed(updateLogContributionRequest);
+            } else {
+                return 0; // avoid updating MAAT DB.
+            }
         } catch (MaatApiClientException | WebClientResponseException | HttpServerErrorException e) {
             log.info("Failed to processContributionUpdate", e);
             throw e;
@@ -71,8 +77,12 @@ public class ContributionService implements FileService {
             }
 
             try {
-                drcClient.sendConcorContributionReqToDrc(ConcorContributionReqForDrc.of(concorContributionId, currentContribution));
-                log.info("Sent contribution data to DRC, concorContributionId = {}", concorContributionId);
+                if (!feature.outgoingIsolated()) {
+                    drcClient.sendConcorContributionReqToDrc(ConcorContributionReqForDrc.of(concorContributionId, currentContribution));
+                    log.info("Sent contribution data to DRC, concorContributionId = {}", concorContributionId);
+                } else {
+                    log.info("Skipping contribution data to DRC, concorContributionId = {}", concorContributionId);
+                }
                 successfulContributions.put(Integer.toString(concorContributionId), currentContribution);
             } catch (Exception e) {
                 log.warn("Failed to send contribution data to DRC, concorContributionId = {}", concorContributionId, e);
@@ -120,6 +130,10 @@ public class ContributionService implements FileService {
                 .concorContributionIds(concorContributionIdList)
                 .xmlFileName(fileName)
                 .ackXmlContent(fileAckXML).build();
-        return contributionClient.updateContributions(request);
+        if (!feature.outgoingIsolated()) {
+            return contributionClient.updateContributions(request);
+        } else {
+            return 0;
+        }
     }
 }

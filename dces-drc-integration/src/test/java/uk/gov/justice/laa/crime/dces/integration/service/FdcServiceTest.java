@@ -16,6 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.web.client.HttpServerErrorException;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
+import uk.gov.justice.laa.crime.dces.integration.config.Feature;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
@@ -38,17 +39,22 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest
 @ExtendWith(SoftAssertionsExtension.class)
+@SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @WireMockTest(httpPort = 1111)
 class FdcServiceTest {
+	private static final String GET_URL = "/debt-collection-enforcement/fdc-contribution-files?status=REQUESTED";
+	private static final String PREPARE_URL = "/debt-collection-enforcement/prepare-fdc-contributions-files";
+	private static final String UPDATE_URL = "/debt-collection-enforcement/create-fdc-file";
+
+	private static final List<StubMapping> customStubs = new ArrayList<>();
 
 	@InjectSoftAssertions
 	private SoftAssertions softly;
 
-	@InjectMocks
 	@Autowired
+	@InjectMocks
 	private FdcService fdcService;
 
 	@MockBean
@@ -57,18 +63,16 @@ class FdcServiceTest {
 	@MockBean
 	private DrcClient drcClient;
 
+	@MockBean
+	private Feature feature;
+
 	@AfterEach
-	void afterTestAssertAll(){
+	void afterTestAssertAll() {
 		softly.assertAll();
 		for(StubMapping stub: customStubs ){
 			WireMock.removeStub(stub);
 		}
 	}
-
-	private static final List<StubMapping> customStubs = new ArrayList<>();
-	private static final String GET_URL = "/debt-collection-enforcement/fdc-contribution-files?status=REQUESTED";
-	private static final String PREPARE_URL = "/debt-collection-enforcement/prepare-fdc-contributions-files";
-	private static final String UPDATE_URL = "/debt-collection-enforcement/create-fdc-file";
 
 	@Test
 	void testXMLValid() {
@@ -76,15 +80,16 @@ class FdcServiceTest {
 		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
 		when(fdcMapperUtils.generateFileXML(any())).thenReturn("<xml>ValidXML</xml>");
 		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
-		when(fdcMapperUtils.generateAckXML(any(),any(),any(),any())).thenReturn("<xml>ValidAckXML</xml>");
+		when(fdcMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("<xml>ValidAckXML</xml>");
 		doNothing().when(drcClient).sendFdcReqToDrc(any());
 		// run
 		boolean successful = fdcService.processDailyFiles();
 		// test
 		verify(fdcMapperUtils).generateFileXML(any());
 		verify(fdcMapperUtils).generateFileName(any());
-		verify(fdcMapperUtils).generateAckXML(any(),any(),any(),any());
-		verify(fdcMapperUtils,times(12)).mapFdcEntry(any());
+		verify(fdcMapperUtils).generateAckXML(any(), any(), any(), any());
+		verify(fdcMapperUtils, times(12)).mapFdcEntry(any());
+		verify(drcClient, times(12)).sendFdcReqToDrc(any());
 		softly.assertThat(successful).isTrue();
 		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
 		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
@@ -92,7 +97,30 @@ class FdcServiceTest {
 	}
 
 	@Test
-	void testFdcGlobalUpdateError(){
+	void testXMLValidWhenOutgoingIsolated() {
+		// setup
+		when(feature.outgoingIsolated()).thenReturn(true);
+		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
+		when(fdcMapperUtils.generateFileXML(any())).thenReturn("<xml>ValidXML</xml>");
+		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
+		when(fdcMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("<xml>ValidAckXML</xml>");
+		doNothing().when(drcClient).sendFdcReqToDrc(any());
+		// run
+		boolean successful = fdcService.processDailyFiles();
+		// test
+		verify(fdcMapperUtils).generateFileXML(any());
+		verify(fdcMapperUtils).generateFileName(any());
+		verify(fdcMapperUtils).generateAckXML(any(), any(), any(), any());
+		verify(fdcMapperUtils, times(12)).mapFdcEntry(any());
+		verify(drcClient, times(0)).sendConcorContributionReqToDrc(any());
+		softly.assertThat(successful).isTrue();
+		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
+		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
+		WireMock.verify(0, postRequestedFor(urlEqualTo(UPDATE_URL)));
+	}
+
+	@Test
+	void testFdcGlobalUpdateError() {
 		// setup
 		when(fdcMapperUtils.generateFileXML(any())).thenReturn("<xml>ValidXML</xml>");
 		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
@@ -104,7 +132,6 @@ class FdcServiceTest {
 		// run
 		boolean successful = fdcService.processDailyFiles();
 
-
 		// test
 		verify(fdcMapperUtils).generateFileXML(any());
 		verify(fdcMapperUtils).generateFileName(any());
@@ -117,7 +144,7 @@ class FdcServiceTest {
 	}
 
 	@Test
-	void testFdcGlobalUpdateFailure(){
+	void testFdcGlobalUpdateFailure() {
 		// setup
 		when(fdcMapperUtils.generateFileXML(any())).thenReturn("<xml>ValidXML</xml>");
 		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
@@ -203,6 +230,16 @@ class FdcServiceTest {
 				.build();
 		Integer response = fdcService.processFdcUpdate(dataRequest);
 		softly.assertThat(response).isEqualTo(1111);
+	}
+
+	@Test
+	void testProcessFdcUpdateWhenIncomingIsolated() {
+		when(feature.incomingIsolated()).thenReturn(true);
+		UpdateLogFdcRequest dataRequest = UpdateLogFdcRequest.builder()
+				.fdcId(911)
+				.build();
+		Integer response = fdcService.processFdcUpdate(dataRequest);
+		softly.assertThat(response).isEqualTo(0); // so MAAT DB not touched
 	}
 
 	@Test
