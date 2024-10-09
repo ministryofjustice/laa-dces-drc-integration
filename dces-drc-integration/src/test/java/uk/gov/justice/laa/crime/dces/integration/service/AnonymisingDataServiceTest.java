@@ -27,14 +27,14 @@ class AnonymisingDataServiceTest {
     @Test
     void testAnonymiseMaatId() {
 
+        BigInteger maatId = BigInteger.valueOf(123456);
         CONTRIBUTIONS contributions = new CONTRIBUTIONS();
-        contributions.setMaatId(BigInteger.valueOf(1234516));
+        contributions.setMaatId(BigInteger.valueOf(67867));
 
         CONTRIBUTIONS result = anonymisingDataService.anonymise(contributions);
 
         assertNotNull(result);
-        assertNotEquals(1234516, result.getMaatId());
-
+        assertNotEquals(maatId, result.getMaatId());
     }
 
     @Test

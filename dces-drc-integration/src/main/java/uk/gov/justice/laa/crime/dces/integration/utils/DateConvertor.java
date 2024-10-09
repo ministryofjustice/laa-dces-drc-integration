@@ -12,6 +12,10 @@ import java.util.Objects;
 
 public class DateConvertor {
 
+    private DateConvertor() {
+        throw new IllegalStateException("Utility class");
+    }
+
     public static XMLGregorianCalendar convertToXMLGregorianCalendar(LocalDate date) {
         if (Objects.isNull(date)) {
             return null;
