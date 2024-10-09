@@ -13,7 +13,6 @@ class DcesDrcIntegrationApplicationTests {
 	@java.lang.SuppressWarnings("squid:S2699")
 	@Test
 	void contextLoads() {
-		throw new UnsupportedOperationException("Test not implemented");
 	}
 
 }
