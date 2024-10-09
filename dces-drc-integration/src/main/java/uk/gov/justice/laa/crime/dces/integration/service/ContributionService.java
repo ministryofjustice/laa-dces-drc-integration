@@ -36,6 +36,7 @@ public class ContributionService implements FileService {
     private final DrcClient drcClient;
     private final ObjectMapper objectMapper;
     private final Feature feature;
+    private final AnonymisingDataService anonymisingDataService;
 
     public Integer processContributionUpdate(UpdateLogContributionRequest updateLogContributionRequest) {
         try {
@@ -72,6 +73,10 @@ public class ContributionService implements FileService {
             CONTRIBUTIONS currentContribution;
             try {
                 currentContribution = contributionsMapperUtils.mapLineXMLToObject(contribEntry.getXmlContent());
+                if (feature.outgoingAnonymized()) {
+                    // anonymize the data when flag is true - only for non production environments
+                    currentContribution = anonymisingDataService.anonymise(currentContribution);
+                }
             } catch (JAXBException e) {
                 log.error("Failed to unmarshal contribution data XML, concorContributionId = {}", concorContributionId, e);
                 failedContributions.put(Integer.toString(concorContributionId), e.getClass().getName() + ": " + e.getMessage());
