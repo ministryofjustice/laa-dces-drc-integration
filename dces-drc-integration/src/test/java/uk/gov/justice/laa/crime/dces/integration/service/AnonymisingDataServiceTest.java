@@ -99,7 +99,6 @@ class AnonymisingDataServiceTest {
         assertNotEquals(getApplicant().getLandline(), result.getApplicant().getLandline());
         assertNotEquals(getApplicant().getMobile(), result.getApplicant().getMobile());
         assertNotEquals(getApplicant().getEmail(), result.getApplicant().getEmail());
-        assertNotEquals(getApplicant().getSpecialInvestigation(), result.getApplicant().getSpecialInvestigation());
 
         assertNotEquals(getApplicant().getPreferredPaymentMethod().getCode(), result.getApplicant().getPreferredPaymentMethod().getCode());
         assertNotEquals(getApplicant().getPreferredPaymentMethod().getDescription(), result.getApplicant().getPreferredPaymentMethod().getDescription());
@@ -109,9 +108,9 @@ class AnonymisingDataServiceTest {
         assertNotEquals(getApplicant().getBankDetails().getAccountNo(), result.getApplicant().getBankDetails().getAccountNo());
         assertNotEquals(getApplicant().getBankDetails().getSortCode(), result.getApplicant().getBankDetails().getSortCode());
 
-        //applicant partner
-        assertNotEquals(getApplicant().getPartner().getCiDetails().getCode(), result.getApplicant().getPartner().getCiDetails().getCode());
-        assertNotEquals(getApplicant().getPartner().getCiDetails().getDescription(), result.getApplicant().getPartner().getCiDetails().getDescription());
+//        //applicant partner
+//        assertNotEquals(getApplicant().getPartner().getCiDetails().getCode(), result.getApplicant().getPartner().getCiDetails().getCode());
+//        assertNotEquals(getApplicant().getPartner().getCiDetails().getDescription(), result.getApplicant().getPartner().getCiDetails().getDescription());
 
         //applicant partner details
         assertNotEquals(getApplicant().getPartnerDetails().getFirstName(), result.getApplicant().getPartnerDetails().getFirstName());
@@ -128,30 +127,6 @@ class AnonymisingDataServiceTest {
         assertNull(result.getApplicant().getHomeAddress());
 
     }
-
-
-    @Test
-    void testAnonymisePassported() {
-
-        CONTRIBUTIONS contributions = new CONTRIBUTIONS();
-        contributions.setMaatId(123456);
-
-        CONTRIBUTIONS.Passported passported = new CONTRIBUTIONS.Passported();
-        CONTRIBUTIONS.Passported.Reason reason = new CONTRIBUTIONS.Passported.Reason();
-        reason.setCode("Code");
-        String description = "Description description of the reason";
-        reason.setDescription(description);
-        passported.setReason(reason);
-        contributions.setPassported(passported);
-
-        CONTRIBUTIONS result = anonymisingDataService.anonymise(contributions);
-
-        assertNotNull(result);
-        assertNotNull(result.getPassported());
-        assertNotEquals("Code", result.getPassported().getReason().getCode());
-        assertNotEquals(description, result.getPassported().getReason().getDescription());
-    }
-
 
     @Test
     void testAnonymiseEquityForThirdParty() {

@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 
-import java.nio.ByteBuffer;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Optional;
 
@@ -24,8 +24,17 @@ public class AnonymisingDataService {
         long seedId = DEFAULT_SEED_VALUE * contribution.getMaatId();
         log.info("Anonymising data for contribution with maatId {} and seedId: {}", contribution.getMaatId(), seedId);
 
-        SecureRandom secureRandom = new SecureRandom(longToBytes(seedId));
+        SecureRandom secureRandom = null;
+        try {
+            secureRandom = SecureRandom.getInstance("SHA1PRNG");
+        } catch (NoSuchAlgorithmException e) {
+            log.error("Failed to create SecureRandom instance", e);
+            throw new RuntimeException(e);
+        }
+
+        secureRandom.setSeed(seedId);
         faker = new Faker(secureRandom);
+
 
         if (hasValue(contribution.getMaatId())) {
             contribution.setMaatId(faker.number().numberBetween(100000, 999999));
@@ -36,8 +45,6 @@ public class AnonymisingDataService {
                 .ifPresent(application -> contribution.setApplication(anonymiseApplication(application)));
         Optional.ofNullable(contribution.getCapitalSummary())
                 .ifPresent(capitalSummary -> contribution.setCapitalSummary(anonymiseCapitalSummary(capitalSummary)));
-        Optional.ofNullable(contribution.getPassported())
-                .ifPresent(passported -> contribution.setPassported(anonymisePassported(passported)));
         Optional.ofNullable(contribution.getEquity())
                 .ifPresent(equity -> contribution.setEquity(anonymiseEquity(equity)));
 
@@ -61,17 +68,6 @@ public class AnonymisingDataService {
         return equity;
     }
 
-    private CONTRIBUTIONS.Passported anonymisePassported(CONTRIBUTIONS.Passported passported) {
-        Optional.ofNullable(passported.getReason()).ifPresent(reason -> {
-            if (hasValue(reason.getCode())) {
-                reason.setCode(faker.text().text(4));
-            }
-            if (hasValue(reason.getDescription())) {
-                reason.setDescription(faker.text().text(10));
-            }
-        });
-        return passported;
-    }
 
     private CONTRIBUTIONS.CapitalSummary anonymiseCapitalSummary(CONTRIBUTIONS.CapitalSummary capitalSummary) {
 
@@ -101,7 +97,6 @@ public class AnonymisingDataService {
         anonymisePersonalDetails(applicant);
         Optional.ofNullable(applicant.getBankDetails()).ifPresent(this::anonymiseBankDetails);
         Optional.ofNullable(applicant.getPartnerDetails()).ifPresent(this::anonymisePartnerPersonalDetails);
-        Optional.ofNullable(applicant.getPartner()).ifPresent(this::anonymisePartnerCirDetails);
         Optional.ofNullable(applicant.getDisabilitySummary()).ifPresent(this::anonymiseDisabilitySummary);
         Optional.ofNullable(applicant.getHomeAddress()).ifPresent(this::anonymizeHomeAddress);
         Optional.ofNullable(applicant.getPostalAddress()).ifPresent(this::anonymizePostalAddress);
@@ -132,9 +127,6 @@ public class AnonymisingDataService {
         }
         if (hasValue(applicant.getEmail())) {
             applicant.setEmail(faker.internet().emailAddress());
-        }
-        if (hasValue(applicant.getSpecialInvestigation())) {
-            applicant.setSpecialInvestigation(faker.lorem().sentence());
         }
 
         Optional.ofNullable(applicant.getPreferredPaymentMethod()).ifPresent(paymentMethod -> {
@@ -176,19 +168,6 @@ public class AnonymisingDataService {
                     details.setDob(convertToXMLGregorianCalendar(faker.timeAndDate().birthday()))
             );
         });
-    }
-
-    private void anonymisePartnerCirDetails(CONTRIBUTIONS.Applicant.Partner partner) {
-        Optional.ofNullable(partner)
-                .map(CONTRIBUTIONS.Applicant.Partner::getCiDetails)
-                .ifPresent(ciDetails -> {
-                    if (hasValue(ciDetails.getCode())) {
-                        ciDetails.setCode(faker.text().text(4));
-                    }
-                    if (hasValue(ciDetails.getDescription())) {
-                        ciDetails.setDescription(faker.text().text(10));
-                    }
-                });
     }
 
     private void anonymiseDisabilitySummary(CONTRIBUTIONS.Applicant.DisabilitySummary disabilitySummary) {
@@ -278,13 +257,5 @@ public class AnonymisingDataService {
     private boolean hasValue(int value) {
         return value != 0;
     }
-
-    private byte[] longToBytes(long x) {
-        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
-        buffer.putLong(x);
-        return buffer.array();
-    }
-
-
 
 }
