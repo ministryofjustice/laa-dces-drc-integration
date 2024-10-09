@@ -29,7 +29,7 @@ def versions = [
 		jakartaXmlBindApi      : '4.0.2',
 		glassfishJaxb          : '4.0.5',
 		resilience4jVersion    : '2.2.0',
-		wiremockVersion        : '3.0.1',
+		wiremockVersion        : '3.9.1',
 		notifyVersion          : '4.1.0-RELEASE',
 		micrometerio           : '1.3.2',
 		prometheus             : '1.13.2',
@@ -113,7 +113,7 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation "org.springframework.security:spring-security-test"
 	testImplementation 'io.projectreactor:reactor-test'
-	testImplementation "com.github.tomakehurst:wiremock-jre8-standalone:$versions.wiremockVersion"
+	testImplementation "org.wiremock:wiremock-standalone:$versions.wiremockVersion"
 	testImplementation "com.squareup.okhttp3:mockwebserver:$versions.mockwebserverVersion"
 
 	testCompileOnly 'org.projectlombok:lombok'
@@ -167,8 +167,8 @@ sonar {
 		property "sonar.host.url", "https://sonarcloud.io"
 		property "sonar.organization", "ministryofjustice"
 		property "sonar.projectKey", "ministryofjustice_laa-dces-drc-integration"
-		property "sonar.exclusions", "**/entity/**.java , **/model/**.java , **/dto/**.java , **/config/**.java, **/jms/**.java,**/exception/**.java,**/handler/**.java,**/maatapi/**Client**.java,**/generated/**, **/listener/stub/DrcStubRestController.java"
-		property "sonar.coverage.exclusions", "**/DcesDrcIntegrationApplication.java, **/controller/DrcStubRestController.java"
+		property "sonar.exclusions", "**/entity/**.java , **/model/**.java , **/dto/**.java , **/config/**.java, **/jms/**.java,**/exception/**.java,**/handler/**.java,**/maatapi/**Client**.java,**/generated/**, **/listener/stub/DrcStubRestController.java, src/test/**"
+		property "sonar.coverage.exclusions", "**/DcesDrcIntegrationApplication.java, **/controller/StubAckFromDrcController.java, **/controller/TempTestController.java"
 		property "sonar.coverage.jacoco.xmlReportPaths",
 				"${project.buildDir}/reports/jacoco/test/jacocoTestReport.xml"
 	}
