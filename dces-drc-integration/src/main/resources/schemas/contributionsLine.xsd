@@ -405,7 +405,7 @@
                                     <xsd:element name="property" maxOccurs="unbounded" minOccurs="0">
                                         <xsd:complexType>
                                             <xsd:sequence>
-                                                <xsd:element type="xsd:string" name="bedRoomCount"/>
+                                                <xsd:element type="xsd:byte" name="bedRoomCount"/>
                                                 <xsd:element name="propertyType">
                                                     <xsd:complexType>
                                                         <xsd:sequence>
@@ -511,7 +511,7 @@
                         <xsd:element name="breathingSpace">
                             <xsd:complexType>
                                 <xsd:sequence>
-                                    <xsd:element type="xsd:integer" name="ID"/>
+                                    <xsd:element type="xsd:byte" name="ID"/>
                                     <xsd:element type="xsd:string" name="type"/>
                                     <xsd:element type="xsd:string" name="status"/>
                                     <xsd:element type="xsd:date" name="bsStartDate"/>
