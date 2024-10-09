@@ -167,7 +167,7 @@
                         <xsd:element name="magsCourt">
                             <xsd:complexType>
                                 <xsd:sequence>
-                                    <xsd:element type="xsd:short" name="court"/>
+                                    <xsd:element type="xsd:integer" name="court"/>
                                     <xsd:element type="xsd:string" name="description"/>
                                 </xsd:sequence>
                             </xsd:complexType>
@@ -518,7 +518,7 @@
                                     <xsd:element type="xsd:date" name="bsEndDate"/>
                                     <xsd:element type="xsd:integer" name="debtAmt"/>
                                     <xsd:element type="xsd:string" name="debtRefNo"/>
-                                    <xsd:element type="xsd:string" name="dateModified"/>
+                                    <xsd:element type="xsd:date" name="dateModified"/>
                                 </xsd:sequence>
                             </xsd:complexType>
                         </xsd:element>
