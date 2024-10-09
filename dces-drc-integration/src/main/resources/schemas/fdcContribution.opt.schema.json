@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "fdc": { "$ref": "#/$defs/Fdc" }
+  },
+  "$defs": {
+    "Fdc": {
+      "type": "object",
+      "required": ["maatId"],
+      "properties": {
+        "maatId": { "type": "integer" },
+        "sentenceDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "calculationDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "finalCost": { "type": "number" },
+        "lgfsTotal": { "type": "number" },
+        "agfsTotal": { "type": "number" },
+        "id": { "type": "integer" }
+      }
+    }
+  }
+}

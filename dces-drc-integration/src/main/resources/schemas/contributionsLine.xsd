@@ -14,7 +14,7 @@
                         <xsd:element type="xsd:string" name="landline"/>
                         <xsd:element type="xsd:string" name="mobile"/>
                         <xsd:element type="xsd:string" name="email"/>
-                        <xsd:element type="xsd:byte" name="preferredPaymentDay"/>
+                        <xsd:element type="xsd:integer" name="preferredPaymentDay"/>
                         <xsd:element name="preferredPaymentMethod">
                             <xsd:complexType>
                                 <xsd:sequence>
@@ -167,7 +167,7 @@
                         <xsd:element name="magsCourt">
                             <xsd:complexType>
                                 <xsd:sequence>
-                                    <xsd:element type="xsd:short" name="court"/>
+                                    <xsd:element type="xsd:integer" name="court"/>
                                     <xsd:element type="xsd:string" name="description"/>
                                 </xsd:sequence>
                             </xsd:complexType>
@@ -405,7 +405,7 @@
                                     <xsd:element name="property" maxOccurs="unbounded" minOccurs="0">
                                         <xsd:complexType>
                                             <xsd:sequence>
-                                                <xsd:element type="xsd:byte" name="bedRoomCount"/>
+                                                <xsd:element type="xsd:string" name="bedRoomCount"/>
                                                 <xsd:element name="propertyType">
                                                     <xsd:complexType>
                                                         <xsd:sequence>
@@ -511,14 +511,14 @@
                         <xsd:element name="breathingSpace">
                             <xsd:complexType>
                                 <xsd:sequence>
-                                    <xsd:element type="xsd:byte" name="ID"/>
+                                    <xsd:element type="xsd:integer" name="ID"/>
                                     <xsd:element type="xsd:string" name="type"/>
                                     <xsd:element type="xsd:string" name="status"/>
                                     <xsd:element type="xsd:date" name="bsStartDate"/>
                                     <xsd:element type="xsd:date" name="bsEndDate"/>
-                                    <xsd:element type="xsd:long" name="debtAmt"/>
+                                    <xsd:element type="xsd:integer" name="debtAmt"/>
                                     <xsd:element type="xsd:string" name="debtRefNo"/>
-                                    <xsd:element type="xsd:string" name="dateModified"/>
+                                    <xsd:element type="xsd:date" name="dateModified"/>
                                 </xsd:sequence>
                             </xsd:complexType>
                         </xsd:element>
