@@ -55,7 +55,7 @@
         "CONTRIBUTIONS.Applicant.BankDetails": {
             "type": "object",
             "properties": {
-                "sortCode": {"type": "integer"},
+                "sortCode": {"type": "string"},
                 "accountNo": {"type": "integer"},
                 "accountName": {"type": "string"}
             }
@@ -260,9 +260,9 @@
                     "type": "string",
                     "format": "date"
                 },
-                "monthlyContribution": {"type": "integer"},
-                "upfrontContribution": {"type": "integer"},
-                "incomeContributionCap": {"type": "integer"},
+                "monthlyContribution": {"type": "number"},
+                "upfrontContribution": {"type": "number"},
+                "incomeContributionCap": {"type": "number"},
                 "assessmentReason": {"$ref": "#/$defs/CONTRIBUTIONS.Assessment.AssessmentReason"},
                 "assessmentDate": {
                     "type": "string",
@@ -370,17 +370,17 @@
         "CONTRIBUTIONS.Equity.PropertyDescriptor": {
             "type": "object",
             "properties": {
-                "bedRoomCount": {"type": "integer"},
+                "bedRoomCount": {"type": "string"},
                 "residentialStatus": {"$ref": "#/$defs/CONTRIBUTIONS.Equity.PropertyDescriptor.ResidentialStatus"},
                 "propertyType": {"$ref": "#/$defs/CONTRIBUTIONS.Equity.PropertyDescriptor.PropertyType"},
                 "address": {"$ref": "#/$defs/CONTRIBUTIONS.Equity.PropertyDescriptor.Address"},
-                "percentageApplicantOwned": {"type": "integer"},
-                "percentagePartnerOwned": {"type": "integer"},
+                "percentageApplicantOwned": {"type": "number"},
+                "percentagePartnerOwned": {"type": "number"},
                 "applicantEquityAmount": {"type": "number"},
-                "partnerEquityAmount": {"type": "integer"},
-                "declaredMortgage": {"type": "integer"},
+                "partnerEquityAmount": {"type": "number"},
+                "declaredMortgage": {"type": "number"},
                 "declaredValue": {"type": "number"},
-                "verifiedMortgage": {"type": "integer"},
+                "verifiedMortgage": {"type": "number"},
                 "verifiedValue": {"type": "number"},
                 "tenantInPlace": {"type": "string"},
                 "thirdPartyList": {"$ref": "#/$defs/CONTRIBUTIONS.Equity.PropertyDescriptor.ThirdPartyList"}
@@ -423,7 +423,7 @@
             "type": "object",
             "properties": {
                 "type": {"$ref": "#/$defs/CONTRIBUTIONS.CapitalSummary.AssetList.Asset.Type"},
-                "amount": {"type": "integer"},
+                "amount": {"type": "number"},
                 "verified": {"type": "string"},
                 "otherDescription": {"type": "string"},
                 "dateVerified": {
@@ -498,16 +498,16 @@
         "CONTRIBUTIONS.CapitalSummary.PropertyList.Property": {
             "type": "object",
             "properties": {
-                "bedRoomCount": {"type": "integer"},
+                "bedRoomCount": {"type": "string"},
                 "propertyType": {"$ref": "#/$defs/CONTRIBUTIONS.CapitalSummary.PropertyList.Property.PropertyType"},
                 "address": {"$ref": "#/$defs/CONTRIBUTIONS.CapitalSummary.PropertyList.Property.Address"},
-                "percentageApplicantOwned": {"type": "integer"},
-                "percentagePartnerOwned": {"type": "integer"},
-                "applicantEquityAmount": {"type": "integer"},
-                "partnerEquityAmount": {"type": "integer"},
-                "declaredMortgage": {"type": "integer"},
-                "declaredValue": {"type": "integer"},
-                "verifiedMortgage": {"type": "integer"},
+                "percentageApplicantOwned": {"type": "number"},
+                "percentagePartnerOwned": {"type": "number"},
+                "applicantEquityAmount": {"type": "number"},
+                "partnerEquityAmount": {"type": "number"},
+                "declaredMortgage": {"type": "number"},
+                "declaredValue": {"type": "number"},
+                "verifiedMortgage": {"type": "number"},
                 "verifiedValue": {"type": "number"},
                 "tenantInPlace": {"type": "string"},
                 "thirdPartyList": {"$ref": "#/$defs/CONTRIBUTIONS.CapitalSummary.PropertyList.Property.ThirdPartyList"}
@@ -530,7 +530,7 @@
                     "type": "string",
                     "format": "date"
                 },
-                "totalCapitalAssets": {"type": "integer"},
+                "totalCapitalAssets": {"type": "number"},
                 "noCapitalDeclared": {"type": "string"},
                 "capAllowanceWithheld": {
                     "type": "string",
@@ -610,7 +610,10 @@
                 },
                 "debtAmt": {"type": "integer"},
                 "debtRefNo": {"type": "string"},
-                "dateModified": {"type": "string"}
+                "dateModified": {
+                    "type": "string",
+                    "format": "date"
+                }
             }
         },
         "CONTRIBUTIONS.BreathingSpaceInfo": {
