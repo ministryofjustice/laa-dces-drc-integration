@@ -6,8 +6,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 
+import java.nio.ByteBuffer;
+import java.security.SecureRandom;
 import java.util.Optional;
-import java.util.Random;
 
 import static uk.gov.justice.laa.crime.dces.integration.utils.DateConvertor.convertToXMLGregorianCalendar;
 
@@ -22,8 +23,9 @@ public class AnonymisingDataService {
 
         long seedId = DEFAULT_SEED_VALUE * contribution.getMaatId();
         log.info("Anonymising data for contribution with maatId {} and seedId: {}", contribution.getMaatId(), seedId);
-        faker = new Faker(new Random(seedId));
 
+        SecureRandom secureRandom = new SecureRandom(longToBytes(seedId));
+        faker = new Faker(secureRandom);
 
         if (hasValue(contribution.getMaatId())) {
             contribution.setMaatId(faker.number().numberBetween(100000, 999999));
@@ -276,6 +278,13 @@ public class AnonymisingDataService {
     private boolean hasValue(int value) {
         return value != 0;
     }
+
+    private byte[] longToBytes(long x) {
+        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+        buffer.putLong(x);
+        return buffer.array();
+    }
+
 
 
 }
