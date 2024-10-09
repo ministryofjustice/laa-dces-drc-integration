@@ -1,0 +1,642 @@
+{
+  "$schema": "http://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "CONTRIBUTIONS": { "$ref": "#/$defs/CONTRIBUTIONS" }
+  },
+  "$defs": {
+    "CONTRIBUTIONS.Applicant.PreferredPaymentMethod": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "CONTRIBUTIONS.Applicant.HomeAddress.Detail": {
+      "type": "object",
+      "properties": {
+        "line1": { "type": "string" },
+        "line2": { "type": "string" },
+        "line3": { "type": "string" },
+        "city": { "type": "string" },
+        "country": { "type": "string" },
+        "postcode": { "type": "string" }
+      }
+    },
+    "CONTRIBUTIONS.Applicant.HomeAddress": {
+      "type": "object",
+      "properties": {
+        "detail": { "$ref": "#/$defs/CONTRIBUTIONS.Applicant.HomeAddress.Detail" }
+      }
+    },
+    "CONTRIBUTIONS.Applicant.PostalAddress.Detail": {
+      "type": "object",
+      "properties": {
+        "line1": { "type": "string" },
+        "line2": { "type": "string" },
+        "line3": { "type": "string" },
+        "city": { "type": "string" },
+        "country": { "type": "string" },
+        "postcode": { "type": "string" }
+      }
+    },
+    "CONTRIBUTIONS.Applicant.PostalAddress": {
+      "type": "object",
+      "properties": {
+        "detail": { "$ref": "#/$defs/CONTRIBUTIONS.Applicant.PostalAddress.Detail" }
+      }
+    },
+    "CONTRIBUTIONS.Applicant.EmploymentStatus": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "CONTRIBUTIONS.Applicant.BankDetails": {
+      "type": "object",
+      "properties": {
+        "sortCode": { "type": "string" },
+        "accountNo": { "type": "integer" },
+        "accountName": { "type": "string" }
+      }
+    },
+    "CONTRIBUTIONS.Applicant.Partner.CiDetails": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "CONTRIBUTIONS.Applicant.Partner": {
+      "type": "object",
+      "properties": {
+        "hasPartner": { "type": "string" },
+        "contraryInterest": { "type": "string" },
+        "ciDetails": { "$ref": "#/$defs/CONTRIBUTIONS.Applicant.Partner.CiDetails" }
+      }
+    },
+    "CONTRIBUTIONS.Applicant.PartnerDetails.EmploymentStatus": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "CONTRIBUTIONS.Applicant.PartnerDetails": {
+      "type": "object",
+      "properties": {
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "dob": {
+          "type": "string",
+          "format": "date"
+        },
+        "niNumber": { "type": "string" },
+        "employmentStatus": { "$ref": "#/$defs/CONTRIBUTIONS.Applicant.PartnerDetails.EmploymentStatus" }
+      }
+    },
+    "CONTRIBUTIONS.Applicant.DisabilitySummary.Disabilities.Disability": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "CONTRIBUTIONS.Applicant.DisabilitySummary.Disabilities": {
+      "type": "object",
+      "properties": {
+        "disability": { "$ref": "#/$defs/CONTRIBUTIONS.Applicant.DisabilitySummary.Disabilities.Disability" }
+      }
+    },
+    "CONTRIBUTIONS.Applicant.DisabilitySummary": {
+      "type": "object",
+      "properties": {
+        "declaration": { "type": "string" },
+        "disabilities": { "$ref": "#/$defs/CONTRIBUTIONS.Applicant.DisabilitySummary.Disabilities" }
+      }
+    },
+    "CONTRIBUTIONS.Applicant": {
+      "type": "object",
+      "properties": {
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "dob": {
+          "type": "string",
+          "format": "date"
+        },
+        "niNumber": { "type": "string" },
+        "landline": { "type": "string" },
+        "mobile": { "type": "string" },
+        "email": { "type": "string" },
+        "preferredPaymentDay": { "type": "integer" },
+        "preferredPaymentMethod": { "$ref": "#/$defs/CONTRIBUTIONS.Applicant.PreferredPaymentMethod" },
+        "noFixedAbode": { "type": "string" },
+        "specialInvestigation": { "type": "string" },
+        "homeAddress": { "$ref": "#/$defs/CONTRIBUTIONS.Applicant.HomeAddress" },
+        "postalAddress": { "$ref": "#/$defs/CONTRIBUTIONS.Applicant.PostalAddress" },
+        "employmentStatus": { "$ref": "#/$defs/CONTRIBUTIONS.Applicant.EmploymentStatus" },
+        "bankDetails": { "$ref": "#/$defs/CONTRIBUTIONS.Applicant.BankDetails" },
+        "partner": { "$ref": "#/$defs/CONTRIBUTIONS.Applicant.Partner" },
+        "partnerDetails": { "$ref": "#/$defs/CONTRIBUTIONS.Applicant.PartnerDetails" },
+        "disabilitySummary": { "$ref": "#/$defs/CONTRIBUTIONS.Applicant.DisabilitySummary" },
+        "id": { "type": "integer" }
+      }
+    },
+    "CONTRIBUTIONS.Application.OffenceType": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "CONTRIBUTIONS.Application.CaseType": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "CONTRIBUTIONS.Application.RepStatus": {
+      "type": "object",
+      "properties": {
+        "status": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "CONTRIBUTIONS.Application.MagsCourt": {
+      "type": "object",
+      "properties": {
+        "court": { "type": "integer" },
+        "description": { "type": "string" }
+      }
+    },
+    "CONTRIBUTIONS.Application.AppealType": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "CONTRIBUTIONS.Application.CcHardship": {
+      "type": "object",
+      "properties": {
+        "reviewDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "reviewResult": { "type": "string" }
+      }
+    },
+    "CONTRIBUTIONS.Application.Solicitor": {
+      "type": "object",
+      "properties": {
+        "accountCode": { "type": "string" },
+        "name": { "type": "string" }
+      }
+    },
+    "CONTRIBUTIONS.Application": {
+      "type": "object",
+      "properties": {
+        "offenceType": { "$ref": "#/$defs/CONTRIBUTIONS.Application.OffenceType" },
+        "caseType": { "$ref": "#/$defs/CONTRIBUTIONS.Application.CaseType" },
+        "repStatus": { "$ref": "#/$defs/CONTRIBUTIONS.Application.RepStatus" },
+        "magsCourt": { "$ref": "#/$defs/CONTRIBUTIONS.Application.MagsCourt" },
+        "repStatusDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "arrestSummonsNumber": { "type": "string" },
+        "inCourtCustody": { "type": "string" },
+        "imprisoned": { "type": "string" },
+        "repOrderWithdrawalDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "committalDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "sentenceDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "appealType": { "$ref": "#/$defs/CONTRIBUTIONS.Application.AppealType" },
+        "ccHardship": { "$ref": "#/$defs/CONTRIBUTIONS.Application.CcHardship" },
+        "solicitor": { "$ref": "#/$defs/CONTRIBUTIONS.Application.Solicitor" }
+      }
+    },
+    "CONTRIBUTIONS.Assessment.AssessmentReason": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "CONTRIBUTIONS.Assessment.IncomeEvidenceList.IncomeEvidence": {
+      "type": "object",
+      "properties": {
+        "evidence": { "type": "string" },
+        "mandatory": { "type": "string" },
+        "dateReceived": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    },
+    "CONTRIBUTIONS.Assessment.IncomeEvidenceList": {
+      "type": "object",
+      "properties": {
+        "incomeEvidence": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/CONTRIBUTIONS.Assessment.IncomeEvidenceList.IncomeEvidence" },
+          "minItems": 0
+        }
+      }
+    },
+    "CONTRIBUTIONS.Assessment": {
+      "type": "object",
+      "properties": {
+        "effectiveDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "monthlyContribution": { "type": "number" },
+        "upfrontContribution": { "type": "number" },
+        "incomeContributionCap": { "type": "number" },
+        "assessmentReason": { "$ref": "#/$defs/CONTRIBUTIONS.Assessment.AssessmentReason" },
+        "assessmentDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "upliftAppliedDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "upliftRemovedDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "incomeEvidenceList": { "$ref": "#/$defs/CONTRIBUTIONS.Assessment.IncomeEvidenceList" },
+        "sufficientDeclaredEquity": { "type": "string" },
+        "sufficientVerifiedEquity": { "type": "string" },
+        "sufficientCapitalandEquity": { "type": "string" }
+      }
+    },
+    "CONTRIBUTIONS.Passported.Result": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "CONTRIBUTIONS.Passported.Reason": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "CONTRIBUTIONS.Passported": {
+      "type": "object",
+      "properties": {
+        "result": { "$ref": "#/$defs/CONTRIBUTIONS.Passported.Result" },
+        "dateCompleted": {
+          "type": "string",
+          "format": "date"
+        },
+        "reason": { "$ref": "#/$defs/CONTRIBUTIONS.Passported.Reason" }
+      }
+    },
+    "CONTRIBUTIONS.Equity.PropertyDescriptor.ResidentialStatus": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "CONTRIBUTIONS.Equity.PropertyDescriptor.PropertyType": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "CONTRIBUTIONS.Equity.PropertyDescriptor.Address.Detail": {
+      "type": "object",
+      "properties": {
+        "line1": { "type": "string" },
+        "line2": { "type": "string" },
+        "line3": { "type": "string" },
+        "city": { "type": "string" },
+        "country": { "type": "string" },
+        "postcode": { "type": "string" }
+      }
+    },
+    "CONTRIBUTIONS.Equity.PropertyDescriptor.Address": {
+      "type": "object",
+      "properties": {
+        "detail": { "$ref": "#/$defs/CONTRIBUTIONS.Equity.PropertyDescriptor.Address.Detail" }
+      }
+    },
+    "CONTRIBUTIONS.Equity.PropertyDescriptor.ThirdPartyList.ThirdParty.Relationship": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "CONTRIBUTIONS.Equity.PropertyDescriptor.ThirdPartyList.ThirdParty": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "relationship": { "$ref": "#/$defs/CONTRIBUTIONS.Equity.PropertyDescriptor.ThirdPartyList.ThirdParty.Relationship" },
+        "otherDescription": { "type": "string" },
+        "dateCreated": {
+          "type": "string",
+          "format": "date"
+        },
+        "dateDeleted": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    },
+    "CONTRIBUTIONS.Equity.PropertyDescriptor.ThirdPartyList": {
+      "type": "object",
+      "properties": {
+        "thirdParty": { "$ref": "#/$defs/CONTRIBUTIONS.Equity.PropertyDescriptor.ThirdPartyList.ThirdParty" }
+      }
+    },
+    "CONTRIBUTIONS.Equity.PropertyDescriptor": {
+      "type": "object",
+      "properties": {
+        "bedRoomCount": { "type": "string" },
+        "residentialStatus": { "$ref": "#/$defs/CONTRIBUTIONS.Equity.PropertyDescriptor.ResidentialStatus" },
+        "propertyType": { "$ref": "#/$defs/CONTRIBUTIONS.Equity.PropertyDescriptor.PropertyType" },
+        "address": { "$ref": "#/$defs/CONTRIBUTIONS.Equity.PropertyDescriptor.Address" },
+        "percentageApplicantOwned": { "type": "number" },
+        "percentagePartnerOwned": { "type": "number" },
+        "applicantEquityAmount": { "type": "number" },
+        "partnerEquityAmount": { "type": "number" },
+        "declaredMortgage": { "type": "number" },
+        "declaredValue": { "type": "number" },
+        "verifiedMortgage": { "type": "number" },
+        "verifiedValue": { "type": "number" },
+        "tenantInPlace": { "type": "string" },
+        "thirdPartyList": { "$ref": "#/$defs/CONTRIBUTIONS.Equity.PropertyDescriptor.ThirdPartyList" }
+      }
+    },
+    "CONTRIBUTIONS.Equity": {
+      "type": "object",
+      "properties": {
+        "undeclaredProperty": { "type": "string" },
+        "equityVerified": { "type": "string" },
+        "equityVerifiedBy": { "type": "string" },
+        "equityVerifiedDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "propertyDescriptor": { "$ref": "#/$defs/CONTRIBUTIONS.Equity.PropertyDescriptor" }
+      }
+    },
+    "CONTRIBUTIONS.CapitalSummary.MotorVehicleOwnership.RegistrationList": {
+      "type": "object",
+      "properties": {
+        "registration": { "type": "string" }
+      }
+    },
+    "CONTRIBUTIONS.CapitalSummary.MotorVehicleOwnership": {
+      "type": "object",
+      "properties": {
+        "owner": { "type": "string" },
+        "registrationList": { "$ref": "#/$defs/CONTRIBUTIONS.CapitalSummary.MotorVehicleOwnership.RegistrationList" }
+      }
+    },
+    "CONTRIBUTIONS.CapitalSummary.AssetList.Asset.Type": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "CONTRIBUTIONS.CapitalSummary.AssetList.Asset": {
+      "type": "object",
+      "properties": {
+        "type": { "$ref": "#/$defs/CONTRIBUTIONS.CapitalSummary.AssetList.Asset.Type" },
+        "amount": { "type": "number" },
+        "verified": { "type": "string" },
+        "otherDescription": { "type": "string" },
+        "dateVerified": {
+          "type": "string",
+          "format": "date"
+        },
+        "evidenceReceivedDate": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    },
+    "CONTRIBUTIONS.CapitalSummary.AssetList": {
+      "type": "object",
+      "properties": {
+        "asset": { "$ref": "#/$defs/CONTRIBUTIONS.CapitalSummary.AssetList.Asset" }
+      }
+    },
+    "CONTRIBUTIONS.CapitalSummary.PropertyList.Property.PropertyType": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "CONTRIBUTIONS.CapitalSummary.PropertyList.Property.Address.Detail": {
+      "type": "object",
+      "properties": {
+        "line1": { "type": "string" },
+        "line2": { "type": "string" },
+        "line3": { "type": "string" },
+        "city": { "type": "string" },
+        "country": { "type": "string" },
+        "postcode": { "type": "string" }
+      }
+    },
+    "CONTRIBUTIONS.CapitalSummary.PropertyList.Property.Address": {
+      "type": "object",
+      "properties": {
+        "detail": { "$ref": "#/$defs/CONTRIBUTIONS.CapitalSummary.PropertyList.Property.Address.Detail" }
+      }
+    },
+    "CONTRIBUTIONS.CapitalSummary.PropertyList.Property.ThirdPartyList.ThirdParty.Relationship": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "CONTRIBUTIONS.CapitalSummary.PropertyList.Property.ThirdPartyList.ThirdParty": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "relationship": { "$ref": "#/$defs/CONTRIBUTIONS.CapitalSummary.PropertyList.Property.ThirdPartyList.ThirdParty.Relationship" },
+        "otherDescription": { "type": "string" },
+        "dateCreated": {
+          "type": "string",
+          "format": "date"
+        },
+        "dateDeleted": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    },
+    "CONTRIBUTIONS.CapitalSummary.PropertyList.Property.ThirdPartyList": {
+      "type": "object",
+      "properties": {
+        "thirdParty": { "$ref": "#/$defs/CONTRIBUTIONS.CapitalSummary.PropertyList.Property.ThirdPartyList.ThirdParty" }
+      }
+    },
+    "CONTRIBUTIONS.CapitalSummary.PropertyList.Property": {
+      "type": "object",
+      "properties": {
+        "bedRoomCount": { "type": "string" },
+        "propertyType": { "$ref": "#/$defs/CONTRIBUTIONS.CapitalSummary.PropertyList.Property.PropertyType" },
+        "address": { "$ref": "#/$defs/CONTRIBUTIONS.CapitalSummary.PropertyList.Property.Address" },
+        "percentageApplicantOwned": { "type": "number" },
+        "percentagePartnerOwned": { "type": "number" },
+        "applicantEquityAmount": { "type": "number" },
+        "partnerEquityAmount": { "type": "number" },
+        "declaredMortgage": { "type": "number" },
+        "declaredValue": { "type": "number" },
+        "verifiedMortgage": { "type": "number" },
+        "verifiedValue": { "type": "number" },
+        "tenantInPlace": { "type": "string" },
+        "thirdPartyList": { "$ref": "#/$defs/CONTRIBUTIONS.CapitalSummary.PropertyList.Property.ThirdPartyList" }
+      }
+    },
+    "CONTRIBUTIONS.CapitalSummary.PropertyList": {
+      "type": "object",
+      "properties": {
+        "property": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/CONTRIBUTIONS.CapitalSummary.PropertyList.Property" },
+          "minItems": 0
+        }
+      }
+    },
+    "CONTRIBUTIONS.CapitalSummary": {
+      "type": "object",
+      "properties": {
+        "allEvidenceDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "totalCapitalAssets": { "type": "number" },
+        "noCapitalDeclared": { "type": "string" },
+        "capAllowanceWithheld": {
+          "type": "string",
+          "format": "date"
+        },
+        "capAllowanceRestore": {
+          "type": "string",
+          "format": "date"
+        },
+        "motorVehicleOwnership": { "$ref": "#/$defs/CONTRIBUTIONS.CapitalSummary.MotorVehicleOwnership" },
+        "assetList": { "$ref": "#/$defs/CONTRIBUTIONS.CapitalSummary.AssetList" },
+        "propertyList": { "$ref": "#/$defs/CONTRIBUTIONS.CapitalSummary.PropertyList" }
+      }
+    },
+    "CONTRIBUTIONS.CcOutcomes.CcOutcome": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "date": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    },
+    "CONTRIBUTIONS.CcOutcomes": {
+      "type": "object",
+      "properties": {
+        "ccOutcome": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/CONTRIBUTIONS.CcOutcomes.CcOutcome" },
+          "minItems": 0
+        }
+      }
+    },
+    "CONTRIBUTIONS.Correspondence.Letter": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "ref": { "type": "string" },
+        "id": { "type": "integer" },
+        "type": { "type": "string" },
+        "created": {
+          "type": "string",
+          "format": "date"
+        },
+        "printed": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    },
+    "CONTRIBUTIONS.Correspondence": {
+      "type": "object",
+      "properties": {
+        "letter": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/CONTRIBUTIONS.Correspondence.Letter" },
+          "minItems": 0
+        }
+      }
+    },
+    "CONTRIBUTIONS.BreathingSpaceInfo.BreathingSpace": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer" },
+        "type": { "type": "string" },
+        "status": { "type": "string" },
+        "bsStartDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "bsEndDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "debtAmt": { "type": "integer" },
+        "debtRefNo": { "type": "string" },
+        "dateModified": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    },
+    "CONTRIBUTIONS.BreathingSpaceInfo": {
+      "type": "object",
+      "properties": {
+        "breathingSpace": { "$ref": "#/$defs/CONTRIBUTIONS.BreathingSpaceInfo.BreathingSpace" }
+      }
+    },
+    "CONTRIBUTIONS": {
+      "type": "object",
+      "required": ["maatId"],
+      "properties": {
+        "maatId": { "type": "integer" },
+        "applicant": { "$ref": "#/$defs/CONTRIBUTIONS.Applicant" },
+        "application": { "$ref": "#/$defs/CONTRIBUTIONS.Application" },
+        "assessment": { "$ref": "#/$defs/CONTRIBUTIONS.Assessment" },
+        "passported": { "$ref": "#/$defs/CONTRIBUTIONS.Passported" },
+        "equity": { "$ref": "#/$defs/CONTRIBUTIONS.Equity" },
+        "capitalSummary": { "$ref": "#/$defs/CONTRIBUTIONS.CapitalSummary" },
+        "ccOutcomes": { "$ref": "#/$defs/CONTRIBUTIONS.CcOutcomes" },
+        "correspondence": { "$ref": "#/$defs/CONTRIBUTIONS.Correspondence" },
+        "breathingSpaceInfo": { "$ref": "#/$defs/CONTRIBUTIONS.BreathingSpaceInfo" },
+        "id": { "type": "integer" },
+        "flag": { "type": "string" }
+      }
+    }
+  }
+}

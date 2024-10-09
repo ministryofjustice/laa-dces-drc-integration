@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Created with Liquid Technologies Online Tools 1.0 (https://www.liquid-technologies.com) -->
 <xsd:schema elementFormDefault="qualified" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
     <xsd:element name="CONTRIBUTIONS" type="CONTRIBUTIONS"/>
     <xsd:complexType name="CONTRIBUTIONS">
         <xsd:sequence>
-            <xsd:element type="xsd:int" name="maat_id"/>
+            <xsd:element type="xsd:integer" name="maat_id"/>
             <xsd:element name="applicant">
                 <xsd:complexType>
                     <xsd:sequence>
@@ -15,7 +14,7 @@
                         <xsd:element type="xsd:string" name="landline"/>
                         <xsd:element type="xsd:string" name="mobile"/>
                         <xsd:element type="xsd:string" name="email"/>
-                        <xsd:element type="xsd:byte" name="preferredPaymentDay"/>
+                        <xsd:element type="xsd:integer" name="preferredPaymentDay"/>
                         <xsd:element name="preferredPaymentMethod">
                             <xsd:complexType>
                                 <xsd:sequence>
@@ -73,8 +72,8 @@
                         <xsd:element name="bankDetails">
                             <xsd:complexType>
                                 <xsd:sequence>
-                                    <xsd:element type="xsd:int" name="sortCode"/>
-                                    <xsd:element type="xsd:int" name="accountNo"/>
+                                    <xsd:element type="xsd:string" name="sortCode"/>
+                                    <xsd:element type="xsd:integer" name="accountNo"/>
                                     <xsd:element type="xsd:string" name="accountName"/>
                                 </xsd:sequence>
                             </xsd:complexType>
@@ -135,7 +134,7 @@
                             </xsd:complexType>
                         </xsd:element>
                     </xsd:sequence>
-                    <xsd:attribute type="xsd:int" name="id"/>
+                    <xsd:attribute type="xsd:integer" name="id"/>
                 </xsd:complexType>
             </xsd:element>
             <xsd:element name="application">
@@ -168,7 +167,7 @@
                         <xsd:element name="magsCourt">
                             <xsd:complexType>
                                 <xsd:sequence>
-                                    <xsd:element type="xsd:short" name="court"/>
+                                    <xsd:element type="xsd:integer" name="court"/>
                                     <xsd:element type="xsd:string" name="description"/>
                                 </xsd:sequence>
                             </xsd:complexType>
@@ -211,9 +210,9 @@
                 <xsd:complexType>
                     <xsd:sequence>
                         <xsd:element type="xsd:date" name="effectiveDate"/>
-                        <xsd:element type="xsd:int" name="monthlyContribution"/>
-                        <xsd:element type="xsd:int" name="upfrontContribution"/>
-                        <xsd:element type="xsd:int" name="incomeContributionCap"/>
+                        <xsd:element type="xsd:decimal" name="monthlyContribution"/>
+                        <xsd:element type="xsd:decimal" name="upfrontContribution"/>
+                        <xsd:element type="xsd:decimal" name="incomeContributionCap"/>
                         <xsd:element name="assessmentReason">
                             <xsd:complexType>
                                 <xsd:sequence>
@@ -279,7 +278,7 @@
                         <xsd:element name="propertyDescriptor">
                             <xsd:complexType>
                                 <xsd:sequence>
-                                    <xsd:element type="xsd:byte" name="bedRoomCount"/>
+                                    <xsd:element type="xsd:string" name="bedRoomCount"/>
                                     <xsd:element name="residentialStatus">
                                         <xsd:complexType>
                                             <xsd:sequence>
@@ -314,14 +313,14 @@
                                             </xsd:sequence>
                                         </xsd:complexType>
                                     </xsd:element>
-                                    <xsd:element type="xsd:byte" name="percentageApplicantOwned"/>
-                                    <xsd:element type="xsd:byte" name="percentagePartnerOwned"/>
-                                    <xsd:element type="xsd:float" name="applicantEquityAmount"/>
-                                    <xsd:element type="xsd:byte" name="partnerEquityAmount"/>
-                                    <xsd:element type="xsd:byte" name="declaredMortgage"/>
-                                    <xsd:element type="xsd:float" name="declaredValue"/>
-                                    <xsd:element type="xsd:byte" name="verifiedMortgage"/>
-                                    <xsd:element type="xsd:float" name="verifiedValue"/>
+                                    <xsd:element type="xsd:decimal" name="percentageApplicantOwned"/>
+                                    <xsd:element type="xsd:decimal" name="percentagePartnerOwned"/>
+                                    <xsd:element type="xsd:decimal" name="applicantEquityAmount"/>
+                                    <xsd:element type="xsd:decimal" name="partnerEquityAmount"/>
+                                    <xsd:element type="xsd:decimal" name="declaredMortgage"/>
+                                    <xsd:element type="xsd:decimal" name="declaredValue"/>
+                                    <xsd:element type="xsd:decimal" name="verifiedMortgage"/>
+                                    <xsd:element type="xsd:decimal" name="verifiedValue"/>
                                     <xsd:element type="xsd:string" name="tenantInPlace"/>
                                     <xsd:element name="thirdPartyList">
                                         <xsd:complexType>
@@ -357,7 +356,7 @@
                 <xsd:complexType>
                     <xsd:sequence>
                         <xsd:element type="xsd:date" name="allEvidenceDate"/>
-                        <xsd:element type="xsd:integer" name="totalCapitalAssets"/>
+                        <xsd:element type="xsd:decimal" name="totalCapitalAssets"/>
                         <xsd:element type="xsd:string" name="noCapitalDeclared"/>
                         <xsd:element type="xsd:date" name="capAllowanceWithheld"/>
                         <xsd:element type="xsd:date" name="capAllowanceRestore"/>
@@ -389,7 +388,7 @@
                                                         </xsd:sequence>
                                                     </xsd:complexType>
                                                 </xsd:element>
-                                                <xsd:element type="xsd:integer" name="amount"/>
+                                                <xsd:element type="xsd:decimal" name="amount"/>
                                                 <xsd:element type="xsd:string" name="verified"/>
                                                 <xsd:element type="xsd:string" name="otherDescription"/>
                                                 <xsd:element type="xsd:date" name="dateVerified"/>
@@ -406,7 +405,7 @@
                                     <xsd:element name="property" maxOccurs="unbounded" minOccurs="0">
                                         <xsd:complexType>
                                             <xsd:sequence>
-                                                <xsd:element type="xsd:byte" name="bedRoomCount"/>
+                                                <xsd:element type="xsd:string" name="bedRoomCount"/>
                                                 <xsd:element name="propertyType">
                                                     <xsd:complexType>
                                                         <xsd:sequence>
@@ -433,14 +432,14 @@
                                                         </xsd:sequence>
                                                     </xsd:complexType>
                                                 </xsd:element>
-                                                <xsd:element type="xsd:byte" name="percentageApplicantOwned"/>
-                                                <xsd:element type="xsd:byte" name="percentagePartnerOwned"/>
-                                                <xsd:element type="xsd:integer" name="applicantEquityAmount"/>
-                                                <xsd:element type="xsd:byte" name="partnerEquityAmount"/>
-                                                <xsd:element type="xsd:integer" name="declaredMortgage"/>
-                                                <xsd:element type="xsd:integer" name="declaredValue"/>
-                                                <xsd:element type="xsd:byte" name="verifiedMortgage"/>
-                                                <xsd:element type="xsd:float" name="verifiedValue"/>
+                                                <xsd:element type="xsd:decimal" name="percentageApplicantOwned"/>
+                                                <xsd:element type="xsd:decimal" name="percentagePartnerOwned"/>
+                                                <xsd:element type="xsd:decimal" name="applicantEquityAmount"/>
+                                                <xsd:element type="xsd:decimal" name="partnerEquityAmount"/>
+                                                <xsd:element type="xsd:decimal" name="declaredMortgage"/>
+                                                <xsd:element type="xsd:decimal" name="declaredValue"/>
+                                                <xsd:element type="xsd:decimal" name="verifiedMortgage"/>
+                                                <xsd:element type="xsd:decimal" name="verifiedValue"/>
                                                 <xsd:element type="xsd:string" name="tenantInPlace"/>
                                                 <xsd:element name="thirdPartyList">
                                                     <xsd:complexType>
@@ -512,14 +511,14 @@
                         <xsd:element name="breathingSpace">
                             <xsd:complexType>
                                 <xsd:sequence>
-                                    <xsd:element type="xsd:byte" name="ID"/>
+                                    <xsd:element type="xsd:integer" name="ID"/>
                                     <xsd:element type="xsd:string" name="type"/>
                                     <xsd:element type="xsd:string" name="status"/>
                                     <xsd:element type="xsd:date" name="bsStartDate"/>
                                     <xsd:element type="xsd:date" name="bsEndDate"/>
                                     <xsd:element type="xsd:integer" name="debtAmt"/>
                                     <xsd:element type="xsd:string" name="debtRefNo"/>
-                                    <xsd:element type="xsd:string" name="dateModified"/>
+                                    <xsd:element type="xsd:date" name="dateModified"/>
                                 </xsd:sequence>
                             </xsd:complexType>
                         </xsd:element>
