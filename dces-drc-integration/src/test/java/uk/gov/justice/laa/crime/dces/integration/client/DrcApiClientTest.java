@@ -147,7 +147,7 @@ class DrcApiClientTest {
         var factory = new uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.ObjectFactory();
         var contribution = factory.createCONTRIBUTIONS();
         contribution.setId(BigInteger.valueOf(3333));
-        contribution.setMaatId(3338);
+        contribution.setMaatId(BigInteger.valueOf(3338));
         contribution.setFlag("NEW");
         var applicant = factory.createCONTRIBUTIONSApplicant();
         applicant.setFirstName("John");
