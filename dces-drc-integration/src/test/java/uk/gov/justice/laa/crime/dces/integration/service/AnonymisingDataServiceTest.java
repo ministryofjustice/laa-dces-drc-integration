@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 
+import java.math.BigInteger;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -27,7 +28,7 @@ class AnonymisingDataServiceTest {
     void testAnonymiseMaatId() {
 
         CONTRIBUTIONS contributions = new CONTRIBUTIONS();
-        contributions.setMaatId(1234516);
+        contributions.setMaatId(BigInteger.valueOf(1234516));
 
         CONTRIBUTIONS result = anonymisingDataService.anonymise(contributions);
 
@@ -40,7 +41,7 @@ class AnonymisingDataServiceTest {
     void testAnonymiseApplicantHomeAddress() {
 
         CONTRIBUTIONS contributions = new CONTRIBUTIONS();
-        contributions.setMaatId(123456);
+        contributions.setMaatId(BigInteger.valueOf(123456));
         CONTRIBUTIONS.Applicant applicant = new CONTRIBUTIONS.Applicant();
         applicant.setHomeAddress(getApplicantHomeAddress());
         contributions.setApplicant(applicant);
@@ -61,8 +62,7 @@ class AnonymisingDataServiceTest {
     @Test
     void testAnonymiseApplicantPostalAddress() {
 
-        CONTRIBUTIONS contributions = new CONTRIBUTIONS();
-        contributions.setMaatId(123456);
+        CONTRIBUTIONS contributions = getContributions();
         CONTRIBUTIONS.Applicant applicant = new CONTRIBUTIONS.Applicant();
         applicant.setPostalAddress(getApplicantPostalAddress());
         contributions.setApplicant(applicant);
@@ -81,8 +81,7 @@ class AnonymisingDataServiceTest {
 
     @Test
     void testAnonymiseApplicant() {
-        CONTRIBUTIONS contributions = new CONTRIBUTIONS();
-        contributions.setMaatId(123456);
+        CONTRIBUTIONS contributions = getContributions();
         contributions.setApplicant(getApplicant());
 
         CONTRIBUTIONS result = anonymisingDataService.anonymise(contributions);
@@ -108,10 +107,6 @@ class AnonymisingDataServiceTest {
         assertNotEquals(getApplicant().getBankDetails().getAccountNo(), result.getApplicant().getBankDetails().getAccountNo());
         assertNotEquals(getApplicant().getBankDetails().getSortCode(), result.getApplicant().getBankDetails().getSortCode());
 
-//        //applicant partner
-//        assertNotEquals(getApplicant().getPartner().getCiDetails().getCode(), result.getApplicant().getPartner().getCiDetails().getCode());
-//        assertNotEquals(getApplicant().getPartner().getCiDetails().getDescription(), result.getApplicant().getPartner().getCiDetails().getDescription());
-
         //applicant partner details
         assertNotEquals(getApplicant().getPartnerDetails().getFirstName(), result.getApplicant().getPartnerDetails().getFirstName());
         assertNotEquals(getApplicant().getPartnerDetails().getLastName(), result.getApplicant().getPartnerDetails().getLastName());
@@ -131,8 +126,7 @@ class AnonymisingDataServiceTest {
     @Test
     void testAnonymiseEquityForThirdParty() {
 
-        CONTRIBUTIONS contributions = new CONTRIBUTIONS();
-        contributions.setMaatId(123456);
+        CONTRIBUTIONS contributions = getContributions();
 
         CONTRIBUTIONS.Equity equity = new CONTRIBUTIONS.Equity();
         CONTRIBUTIONS.Equity.PropertyDescriptor property = new CONTRIBUTIONS.Equity.PropertyDescriptor();
@@ -154,8 +148,7 @@ class AnonymisingDataServiceTest {
     @Test
     void testAnonymiseEquityForProperty() {
 
-        CONTRIBUTIONS contributions = new CONTRIBUTIONS();
-        contributions.setMaatId(123456);
+        CONTRIBUTIONS contributions = getContributions();
 
         CONTRIBUTIONS.Equity equity = new CONTRIBUTIONS.Equity();
         CONTRIBUTIONS.Equity.PropertyDescriptor property = new CONTRIBUTIONS.Equity.PropertyDescriptor();
@@ -185,7 +178,7 @@ class AnonymisingDataServiceTest {
 
     private CONTRIBUTIONS.Applicant getApplicant() {
         CONTRIBUTIONS.Applicant applicantWithDefaultData = new CONTRIBUTIONS.Applicant();
-        applicantWithDefaultData.setId(1212);
+        applicantWithDefaultData.setId(BigInteger.valueOf(1212));
         applicantWithDefaultData.setFirstName("John");
         applicantWithDefaultData.setLastName("Doe");
         applicantWithDefaultData.setDob(convertToXMLGregorianCalendar(LocalDate.of(1989, 1, 1)));
@@ -202,8 +195,8 @@ class AnonymisingDataServiceTest {
 
         CONTRIBUTIONS.Applicant.BankDetails bankDetails = new CONTRIBUTIONS.Applicant.BankDetails();
         bankDetails.setAccountName("John Doe");
-        bankDetails.setAccountNo(12345678);
-        bankDetails.setSortCode(223344);
+        bankDetails.setAccountNo(BigInteger.valueOf(12345678));
+        bankDetails.setSortCode("223344");
         applicantWithDefaultData.setBankDetails(bankDetails);
 
         //set partner
@@ -258,8 +251,7 @@ class AnonymisingDataServiceTest {
     @Test
     void testAnonymiseCapitalSummary() {
 
-        CONTRIBUTIONS contributions = new CONTRIBUTIONS();
-        contributions.setMaatId(123456);
+        CONTRIBUTIONS contributions = getContributions();
 
         contributions.setCapitalSummary(getCapitalSummary());
 
@@ -272,8 +264,7 @@ class AnonymisingDataServiceTest {
     @Test
     void testAnonymiseCapitalSummaryWhenMotorOwnershipIsNull() {
 
-        CONTRIBUTIONS contributions = new CONTRIBUTIONS();
-        contributions.setMaatId(123456);
+        CONTRIBUTIONS contributions = getContributions();
         CONTRIBUTIONS.CapitalSummary capitalSummary = getCapitalSummary();
         capitalSummary.setMotorVehicleOwnership(null);
         contributions.setCapitalSummary(capitalSummary);
@@ -286,8 +277,7 @@ class AnonymisingDataServiceTest {
     @Test
     void testAnonymiseCapitalSummaryWhenMotorRegistrationIsNull() {
 
-        CONTRIBUTIONS contributions = new CONTRIBUTIONS();
-        contributions.setMaatId(123456);
+        CONTRIBUTIONS contributions = getContributions();
         CONTRIBUTIONS.CapitalSummary capitalSummary = getCapitalSummary();
         capitalSummary.getMotorVehicleOwnership().setRegistrationList(null);
         contributions.setCapitalSummary(capitalSummary);
@@ -324,5 +314,9 @@ class AnonymisingDataServiceTest {
         return disabilitySummary;
     }
 
-
+    private CONTRIBUTIONS getContributions() {
+        CONTRIBUTIONS contributions = new CONTRIBUTIONS();
+        contributions.setMaatId(BigInteger.valueOf(23223));
+        return contributions;
+    }
 }

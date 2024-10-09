@@ -4,8 +4,10 @@ import lombok.extern.slf4j.Slf4j;
 import net.datafaker.Faker;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import uk.gov.justice.laa.crime.dces.integration.exception.DcesDrcServiceException;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 
+import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Optional;
@@ -21,23 +23,23 @@ public class AnonymisingDataService {
 
     public CONTRIBUTIONS anonymise(CONTRIBUTIONS contribution) {
 
-        long seedId = DEFAULT_SEED_VALUE * contribution.getMaatId();
+        BigInteger seedId = BigInteger.valueOf(DEFAULT_SEED_VALUE).multiply(contribution.getMaatId());
         log.info("Anonymising data for contribution with maatId {} and seedId: {}", contribution.getMaatId(), seedId);
 
-        SecureRandom secureRandom = null;
+        SecureRandom secureRandom;
         try {
             secureRandom = SecureRandom.getInstance("SHA1PRNG");
         } catch (NoSuchAlgorithmException e) {
             log.error("Failed to create SecureRandom instance", e);
-            throw new RuntimeException(e);
+            throw new DcesDrcServiceException(e.getMessage(), e);
         }
 
-        secureRandom.setSeed(seedId);
+        secureRandom.setSeed(seedId.longValue());
         faker = new Faker(secureRandom);
 
 
         if (hasValue(contribution.getMaatId())) {
-            contribution.setMaatId(faker.number().numberBetween(100000, 999999));
+            contribution.setMaatId(BigInteger.valueOf(faker.number().numberBetween(100000, 999999)));
         }
         Optional.ofNullable(contribution.getApplicant())
                 .ifPresent(applicant -> contribution.setApplicant(anonymiseApplicant(applicant)));
@@ -100,13 +102,13 @@ public class AnonymisingDataService {
         Optional.ofNullable(applicant.getDisabilitySummary()).ifPresent(this::anonymiseDisabilitySummary);
         Optional.ofNullable(applicant.getHomeAddress()).ifPresent(this::anonymizeHomeAddress);
         Optional.ofNullable(applicant.getPostalAddress()).ifPresent(this::anonymizePostalAddress);
-
         return applicant;
     }
 
 
     private void anonymisePersonalDetails(CONTRIBUTIONS.Applicant applicant) {
-        Optional.ofNullable(applicant.getId()).ifPresent(id -> applicant.setId(faker.number().positive()));
+        Optional.ofNullable(applicant.getId())
+                .ifPresent(id -> applicant.setId(BigInteger.valueOf(faker.number().positive())));
         if (hasValue(applicant.getFirstName())) {
             applicant.setFirstName(faker.name().firstName());
         }
@@ -145,10 +147,10 @@ public class AnonymisingDataService {
                 details.setAccountName(faker.name().fullName());
             }
             if (hasValue(details.getSortCode())) {
-                details.setSortCode(faker.number().numberBetween(100000, 999999));
+                details.setSortCode(String.valueOf(faker.number().numberBetween(100000, 999999)));
             }
             if (hasValue(details.getAccountNo())) {
-                details.setAccountNo(faker.number().numberBetween(10000000, 99999999));
+                details.setAccountNo(BigInteger.valueOf(faker.number().numberBetween(10000000, 99999999)));
             }
         });
     }
@@ -254,8 +256,8 @@ public class AnonymisingDataService {
         return StringUtils.hasText(value);
     }
 
-    private boolean hasValue(int value) {
-        return value != 0;
+    private boolean hasValue(BigInteger value) {
+        return value != null && value.signum() != 0;
     }
 
 }

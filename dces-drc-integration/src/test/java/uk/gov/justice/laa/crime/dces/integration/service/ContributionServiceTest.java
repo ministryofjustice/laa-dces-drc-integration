@@ -112,7 +112,6 @@ class ContributionServiceTest {
 	@Test
 	void testXMLValidWhenOutgoingAnonymizedFlagIsTrue() throws JAXBException {
 		CONTRIBUTIONS contributions = createTestContribution();
-		contributions.setMaatId(23223);
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(contributions);
 		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
@@ -222,6 +221,7 @@ class ContributionServiceTest {
 	CONTRIBUTIONS createTestContribution(){
 		ObjectFactory of = new ObjectFactory();
 		CONTRIBUTIONS cont = of.createCONTRIBUTIONS();
+		cont.setMaatId(BigInteger.valueOf(1111));
 		cont.setId(BigInteger.valueOf(3333));
 		return cont;
 	}
