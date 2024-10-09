@@ -14,7 +14,7 @@
                         <xsd:element type="xsd:string" name="landline"/>
                         <xsd:element type="xsd:string" name="mobile"/>
                         <xsd:element type="xsd:string" name="email"/>
-                        <xsd:element type="xsd:byte" name="preferredPaymentDay"/>
+                        <xsd:element type="xsd:integer" name="preferredPaymentDay"/>
                         <xsd:element name="preferredPaymentMethod">
                             <xsd:complexType>
                                 <xsd:sequence>
@@ -516,7 +516,7 @@
                                     <xsd:element type="xsd:string" name="status"/>
                                     <xsd:element type="xsd:date" name="bsStartDate"/>
                                     <xsd:element type="xsd:date" name="bsEndDate"/>
-                                    <xsd:element type="xsd:long" name="debtAmt"/>
+                                    <xsd:element type="xsd:integer" name="debtAmt"/>
                                     <xsd:element type="xsd:string" name="debtRefNo"/>
                                     <xsd:element type="xsd:string" name="dateModified"/>
                                 </xsd:sequence>
