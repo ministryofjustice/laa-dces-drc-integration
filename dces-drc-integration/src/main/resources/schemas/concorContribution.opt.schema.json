@@ -639,7 +639,7 @@
       "properties": {
         "breathingSpace": {
           "type": "array",
-          "items": {"$ref": "#/$defs/CONTRIBUTIONS.BreathingSpaceInfo.BreathingSpace" },
+          "items": { "$ref": "#/$defs/CONTRIBUTIONS.BreathingSpaceInfo.BreathingSpace" },
           "minItems": 0
         }
       }
