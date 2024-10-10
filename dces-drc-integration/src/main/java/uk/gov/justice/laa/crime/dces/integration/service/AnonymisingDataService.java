@@ -18,13 +18,9 @@ import static uk.gov.justice.laa.crime.dces.integration.utils.DateConvertor.conv
 @Service
 public class AnonymisingDataService {
 
-    private static final long DEFAULT_SEED_VALUE = 38;
     private Faker faker;
 
     public CONTRIBUTIONS anonymise(CONTRIBUTIONS contribution) {
-
-        BigInteger seedId = BigInteger.valueOf(DEFAULT_SEED_VALUE).multiply(contribution.getMaatId());
-        log.info("Anonymising data for contribution with maatId {} and seedId: {}", contribution.getMaatId(), seedId);
 
         SecureRandom secureRandom;
         try {
@@ -34,13 +30,13 @@ public class AnonymisingDataService {
             throw new DcesDrcServiceException(e.getMessage(), e);
         }
 
-        secureRandom.setSeed(seedId.longValue());
+        secureRandom.setSeed(contribution.getMaatId().longValue());
         faker = new Faker(secureRandom);
-
 
         if (hasValue(contribution.getMaatId())) {
             contribution.setMaatId(BigInteger.valueOf(faker.number().numberBetween(100000, 999999)));
         }
+        log.info("Anonymising data for contribution with maatId {} and anonymised maat-id: {}", contribution.getMaatId(), contribution.getMaatId());
         Optional.ofNullable(contribution.getApplicant())
                 .ifPresent(applicant -> contribution.setApplicant(anonymiseApplicant(applicant)));
         Optional.ofNullable(contribution.getApplication())
