@@ -114,8 +114,7 @@ class AnonymisingDataServiceTest {
         assertNotEquals(getApplicant().getPartnerDetails().getDob(), result.getApplicant().getPartnerDetails().getDob());
 
         //applicant disability
-        assertNotEquals(getApplicant().getDisabilitySummary().getDisabilities().getDisability().getCode(), result.getApplicant().getDisabilitySummary().getDisabilities().getDisability().getCode());
-        assertNotEquals(getApplicant().getDisabilitySummary().getDisabilities().getDisability().getDescription(), result.getApplicant().getDisabilitySummary().getDisabilities().getDisability().getDescription());
+        assertNotEquals(getApplicant().getDisabilitySummary().getDisabilities().getDisability(), result.getApplicant().getDisabilitySummary().getDisabilities().getDisability());
 
         //applicant address should be null
         assertNull(result.getApplicant().getPostalAddress());
@@ -134,7 +133,7 @@ class AnonymisingDataServiceTest {
         CONTRIBUTIONS.Equity.PropertyDescriptor.ThirdPartyList.ThirdParty thirdParty = new CONTRIBUTIONS.Equity.PropertyDescriptor.ThirdPartyList.ThirdParty();
         thirdParty.setName("John Doe");
         CONTRIBUTIONS.Equity.PropertyDescriptor.ThirdPartyList thirdPartyList = new CONTRIBUTIONS.Equity.PropertyDescriptor.ThirdPartyList();
-        thirdPartyList.setThirdParty(thirdParty);
+        thirdPartyList.getThirdParty().add(thirdParty);
         property.setThirdPartyList(thirdPartyList);
         equity.setPropertyDescriptor(property);
         contributions.setEquity(equity);
@@ -142,7 +141,7 @@ class AnonymisingDataServiceTest {
 
         assertNotNull(result);
         assertNotNull(result.getEquity());
-        assertNotEquals("John Doe", result.getEquity().getPropertyDescriptor().getThirdPartyList().getThirdParty().getName());
+        assertNotEquals("John Doe", result.getEquity().getPropertyDescriptor().getThirdPartyList().getThirdParty().get(0).getName());
     }
 
     @Test
@@ -257,7 +256,7 @@ class AnonymisingDataServiceTest {
 
         CONTRIBUTIONS result = anonymisingDataService.anonymise(contributions);
 
-        assertNotEquals("REAL REG NO", result.getCapitalSummary().getMotorVehicleOwnership().getRegistrationList().getRegistration());
+        assertNotEquals("REAL REG NO", result.getCapitalSummary().getMotorVehicleOwnership().getRegistrationList().getRegistration().get(0));
 
     }
 
@@ -294,7 +293,7 @@ class AnonymisingDataServiceTest {
 
         CONTRIBUTIONS.CapitalSummary.MotorVehicleOwnership ownership = new CONTRIBUTIONS.CapitalSummary.MotorVehicleOwnership();
         CONTRIBUTIONS.CapitalSummary.MotorVehicleOwnership.RegistrationList registrationList = new CONTRIBUTIONS.CapitalSummary.MotorVehicleOwnership.RegistrationList();
-        registrationList.setRegistration("REAL REG NO");
+        registrationList.getRegistration().add("REAL REG NO");
         ownership.setRegistrationList(registrationList);
         ownership.setOwner("Peter Parker");
         capital.setMotorVehicleOwnership(ownership);
@@ -308,7 +307,7 @@ class AnonymisingDataServiceTest {
         disability.setCode("Hearing");
         disability.setDescription("Hearing Impairment and details of the impairment hearing");
         CONTRIBUTIONS.Applicant.DisabilitySummary.Disabilities disabilities = new CONTRIBUTIONS.Applicant.DisabilitySummary.Disabilities();
-        disabilities.setDisability(disability);
+        disabilities.getDisability().add(disability);
         CONTRIBUTIONS.Applicant.DisabilitySummary disabilitySummary = new CONTRIBUTIONS.Applicant.DisabilitySummary();
         disabilitySummary.setDisabilities(disabilities);
         return disabilitySummary;

@@ -54,11 +54,12 @@ public class AnonymisingDataService {
             Optional.ofNullable(propertyDescriptor.getThirdPartyList())
                     .flatMap(thirdPartyList -> Optional.ofNullable(thirdPartyList.getThirdParty()))
                     .ifPresent(thirdParty -> {
-                        if (hasValue(thirdParty.getName())) {
-                            thirdParty.setName(faker.name().fullName());
-                        }
+                        thirdParty.forEach(item -> {
+                            if (hasValue(item.getName())) {
+                                item.setName(faker.name().fullName());
+                            }
+                        });
                     });
-
             Optional.ofNullable(propertyDescriptor.getAddress())
                     .flatMap(address -> Optional.ofNullable(address.getDetail()))
                     .ifPresent(this::equityAddressDetail);
@@ -70,11 +71,11 @@ public class AnonymisingDataService {
     private CONTRIBUTIONS.CapitalSummary anonymiseCapitalSummary(CONTRIBUTIONS.CapitalSummary capitalSummary) {
 
         Optional.ofNullable(capitalSummary.getMotorVehicleOwnership()).ifPresent(motorVehicleOwnership -> {
-            Optional.ofNullable(motorVehicleOwnership.getRegistrationList()).ifPresent(registrationList -> {
-                if (hasValue(registrationList.getRegistration())) {
-                    registrationList.setRegistration(faker.vehicle().licensePlate());
-                }
-            });
+            Optional.ofNullable(motorVehicleOwnership.getRegistrationList())
+                    .flatMap(registrationList -> Optional.ofNullable(registrationList.getRegistration()))
+                    .ifPresent(registration -> {
+                        registration.replaceAll(item -> hasValue(item) ? faker.vehicle().licensePlate() : null);
+                    });
         });
         return capitalSummary;
     }
@@ -88,7 +89,6 @@ public class AnonymisingDataService {
     }
 
     private CONTRIBUTIONS.Applicant anonymiseApplicant(CONTRIBUTIONS.Applicant applicant) {
-
         anonymisePersonalDetails(applicant);
         Optional.ofNullable(applicant.getBankDetails()).ifPresent(this::anonymiseBankDetails);
         Optional.ofNullable(applicant.getPartnerDetails()).ifPresent(this::anonymisePartnerPersonalDetails);
@@ -170,12 +170,14 @@ public class AnonymisingDataService {
                 .map(CONTRIBUTIONS.Applicant.DisabilitySummary::getDisabilities)
                 .map(CONTRIBUTIONS.Applicant.DisabilitySummary.Disabilities::getDisability)
                 .ifPresent(disability -> {
-                    if (hasValue(disability.getCode())) {
-                        disability.setCode(faker.text().text(4));
-                    }
-                    if (hasValue(disability.getDescription())) {
-                        disability.setDescription(faker.text().text(10));
-                    }
+                    disability.forEach(item -> {
+                        if (hasValue(item.getCode())) {
+                            item.setCode(faker.text().text(4));
+                        }
+                        if (hasValue(item.getDescription())) {
+                            item.setDescription(faker.text().text(10));
+                        }
+                    });
                 });
     }
 
