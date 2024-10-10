@@ -36,6 +36,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.AssertionsForClassTypes.catchThrowableOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -55,6 +56,9 @@ class ContributionServiceTest {
 
 	@MockBean
 	private ContributionsMapperUtils contributionsMapperUtils;
+
+	@MockBean
+	private AnonymisingDataService anonymisingDataService;
 
 	@MockBean
 	private DrcClient drcClient;
@@ -88,7 +92,38 @@ class ContributionServiceTest {
 		verify(contributionsMapperUtils).generateFileXML(any(), any());
 		verify(drcClient, times(2)).sendConcorContributionReqToDrc(any());
 		softly.assertThat(result).isTrue();
+		verify(anonymisingDataService, never()).anonymise(any());
 	}
+
+	@Test
+	void testXMLValidWhenOutgoingAnonymizedFlagIsFalse() throws JAXBException {
+		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());
+		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
+		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
+		when(contributionsMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
+		doNothing().when(drcClient).sendConcorContributionReqToDrc(any());
+		when(feature.outgoingAnonymized()).thenReturn(false);
+
+		contributionService.processDailyFiles();
+
+		verify(anonymisingDataService, never()).anonymise(any());
+	}
+
+	@Test
+	void testXMLValidWhenOutgoingAnonymizedFlagIsTrue() throws JAXBException {
+		CONTRIBUTIONS contributions = createTestContribution();
+		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(contributions);
+		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
+		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
+		when(contributionsMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
+		doNothing().when(drcClient).sendConcorContributionReqToDrc(any());
+		when(feature.outgoingAnonymized()).thenReturn(true);
+
+		contributionService.processDailyFiles();
+
+		verify(anonymisingDataService, times(2)).anonymise(any());
+	}
+
 
 	@Test
 	void testXMLValidWhenOutgoingIsolated() throws JAXBException {
@@ -186,6 +221,7 @@ class ContributionServiceTest {
 	CONTRIBUTIONS createTestContribution(){
 		ObjectFactory of = new ObjectFactory();
 		CONTRIBUTIONS cont = of.createCONTRIBUTIONS();
+		cont.setMaatId(BigInteger.valueOf(1111));
 		cont.setId(BigInteger.valueOf(3333));
 		return cont;
 	}
