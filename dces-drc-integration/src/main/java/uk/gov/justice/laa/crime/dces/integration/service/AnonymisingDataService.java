@@ -70,9 +70,6 @@ public class AnonymisingDataService {
     private CONTRIBUTIONS.CapitalSummary anonymiseCapitalSummary(CONTRIBUTIONS.CapitalSummary capitalSummary) {
 
         Optional.ofNullable(capitalSummary.getMotorVehicleOwnership()).ifPresent(motorVehicleOwnership -> {
-            if (hasValue(motorVehicleOwnership.getOwner())) {
-                motorVehicleOwnership.setOwner(faker.name().fullName());
-            }
             Optional.ofNullable(motorVehicleOwnership.getRegistrationList()).ifPresent(registrationList -> {
                 if (hasValue(registrationList.getRegistration())) {
                     registrationList.setRegistration(faker.vehicle().licensePlate());

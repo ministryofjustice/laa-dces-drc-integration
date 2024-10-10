@@ -258,7 +258,7 @@ class AnonymisingDataServiceTest {
         CONTRIBUTIONS result = anonymisingDataService.anonymise(contributions);
 
         assertNotEquals("REAL REG NO", result.getCapitalSummary().getMotorVehicleOwnership().getRegistrationList().getRegistration());
-        assertNotEquals("Peter Parker", result.getCapitalSummary().getMotorVehicleOwnership().getOwner());
+
     }
 
     @Test
@@ -285,7 +285,7 @@ class AnonymisingDataServiceTest {
         CONTRIBUTIONS result = anonymisingDataService.anonymise(contributions);
 
         assertNull(result.getCapitalSummary().getMotorVehicleOwnership().getRegistrationList());
-        assertNotEquals("Peter Parker", result.getCapitalSummary().getMotorVehicleOwnership().getOwner());
+
     }
 
     private CONTRIBUTIONS.CapitalSummary getCapitalSummary() {
