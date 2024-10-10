@@ -121,6 +121,8 @@ dependencies {
 
 	testImplementation "net.serenity-bdd:serenity-rest-assured:$versions.serenityVersion"
 
+    implementation 'net.datafaker:datafaker:2.4.0'
+
 }
 
 jacoco {
