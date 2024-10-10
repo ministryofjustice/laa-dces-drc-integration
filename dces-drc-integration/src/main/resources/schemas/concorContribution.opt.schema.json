@@ -105,7 +105,10 @@
     "CONTRIBUTIONS.Applicant.DisabilitySummary.Disabilities": {
       "type": "object",
       "properties": {
-        "disability": { "$ref": "#/$defs/CONTRIBUTIONS.Applicant.DisabilitySummary.Disabilities.Disability" }
+        "disability": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/CONTRIBUTIONS.Applicant.DisabilitySummary.Disabilities.Disability" },
+          "minItems": 0
       }
     },
     "CONTRIBUTIONS.Applicant.DisabilitySummary": {
@@ -364,7 +367,11 @@
     "CONTRIBUTIONS.Equity.PropertyDescriptor.ThirdPartyList": {
       "type": "object",
       "properties": {
-        "thirdParty": { "$ref": "#/$defs/CONTRIBUTIONS.Equity.PropertyDescriptor.ThirdPartyList.ThirdParty" }
+        "thirdParty": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/CONTRIBUTIONS.Equity.PropertyDescriptor.ThirdPartyList.ThirdParty" },
+          "minItems": 0
+        }
       }
     },
     "CONTRIBUTIONS.Equity.PropertyDescriptor": {
@@ -390,19 +397,23 @@
       "type": "object",
       "properties": {
         "undeclaredProperty": { "type": "string" },
-        "equityVerified": { "type": "string" },
         "equityVerifiedBy": { "type": "string" },
         "equityVerifiedDate": {
           "type": "string",
           "format": "date"
         },
+        "equityVerified": { "type": "string" },
         "propertyDescriptor": { "$ref": "#/$defs/CONTRIBUTIONS.Equity.PropertyDescriptor" }
       }
     },
     "CONTRIBUTIONS.CapitalSummary.MotorVehicleOwnership.RegistrationList": {
       "type": "object",
       "properties": {
-        "registration": { "type": "string" }
+        "registration": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 0
+        }
       }
     },
     "CONTRIBUTIONS.CapitalSummary.MotorVehicleOwnership": {
@@ -439,7 +450,11 @@
     "CONTRIBUTIONS.CapitalSummary.AssetList": {
       "type": "object",
       "properties": {
-        "asset": { "$ref": "#/$defs/CONTRIBUTIONS.CapitalSummary.AssetList.Asset" }
+        "asset": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/CONTRIBUTIONS.CapitalSummary.AssetList.Asset" },
+          "minItems": 0
+        }
       }
     },
     "CONTRIBUTIONS.CapitalSummary.PropertyList.Property.PropertyType": {
@@ -492,7 +507,11 @@
     "CONTRIBUTIONS.CapitalSummary.PropertyList.Property.ThirdPartyList": {
       "type": "object",
       "properties": {
-        "thirdParty": { "$ref": "#/$defs/CONTRIBUTIONS.CapitalSummary.PropertyList.Property.ThirdPartyList.ThirdParty" }
+        "thirdParty": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/CONTRIBUTIONS.CapitalSummary.PropertyList.Property.ThirdPartyList.ThirdParty" },
+          "minItems": 0
+        }
       }
     },
     "CONTRIBUTIONS.CapitalSummary.PropertyList.Property": {
@@ -617,7 +636,11 @@
     "CONTRIBUTIONS.BreathingSpaceInfo": {
       "type": "object",
       "properties": {
-        "breathingSpace": { "$ref": "#/$defs/CONTRIBUTIONS.BreathingSpaceInfo.BreathingSpace" }
+        "breathingSpace": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/CONTRIBUTIONS.BreathingSpaceInfo.BreathingSpace" },
+          "minItems": 0
+        }
       }
     },
     "CONTRIBUTIONS": {
