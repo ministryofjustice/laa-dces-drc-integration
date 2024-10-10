@@ -119,7 +119,7 @@
                                     <xsd:element name="disabilities">
                                         <xsd:complexType>
                                             <xsd:sequence>
-                                                <xsd:element name="disability">
+                                                <xsd:element name="disability" minOccurs="0" maxOccurs="unbounded">
                                                     <xsd:complexType>
                                                         <xsd:sequence>
                                                             <xsd:element type="xsd:string" name="code"/>
@@ -272,9 +272,9 @@
                 <xsd:complexType>
                     <xsd:sequence>
                         <xsd:element type="xsd:string" name="undeclaredProperty"/>
-                        <xsd:element type="xsd:string" name="equityVerified"/>
                         <xsd:element type="xsd:string" name="equityVerifiedBy"/>
                         <xsd:element type="xsd:date" name="equityVerifiedDate"/>
+                        <xsd:element type="xsd:string" name="equityVerified"/>
                         <xsd:element name="propertyDescriptor">
                             <xsd:complexType>
                                 <xsd:sequence>
@@ -325,7 +325,7 @@
                                     <xsd:element name="thirdPartyList">
                                         <xsd:complexType>
                                             <xsd:sequence>
-                                                <xsd:element name="thirdParty">
+                                                <xsd:element name="thirdParty" minOccurs="0" maxOccurs="unbounded">
                                                     <xsd:complexType>
                                                         <xsd:sequence>
                                                             <xsd:element type="xsd:string" name="name"/>
@@ -367,7 +367,7 @@
                                     <xsd:element name="RegistrationList">
                                         <xsd:complexType>
                                             <xsd:sequence>
-                                                <xsd:element type="xsd:string" name="Registration"/>
+                                                <xsd:element type="xsd:string" name="Registration" minOccurs="0" maxOccurs="unbounded"/>
                                             </xsd:sequence>
                                         </xsd:complexType>
                                     </xsd:element>
@@ -377,7 +377,7 @@
                         <xsd:element name="assetList">
                             <xsd:complexType>
                                 <xsd:sequence>
-                                    <xsd:element name="asset">
+                                    <xsd:element name="asset" minOccurs="0" maxOccurs="unbounded">
                                         <xsd:complexType>
                                             <xsd:sequence>
                                                 <xsd:element name="type">
@@ -402,7 +402,7 @@
                         <xsd:element name="propertyList">
                             <xsd:complexType>
                                 <xsd:sequence>
-                                    <xsd:element name="property" maxOccurs="unbounded" minOccurs="0">
+                                    <xsd:element name="property" minOccurs="0" maxOccurs="unbounded">
                                         <xsd:complexType>
                                             <xsd:sequence>
                                                 <xsd:element type="xsd:string" name="bedRoomCount"/>
@@ -444,7 +444,7 @@
                                                 <xsd:element name="thirdPartyList">
                                                     <xsd:complexType>
                                                         <xsd:sequence>
-                                                            <xsd:element name="thirdParty">
+                                                            <xsd:element name="thirdParty" minOccurs="0" maxOccurs="unbounded">
                                                                 <xsd:complexType>
                                                                     <xsd:sequence>
                                                                         <xsd:element type="xsd:string" name="name"/>
@@ -477,7 +477,7 @@
             <xsd:element name="ccOutcomes">
                 <xsd:complexType>
                     <xsd:sequence>
-                        <xsd:element name="ccOutcome" maxOccurs="unbounded" minOccurs="0">
+                        <xsd:element name="ccOutcome" minOccurs="0" maxOccurs="unbounded">
                             <xsd:complexType>
                                 <xsd:sequence>
                                     <xsd:element type="xsd:string" name="code"/>
@@ -491,7 +491,7 @@
             <xsd:element name="correspondence">
                 <xsd:complexType>
                     <xsd:sequence>
-                        <xsd:element name="letter" maxOccurs="unbounded" minOccurs="0">
+                        <xsd:element name="letter" minOccurs="0" maxOccurs="unbounded">
                             <xsd:complexType>
                                 <xsd:sequence>
                                     <xsd:element type="xsd:string" name="Ref"/>
@@ -508,7 +508,7 @@
             <xsd:element name="breathingSpaceInfo">
                 <xsd:complexType>
                     <xsd:sequence>
-                        <xsd:element name="breathingSpace">
+                        <xsd:element name="breathingSpace" minOccurs="0" maxOccurs="unbounded">
                             <xsd:complexType>
                                 <xsd:sequence>
                                     <xsd:element type="xsd:integer" name="ID"/>
