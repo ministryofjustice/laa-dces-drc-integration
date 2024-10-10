@@ -231,6 +231,7 @@
                                         <xsd:complexType>
                                             <xsd:sequence>
                                                 <xsd:element type="xsd:string" name="evidence"/>
+                                                <xsd:element type="xsd:string" name="otherText"/>
                                                 <xsd:element type="xsd:string" name="mandatory"/>
                                                 <xsd:element type="xsd:date" name="dateReceived"/>
                                             </xsd:sequence>
@@ -406,6 +407,14 @@
                                         <xsd:complexType>
                                             <xsd:sequence>
                                                 <xsd:element type="xsd:string" name="bedRoomCount"/>
+                                                <xsd:element name="residentialStatus">
+                                                    <xsd:complexType>
+                                                        <xsd:sequence>
+                                                            <xsd:element type="xsd:string" name="code"/>
+                                                            <xsd:element type="xsd:string" name="description"/>
+                                                        </xsd:sequence>
+                                                    </xsd:complexType>
+                                                </xsd:element>
                                                 <xsd:element name="propertyType">
                                                     <xsd:complexType>
                                                         <xsd:sequence>
