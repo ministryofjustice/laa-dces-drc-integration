@@ -109,6 +109,7 @@
           "type": "array",
           "items": { "$ref": "#/$defs/CONTRIBUTIONS.Applicant.DisabilitySummary.Disabilities.Disability" },
           "minItems": 0
+        }
       }
     },
     "CONTRIBUTIONS.Applicant.DisabilitySummary": {
