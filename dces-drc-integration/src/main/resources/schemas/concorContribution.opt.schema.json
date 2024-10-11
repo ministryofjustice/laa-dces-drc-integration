@@ -240,6 +240,7 @@
       "type": "object",
       "properties": {
         "evidence": { "type": "string" },
+        "otherText": { "type": "string" },
         "mandatory": { "type": "string" },
         "dateReceived": {
           "type": "string",
@@ -458,6 +459,13 @@
         }
       }
     },
+    "CONTRIBUTIONS.CapitalSummary.PropertyList.Property.ResidentialStatus": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
     "CONTRIBUTIONS.CapitalSummary.PropertyList.Property.PropertyType": {
       "type": "object",
       "properties": {
@@ -519,6 +527,7 @@
       "type": "object",
       "properties": {
         "bedRoomCount": { "type": "string" },
+        "residentialStatus": { "$ref": "#/$defs/CONTRIBUTIONS.CapitalSummary.PropertyList.Property.ResidentialStatus" },
         "propertyType": { "$ref": "#/$defs/CONTRIBUTIONS.CapitalSummary.PropertyList.Property.PropertyType" },
         "address": { "$ref": "#/$defs/CONTRIBUTIONS.CapitalSummary.PropertyList.Property.Address" },
         "percentageApplicantOwned": { "type": "number" },
