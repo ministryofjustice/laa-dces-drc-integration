@@ -28,6 +28,9 @@ spring:
         jwt:
           issuer-uri: http://testurl
   datasource:
+    url: jdbc:postgresql://localhost:5432/db_name
+    username: username
+    password: password
     driver-class-name: org.postgresql.Driver
     hikari:
       connection-timeout: 30000
@@ -39,4 +42,3 @@ spring:
     generate-ddl: false
     properties:
       hibernate.temp.use_jdbc_metadata_defaults: false
-
