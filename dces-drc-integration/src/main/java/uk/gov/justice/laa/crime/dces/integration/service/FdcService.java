@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import uk.gov.justice.laa.crime.dces.integration.datasource.CaseSubmissionService;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.client.FdcClient;
 import uk.gov.justice.laa.crime.dces.integration.config.Feature;
@@ -40,6 +41,8 @@ public class FdcService implements FileService {
     private final DrcClient drcClient;
     private final ObjectMapper objectMapper;
     private final Feature feature;
+    private final CaseSubmissionService caseSubmissionService;
+    private BigInteger batchId;
 
     public Integer processFdcUpdate(UpdateLogFdcRequest updateLogFdcRequest) {
         try {
@@ -52,12 +55,14 @@ public class FdcService implements FileService {
             log.info("Failed to processFdcUpdate", e);
             throw e;
         }
+
+
     }
 
-    // TODO Change all Objects to the actual object type.
     @Timed(value = "laa_dces_drc_service_process_fdc_daily_files",
             description = "Time taken to process the daily FDC files from DRC and passing this for downstream processing.")
     public boolean processDailyFiles() throws WebClientResponseException {
+        batchId = caseSubmissionService.generateBatchId();
         List<Fdc> successfulFdcs = new ArrayList<>();
         Map<String,String> failedFdcs = new HashMap<>();
         int globalUpdateResult = callGlobalUpdate();
@@ -69,9 +74,9 @@ public class FdcService implements FileService {
     }
 
     @Retry(name = SERVICE_NAME)
-    @SuppressWarnings("squid:S2583") // ignore the can only be true warning. As this is placeholder.
     void sendFdcToDrc(List<Fdc> fdcList, List<Fdc> successfulFdcs, Map<String,String> failedFdcs) {
         fdcList.forEach(currentFdc -> {
+            // TODO: DB Log the fetch for each item
             int fdcId = currentFdc.getId().intValue();
             try {
                 final var request = FdcReqForDrc.of(fdcId, currentFdc);
@@ -84,11 +89,14 @@ public class FdcService implements FileService {
                     log.debug("Skipping FDC data to DRC, JSON = [{}]", json);
                 }
                 successfulFdcs.add(currentFdc);
+                // TODO: DB Log sent to DRC, capture error etc.
             } catch (Exception e) {
                 log.warn("Failed to send FDC data to DRC. fdcId = {}", fdcId, e);
                 // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
                 failedFdcs.put(Integer.toString(fdcId), e.getClass().getName() + ": " + e.getMessage());
             }
+
+
         });
     }
 
@@ -123,6 +131,7 @@ public class FdcService implements FileService {
                 throw e;
             }
         }
+        // TODO: DB Log each successful id. I.e. iterate through list of successful ids, that have been updated. And create a new db logging line for each.
         return contributionFileId;
     }
 
@@ -143,6 +152,7 @@ public class FdcService implements FileService {
         } catch (HttpServerErrorException e) {
             // We're rethrowing the exception, therefore avoid logging the stack trace to prevent logging the same trace multiple times.
             log.error("Failed to retrieve FDC contributions, after the FDC global update completed [" + e.getClass().getName() + "(" + e.getMessage() + ")]");
+            // TODO: DB Log event here if failed.
             throw e;
         }
         List<Fdc> fdcList = new ArrayList<>();
