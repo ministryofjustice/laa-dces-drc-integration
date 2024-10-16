@@ -18,4 +18,7 @@ public interface CaseSubmissionRepository extends JpaRepository<CaseSubmissionEn
     @Transactional
     Long deleteByPayloadAndBatchIdAndTraceId(String payload, BigInteger batchId, BigInteger traceId);
 
+    @Transactional
+    Long deleteByBatchIdAndTraceId(BigInteger batchId, BigInteger traceId);
+
 }

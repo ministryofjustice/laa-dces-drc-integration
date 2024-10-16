@@ -1,7 +1,8 @@
 package uk.gov.justice.laa.crime.dces.integration.testing;
 
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,9 +35,11 @@ class DbLoggingTest {
   private final BigInteger testBatchId = BigInteger.valueOf(-999);
   private final BigInteger testTraceId = BigInteger.valueOf(-999);
 
-  @AfterEach
+  // Method to clear out any lingering test data that might exist.
+  @AfterAll
+  @BeforeAll
   public void deleteTestData(){
-    caseSubmissionRepository.deleteByPayloadAndBatchIdAndTraceId(testPayloadString, testBatchId, testTraceId);
+    caseSubmissionRepository.deleteByBatchIdAndTraceId(testBatchId, testTraceId);
   }
 
   @Test
