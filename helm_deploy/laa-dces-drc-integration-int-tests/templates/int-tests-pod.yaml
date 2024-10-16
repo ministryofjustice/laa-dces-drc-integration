@@ -20,6 +20,10 @@ spec:
       image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
       imagePullPolicy: {{ .Values.image.pullPolicy }}
       {{ include "laa-dces-drc-integration-int-test.env-vars" . | nindent 6 }}
+      envFrom:
+        - secretRef:
+            name: dces-datasource
+            optional: false
       resources:
         {{- toYaml .Values.resources | nindent 8 }}
   restartPolicy: Never
