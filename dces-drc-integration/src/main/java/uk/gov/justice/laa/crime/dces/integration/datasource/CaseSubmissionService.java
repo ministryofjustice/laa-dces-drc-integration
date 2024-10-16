@@ -9,11 +9,13 @@ import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventTypeEntit
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.RecordType;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionRepository;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.EventTypeRepository;
+import uk.gov.justice.laa.crime.dces.integration.exception.DcesDrcServiceException;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +34,9 @@ public class CaseSubmissionService {
     }
 
     public boolean logFdcEvent(EventType eventType, BigInteger batchId, BigInteger traceId, Fdc fdcObject, Integer httpStatusCode, String payload){
+        // default fdcObject if null is passed. No ids is a valid scenario.
+        fdcObject = Objects.requireNonNullElse(fdcObject, new Fdc());
+
         var entity = createCaseSubmissionEntity(eventType, batchId, traceId, fdcObject.getMaatId(), httpStatusCode, payload);
         entity.setRecordType(RecordType.FDC);
         entity.setFdcId(fdcObject.getId());
@@ -40,6 +45,9 @@ public class CaseSubmissionService {
     }
 
     public boolean logContributionCall(EventType eventType, BigInteger batchId, BigInteger traceId, CONTRIBUTIONS contributionsObject, Integer httpStatusCode, String payload){
+        // default fdcObject if null is passed. No ids is a valid scenario.
+        contributionsObject = Objects.requireNonNullElse(contributionsObject, new CONTRIBUTIONS());
+
         var entity = createCaseSubmissionEntity(eventType, batchId, traceId, contributionsObject.getMaatId(), httpStatusCode, payload);
         entity.setRecordType(RecordType.CONTRIBUTION);
         entity.setConcorContributionId(contributionsObject.getId());
@@ -66,8 +74,13 @@ public class CaseSubmissionService {
         return caseSubmissionRepository.getNextTraceId();
     }
 
-    private void setEventType(EventType type, CaseSubmissionEntity entity){
-        EventTypeEntity typeEntity = eventTypeRepository.getEventTypeEntityByDescriptionEquals(type.getName());
-        entity.setEventType(typeEntity.getId());
+    private void setEventType(EventType type, CaseSubmissionEntity entity) {
+        if (Objects.nonNull(type)) {
+            EventTypeEntity typeEntity = eventTypeRepository.getEventTypeEntityByDescriptionEquals(type.getName());
+            entity.setEventType(typeEntity.getId());
+        }
+        else{
+            throw new DcesDrcServiceException("EventType cannot be null");
+        }
     }
 }
