@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigInteger;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * An entity class represents a table in a relational database
@@ -37,7 +37,7 @@ public class CaseSubmissionEntity {
     private BigInteger fdcId;
     private String recordType;
     @CreationTimestamp
-    private LocalDate processedDate;
+    private LocalDateTime processedDate;
     private Integer eventType;
     private Integer httpStatus;
     private String payload;
