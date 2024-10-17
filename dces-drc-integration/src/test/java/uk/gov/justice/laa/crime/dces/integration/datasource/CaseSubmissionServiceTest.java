@@ -51,7 +51,7 @@ class CaseSubmissionServiceTest {
     private final String testPayload = "TestPayload"+ LocalDateTime.now();
 
     @AfterEach
-    void assertAll(){
+    void postTestAssertAll(){
         softly.assertAll();
     }
 
