@@ -99,7 +99,7 @@ commands:
           no_output_timeout: 20m
           command: |
             kubectl wait --for=condition=ready pod/${POD_NAME} --timeout=60s -n ${NAMESPACE}
-            kubectl exec -n ${NAMESPACE} ${POD_NAME} -- ./gradlew clean compileIntegrationTestJava processIntegrationTestResources
+            kubectl exec -n ${NAMESPACE} ${POD_NAME} -- ./gradlew --no-daemon clean compileIntegrationTestJava processIntegrationTestResources
             kubectl exec -n ${NAMESPACE} ${POD_NAME} -- ./gradlew integrationTest -Dorg.gradle.jvmargs=-Xmx2g
       - run:
           name: Fetch Integration Test results

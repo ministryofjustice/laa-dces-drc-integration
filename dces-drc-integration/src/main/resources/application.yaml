@@ -84,8 +84,6 @@ spring:
     properties:
       hibernate.temp.use_jdbc_metadata_defaults: false
 
-
-
 springdoc:
   swagger-ui:
     path: /swagger-ui-custom.html
