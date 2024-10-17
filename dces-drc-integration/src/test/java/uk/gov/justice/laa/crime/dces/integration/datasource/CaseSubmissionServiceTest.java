@@ -3,6 +3,7 @@ package uk.gov.justice.laa.crime.dces.integration.datasource;
 import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -48,6 +49,11 @@ class CaseSubmissionServiceTest {
     private final BigInteger testFdcId = BigInteger.valueOf(-444);
     private final BigInteger testConcorId = BigInteger.valueOf(-333);
     private final String testPayload = "TestPayload"+ LocalDateTime.now();
+
+    @AfterEach
+    void assertAll(){
+        softly.assertAll();
+    }
 
     @Test
     void whenLogFdcIsCalledWithAllDetails_thenLogEntryIsAsExpected() {
