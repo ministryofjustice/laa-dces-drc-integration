@@ -3,7 +3,6 @@ package uk.gov.justice.laa.crime.dces.integration.datasource;
 import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -50,11 +49,6 @@ class CaseSubmissionServiceTest {
     private final BigInteger testConcorId = BigInteger.valueOf(-333);
     private final String testPayload = "TestPayload"+ LocalDateTime.now();
 
-    @AfterEach
-    void postTestAssertAll(){
-        softly.assertAll();
-    }
-
     @Test
     void whenLogFdcIsCalledWithAllDetails_thenLogEntryIsAsExpected() {
         Integer expectedHttpStatusCode = 200;
@@ -68,6 +62,7 @@ class CaseSubmissionServiceTest {
         caseSubmissionService.logFdcEvent(expectedEventType,testBatchId,testTraceId,fdcObject,expectedHttpStatusCode,testPayload);
 
         softly.assertThat(caseSubmissionEntityArgumentCaptor.getValue()).isEqualTo(expectedCaseSubmissionEntity);
+        softly.assertAll();
     }
 
     @Test
@@ -84,6 +79,7 @@ class CaseSubmissionServiceTest {
         } catch (Exception e){
             softly.fail("Unexpected Exception Thrown:"+ e.getMessage());
         }
+        softly.assertAll();
     }
 
     @Test
@@ -99,6 +95,7 @@ class CaseSubmissionServiceTest {
         caseSubmissionService.logContributionEvent(expectedEventType,testBatchId,testTraceId,contributionObject,expectedHttpStatusCode,testPayload);
 
         softly.assertThat(caseSubmissionEntityArgumentCaptor.getValue()).isEqualTo(expectedCaseSubmissionEntity);
+        softly.assertAll();
     }
 
     private CaseSubmissionEntity createExpectedCaseSubmissionEntity(RecordType recordType, Integer eventTypeId, Integer httpStatusCode){
