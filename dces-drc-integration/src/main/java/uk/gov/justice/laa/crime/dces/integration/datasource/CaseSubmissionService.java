@@ -44,7 +44,7 @@ public class CaseSubmissionService {
         return true;
     }
 
-    public boolean logContributionCall(EventType eventType, BigInteger batchId, BigInteger traceId, CONTRIBUTIONS contributionsObject, Integer httpStatusCode, String payload){
+    public boolean logContributionEvent(EventType eventType, BigInteger batchId, BigInteger traceId, CONTRIBUTIONS contributionsObject, Integer httpStatusCode, String payload){
         // default fdcObject if null is passed. No ids is a valid scenario.
         contributionsObject = Objects.requireNonNullElse(contributionsObject, new CONTRIBUTIONS());
 

@@ -61,7 +61,7 @@ class DbLoggingTest {
   @Test
   void given_ContributionAllRequiredValues_thenSaves(){
     var contribution = createTestContribution();
-    boolean response = caseSubmissionService.logContributionCall(EventType.SENT_TO_DRC, testBatchId,testTraceId, contribution, 200, testPayloadString );
+    boolean response = caseSubmissionService.logContributionEvent(EventType.SENT_TO_DRC, testBatchId,testTraceId, contribution, 200, testPayloadString );
     assertTrue(response);
     clearDownData(1L);
   }
@@ -69,13 +69,13 @@ class DbLoggingTest {
   @Test
   void given_MissingTypeValue_thenError(){
     var contribution = createTestContribution();
-    assertThrows(DcesDrcServiceException.class,() -> caseSubmissionService.logContributionCall(null, testBatchId,testTraceId, contribution, 200, testPayloadString ));
+    assertThrows(DcesDrcServiceException.class,() -> caseSubmissionService.logContributionEvent(null, testBatchId,testTraceId, contribution, 200, testPayloadString ));
     clearDownData(0L);
   }
 
   @Test
   void given_MissingContributionValue_thenSave(){
-    boolean response = caseSubmissionService.logContributionCall(EventType.SENT_TO_DRC, testBatchId,testTraceId, null, 200, testPayloadString );
+    boolean response = caseSubmissionService.logContributionEvent(EventType.SENT_TO_DRC, testBatchId,testTraceId, null, 200, testPayloadString );
     assertTrue(response);
     clearDownData(1L);
   }
