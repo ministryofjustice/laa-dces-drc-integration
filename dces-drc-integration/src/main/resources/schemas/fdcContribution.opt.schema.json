@@ -1,8 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft/2020-12/schema",
-  "properties": {
-    "fdc": { "$ref": "#/$defs/Fdc" }
-  },
+  "$ref": "#/$defs/Fdc",
   "$defs": {
     "Fdc": {
       "type": "object",
