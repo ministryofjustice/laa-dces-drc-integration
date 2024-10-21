@@ -72,17 +72,10 @@ spring:
 
   datasource:
     driver-class-name: org.postgresql.Driver
-    hikari:
-      connection-timeout: 30000
-      idle-timeout: 60000
-      max-lifetime: 3600000
-
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     show-sql: false
     generate-ddl: false
-    properties:
-      hibernate.temp.use_jdbc_metadata_defaults: false
 
 springdoc:
   swagger-ui:
