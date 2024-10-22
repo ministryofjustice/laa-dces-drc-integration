@@ -20,6 +20,7 @@ metadata:
   {{- with .Values.ingress.annotations.common }}
     {{- toYaml . | nindent 4 }}
   {{- end }}
+    {{- include "laa-dces-drc-integration.allowlistMon" . | indent 4 }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   {{- if .Values.ingress.tls }}
