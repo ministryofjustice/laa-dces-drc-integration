@@ -292,7 +292,7 @@ jobs:
     steps:
       - deploy-to:
           environment: test
-          token: ${CIRCLE_CI_TOKEN_STAGING}
+          token: ${CIRCLE_CI_TOKEN_TEST}
 
   deploy-uat:
     executor: cloud-platform-executor
