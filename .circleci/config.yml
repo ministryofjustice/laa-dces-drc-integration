@@ -355,6 +355,11 @@ workflows:
           requires:
             - build_and_push_image
 
+      - hold_install_on_test:
+          type: approval
+          requires:
+            - build_and_push_image
+
       - deploy-test:
           requires:
             - hold_install_on_test
