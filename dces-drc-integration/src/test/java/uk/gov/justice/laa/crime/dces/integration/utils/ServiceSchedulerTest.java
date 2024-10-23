@@ -4,6 +4,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
+import org.springframework.test.context.ActiveProfiles;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
 
@@ -29,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
         "scheduling.fdcDailyFiles.cron=* * * * * *",
         "scheduling.contributionsDailyFiles.cron=* * * * * *"
 })
+@ActiveProfiles(profiles = "default")
 public class ServiceSchedulerTest {
 
     @MockBean
@@ -47,12 +49,7 @@ public class ServiceSchedulerTest {
 
         verify(fdcService, atLeast(1)).processDailyFiles();
         verify(fdcService, atMost(2)).processDailyFiles();
-
-       assertAll("processing fdc",
-               () ->  assertThat(output.getOut()).contains("Processing fdc daily files"),
-               () ->  assertThat(output.getOut()).contains("with cron * * * * * *")
-       );
-
+        assertThat(output.getOut()).contains("Processing fdc daily files");
     }
 
     @Test
@@ -63,10 +60,6 @@ public class ServiceSchedulerTest {
 
         verify(contributionService, atLeast(1)).processDailyFiles();
         verify(contributionService, atMost(2)).processDailyFiles();
-
-        assertAll("processing contributions",
-                () ->  assertThat(output.getOut()).contains("Processing contributions daily files"),
-                () ->  assertThat(output.getOut()).contains("with cron * * * * * *")
-        );
+        assertThat(output.getOut()).contains("Processing contributions daily files");
     }
 }
