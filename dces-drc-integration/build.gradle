@@ -124,6 +124,7 @@ dependencies {
 	testImplementation 'io.projectreactor:reactor-test'
 	testImplementation "org.wiremock:wiremock-standalone:$versions.wiremockVersion"
 	testImplementation "com.squareup.okhttp3:mockwebserver:$versions.mockwebserverVersion"
+	testImplementation "org.flywaydb:flyway-core:6.4.3"
 
 	testCompileOnly 'org.projectlombok:lombok'
 	testAnnotationProcessor 'org.projectlombok:lombok'
