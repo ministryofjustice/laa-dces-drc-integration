@@ -17,6 +17,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.web.client.HttpServerErrorException;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.config.Feature;
+import uk.gov.justice.laa.crime.dces.integration.datasource.CaseSubmissionService;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
@@ -65,6 +66,9 @@ class FdcServiceTest {
 
 	@MockBean
 	private Feature feature;
+
+	@MockBean
+	private CaseSubmissionService caseSubmissionService;
 
 	@AfterEach
 	void afterTestAssertAll() {

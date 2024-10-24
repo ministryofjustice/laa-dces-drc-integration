@@ -27,6 +27,15 @@ spring:
       resource-server:
         jwt:
           issuer-uri: http://testurl
+  datasource:
+    url: jdbc:postgresql://localhost:5432/db_name
+    username: username
+    password: password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+    generate-ddl: false
   # the following stops the ServiceSheduler from running in test profile
   profiles:
     active: test
