@@ -39,4 +39,3 @@ spring:
   # the following stops the ServiceSheduler from running in test profile
   profiles:
     active: test
-
