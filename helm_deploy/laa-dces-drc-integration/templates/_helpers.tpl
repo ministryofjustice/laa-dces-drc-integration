@@ -60,3 +60,25 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Inbound IP filtering for the mTLS ingress
+*/}}
+{{- define "laa-dces-drc-integration.allowlistApi" -}}
+{{- if .Values.ingress.allowlist.api_include_laai }}
+nginx.ingress.kubernetes.io/whitelist-source-range: {{ .Values.ingress.allowlist.api | default "127.0.0.1/32" }},{{ .Values.ingress.allowlist.laai | default "127.0.0.1/32" }}
+{{- else }}
+nginx.ingress.kubernetes.io/whitelist-source-range: {{ .Values.ingress.allowlist.api | default "127.0.0.1/32" }}
+{{- end }}
+{{- end }}
+
+{{/*
+Inbound IP filtering for the non-mTLS ingress
+*/}}
+{{- define "laa-dces-drc-integration.allowlistMon" -}}
+{{- if .Values.ingress.allowlist.mon_include_laai }}
+nginx.ingress.kubernetes.io/whitelist-source-range: {{ .Values.ingress.allowlist.mon | default "127.0.0.1/32" }},{{ .Values.ingress.allowlist.monx | default "127.0.0.1/32" }},{{ .Values.ingress.allowlist.laai | default "127.0.0.1/32" }}
+{{- else }}
+nginx.ingress.kubernetes.io/whitelist-source-range: {{ .Values.ingress.allowlist.mon | default "127.0.0.1/32" }},{{ .Values.ingress.allowlist.monx | default "127.0.0.1/32" }}
+{{- end }}
+{{- end }}
