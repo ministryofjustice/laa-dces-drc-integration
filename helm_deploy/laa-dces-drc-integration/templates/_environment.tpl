@@ -41,4 +41,8 @@ env:
         secretKeyRef:
             name: {{ .Values.clientAuth.secretName }}
             key: private-key-password
+  - name: DCES_CRON_CONTRIBUTIONS
+    value: {{ .Values.scheduling.dces_cron_contributions }}
+  - name: DCES_CRON_FDC
+    value: {{ .Values.scheduling.dces_cron_fdc }}
 {{- end -}}

@@ -27,3 +27,6 @@ spring:
       resource-server:
         jwt:
           issuer-uri: http://testurl
+  # the following stops the ServiceSheduler from running in test profile
+  profiles:
+    active: test

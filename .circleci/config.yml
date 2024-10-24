@@ -137,13 +137,20 @@ commands:
       - setup-kubectl:
           environment: << parameters.environment >>
           token: << parameters.token >>
+      - run:
+          name: Dynamic IP ranges for allowlist, updated during deployment
+          command: |
+            export CIDR_LAAI="$(curl -s https://raw.githubusercontent.com/ministryofjustice/laa-ip-allowlist/main/cidrs.txt | tr -d ' ' | tr '\n' ',' | sed 's/,/\\,/g' | sed 's/\\,$//')"
+            export CIDR_MONX="$(curl -s https://my.pingdom.com/probes/ipv4 | tr -d ' ' | tr '\n' ',' | sed 's/,/\/32\\,/g' | sed 's/\\,$//')"
+            echo "export CIDR_LAAI=\"$CIDR_LAAI\"" >> "$BASH_ENV"
+            echo "export CIDR_MONX=\"$CIDR_MONX\"" >> "$BASH_ENV"
       - helm/upgrade-helm-chart:
           namespace: laa-dces-drc-integration-<< parameters.environment >>
           update-repositories: false
           chart: ./helm_deploy/laa-dces-drc-integration/
           release-name: laa-dces-drc-integration
           values: ./helm_deploy/laa-dces-drc-integration/values-<< parameters.environment >>.yaml
-          values-to-override: image.tag=${CIRCLE_SHA1}
+          values-to-override: image.tag=${CIRCLE_SHA1},ingress.allowlist.monx=${CIDR_MONX},ingress.allowlist.laai=${CIDR_LAAI}
 
 # ------------------
 # JOBS
