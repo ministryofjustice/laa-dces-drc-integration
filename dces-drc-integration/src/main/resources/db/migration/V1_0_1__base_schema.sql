@@ -1,25 +1,25 @@
-CREATE SEQUENCE batch_id_seq
+CREATE SEQUENCE IF NOT EXISTS batch_id_seq
     INCREMENT 1
     START 1;
 
 COMMENT ON SEQUENCE batch_id_seq is 'Used for populating batch id used in case_submission';
 
-CREATE SEQUENCE trace_id_seq
+CREATE SEQUENCE IF NOT EXISTS trace_id_seq
     INCREMENT 1
     START 1;
 
 COMMENT ON SEQUENCE trace_id_seq is 'Used for populating trace id used in case_submission';
 
-CREATE TABLE record_type (
+CREATE TABLE IF NOT EXISTS record_type (
     name VARCHAR(255) PRIMARY KEY
 );
 
-CREATE TABLE event_type (
+CREATE TABLE IF NOT EXISTS event_type (
                             id SERIAL PRIMARY KEY,
                             description VARCHAR(255) UNIQUE
 );
 
-CREATE TABLE case_submission (
+CREATE TABLE IF NOT EXISTS case_submission (
                                  id SERIAL PRIMARY KEY,
                                  batch_id INT,
                                  trace_id INT,
