@@ -85,6 +85,9 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     show-sql: false
     generate-ddl: false
+  flyway:
+    baselineOnMigrate: true
+    enabled: true
 
 springdoc:
   swagger-ui:

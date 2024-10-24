@@ -36,6 +36,9 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     show-sql: false
     generate-ddl: false
+  flyway:
+    baselineOnMigrate: false
+    enabled: false
   # the following stops the ServiceSheduler from running in test profile
   profiles:
     active: test
