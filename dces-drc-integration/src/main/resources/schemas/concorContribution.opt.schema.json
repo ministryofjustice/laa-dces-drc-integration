@@ -1,8 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft/2020-12/schema",
-  "properties": {
-    "CONTRIBUTIONS": { "$ref": "#/$defs/CONTRIBUTIONS" }
-  },
+  "$ref": "#/$defs/CONTRIBUTIONS",
   "$defs": {
     "CONTRIBUTIONS.Applicant.PreferredPaymentMethod": {
       "type": "object",
