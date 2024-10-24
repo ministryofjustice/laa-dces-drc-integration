@@ -33,14 +33,14 @@ public class DisabledServiceSchedulerTest {
     private ServiceScheduler serviceScheduler;
 
     @Test
-    public void testProcessFdcDailyFilesIsCalled() throws InterruptedException {
+    public void testProcessFdcDailyFilesIsNotCalled() throws InterruptedException {
         // Wait for the scheduled method to be called
         Thread.sleep(1000);
         verify(fdcService, never()).processDailyFiles();
     }
 
     @Test
-    public void testProcessContributionsDailyFilesIsCalled() throws InterruptedException {
+    public void testProcessContributionsDailyFilesIsNotCalled() throws InterruptedException {
         // Wait for the scheduled method to be called
         Thread.sleep(1000);
         verify(contributionService, never()).processDailyFiles();
