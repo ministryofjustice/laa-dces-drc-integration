@@ -44,13 +44,13 @@ public class CaseSubmissionService {
         return true;
     }
 
-    public boolean logContributionEvent(EventType eventType, BigInteger batchId, BigInteger traceId, CONTRIBUTIONS contributionsObject, Integer httpStatusCode, String payload){
+    public boolean logContributionEvent(BigInteger concorContributionId, EventType eventType, BigInteger batchId, BigInteger traceId, CONTRIBUTIONS contributionsObject, Integer httpStatusCode, String payload){
         // default fdcObject if null is passed. No ids is a valid scenario.
         contributionsObject = Objects.requireNonNullElse(contributionsObject, new CONTRIBUTIONS());
 
         var entity = createCaseSubmissionEntity(eventType, batchId, traceId, contributionsObject.getMaatId(), httpStatusCode, payload);
         entity.setRecordType(RecordType.CONTRIBUTION);
-        entity.setConcorContributionId(contributionsObject.getId());
+        entity.setConcorContributionId(concorContributionId);
         saveEntity(entity);
         return true;
     }

@@ -63,6 +63,9 @@ configurations {
 	integrationTestAnnotationProcessor {
 		extendsFrom testAnnotationProcessor
 	}
+	integrationTestRuntimeOnly {
+		extendsFrom testRuntimeOnly
+	}
 }
 
 repositories {
@@ -88,7 +91,7 @@ dependencies {
 	implementation "org.springframework.security:spring-security-oauth2-jose"
 
 	implementation 'io.sentry:sentry-spring-boot-starter-jakarta'
-	implementation "org.postgresql:postgresql:$versions.postgresqlVersion"
+	runtimeOnly "org.postgresql:postgresql:$versions.postgresqlVersion"
 	implementation 'io.sentry:sentry-logback'
 
 	implementation "net.logstash.logback:logstash-logback-encoder:$versions.logbackEncoderVersion"

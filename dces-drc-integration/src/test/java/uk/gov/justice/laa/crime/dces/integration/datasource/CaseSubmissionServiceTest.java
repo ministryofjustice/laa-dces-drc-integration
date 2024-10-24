@@ -92,7 +92,7 @@ class CaseSubmissionServiceTest {
         when(eventTypeRepository.getEventTypeEntityByDescriptionEquals(expectedEventType.getName())).thenReturn(new EventTypeEntity(1,expectedEventType.getName()));
         var expectedCaseSubmissionEntity = createExpectedCaseSubmissionEntity(RecordType.CONTRIBUTION, 1, expectedHttpStatusCode);
 
-        caseSubmissionService.logContributionEvent(expectedEventType,testBatchId,testTraceId,contributionObject,expectedHttpStatusCode,testPayload);
+        caseSubmissionService.logContributionEvent(testConcorId, expectedEventType,testBatchId,testTraceId,contributionObject,expectedHttpStatusCode,testPayload);
 
         softly.assertThat(caseSubmissionEntityArgumentCaptor.getValue()).isEqualTo(expectedCaseSubmissionEntity);
         softly.assertAll();
