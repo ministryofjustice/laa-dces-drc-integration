@@ -94,7 +94,7 @@ dependencies {
 	implementation 'io.sentry:sentry-spring-boot-starter-jakarta'
 	runtimeOnly "org.postgresql:postgresql:$versions.postgresqlVersion"
 	implementation "org.flywaydb:flyway-core:$versions.flywayVersion"
-
+	runtimeOnly "org.flywaydb:flyway-database-postgresql:$versions.flywayVersion"
 
 	implementation 'io.sentry:sentry-logback'
 
