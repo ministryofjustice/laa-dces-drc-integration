@@ -35,7 +35,8 @@ def versions = [
 		prometheus             : '1.13.2',
 		logbackEncoderVersion  : '7.2',
 		serenityVersion        : "4.1.10",
-		postgresqlVersion      : "42.7.4"
+		postgresqlVersion      : "42.7.4",
+		flywayVersion		   : "10.20.1"
 ]
 
 group = 'uk.gov.justice.laa.crime'
@@ -92,6 +93,9 @@ dependencies {
 
 	implementation 'io.sentry:sentry-spring-boot-starter-jakarta'
 	runtimeOnly "org.postgresql:postgresql:$versions.postgresqlVersion"
+	implementation "org.flywaydb:flyway-core:$versions.flywayVersion"
+	runtimeOnly "org.flywaydb:flyway-database-postgresql:$versions.flywayVersion"
+
 	implementation 'io.sentry:sentry-logback'
 
 	implementation "net.logstash.logback:logstash-logback-encoder:$versions.logbackEncoderVersion"
@@ -121,6 +125,7 @@ dependencies {
 	testImplementation 'io.projectreactor:reactor-test'
 	testImplementation "org.wiremock:wiremock-standalone:$versions.wiremockVersion"
 	testImplementation "com.squareup.okhttp3:mockwebserver:$versions.mockwebserverVersion"
+	testImplementation "org.flywaydb:flyway-core:$versions.flywayVersion"
 
 	testCompileOnly 'org.projectlombok:lombok'
 	testAnnotationProcessor 'org.projectlombok:lombok'
