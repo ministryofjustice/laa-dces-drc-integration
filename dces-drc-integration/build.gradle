@@ -36,7 +36,7 @@ def versions = [
 		logbackEncoderVersion  : '7.2',
 		serenityVersion        : "4.1.10",
 		postgresqlVersion      : "42.7.4",
-		flywayVersion		   : "10.20.0"
+		flywayVersion		   : "10.20.1"
 ]
 
 group = 'uk.gov.justice.laa.crime'
@@ -125,7 +125,7 @@ dependencies {
 	testImplementation 'io.projectreactor:reactor-test'
 	testImplementation "org.wiremock:wiremock-standalone:$versions.wiremockVersion"
 	testImplementation "com.squareup.okhttp3:mockwebserver:$versions.mockwebserverVersion"
-	testImplementation "org.flywaydb:flyway-core:6.4.3"
+	testImplementation "org.flywaydb:flyway-core:$versions.flywayVersion"
 
 	testCompileOnly 'org.projectlombok:lombok'
 	testAnnotationProcessor 'org.projectlombok:lombok'
