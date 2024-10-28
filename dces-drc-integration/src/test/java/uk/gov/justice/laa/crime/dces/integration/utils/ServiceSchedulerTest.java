@@ -5,6 +5,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import uk.gov.justice.laa.crime.dces.integration.config.SchedulerConfiguration;
+import uk.gov.justice.laa.crime.dces.integration.config.TestSchedulerConfiguration;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
 
@@ -26,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 @ExtendWith(SpringExtension.class)
 @SpringJUnitConfig(ServiceScheduler.class)
 @SpringBootTest
+@ContextConfiguration(classes = {TestSchedulerConfiguration.class})
 @TestPropertySource(properties = {
         "scheduling.fdcDailyFiles.cron=* * * * * *",
         "scheduling.contributionsDailyFiles.cron=* * * * * *"
@@ -44,22 +48,20 @@ public class ServiceSchedulerTest {
     @Test
     public void testProcessFdcDailyFilesIsCalled(CapturedOutput output) throws InterruptedException {
         // Wait for the scheduled method to be called
-        Thread.sleep(1000);
+        Thread.sleep(2000);
         when(fdcService.processDailyFiles()).thenReturn(true);
 
-        verify(fdcService, atLeast(1)).processDailyFiles();
-        verify(fdcService, atMost(2)).processDailyFiles();
+        verify(fdcService, times(1)).processDailyFiles();
         assertThat(output.getOut()).contains("Processing fdc daily files");
     }
 
     @Test
     public void testProcessContributionsDailyFilesIsCalled(CapturedOutput output) throws InterruptedException {
         // Wait for the scheduled method to be called
-        Thread.sleep(1000);
+        Thread.sleep(2000);
         when(contributionService.processDailyFiles()).thenReturn(true);
 
-        verify(contributionService, atLeast(1)).processDailyFiles();
-        verify(contributionService, atMost(2)).processDailyFiles();
+        verify(contributionService, times(1)).processDailyFiles();
         assertThat(output.getOut()).contains("Processing contributions daily files");
     }
 }

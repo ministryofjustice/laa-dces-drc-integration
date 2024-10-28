@@ -36,7 +36,8 @@ def versions = [
 		logbackEncoderVersion  : '7.2',
 		serenityVersion        : "4.1.10",
 		postgresqlVersion      : "42.7.4",
-		flywayVersion		   : "10.20.1"
+		flywayVersion		   : "10.20.1",
+		shedlockVersion		   : "5.16.0"
 ]
 
 group = 'uk.gov.justice.laa.crime'
@@ -120,6 +121,11 @@ dependencies {
 	implementation "io.micrometer:micrometer-tracing-bridge-brave:$versions.micrometerio"
 	implementation "io.micrometer:micrometer-registry-prometheus:$versions.prometheus"
 
+	implementation "net.javacrumbs.shedlock:shedlock-spring:$versions.shedlockVersion"
+	implementation "net.javacrumbs.shedlock:shedlock-provider-jdbc-template:$versions.shedlockVersion"
+	implementation "net.javacrumbs.shedlock:shedlock-provider-inmemory:$versions.shedlockVersion"
+	implementation 'net.datafaker:datafaker:2.4.0'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation "org.springframework.security:spring-security-test"
 	testImplementation 'io.projectreactor:reactor-test'
@@ -132,7 +138,9 @@ dependencies {
 
 	testImplementation "net.serenity-bdd:serenity-rest-assured:$versions.serenityVersion"
 
-	implementation 'net.datafaker:datafaker:2.4.0'
+	testImplementation "net.javacrumbs.shedlock:shedlock-spring:$versions.shedlockVersion"
+	testImplementation "net.javacrumbs.shedlock:shedlock-provider-inmemory:$versions.shedlockVersion"
+	runtimeOnly 'com.h2database:h2'
 
 }
 

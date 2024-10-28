@@ -1,6 +1,8 @@
 package uk.gov.justice.laa.crime.dces.integration.utils;
 
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.core.LockAssert;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -24,15 +26,19 @@ public class ServiceScheduler {
         this.contributionService = contributionService;
     }
     @Scheduled(cron =  "${scheduling.fdcDailyFiles.cron:-}")
+    @SchedulerLock(name = "ProcessFdcDailyFiles_Scheduler", lockAtMostFor = "15m", lockAtLeastFor = "1m")
     public void processFdcDailyFiles()
     {
+        LockAssert.assertLocked();
         log.info("Processing fdc daily files at {}", LocalDateTime.now());
         fdcService.processDailyFiles();
     }
 
     @Scheduled(cron = "${scheduling.contributionsDailyFiles.cron:-}")
+    @SchedulerLock(name = "ProcessContributionsDailyFiles_Scheduler", lockAtMostFor = "15m", lockAtLeastFor = "1m")
     public void processContributionsDailyFiles()
     {
+        LockAssert.assertLocked();
         log.info("Processing contributions daily files at {}", LocalDateTime.now());
         contributionService.processDailyFiles();
     }
