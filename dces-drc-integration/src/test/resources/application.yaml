@@ -36,6 +36,10 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     show-sql: false
     generate-ddl: false
+    properties:
+      hibernate:
+        boot:
+          allow_jdbc_metadata_access: false
   flyway:
     baselineOnMigrate: false
     enabled: false
