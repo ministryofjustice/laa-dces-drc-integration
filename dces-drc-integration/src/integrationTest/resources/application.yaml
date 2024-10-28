@@ -69,6 +69,12 @@ spring:
       resource-server:
         jwt:
           issuer-uri: ${LAA_DCES_DRC_INTEGRATION_RESOURCE_SERVER_ISSUER_URI}
+  datasource:
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+    generate-ddl: false
 
 springdoc:
   swagger-ui:

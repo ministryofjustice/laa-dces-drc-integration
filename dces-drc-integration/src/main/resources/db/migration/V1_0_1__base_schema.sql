@@ -1,25 +1,25 @@
-CREATE SEQUENCE batch_id_seq
+CREATE SEQUENCE IF NOT EXISTS batch_id_seq
     INCREMENT 1
     START 1;
 
 COMMENT ON SEQUENCE batch_id_seq is 'Used for populating batch id used in case_submission';
 
-CREATE SEQUENCE trace_id_seq
+CREATE SEQUENCE IF NOT EXISTS trace_id_seq
     INCREMENT 1
     START 1;
 
 COMMENT ON SEQUENCE trace_id_seq is 'Used for populating trace id used in case_submission';
 
-CREATE TABLE record_type (
+CREATE TABLE IF NOT EXISTS record_type (
     name VARCHAR(255) PRIMARY KEY
 );
 
-CREATE TABLE event_type (
-                            id SERIAL PRIMARY KEY ,
+CREATE TABLE IF NOT EXISTS event_type (
+                            id SERIAL PRIMARY KEY,
                             description VARCHAR(255) UNIQUE
 );
 
-CREATE TABLE case_submission (
+CREATE TABLE IF NOT EXISTS case_submission (
                                  id SERIAL PRIMARY KEY,
                                  batch_id INT,
                                  trace_id INT,
@@ -40,7 +40,7 @@ CREATE TABLE case_submission (
 );
 
 comment on column case_submission.batch_id is 'The id assigned for an entire batch process run. Each id will point to all interactions attempted in a single run of the process. Will not be populated for an async response.';
-comment on column case_submission.trace_id is 'The id assigned for each FDC/ConcorContribution for tracing progress through the process. For example, an FDC is retrieved, and sent to the DRC, and successfully updated in MAAT, all three entries will share the TraceId. Will not be populated for an async response.';
+comment on column case_submission.trace_id is 'TBD if dropped or recycled into showing the micrometer trace id'; --TODO: Decision
 comment on column case_submission.maat_id is 'The maat ID related to the entry.';
 comment on column case_submission.concor_contribution_id is 'Populated if the entry is for a ConcorContribution';
 comment on column case_submission.fdc_id is 'Populated if the entry is for an FDC';
