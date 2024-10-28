@@ -134,6 +134,10 @@ dependencies {
 
 	implementation 'net.datafaker:datafaker:2.4.0'
 
+	testImplementation 'org.testcontainers:testcontainers:1.19.7'
+	testImplementation 'org.testcontainers:postgresql:1.19.3'
+	testImplementation 'org.testcontainers:junit-jupiter:1.16.0'
+
 }
 
 jacoco {
