@@ -458,3 +458,13 @@ workflows:
       - deploy-staging:
           requires:
             - hold_install_on_staging
+
+      - hold_install_on_prod:
+          type: approval
+          requires:
+            - build_and_push_image
+
+      - deploy-prod:
+          requires:
+            - hold_install_on_prod
+
