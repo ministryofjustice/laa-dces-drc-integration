@@ -10,6 +10,8 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionEntity;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventTypeEntity;
@@ -22,6 +24,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.Fdc
 
 import java.math.BigInteger;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 import static org.mockito.Mockito.when;
 
@@ -51,7 +54,7 @@ class CaseSubmissionServiceTest {
 
     @Test
     void whenLogFdcIsCalledWithAllDetails_thenLogEntryIsAsExpected() {
-        Integer expectedHttpStatusCode = 200;
+        HttpStatusCode expectedHttpStatusCode = HttpStatus.OK;
         EventType expectedEventType = EventType.SENT_TO_DRC;
         Fdc fdcObject = createTestFdcObject();
 
@@ -67,7 +70,7 @@ class CaseSubmissionServiceTest {
 
     @Test
     void whenLogFdcIsCalledWithNoEventType_thenLogEntryFails() {
-        Integer expectedHttpStatusCode = 200;
+        HttpStatusCode expectedHttpStatusCode = HttpStatus.OK;
         EventType expectedEventType = null;
         Fdc fdcObject = createTestFdcObject();
 
@@ -84,7 +87,7 @@ class CaseSubmissionServiceTest {
 
     @Test
     void whenLogContributionIsCalledWithAllDetails_thenLogEntryIsAsExpected() {
-        Integer expectedHttpStatusCode = 200;
+        HttpStatusCode expectedHttpStatusCode = HttpStatus.OK;
         EventType expectedEventType = EventType.SENT_TO_DRC;
         CONTRIBUTIONS contributionObject = createTestContributionObject();
 
@@ -98,7 +101,7 @@ class CaseSubmissionServiceTest {
         softly.assertAll();
     }
 
-    private CaseSubmissionEntity createExpectedCaseSubmissionEntity(RecordType recordType, Integer eventTypeId, Integer httpStatusCode){
+    private CaseSubmissionEntity createExpectedCaseSubmissionEntity(RecordType recordType, Integer eventTypeId, HttpStatusCode httpStatusCode){
         return CaseSubmissionEntity.builder()
                 .id(null) // this will not be assigned till post-save.
                 .traceId(testTraceId)
@@ -109,7 +112,7 @@ class CaseSubmissionServiceTest {
                 .recordType(recordType.getName())
                 .eventType(eventTypeId)
                 .payload(testPayload)
-                .httpStatus(httpStatusCode)
+                .httpStatus( Objects.nonNull(httpStatusCode) ? httpStatusCode.value() : null )
                 .build();
     }
 
