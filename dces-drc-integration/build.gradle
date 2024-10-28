@@ -86,9 +86,9 @@ dependencies {
 
 	// oAuth
 	implementation "org.springframework.security:spring-security-config"
-	implementation "org.springframework.security:spring-security-web"
-	implementation "org.springframework.boot:spring-boot-starter-oauth2-resource-server"
-	implementation "org.springframework.boot:spring-boot-starter-oauth2-client"
+	implementation "org.springframework.security:spring-security-web:6.3.4"
+	implementation "org.springframework.boot:spring-boot-starter-oauth2-resource-server:3.3.5"
+	implementation "org.springframework.boot:spring-boot-starter-oauth2-client:3.3.5"
 	implementation "org.springframework.security:spring-security-oauth2-jose"
 
 	implementation 'io.sentry:sentry-spring-boot-starter-jakarta'
@@ -121,7 +121,7 @@ dependencies {
 	implementation "io.micrometer:micrometer-registry-prometheus:$versions.prometheus"
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation "org.springframework.security:spring-security-test"
+	testImplementation "org.springframework.security:spring-security-test:6.3.4"
 	testImplementation 'io.projectreactor:reactor-test'
 	testImplementation "org.wiremock:wiremock-standalone:$versions.wiremockVersion"
 	testImplementation "com.squareup.okhttp3:mockwebserver:$versions.mockwebserverVersion"
