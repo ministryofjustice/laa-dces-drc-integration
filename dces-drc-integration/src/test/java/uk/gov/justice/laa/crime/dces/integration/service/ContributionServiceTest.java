@@ -14,10 +14,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpServerErrorException;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.config.Feature;
 import uk.gov.justice.laa.crime.dces.integration.datasource.CaseSubmissionService;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
@@ -73,6 +75,8 @@ class ContributionServiceTest {
 	@MockBean
 	private CaseSubmissionService caseSubmissionService;
 
+	private final BigInteger testBatchId = BigInteger.valueOf(-666);
+
 	@AfterEach
 	void afterTestAssertAll(){
 		softly.assertAll();
@@ -84,10 +88,12 @@ class ContributionServiceTest {
 
 	@Test
 	void testXMLValid() throws JAXBException {
-		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());
+		CONTRIBUTIONS testContribution = createTestContribution();
+		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(testContribution);
 		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
 		when(contributionsMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
+		when(caseSubmissionService.generateBatchId()).thenReturn(testBatchId);
 		doNothing().when(drcClient).sendConcorContributionReqToDrc(any());
 
 		boolean result = contributionService.processDailyFiles();
@@ -97,6 +103,20 @@ class ContributionServiceTest {
 		verify(drcClient, times(2)).sendConcorContributionReqToDrc(any());
 		softly.assertThat(result).isTrue();
 		verify(anonymisingDataService, never()).anonymise(any());
+		verify(caseSubmissionService, times(8)).logContributionEvent(any(), any(), any(), any(), any(), any());
+
+		// verify each event is logged.
+		verify(caseSubmissionService).logContributionEvent(null, EventType.FETCHED_FROM_MAAT, testBatchId, null, HttpStatus.OK, "Fetched 2 concorContribution entries");
+		verify(caseSubmissionService).logContributionEvent(BigInteger.valueOf(1234), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, HttpStatus.OK, null);
+		verify(caseSubmissionService).logContributionEvent(BigInteger.valueOf(9876), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, HttpStatus.OK, null);
+
+		verify(caseSubmissionService).logContributionEvent(BigInteger.valueOf(1234), EventType.SENT_TO_DRC, testBatchId, testContribution, HttpStatus.OK, null);
+		verify(caseSubmissionService).logContributionEvent(BigInteger.valueOf(9876), EventType.SENT_TO_DRC, testBatchId, testContribution, HttpStatus.OK, null);
+
+		verify(caseSubmissionService).logContributionEvent(BigInteger.valueOf(1234), EventType.UPDATED_IN_MAAT, testBatchId, testContribution, HttpStatus.OK, null);
+		verify(caseSubmissionService).logContributionEvent(BigInteger.valueOf(9876), EventType.UPDATED_IN_MAAT, testBatchId, testContribution, HttpStatus.OK, null);
+		verify(caseSubmissionService).logContributionEvent(null, EventType.UPDATED_IN_MAAT, testBatchId, null, HttpStatus.OK, "Successfully Sent:2");
+
 	}
 
 	@Test
@@ -147,11 +167,13 @@ class ContributionServiceTest {
 
 	@Test
 	void testFileXMLInvalid() throws JAXBException {
-		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(new CONTRIBUTIONS()); // mock returns null otherwise
+		CONTRIBUTIONS testContribution = createTestContribution();
+		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(testContribution); // mock returns null otherwise
 		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("InvalidXML");
 		when(contributionsMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("AckXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("FileName");
 		doNothing().when(drcClient).sendConcorContributionReqToDrc(any());
+		when(caseSubmissionService.generateBatchId()).thenReturn(testBatchId);
 
 		softly.assertThatThrownBy(() -> contributionService.processDailyFiles())
 				.isInstanceOf(HttpServerErrorException.class)
@@ -160,6 +182,18 @@ class ContributionServiceTest {
 		// failure to generate the xml should return a null xmlString.
 		verify(contributionsMapperUtils).generateFileXML(any(), any());
 		// failure should be the result of file generation
+
+		verify(caseSubmissionService, times(6)).logContributionEvent(any(), any(), any(), any(), any(), any());
+		// verify each event is logged.
+		verify(caseSubmissionService).logContributionEvent(null, EventType.FETCHED_FROM_MAAT, testBatchId, null, HttpStatus.OK, "Fetched 2 concorContribution entries");
+		verify(caseSubmissionService).logContributionEvent(BigInteger.valueOf(1234), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, HttpStatus.OK, null);
+		verify(caseSubmissionService).logContributionEvent(BigInteger.valueOf(9876), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, HttpStatus.OK, null);
+
+		verify(caseSubmissionService).logContributionEvent(BigInteger.valueOf(1234), EventType.SENT_TO_DRC, testBatchId, testContribution, HttpStatus.OK, null);
+		verify(caseSubmissionService).logContributionEvent(BigInteger.valueOf(9876), EventType.SENT_TO_DRC, testBatchId, testContribution, HttpStatus.OK, null);
+
+		verify(caseSubmissionService).logContributionEvent(null, EventType.UPDATED_IN_MAAT, testBatchId, null, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create Concor contribution-file. Investigation needed. State of files will be out of sync! [org.springframework.web.client.HttpServerErrorException(500 Received error 500 INTERNAL_SERVER_ERROR due to Internal Server Error)]");
+
 	}
 
 	@Test
@@ -197,6 +231,7 @@ class ContributionServiceTest {
 				.build();
 		Integer response = contributionService.processContributionUpdate(dataRequest);
 		softly.assertThat(response).isEqualTo(1111);
+		verify(caseSubmissionService).logContributionEvent(BigInteger.valueOf(911),EventType.DRC_ASYNC_RESPONSE,null,null, HttpStatus.OK, null);
 	}
 
 	@Test
@@ -220,6 +255,7 @@ class ContributionServiceTest {
 		var exception = catchThrowableOfType(() -> contributionService.processContributionUpdate(dataRequest), MaatApiClientException.class);
 		softly.assertThat(exception).isNotNull();
 		softly.assertThat(exception.getStatusCode().is4xxClientError()).isTrue();
+		verify(caseSubmissionService).logContributionEvent(BigInteger.valueOf(9),EventType.DRC_ASYNC_RESPONSE,null,null, HttpStatus.BAD_REQUEST, errorText);
 	}
 
 	CONTRIBUTIONS createTestContribution(){
