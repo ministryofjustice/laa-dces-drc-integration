@@ -63,7 +63,7 @@ public class ContributionProcessSpy {
                 final var result = (List<ConcurContribEntry>) mockingDetails(contributionClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation);
                 activeIds(result.stream().map(ConcurContribEntry::getConcorContributionId).collect(Collectors.toSet()));
                 return result;
-            }).when(contributionClientSpy).getContributions("ACTIVE");
+            }).when(contributionClientSpy).getContributions("ACTIVE", 0, 10);
             return this;
         }
 
@@ -75,7 +75,7 @@ public class ContributionProcessSpy {
                 result = result.stream().filter(concurContribEntry -> idSet.contains(concurContribEntry.getConcorContributionId())).toList();
                 activeIds(result.stream().map(ConcurContribEntry::getConcorContributionId).collect(Collectors.toSet()));
                 return result;
-            }).when(contributionClientSpy).getContributions("ACTIVE");
+            }).when(contributionClientSpy).getContributions("ACTIVE", 0, 10);
             return this;
         }
 

@@ -54,13 +54,24 @@ public class ContributionService implements FileService {
     @Timed(value = "laa_dces_drc_service_process_contributions_daily_files",
             description = "Time taken to process the daily contributions files from DRC and passing this for downstream processing.")
     public boolean processDailyFiles() {
-        Map<String, CONTRIBUTIONS> successfulContributions = new HashMap<>();
-        Map<String, String> failedContributions = new HashMap<>();
-        // get all the values to process via maat call
-        List<ConcurContribEntry> contributionsList = contributionClient.getContributions("ACTIVE");
-        sendContributionsToDrc(contributionsList, successfulContributions, failedContributions);
+        int defaultNoOfRecord = feature.noOfContributionRecords();
+        List<ConcurContribEntry> contributionsList;
+        int startingId = 0;
+        boolean isSuccessful = false;
+        do {
+            Map<String, CONTRIBUTIONS> successfulContributions = new HashMap<>();
+            Map<String, String> failedContributions = new HashMap<>();
+            contributionsList = contributionClient.getContributions("ACTIVE", startingId, defaultNoOfRecord);
+            if (contributionsList != null && !contributionsList.isEmpty()) {
+                sendContributionsToDrc(contributionsList, successfulContributions, failedContributions);
+                Integer contributionFileId = updateContributionsAndCreateFile(successfulContributions, failedContributions);
+                log.info("Created contribution-file ID {}", contributionFileId);
+                startingId = contributionsList.get(contributionsList.size() - 1).getConcorContributionId();
+                isSuccessful = true;
+            }
+        } while (contributionsList != null && contributionsList.size() == defaultNoOfRecord);
 
-        return updateContributionsAndCreateFile(successfulContributions, failedContributions) != null;
+        return isSuccessful;
     }
 
 
@@ -134,6 +145,7 @@ public class ContributionService implements FileService {
 
     @Retry(name = SERVICE_NAME)
     public Integer contributionUpdateRequest(String xmlContent, List<String> concorContributionIdList, int numberOfRecords, String fileName, String fileAckXML) throws HttpServerErrorException {
+        log.info("Sending contribution update request to MAAT API for {}", concorContributionIdList.stream().peek(log::info).toList());
         ContributionUpdateRequest request = ContributionUpdateRequest.builder()
                 .recordsSent(numberOfRecords)
                 .xmlContent(xmlContent)

@@ -46,7 +46,7 @@ import static org.mockito.Mockito.when;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @WireMockTest(httpPort = 1111)
 class ContributionServiceTest {
-	private static final String GET_URL = "/debt-collection-enforcement/concor-contribution-files?status=ACTIVE";
+	private static final String GET_URL = "/debt-collection-enforcement/concor-contribution-files?status=ACTIVE&startingId=0&numberOfRecords=0";
 	private static final String UPDATE_URL = "/debt-collection-enforcement/create-contribution-file";
 
 	private static final List<StubMapping> customStubs = new ArrayList<>();
@@ -84,13 +84,14 @@ class ContributionServiceTest {
 		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
 		when(contributionsMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
+		when(feature.noOfContributionRecords()).thenReturn(5);
 		doNothing().when(drcClient).sendConcorContributionReqToDrc(any());
 
 		boolean result = contributionService.processDailyFiles();
-
-		verify(contributionsMapperUtils, times(2)).mapLineXMLToObject(any());
-		verify(contributionsMapperUtils).generateFileXML(any(), any());
-		verify(drcClient, times(2)).sendConcorContributionReqToDrc(any());
+		//testing the number of times the methods are called to ensure the correct number of records are processed.
+		verify(contributionsMapperUtils, times(8)).mapLineXMLToObject(any());
+		verify(contributionsMapperUtils, times(2)).generateFileXML(any(), any());
+		verify(drcClient, times(8)).sendConcorContributionReqToDrc(any());
 		softly.assertThat(result).isTrue();
 		verify(anonymisingDataService, never()).anonymise(any());
 	}
@@ -102,6 +103,7 @@ class ContributionServiceTest {
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
 		when(contributionsMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
 		doNothing().when(drcClient).sendConcorContributionReqToDrc(any());
+		when(feature.noOfContributionRecords()).thenReturn(5);
 		when(feature.outgoingAnonymized()).thenReturn(false);
 
 		contributionService.processDailyFiles();

@@ -47,5 +47,6 @@ public record Feature(boolean stubAckEndpoints   /* feature.stub-ack-endpoints *
                       boolean tempTestEndpoints  /* feature.temp-test-endpoints */,
                       boolean incomingIsolated   /* feature.incoming-isolated */,
                       boolean outgoingIsolated   /* feature.outgoing-isolated */,
+                      int noOfContributionRecords   /* feature.outgoing-isolated */,
                       boolean outgoingAnonymized /* feature.outgoing-anonymized */) {
 }

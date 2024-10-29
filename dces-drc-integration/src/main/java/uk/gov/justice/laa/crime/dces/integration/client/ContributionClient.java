@@ -22,7 +22,7 @@ import java.util.List;
 @HttpExchange("/debt-collection-enforcement")
 public interface ContributionClient extends MaatApiClient {
     @GetExchange("/concor-contribution-files")
-    List<ConcurContribEntry> getContributions(@RequestParam String status);
+    List<ConcurContribEntry> getContributions(@RequestParam String status, @RequestParam Integer startingId, @RequestParam Integer numberOfRecords);
 
     @PostExchange("/create-contribution-file")
     @Valid
