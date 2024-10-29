@@ -51,11 +51,14 @@ public class ContributionService implements FileService {
     // a generic "Exception" back up the chain.
     public Integer processContributionUpdate(UpdateLogContributionRequest updateLogContributionRequest) {
         try {
+            int result;
             if (!feature.incomingIsolated()) {
-                return contributionClient.sendLogContributionProcessed(updateLogContributionRequest);
+                result = contributionClient.sendLogContributionProcessed(updateLogContributionRequest);
             } else {
-                return 0; // avoid updating MAAT DB.
+                result = 0; // avoid updating MAAT DB.
             }
+            logContributionAsyncEvent(updateLogContributionRequest, HttpStatus.OK);
+            return result;
         } catch (WebClientResponseException e){
             logContributionAsyncEvent(updateLogContributionRequest, e.getStatusCode());
             throw e;
@@ -82,7 +85,7 @@ public class ContributionService implements FileService {
         Map<String, String> failedContributions = new HashMap<>();
         // get all the values to process via maat call
         List<ConcurContribEntry> contributionsList = contributionClient.getContributions("ACTIVE");
-        String successfulPayload = "Fetched "+contributionsList.size()+" concorContribution entries.";
+        String successfulPayload = "Fetched "+contributionsList.size()+" concorContribution entries";
         caseSubmissionService.logContributionEvent(null, FETCHED_FROM_MAAT, batchId, null, HttpStatus.OK, successfulPayload);
 
         sendContributionsToDrc(contributionsList, successfulContributions, failedContributions);
