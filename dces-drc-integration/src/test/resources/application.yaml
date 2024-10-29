@@ -11,8 +11,6 @@ sentry:
   environment: test
 
 spring:
-  main:
-    allow-bean-definition-overriding: true
   security:
     oauth2:
       client:
@@ -30,14 +28,18 @@ spring:
         jwt:
           issuer-uri: http://testurl
   datasource:
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    username: sa
+    url: jdbc:postgresql://localhost:5432/db_name
+    username: username
     password: password
-    driver-class-name: org.h2.Driver
+    driver-class-name: org.postgresql.Driver
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     show-sql: false
     generate-ddl: false
+    properties:
+      hibernate:
+        boot:
+          allow_jdbc_metadata_access: false
   flyway:
     baselineOnMigrate: false
     enabled: false

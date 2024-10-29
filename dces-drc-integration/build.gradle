@@ -120,11 +120,12 @@ dependencies {
 	implementation "io.micrometer:micrometer-tracing-bom:$versions.micrometerio"
 	implementation "io.micrometer:micrometer-tracing-bridge-brave:$versions.micrometerio"
 	implementation "io.micrometer:micrometer-registry-prometheus:$versions.prometheus"
-
 	implementation "net.javacrumbs.shedlock:shedlock-spring:$versions.shedlockVersion"
 	implementation "net.javacrumbs.shedlock:shedlock-provider-jdbc-template:$versions.shedlockVersion"
-	implementation "net.javacrumbs.shedlock:shedlock-provider-inmemory:$versions.shedlockVersion"
 	implementation 'net.datafaker:datafaker:2.4.0'
+
+	testCompileOnly 'org.projectlombok:lombok'
+	testAnnotationProcessor 'org.projectlombok:lombok'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation "org.springframework.security:spring-security-test"
@@ -132,16 +133,8 @@ dependencies {
 	testImplementation "org.wiremock:wiremock-standalone:$versions.wiremockVersion"
 	testImplementation "com.squareup.okhttp3:mockwebserver:$versions.mockwebserverVersion"
 	testImplementation "org.flywaydb:flyway-core:$versions.flywayVersion"
-
-	testCompileOnly 'org.projectlombok:lombok'
-	testAnnotationProcessor 'org.projectlombok:lombok'
-
-	testImplementation "net.serenity-bdd:serenity-rest-assured:$versions.serenityVersion"
-
-	testImplementation "net.javacrumbs.shedlock:shedlock-spring:$versions.shedlockVersion"
 	testImplementation "net.javacrumbs.shedlock:shedlock-provider-inmemory:$versions.shedlockVersion"
-	runtimeOnly 'com.h2database:h2'
-
+	testImplementation "net.serenity-bdd:serenity-rest-assured:$versions.serenityVersion"
 }
 
 jacoco {
