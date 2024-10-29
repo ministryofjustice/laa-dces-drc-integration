@@ -56,7 +56,7 @@ public class FdcMapperUtils extends MapperUtils{
 
     private FdcFile.Header generateHeader (ObjectFactory of, List<Fdc> fdcList){
         FdcFile.Header header = of.createFdcFileHeader();
-        header.setDateGenerated(generateDate(LocalDate.now()));
+        header.setDateGenerated(DateConvertor.convertToXMLGregorianCalendar(LocalDate.now()));
         // TODO: Get generation method for the headers resolved.
         header.setFilename("file.name");
         header.setFileId(BigInteger.valueOf(123));
@@ -82,8 +82,8 @@ public class FdcMapperUtils extends MapperUtils{
         fdc.setLgfsTotal(entry.getLgfsCost());
         fdc.setAgfsTotal(entry.getAgfsCost());
         fdc.setFinalCost(entry.getFinalCost());
-        fdc.setSentenceDate(super.generateDate(entry.getSentenceOrderDate()));
-        fdc.setCalculationDate(super.generateDate(entry.getDateCalculated()));
+        fdc.setSentenceDate(DateConvertor.convertToXMLGregorianCalendar(entry.getSentenceOrderDate()));
+        fdc.setCalculationDate(DateConvertor.convertToXMLGregorianCalendar(entry.getDateCalculated()));
         return fdc;
     }
 

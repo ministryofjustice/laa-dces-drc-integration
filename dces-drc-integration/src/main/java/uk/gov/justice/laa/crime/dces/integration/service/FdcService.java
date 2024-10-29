@@ -96,7 +96,7 @@ public class FdcService implements FileService {
     @Retry(name = SERVICE_NAME)
     void sendFdcToDrc(List<Fdc> fdcList, List<Fdc> successfulFdcs, Map<String,String> failedFdcs) {
         fdcList.forEach(currentFdc -> {
-            caseSubmissionService.logFdcEvent(FETCHED_FROM_MAAT, batchId, currentFdc, HttpStatus.OK, "");
+            caseSubmissionService.logFdcEvent(FETCHED_FROM_MAAT, batchId, currentFdc, HttpStatus.OK, null);
             int fdcId = currentFdc.getId().intValue();
             try {
                 final var request = FdcReqForDrc.of(fdcId, currentFdc);
@@ -109,7 +109,7 @@ public class FdcService implements FileService {
                     log.debug("Skipping FDC data to DRC, JSON = [{}]", json);
                 }
                 successfulFdcs.add(currentFdc);
-                caseSubmissionService.logFdcEvent(SENT_TO_DRC, batchId, currentFdc, HttpStatus.OK, "");
+                caseSubmissionService.logFdcEvent(SENT_TO_DRC, batchId, currentFdc, HttpStatus.OK, null);
             } catch (Exception e) {
                 // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
                 failedFdcs.put(Integer.toString(fdcId), e.getClass().getName() + ": " + e.getMessage());
@@ -154,7 +154,7 @@ public class FdcService implements FileService {
             }
         }
         for(Fdc currentFdc: successfulFdcs){
-            caseSubmissionService.logFdcEvent(UPDATED_IN_MAAT, batchId, currentFdc, null, null);
+            caseSubmissionService.logFdcEvent(UPDATED_IN_MAAT, batchId, currentFdc, HttpStatus.OK, null);
         }
         String payload = "Successfully Sent:"+successfulFdcs.size();
         caseSubmissionService.logFdcEvent(UPDATED_IN_MAAT, batchId, null, HttpStatus.OK, payload);
@@ -196,7 +196,7 @@ public class FdcService implements FileService {
                 && !response.getFdcContributions().isEmpty()) {
             List<FdcContributionEntry> fdcContributionEntryList= response.getFdcContributions();
             fdcList = fdcContributionEntryList.stream().map(fdcMapperUtils::mapFdcEntry).toList();
-            String successfulPayload = "Fetched "+fdcList.size()+" fdc entries.";
+            String successfulPayload = "Fetched "+fdcList.size()+" fdc entries";
             caseSubmissionService.logFdcEvent(FETCHED_FROM_MAAT, batchId, null, HttpStatus.OK, successfulPayload);
         }
         return fdcList;
@@ -228,13 +228,17 @@ public class FdcService implements FileService {
         if (!globalUpdateResponse.isSuccessful()) {
             return logGlobalUpdateFailure("endpoint response has successful==false");
         }
-        return globalUpdateResponse.getNumberOfUpdates();
+        int numUpdates = globalUpdateResponse.getNumberOfUpdates();
+        caseSubmissionService.logFdcEvent(FDC_GLOBAL_UPDATE, batchId, null, HttpStatus.OK, "Updated "+numUpdates+" fdc entries");
+        return numUpdates;
     }
 
     private int logGlobalUpdateFailure(String errorMessage){
         // We've failed to do a global update.
         // TODO: Flag here for sentry
-        log.error("Failed to complete FDC global update [{}]", errorMessage);
+        String errorText = String.format("Failed to complete FDC global update [%s]", errorMessage);
+        log.error(errorText);
+        caseSubmissionService.logFdcEvent(FDC_GLOBAL_UPDATE, batchId, null, HttpStatus.INTERNAL_SERVER_ERROR, errorText);
         // continue processing, as can still have data to deal with.
         return 0;
     }

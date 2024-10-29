@@ -74,8 +74,8 @@ class FdcMapperUtilsTests {
 	}
 
 	private Fdc generateDefaultFdc() {
-		XMLGregorianCalendar calculationDate = fdcMapperUtils.generateDate(LocalDate.parse(DEFAULT_CALCULATION_DATE));
-		XMLGregorianCalendar sentenceDate = fdcMapperUtils.generateDate(LocalDate.parse(DEFAULT_SENTENCE_DATE));
+		XMLGregorianCalendar calculationDate = DateConvertor.convertToXMLGregorianCalendar(LocalDate.parse(DEFAULT_CALCULATION_DATE));
+		XMLGregorianCalendar sentenceDate = DateConvertor.convertToXMLGregorianCalendar(LocalDate.parse(DEFAULT_SENTENCE_DATE));
 		ObjectFactory of = new ObjectFactory();
 		Fdc fdc = of.createFdcFileFdcListFdc();
 		fdc.setId(DEFAULT_ID);
