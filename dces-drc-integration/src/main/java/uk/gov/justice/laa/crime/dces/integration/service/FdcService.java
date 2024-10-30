@@ -13,7 +13,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.client.FdcClient;
 import uk.gov.justice.laa.crime.dces.integration.config.Feature;
-import uk.gov.justice.laa.crime.dces.integration.datasource.CaseSubmissionService;
+import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionEntry;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsResponse;
@@ -45,7 +45,7 @@ public class FdcService implements FileService {
     private final DrcClient drcClient;
     private final ObjectMapper objectMapper;
     private final Feature feature;
-    private final CaseSubmissionService caseSubmissionService;
+    private final EventService eventService;
     private BigInteger batchId;
 
     @SuppressWarnings("squid:S2147")  // Duplicate code is catch blocks. However they cannot be merged, due to lacking
@@ -76,13 +76,13 @@ public class FdcService implements FileService {
     private void logFdcAsyncEvent(UpdateLogFdcRequest updateLogFdcRequest, HttpStatusCode httpStatusCode){
         Fdc idHolder = new Fdc();
         idHolder.setId(BigInteger.valueOf(updateLogFdcRequest.getFdcId()));
-        caseSubmissionService.logFdcEvent(DRC_ASYNC_RESPONSE, null, idHolder, httpStatusCode, updateLogFdcRequest.getErrorText());
+        eventService.logFdc(DRC_ASYNC_RESPONSE, null, idHolder, httpStatusCode, updateLogFdcRequest.getErrorText());
     }
 
     @Timed(value = "laa_dces_drc_service_process_fdc_daily_files",
             description = "Time taken to process the daily FDC files from DRC and passing this for downstream processing.")
     public boolean processDailyFiles() {
-        batchId = caseSubmissionService.generateBatchId();
+        batchId = eventService.generateBatchId();
         List<Fdc> successfulFdcs = new ArrayList<>();
         Map<String,String> failedFdcs = new HashMap<>();
         int globalUpdateResult = callGlobalUpdate();
@@ -96,7 +96,7 @@ public class FdcService implements FileService {
     @Retry(name = SERVICE_NAME)
     void sendFdcToDrc(List<Fdc> fdcList, List<Fdc> successfulFdcs, Map<String,String> failedFdcs) {
         fdcList.forEach(currentFdc -> {
-            caseSubmissionService.logFdcEvent(FETCHED_FROM_MAAT, batchId, currentFdc, HttpStatus.OK, null);
+            eventService.logFdc(FETCHED_FROM_MAAT, batchId, currentFdc, HttpStatus.OK, null);
             int fdcId = currentFdc.getId().intValue();
             try {
                 final var request = FdcReqForDrc.of(fdcId, currentFdc);
@@ -109,11 +109,11 @@ public class FdcService implements FileService {
                     log.debug("Skipping FDC data to DRC, JSON = [{}]", json);
                 }
                 successfulFdcs.add(currentFdc);
-                caseSubmissionService.logFdcEvent(SENT_TO_DRC, batchId, currentFdc, HttpStatus.OK, null);
+                eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, HttpStatus.OK, null);
             } catch (Exception e) {
                 // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
                 failedFdcs.put(Integer.toString(fdcId), e.getClass().getName() + ": " + e.getMessage());
-                caseSubmissionService.logFdcEvent(SENT_TO_DRC, batchId, currentFdc, HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+                eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
             }
         });
     }
@@ -154,12 +154,12 @@ public class FdcService implements FileService {
             }
         }
         for(Fdc currentFdc: successfulFdcs){
-            caseSubmissionService.logFdcEvent(UPDATED_IN_MAAT, batchId, currentFdc, HttpStatus.OK, null);
+            eventService.logFdc(UPDATED_IN_MAAT, batchId, currentFdc, HttpStatus.OK, null);
         }
         String payload = "Successfully Sent:"+successfulFdcs.size();
-        caseSubmissionService.logFdcEvent(UPDATED_IN_MAAT, batchId, null, HttpStatus.OK, payload);
+        eventService.logFdc(UPDATED_IN_MAAT, batchId, null, HttpStatus.OK, payload);
         payload = "Failed To Send:"+failedFdcs.size();
-        caseSubmissionService.logFdcEvent(UPDATED_IN_MAAT, batchId, null, HttpStatus.INTERNAL_SERVER_ERROR, payload);
+        eventService.logFdc(UPDATED_IN_MAAT, batchId, null, HttpStatus.INTERNAL_SERVER_ERROR, payload);
         return contributionFileId;
     }
 
@@ -167,7 +167,7 @@ public class FdcService implements FileService {
         // We're rethrowing the exception, therefore avoid logging the stack trace to prevent logging the same trace multiple times.
         log.error("Failed to create FDC contribution-file. Investigation needed. State of files will be out of sync! [" + e.getClass().getName() + "(" + e.getMessage() + ")]");
         // If failed, we want to handle this. As it will mean the whole process failed for current day.
-        caseSubmissionService.logFdcEvent(UPDATED_IN_MAAT, batchId,null, httpStatusCode, e.getMessage());
+        eventService.logFdc(UPDATED_IN_MAAT, batchId,null, httpStatusCode, e.getMessage());
     }
 
     public void logNumberDiscepancies(int globalUpdateCount, int getFdcCount, int successfullySentFdcCount) {
@@ -187,7 +187,7 @@ public class FdcService implements FileService {
         } catch (HttpServerErrorException e) {
             // We're rethrowing the exception, therefore avoid logging the stack trace to prevent logging the same trace multiple times.
             log.error("Failed to retrieve FDC contributions, after the FDC global update completed [" + e.getClass().getName() + "(" + e.getMessage() + ")]");
-            caseSubmissionService.logFdcEvent(FETCHED_FROM_MAAT, batchId, null, e.getStatusCode(), e.getMessage());
+            eventService.logFdc(FETCHED_FROM_MAAT, batchId, null, e.getStatusCode(), e.getMessage());
             throw e;
         }
         List<Fdc> fdcList = new ArrayList<>();
@@ -197,7 +197,7 @@ public class FdcService implements FileService {
             List<FdcContributionEntry> fdcContributionEntryList= response.getFdcContributions();
             fdcList = fdcContributionEntryList.stream().map(fdcMapperUtils::mapFdcEntry).toList();
             String successfulPayload = "Fetched "+fdcList.size()+" fdc entries";
-            caseSubmissionService.logFdcEvent(FETCHED_FROM_MAAT, batchId, null, HttpStatus.OK, successfulPayload);
+            eventService.logFdc(FETCHED_FROM_MAAT, batchId, null, HttpStatus.OK, successfulPayload);
         }
         return fdcList;
     }
@@ -229,7 +229,7 @@ public class FdcService implements FileService {
             return logGlobalUpdateFailure("endpoint response has successful==false");
         }
         int numUpdates = globalUpdateResponse.getNumberOfUpdates();
-        caseSubmissionService.logFdcEvent(FDC_GLOBAL_UPDATE, batchId, null, HttpStatus.OK, "Updated "+numUpdates+" fdc entries");
+        eventService.logFdc(FDC_GLOBAL_UPDATE, batchId, null, HttpStatus.OK, "Updated "+numUpdates+" fdc entries");
         return numUpdates;
     }
 
@@ -238,7 +238,7 @@ public class FdcService implements FileService {
         // TODO: Flag here for sentry
         String errorText = String.format("Failed to complete FDC global update [%s]", errorMessage);
         log.error(errorText);
-        caseSubmissionService.logFdcEvent(FDC_GLOBAL_UPDATE, batchId, null, HttpStatus.INTERNAL_SERVER_ERROR, errorText);
+        eventService.logFdc(FDC_GLOBAL_UPDATE, batchId, null, HttpStatus.INTERNAL_SERVER_ERROR, errorText);
         // continue processing, as can still have data to deal with.
         return 0;
     }

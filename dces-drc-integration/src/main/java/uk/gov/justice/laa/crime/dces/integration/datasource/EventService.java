@@ -21,7 +21,7 @@ import java.util.Objects;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class CaseSubmissionService {
+public class EventService {
 
     private final CaseSubmissionRepository caseSubmissionRepository;
     private final EventTypeRepository eventTypeRepository;
@@ -34,7 +34,7 @@ public class CaseSubmissionService {
         return caseSubmissionRepository.save(entity);
     }
 
-    public boolean logFdcEvent(EventType eventType, BigInteger batchId, BigInteger traceId, Fdc fdcObject, HttpStatusCode httpStatusCode, String payload){
+    public boolean logFdc(EventType eventType, BigInteger batchId, BigInteger traceId, Fdc fdcObject, HttpStatusCode httpStatusCode, String payload){
         // default fdcObject if null is passed. No ids is a valid scenario.
         fdcObject = Objects.requireNonNullElse(fdcObject, new Fdc());
 
@@ -45,11 +45,11 @@ public class CaseSubmissionService {
         return true;
     }
 
-    public boolean logFdcEvent(EventType eventType, BigInteger batchId, Fdc fdcObject, HttpStatusCode httpStatusCode, String payload){
-        return logFdcEvent(eventType, batchId, null, fdcObject, httpStatusCode, payload);
+    public boolean logFdc(EventType eventType, BigInteger batchId, Fdc fdcObject, HttpStatusCode httpStatusCode, String payload){
+        return logFdc(eventType, batchId, null, fdcObject, httpStatusCode, payload);
     }
 
-    public boolean logContributionEvent(BigInteger concorContributionId, EventType eventType, BigInteger batchId, BigInteger traceId, CONTRIBUTIONS contributionsObject, HttpStatusCode httpStatusCode, String payload){
+    public boolean logConcor(BigInteger concorContributionId, EventType eventType, BigInteger batchId, BigInteger traceId, CONTRIBUTIONS contributionsObject, HttpStatusCode httpStatusCode, String payload){
         // default fdcObject if null is passed. No ids is a valid scenario.
         contributionsObject = Objects.requireNonNullElse(contributionsObject, new CONTRIBUTIONS());
 
@@ -60,8 +60,8 @@ public class CaseSubmissionService {
         return true;
     }
 
-    public boolean logContributionEvent(BigInteger concorContributionId, EventType eventType, BigInteger batchId, CONTRIBUTIONS contributionsObject, HttpStatusCode httpStatusCode, String payload){
-        return logContributionEvent(concorContributionId, eventType, batchId, null, contributionsObject, httpStatusCode, payload);
+    public boolean logConcor(BigInteger concorContributionId, EventType eventType, BigInteger batchId, CONTRIBUTIONS contributionsObject, HttpStatusCode httpStatusCode, String payload){
+        return logConcor(concorContributionId, eventType, batchId, null, contributionsObject, httpStatusCode, payload);
     }
 
     private CaseSubmissionEntity createCaseSubmissionEntity(EventType eventType, BigInteger batchId, BigInteger traceId, BigInteger maatId, HttpStatusCode httpStatusCode, String payload){

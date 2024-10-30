@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
-import uk.gov.justice.laa.crime.dces.integration.datasource.CaseSubmissionService;
+import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionRepository;
 import uk.gov.justice.laa.crime.dces.integration.exception.DcesDrcServiceException;
@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class DbLoggingTest {
 
   @Autowired
-  private CaseSubmissionService caseSubmissionService;
+  private EventService eventService;
   @Autowired
   private CaseSubmissionRepository caseSubmissionRepository;
 
@@ -47,14 +47,14 @@ class DbLoggingTest {
   @Test
   void given_FdcAllRequiredValues_thenSaves(){
     var fdc = createTestFdc();
-    boolean response = caseSubmissionService.logFdcEvent(EventType.SENT_TO_DRC, testBatchId,testTraceId, fdc, HttpStatus.OK, testPayloadString );
+    boolean response = eventService.logFdc(EventType.SENT_TO_DRC, testBatchId,testTraceId, fdc, HttpStatus.OK, testPayloadString );
     assertTrue(response);
     clearDownData(1L);
   }
 
   @Test
   void given_FdcMinimalValues_thenSaves(){
-    boolean response = caseSubmissionService.logFdcEvent(EventType.SENT_TO_DRC, testBatchId,testTraceId, null, null, testPayloadString );
+    boolean response = eventService.logFdc(EventType.SENT_TO_DRC, testBatchId,testTraceId, null, null, testPayloadString );
     assertTrue(response);
     clearDownData(1L);
   }
@@ -62,7 +62,7 @@ class DbLoggingTest {
   @Test
   void given_ContributionAllRequiredValues_thenSaves(){
     var contribution = createTestContribution();
-    boolean response = caseSubmissionService.logContributionEvent(BigInteger.valueOf(-8888), EventType.SENT_TO_DRC,testBatchId,testTraceId, contribution, HttpStatus.OK, testPayloadString );
+    boolean response = eventService.logConcor(BigInteger.valueOf(-8888), EventType.SENT_TO_DRC,testBatchId,testTraceId, contribution, HttpStatus.OK, testPayloadString );
     assertTrue(response);
     clearDownData(1L);
   }
@@ -70,13 +70,13 @@ class DbLoggingTest {
   @Test
   void given_MissingTypeValue_thenError(){
     var contribution = createTestContribution();
-    assertThrows(DcesDrcServiceException.class,() -> caseSubmissionService.logContributionEvent(BigInteger.valueOf(-8888), null, testBatchId,testTraceId, contribution, HttpStatus.OK, testPayloadString ));
+    assertThrows(DcesDrcServiceException.class,() -> eventService.logConcor(BigInteger.valueOf(-8888), null, testBatchId,testTraceId, contribution, HttpStatus.OK, testPayloadString ));
     clearDownData(0L);
   }
 
   @Test
   void given_MissingContributionValue_thenSave(){
-    boolean response = caseSubmissionService.logContributionEvent(BigInteger.valueOf(-8888), EventType.SENT_TO_DRC, testBatchId,testTraceId, null, HttpStatus.OK, testPayloadString );
+    boolean response = eventService.logConcor(BigInteger.valueOf(-8888), EventType.SENT_TO_DRC, testBatchId,testTraceId, null, HttpStatus.OK, testPayloadString );
     assertTrue(response);
     clearDownData(1L);
   }
