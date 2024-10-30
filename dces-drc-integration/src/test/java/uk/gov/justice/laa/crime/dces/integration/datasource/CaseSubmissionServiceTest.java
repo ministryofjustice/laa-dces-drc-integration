@@ -60,9 +60,25 @@ class CaseSubmissionServiceTest {
 
         when(caseSubmissionRepository.save(caseSubmissionEntityArgumentCaptor.capture())).thenReturn(new CaseSubmissionEntity());
         when(eventTypeRepository.getEventTypeEntityByDescriptionEquals(expectedEventType.getName())).thenReturn(new EventTypeEntity(1,expectedEventType.getName()));
-        var expectedCaseSubmissionEntity = createExpectedCaseSubmissionEntity(RecordType.FDC, 1, expectedHttpStatusCode);
+        var expectedCaseSubmissionEntity = createExpectedCaseSubmissionEntity(RecordType.FDC, 1, testTraceId, expectedHttpStatusCode);
 
         caseSubmissionService.logFdcEvent(expectedEventType,testBatchId,testTraceId,fdcObject,expectedHttpStatusCode,testPayload);
+
+        softly.assertThat(caseSubmissionEntityArgumentCaptor.getValue()).isEqualTo(expectedCaseSubmissionEntity);
+        softly.assertAll();
+    }
+
+    @Test
+    void whenLogFdcIsCalledWithNoTrace_thenLogEntryIsAsExpected() {
+        HttpStatusCode expectedHttpStatusCode = HttpStatus.OK;
+        EventType expectedEventType = EventType.SENT_TO_DRC;
+        Fdc fdcObject = createTestFdcObject();
+
+        when(caseSubmissionRepository.save(caseSubmissionEntityArgumentCaptor.capture())).thenReturn(new CaseSubmissionEntity());
+        when(eventTypeRepository.getEventTypeEntityByDescriptionEquals(expectedEventType.getName())).thenReturn(new EventTypeEntity(1,expectedEventType.getName()));
+        var expectedCaseSubmissionEntity = createExpectedCaseSubmissionEntity(RecordType.FDC, 1, null, expectedHttpStatusCode);
+
+        caseSubmissionService.logFdcEvent(expectedEventType,testBatchId,fdcObject,expectedHttpStatusCode,testPayload);
 
         softly.assertThat(caseSubmissionEntityArgumentCaptor.getValue()).isEqualTo(expectedCaseSubmissionEntity);
         softly.assertAll();
@@ -93,7 +109,7 @@ class CaseSubmissionServiceTest {
 
         when(caseSubmissionRepository.save(caseSubmissionEntityArgumentCaptor.capture())).thenReturn(new CaseSubmissionEntity());
         when(eventTypeRepository.getEventTypeEntityByDescriptionEquals(expectedEventType.getName())).thenReturn(new EventTypeEntity(1,expectedEventType.getName()));
-        var expectedCaseSubmissionEntity = createExpectedCaseSubmissionEntity(RecordType.CONTRIBUTION, 1, expectedHttpStatusCode);
+        var expectedCaseSubmissionEntity = createExpectedCaseSubmissionEntity(RecordType.CONTRIBUTION, 1, testTraceId, expectedHttpStatusCode);
 
         caseSubmissionService.logContributionEvent(testConcorId, expectedEventType,testBatchId,testTraceId,contributionObject,expectedHttpStatusCode,testPayload);
 
@@ -101,10 +117,41 @@ class CaseSubmissionServiceTest {
         softly.assertAll();
     }
 
-    private CaseSubmissionEntity createExpectedCaseSubmissionEntity(RecordType recordType, Integer eventTypeId, HttpStatusCode httpStatusCode){
+    @Test
+    void whenLogContributionIsCalledWithNoTraceId_thenLogEntryIsAsExpected() {
+        HttpStatusCode expectedHttpStatusCode = HttpStatus.OK;
+        EventType expectedEventType = EventType.SENT_TO_DRC;
+        CONTRIBUTIONS contributionObject = createTestContributionObject();
+
+        when(caseSubmissionRepository.save(caseSubmissionEntityArgumentCaptor.capture())).thenReturn(new CaseSubmissionEntity());
+        when(eventTypeRepository.getEventTypeEntityByDescriptionEquals(expectedEventType.getName())).thenReturn(new EventTypeEntity(1,expectedEventType.getName()));
+        var expectedCaseSubmissionEntity = createExpectedCaseSubmissionEntity(RecordType.CONTRIBUTION, 1, null, expectedHttpStatusCode);
+
+        caseSubmissionService.logContributionEvent(testConcorId, expectedEventType,testBatchId,contributionObject,expectedHttpStatusCode,testPayload);
+
+        softly.assertThat(caseSubmissionEntityArgumentCaptor.getValue()).isEqualTo(expectedCaseSubmissionEntity);
+        softly.assertAll();
+    }
+
+    @Test
+    void whenGenerateBatchIdIsCalled_thenBatchIdIsReturned(){
+        when(caseSubmissionRepository.getNextBatchId()).thenReturn(testBatchId);
+        BigInteger actualBatchId = caseSubmissionService.generateBatchId();
+        softly.assertThat(actualBatchId).isEqualTo(testBatchId);
+        softly.assertAll();
+    }
+    @Test
+    void whenGenerateTraceIdIsCalled_thenBatchIdIsReturned(){
+        when(caseSubmissionRepository.getNextTraceId()).thenReturn(testTraceId);
+        BigInteger actualTraceId = caseSubmissionService.generateTraceId();
+        softly.assertThat(actualTraceId).isEqualTo(testTraceId);
+        softly.assertAll();
+    }
+
+    private CaseSubmissionEntity createExpectedCaseSubmissionEntity(RecordType recordType, Integer eventTypeId, BigInteger traceId,HttpStatusCode httpStatusCode){
         return CaseSubmissionEntity.builder()
                 .id(null) // this will not be assigned till post-save.
-                .traceId(testTraceId)
+                .traceId(traceId)
                 .batchId(testBatchId)
                 .maatId(testMaatId)
                 .fdcId(RecordType.FDC.equals(recordType) ? testFdcId: null)
