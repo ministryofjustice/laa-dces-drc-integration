@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionEntity;
 
 import java.math.BigInteger;
+import java.util.List;
 
 @Repository
 public interface CaseSubmissionRepository extends JpaRepository<CaseSubmissionEntity, Integer> {
@@ -22,5 +23,10 @@ public interface CaseSubmissionRepository extends JpaRepository<CaseSubmissionEn
 
     @Transactional
     Long deleteByBatchIdAndTraceId(BigInteger batchId, BigInteger traceId);
+
+    List<CaseSubmissionEntity> findAllByBatchId(BigInteger batchId);
+
+    @Transactional
+    Long deleteAllByBatchId(BigInteger batchId);
 
 }

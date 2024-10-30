@@ -14,7 +14,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpServerErrorException;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.config.Feature;
@@ -43,6 +42,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.HttpStatus.*;
 
 @ExtendWith(SoftAssertionsExtension.class)
 @SpringBootTest
@@ -106,16 +106,16 @@ class ContributionServiceTest {
 		verify(eventService, times(8)).logConcor(any(), any(), any(), any(), any(), any());
 
 		// verify each event is logged.
-		verify(eventService).logConcor(null, EventType.FETCHED_FROM_MAAT, testBatchId, null, HttpStatus.OK, "Fetched 2 concorContribution entries");
-		verify(eventService).logConcor(BigInteger.valueOf(1234), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, HttpStatus.OK, null);
-		verify(eventService).logConcor(BigInteger.valueOf(9876), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, HttpStatus.OK, null);
+		verify(eventService).logConcor(null, EventType.FETCHED_FROM_MAAT, testBatchId, null, OK, "Fetched 2 concorContribution entries");
+		verify(eventService).logConcor(BigInteger.valueOf(1234), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(BigInteger.valueOf(9876), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
 
-		verify(eventService).logConcor(BigInteger.valueOf(1234), EventType.SENT_TO_DRC, testBatchId, testContribution, HttpStatus.OK, null);
-		verify(eventService).logConcor(BigInteger.valueOf(9876), EventType.SENT_TO_DRC, testBatchId, testContribution, HttpStatus.OK, null);
+		verify(eventService).logConcor(BigInteger.valueOf(1234), EventType.SENT_TO_DRC, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(BigInteger.valueOf(9876), EventType.SENT_TO_DRC, testBatchId, testContribution, OK, null);
 
-		verify(eventService).logConcor(BigInteger.valueOf(1234), EventType.UPDATED_IN_MAAT, testBatchId, testContribution, HttpStatus.OK, null);
-		verify(eventService).logConcor(BigInteger.valueOf(9876), EventType.UPDATED_IN_MAAT, testBatchId, testContribution, HttpStatus.OK, null);
-		verify(eventService).logConcor(null, EventType.UPDATED_IN_MAAT, testBatchId, null, HttpStatus.OK, "Successfully Sent:2");
+		verify(eventService).logConcor(BigInteger.valueOf(1234), EventType.UPDATED_IN_MAAT, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(BigInteger.valueOf(9876), EventType.UPDATED_IN_MAAT, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(null, EventType.UPDATED_IN_MAAT, testBatchId, null, OK, "Successfully Sent:2");
 
 	}
 
@@ -185,14 +185,14 @@ class ContributionServiceTest {
 
 		verify(eventService, times(6)).logConcor(any(), any(), any(), any(), any(), any());
 		// verify each event is logged.
-		verify(eventService).logConcor(null, EventType.FETCHED_FROM_MAAT, testBatchId, null, HttpStatus.OK, "Fetched 2 concorContribution entries");
-		verify(eventService).logConcor(BigInteger.valueOf(1234), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, HttpStatus.OK, null);
-		verify(eventService).logConcor(BigInteger.valueOf(9876), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, HttpStatus.OK, null);
+		verify(eventService).logConcor(null, EventType.FETCHED_FROM_MAAT, testBatchId, null, OK, "Fetched 2 concorContribution entries");
+		verify(eventService).logConcor(BigInteger.valueOf(1234), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(BigInteger.valueOf(9876), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
 
-		verify(eventService).logConcor(BigInteger.valueOf(1234), EventType.SENT_TO_DRC, testBatchId, testContribution, HttpStatus.OK, null);
-		verify(eventService).logConcor(BigInteger.valueOf(9876), EventType.SENT_TO_DRC, testBatchId, testContribution, HttpStatus.OK, null);
+		verify(eventService).logConcor(BigInteger.valueOf(1234), EventType.SENT_TO_DRC, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(BigInteger.valueOf(9876), EventType.SENT_TO_DRC, testBatchId, testContribution, OK, null);
 
-		verify(eventService).logConcor(null, EventType.UPDATED_IN_MAAT, testBatchId, null, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create Concor contribution-file. Investigation needed. State of files will be out of sync! [org.springframework.web.client.HttpServerErrorException(500 Received error 500 INTERNAL_SERVER_ERROR due to Internal Server Error)]");
+		verify(eventService).logConcor(null, EventType.UPDATED_IN_MAAT, testBatchId, null, INTERNAL_SERVER_ERROR, "Failed to create Concor contribution-file. Investigation needed. State of files will be out of sync! [org.springframework.web.client.HttpServerErrorException(500 Received error 500 INTERNAL_SERVER_ERROR due to Internal Server Error)]");
 
 	}
 
@@ -231,7 +231,7 @@ class ContributionServiceTest {
 				.build();
 		Integer response = contributionService.processContributionUpdate(dataRequest);
 		softly.assertThat(response).isEqualTo(1111);
-		verify(eventService).logConcor(BigInteger.valueOf(911),EventType.DRC_ASYNC_RESPONSE,null,null, HttpStatus.OK, null);
+		verify(eventService).logConcor(BigInteger.valueOf(911),EventType.DRC_ASYNC_RESPONSE,null,null, OK, null);
 	}
 
 	@Test
@@ -255,7 +255,7 @@ class ContributionServiceTest {
 		var exception = catchThrowableOfType(() -> contributionService.processContributionUpdate(dataRequest), MaatApiClientException.class);
 		softly.assertThat(exception).isNotNull();
 		softly.assertThat(exception.getStatusCode().is4xxClientError()).isTrue();
-		verify(eventService).logConcor(BigInteger.valueOf(9),EventType.DRC_ASYNC_RESPONSE,null,null, HttpStatus.BAD_REQUEST, errorText);
+		verify(eventService).logConcor(BigInteger.valueOf(9),EventType.DRC_ASYNC_RESPONSE,null,null, BAD_REQUEST, errorText);
 	}
 
 	CONTRIBUTIONS createTestContribution(){

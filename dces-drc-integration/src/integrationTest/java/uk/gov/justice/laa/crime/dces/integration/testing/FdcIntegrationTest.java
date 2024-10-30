@@ -5,25 +5,40 @@ import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionEntity;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
+import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionRepository;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsStatus;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcAccelerationType;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
 import uk.gov.justice.laa.crime.dces.integration.service.spy.FdcProcessSpy;
 import uk.gov.justice.laa.crime.dces.integration.service.spy.SpyFactory;
 
+import java.math.BigInteger;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
+
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @EnabledIf(expression = "#{environment['sentry.environment'] == 'development'}", loadContext = true)
 @SpringBootTest
@@ -42,7 +57,17 @@ class FdcIntegrationTest {
 	@SpyBean
 	private EventService eventService;
 
+	@SpyBean
+	private CaseSubmissionRepository caseSubmissionRepository;
+
+	@Captor
+	ArgumentCaptor<CaseSubmissionEntity> caseSubmissionEntityArgumentCaptor;
+
+	@Captor
+	ArgumentCaptor<Fdc> fdcArgumentCaptor;
+
 	private static final String USER_AUDIT = "DCES";
+	private static final BigInteger testBatchId = BigInteger.valueOf(-555L);
 
     @Builder
     private record CheckOptions(
@@ -54,8 +79,17 @@ class FdcIntegrationTest {
 
 	@AfterEach
 	void afterTestAssertAll(){
+		caseSubmissionRepository.deleteAllByBatchId(testBatchId);
 		softly.assertAll();
 	}
+
+	// set a unique batchId which cannot be from actual data. So we can clear down post-test.
+	@BeforeEach
+	void setBatchIdToTest(){
+		caseSubmissionRepository.deleteAllByBatchId(testBatchId);
+		when(eventService.generateBatchId()).thenReturn(testBatchId);
+	}
+
 
 	@Test
 	void testProcessFdcUpdateWhenFound() {
@@ -64,6 +98,18 @@ class FdcIntegrationTest {
 				.build();
 		final Integer response = fdcService.processFdcUpdate(updateLogFdcRequest);
 		softly.assertThat(response).isPositive();
+		assertProcessFdcCaseSubmissionCreation(updateLogFdcRequest, HttpStatus.OK);
+	}
+
+	@Test
+	void testProcessFdcUpdateWhenFoundWithText() {
+		final var updateLogFdcRequest = UpdateLogFdcRequest.builder()
+				.fdcId(31774046)
+				.errorText("testProcessFdcUpdateWhenFoundWithText")
+				.build();
+		final Integer response = fdcService.processFdcUpdate(updateLogFdcRequest);
+		softly.assertThat(response).isPositive();
+		assertProcessFdcCaseSubmissionCreation(updateLogFdcRequest, HttpStatus.OK);
 	}
 
 	@Test
@@ -75,6 +121,18 @@ class FdcIntegrationTest {
 				.build();
 		softly.assertThatThrownBy(() -> fdcService.processFdcUpdate(updateLogFdcRequest))
 				.isInstanceOf(WebClientResponseException.class);
+		assertProcessFdcCaseSubmissionCreation(updateLogFdcRequest, HttpStatus.NOT_FOUND);
+	}
+
+	// Just verify we're submitting what is expected to the DB. Persistence testing itself is done elsewhere.
+	// Parameters being sent down are also tested in the unit tests. So just need to verify that they are running successfully.
+	private void assertProcessFdcCaseSubmissionCreation(UpdateLogFdcRequest fdcLogRequest, HttpStatusCode expectedStatusCode) {
+		verify(eventService).logFdc(eq(EventType.DRC_ASYNC_RESPONSE), eq(null), fdcArgumentCaptor.capture(), eq(expectedStatusCode), eq(fdcLogRequest.getErrorText()));
+
+		verify(caseSubmissionRepository).save(caseSubmissionEntityArgumentCaptor.capture());
+		CaseSubmissionEntity caseSubmission = caseSubmissionEntityArgumentCaptor.getValue();
+		softly.assertThat(caseSubmission.getFdcId().intValue()).isEqualTo(fdcLogRequest.getFdcId());
+		softly.assertThat(caseSubmissionRepository.findById(caseSubmission.getId().intValue())).isNotNull();
 	}
 
     /**
@@ -98,6 +156,9 @@ class FdcIntegrationTest {
 		final var updatedIds = spyFactory.createFdcDelayedPickupTestData(FdcTestType.POSITIVE, 3);
 
 		whenProcessDailyFilesRuns_thenTheyAreQueriedSentAndInCreatedFile(updatedIds);
+		List<CaseSubmissionEntity> savedEvents = caseSubmissionRepository.findAllByBatchId(testBatchId);
+		// for 3 fdcs, we should end up with 13 entries. So verify we're doing so.
+		softly.assertThat(savedEvents.size()).isEqualTo(13);
 	}
 
     /**

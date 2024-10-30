@@ -6,7 +6,6 @@ import io.micrometer.core.annotation.Timed;
 import jakarta.xml.bind.JAXBException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
@@ -24,6 +23,8 @@ import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.C
 import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
 
 import static uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType.*;
+import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
 import java.math.BigInteger;
 import java.time.LocalDateTime;
@@ -57,7 +58,7 @@ public class ContributionService implements FileService {
             } else {
                 result = 0; // avoid updating MAAT DB.
             }
-            logContributionAsyncEvent(updateLogContributionRequest, HttpStatus.OK);
+            logContributionAsyncEvent(updateLogContributionRequest, OK);
             return result;
         } catch (WebClientResponseException e){
             logContributionAsyncEvent(updateLogContributionRequest, e.getStatusCode());
@@ -86,7 +87,7 @@ public class ContributionService implements FileService {
 
         List<ConcurContribEntry> contributionsList = contributionClient.getContributions("ACTIVE");
         String successfulPayload = "Fetched "+contributionsList.size()+" concorContribution entries";
-        eventService.logConcor(null, FETCHED_FROM_MAAT, batchId, null, HttpStatus.OK, successfulPayload);
+        eventService.logConcor(null, FETCHED_FROM_MAAT, batchId, null, OK, successfulPayload);
 
         sendContributionsToDrc(contributionsList, successfulContributions, failedContributions);
         return updateContributionsAndCreateFile(successfulContributions, failedContributions) != null;
@@ -106,11 +107,11 @@ public class ContributionService implements FileService {
                     // anonymize the data when flag is true - only for non production environments
                     currentContribution = anonymisingDataService.anonymise(currentContribution);
                 }
-                eventService.logConcor(concorContributionId, FETCHED_FROM_MAAT, batchId, currentContribution, HttpStatus.OK, null);
+                eventService.logConcor(concorContributionId, FETCHED_FROM_MAAT, batchId, currentContribution, OK, null);
             } catch (JAXBException e) {
                 failedContributions.put(concorContributionId.toString(), e.getClass().getName() + ": " + e.getMessage());
                 log.error("Failed to unmarshal contribution data XML, concorContributionId = {}", concorContributionId, e);
-                eventService.logConcor(concorContributionId, FETCHED_FROM_MAAT, batchId, null, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to unmarshal contribution data XML");
+                eventService.logConcor(concorContributionId, FETCHED_FROM_MAAT, batchId, null, INTERNAL_SERVER_ERROR, "Failed to unmarshal contribution data XML");
                 continue;
             }
 
@@ -125,11 +126,11 @@ public class ContributionService implements FileService {
                     log.debug("Skipping contribution data to DRC, JSON = [{}]", json);
                 }
                 successfulContributions.put(concorContributionId.toString(), currentContribution);
-                eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, HttpStatus.OK, null);
+                eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, OK, null);
             } catch (Exception e) {
                 // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
                 failedContributions.put(concorContributionId.toString(), e.getClass().getName() + ": " + e.getMessage());
-                eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to send contribution data to DRC");
+                eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, INTERNAL_SERVER_ERROR, "Failed to send contribution data to DRC");
             }
         }
     }
@@ -144,28 +145,24 @@ public class ContributionService implements FileService {
             String xmlFile = contributionsMapperUtils.generateFileXML(successfulContributions.values().stream().toList(), fileName);
             String ackXml = contributionsMapperUtils.generateAckXML(fileName, dateGenerated.toLocalDate(), failedContributions.size(), successfulContributions.size());
             List<String> successfulIdList = successfulContributions.keySet().stream().toList();
-
-            // Failed XML lines to be logged. Need to use this to set the ATOMIC UPDATE's ack field.
-            if (!failedContributions.isEmpty()) {
-                log.info("Failed to send {} Concor contributions", failedContributions.size());
-            }
             try {
                 contributionFileId = contributionUpdateRequest(xmlFile, successfulIdList, successfulIdList.size(), fileName, ackXml);
                 log.info("Created Concor contribution-file ID {} from {} Concor contribution IDs [{}]", contributionFileId, successfulIdList.size(), String.join(", ", successfulIdList));
-                eventService.logConcor(null, UPDATED_IN_MAAT, batchId, null, HttpStatus.OK, "Successfully Sent:"+successfulContributions.size());
                 // Explicitly log the Concor contribution IDs that were updated:
                 for(Map.Entry<String, CONTRIBUTIONS> contribEntry: successfulContributions.entrySet()){
-                    eventService.logConcor(new BigInteger(contribEntry.getKey()), UPDATED_IN_MAAT, batchId, contribEntry.getValue(), HttpStatus.OK, null);
+                    eventService.logConcor(new BigInteger(contribEntry.getKey()), UPDATED_IN_MAAT, batchId, contribEntry.getValue(), OK, null);
                 }
             } catch (MaatApiClientException | WebClientResponseException | HttpServerErrorException e) {
                 // We're rethrowing the exception, therefore avoid logging the stack trace to prevent logging the same trace multiple times.
                 String payload = "Failed to create Concor contribution-file. Investigation needed. State of files will be out of sync! [" + e.getClass().getName() + "(" + e.getMessage() + ")]";
                 // If failed, we want to handle this. As it will mean the whole process failed for current day.
                 // TODO: Need to figure how we're going to log a failed call to the ATOMIC UPDATE.
-                eventService.logConcor(null, UPDATED_IN_MAAT, batchId, null, HttpStatus.INTERNAL_SERVER_ERROR, payload);
+                eventService.logConcor(null, UPDATED_IN_MAAT, batchId, null, INTERNAL_SERVER_ERROR, payload);
                 throw e;
             }
         }
+        logMaatUpdateEvents(successfulContributions, failedContributions);
+
         return contributionFileId;
     }
 
@@ -181,6 +178,15 @@ public class ContributionService implements FileService {
             return contributionClient.updateContributions(request);
         } else {
             return 0;
+        }
+    }
+
+    private void logMaatUpdateEvents(Map<String, CONTRIBUTIONS> successfulContributions, Map<String, String> failedContributions) {
+        // log success and failure numbers.
+        eventService.logConcor(null, UPDATED_IN_MAAT, batchId, null, OK, "Successfully Sent:"+ successfulContributions.size());
+        eventService.logConcor(null, UPDATED_IN_MAAT, batchId, null, (failedContributions.size()>0?INTERNAL_SERVER_ERROR:OK), "Failed To Send:"+ failedContributions.size());
+        for(Map.Entry<String, CONTRIBUTIONS> currentContribution: successfulContributions.entrySet()){
+            eventService.logConcor(new BigInteger(currentContribution.getKey()),UPDATED_IN_MAAT, batchId, currentContribution.getValue(), OK, null);
         }
     }
 }
