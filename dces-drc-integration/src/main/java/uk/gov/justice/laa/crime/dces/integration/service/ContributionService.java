@@ -12,8 +12,9 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.config.Feature;
+import uk.gov.justice.laa.crime.dces.integration.enums.ContributionRecordStatus;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
+import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcorContribEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionReqForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
@@ -55,30 +56,30 @@ public class ContributionService implements FileService {
             description = "Time taken to process the daily contributions files from DRC and passing this for downstream processing.")
     public boolean processDailyFiles() {
         int defaultNoOfRecord = feature.noOfContributionRecords();
-        List<ConcurContribEntry> contributionsList;
+        List<ConcorContribEntry> contributionsList;
         int startingId = 0;
-        boolean isSuccessful = false;
+        boolean hasProcessedAnyRecords = false;
         do {
             Map<String, CONTRIBUTIONS> successfulContributions = new HashMap<>();
             Map<String, String> failedContributions = new HashMap<>();
-            contributionsList = contributionClient.getContributions("ACTIVE", startingId, defaultNoOfRecord);
+            contributionsList = contributionClient.getContributions(ContributionRecordStatus.ACTIVE.name(), startingId, defaultNoOfRecord);
             if (contributionsList != null && !contributionsList.isEmpty()) {
                 sendContributionsToDrc(contributionsList, successfulContributions, failedContributions);
                 Integer contributionFileId = updateContributionsAndCreateFile(successfulContributions, failedContributions);
                 log.info("Created contribution-file ID {}", contributionFileId);
                 startingId = contributionsList.get(contributionsList.size() - 1).getConcorContributionId();
-                isSuccessful = true;
+                hasProcessedAnyRecords = true;
             }
         } while (contributionsList != null && contributionsList.size() == defaultNoOfRecord);
 
-        return isSuccessful;
+        return hasProcessedAnyRecords;
     }
 
 
     @Retry(name = SERVICE_NAME)
-    public void sendContributionsToDrc(List<ConcurContribEntry> contributionsList, Map<String, CONTRIBUTIONS> successfulContributions, Map<String,String> failedContributions){
+    public void sendContributionsToDrc(List<ConcorContribEntry> contributionsList, Map<String, CONTRIBUTIONS> successfulContributions, Map<String, String> failedContributions) {
         // for each contribution sent by MAAT API
-        for (ConcurContribEntry contribEntry : contributionsList) {
+        for (ConcorContribEntry contribEntry : contributionsList) {
             final int concorContributionId = contribEntry.getConcorContributionId();
             // convert string into objects
             CONTRIBUTIONS currentContribution;
