@@ -22,6 +22,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.C
 import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,8 +58,8 @@ public class ContributionService implements FileService {
     public boolean processDailyFiles() {
         int defaultNoOfRecord = feature.noOfContributionRecords();
         List<ConcorContribEntry> contributionsList;
+        List<Integer> receivedContributionFileIds = new ArrayList<>();
         int startingId = 0;
-        boolean hasProcessedAnyRecords = false;
         do {
             Map<String, CONTRIBUTIONS> successfulContributions = new HashMap<>();
             Map<String, String> failedContributions = new HashMap<>();
@@ -66,15 +67,14 @@ public class ContributionService implements FileService {
             if (contributionsList != null && !contributionsList.isEmpty()) {
                 sendContributionsToDrc(contributionsList, successfulContributions, failedContributions);
                 Integer contributionFileId = updateContributionsAndCreateFile(successfulContributions, failedContributions);
+                receivedContributionFileIds.add(contributionFileId);
                 log.info("Created contribution-file ID {}", contributionFileId);
                 startingId = contributionsList.get(contributionsList.size() - 1).getConcorContributionId();
-                hasProcessedAnyRecords = true;
             }
         } while (contributionsList != null && contributionsList.size() == defaultNoOfRecord);
 
-        return hasProcessedAnyRecords;
+        return !receivedContributionFileIds.isEmpty() && !receivedContributionFileIds.contains(null);
     }
-
 
     @Retry(name = SERVICE_NAME)
     public void sendContributionsToDrc(List<ConcorContribEntry> contributionsList, Map<String, CONTRIBUTIONS> successfulContributions, Map<String, String> failedContributions) {
@@ -146,7 +146,8 @@ public class ContributionService implements FileService {
 
     @Retry(name = SERVICE_NAME)
     public Integer contributionUpdateRequest(String xmlContent, List<String> concorContributionIdList, int numberOfRecords, String fileName, String fileAckXML) throws HttpServerErrorException {
-        log.info("Sending contribution update request to MAAT API for {}", concorContributionIdList.stream().peek(log::info).toList());
+        log.info("Sending contribution update request to MAAT API for {}", concorContributionIdList);
+
         ContributionUpdateRequest request = ContributionUpdateRequest.builder()
                 .recordsSent(numberOfRecords)
                 .xmlContent(xmlContent)
