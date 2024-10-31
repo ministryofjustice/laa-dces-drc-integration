@@ -79,6 +79,7 @@ spec:
             periodSeconds: {{ .Values.actuator.readiness.periodSeconds }}
             timeoutSeconds: {{ .Values.actuator.readiness.timeoutSeconds }}
             failureThreshold: {{ .Values.actuator.readiness.failureThreshold }}
+          {{ include "laa-dces-drc-integration.env-vars" . | nindent 10 }}
           envFrom:
             - secretRef:
                 name: feature
@@ -86,7 +87,9 @@ spec:
             - secretRef:
                 name: dces-datasource
                 optional: false
-          {{ include "laa-dces-drc-integration.env-vars" . | nindent 10 }}
+            - secretRef:
+                name: config-overrides
+                optional: true
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
