@@ -43,6 +43,7 @@ public class ContributionService implements FileService {
             if (!feature.incomingIsolated()) {
                 return contributionClient.sendLogContributionProcessed(updateLogContributionRequest);
             } else {
+                log.info("Not updating MAAT DB because feature.incomingIsolated is set to True");
                 return 0; // avoid updating MAAT DB.
             }
         } catch (MaatApiClientException | WebClientResponseException | HttpServerErrorException e) {
@@ -143,6 +144,7 @@ public class ContributionService implements FileService {
         if (!feature.outgoingIsolated()) {
             return contributionClient.updateContributions(request);
         } else {
+            log.info("Not updating contributions because feature.outgoingIsolated is set to True");
             return 0;
         }
     }
