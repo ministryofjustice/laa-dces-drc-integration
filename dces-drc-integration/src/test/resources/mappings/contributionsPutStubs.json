@@ -7,7 +7,26 @@
         "method": "POST",
         "bodyPatterns": [
           {
-            "contains": "{\"recordsSent\":2,\"xmlContent\":\"ValidXML\",\"xmlFileName\":\"TestFilename.xml\",\"ackXmlContent\":\"ValidAckXML\",\"concorContributionIds\":[\"9876\",\"1234\"]}"
+            "contains": "{\"recordsSent\":5,\"xmlContent\":\"ValidXML\",\"xmlFileName\":\"TestFilename.xml\",\"ackXmlContent\":\"ValidAckXML\",\"concorContributionIds\":[\"1111\",\"2222\",\"3333\",\"4444\",\"5555\"]}"
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": 1111
+      }
+    },
+    {
+      "scenarioName": "successBasicRequest",
+      "request": {
+        "urlPath": "/debt-collection-enforcement/create-contribution-file",
+        "method": "POST",
+        "bodyPatterns": [
+          {
+            "contains": "{\"recordsSent\":3,\"xmlContent\":\"ValidXML\",\"xmlFileName\":\"TestFilename.xml\",\"ackXmlContent\":\"ValidAckXML\",\"concorContributionIds\":[\"1000\",\"6666\",\"7777\"]}"
           }
         ]
       },
