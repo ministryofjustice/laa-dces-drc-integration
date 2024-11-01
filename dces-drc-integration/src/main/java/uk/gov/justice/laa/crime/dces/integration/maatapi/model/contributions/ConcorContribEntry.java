@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ConcurContribEntry {
+public class ConcorContribEntry {
     private int concorContributionId;
     private String xmlContent;
 }

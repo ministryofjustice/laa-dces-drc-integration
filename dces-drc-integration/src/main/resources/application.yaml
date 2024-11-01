@@ -49,17 +49,19 @@ services:
     oAuthEnabled: true
     maxBufferSize: 16
   drc-client-api:
-    baseUrl: https://advantisclientapi.advantis-ase.p.azurewebsites.net/
+    baseUrl: ${DRC_API_BASE_URL}
     oAuthEnabled: false
 
 scheduling:
   # default is disabled. "-"
   # Example to schedule daily file processing at 8pm Mon to Sat
   # "0 0 20 * * MON-SAT"
-  fdcDailyFiles:
-    cron: ${DCES_CRON_FDC:-}
-  contributionsDailyFiles:
-    cron: ${DCES_CRON_CONTRIBUTIONS:-}
+  cron:
+    process-fdc-files: ${DCES_CRON_FDC:-}
+    process-contributions-files: ${DCES_CRON_CONTRIBUTIONS:-}
+  lock:
+    at-least: 30s
+    at-most: 15m
 
 spring:
   security:

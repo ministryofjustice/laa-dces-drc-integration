@@ -9,7 +9,7 @@ import org.springframework.http.HttpStatus;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
+import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcorContribEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionReqForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
 
@@ -59,11 +59,10 @@ public class ContributionProcessSpy {
             doAnswer(invocation -> {
                 // Because ContributionClient is a proxied interface, cannot just call `invocation.callRealMethod()` here.
                 // https://github.com/spring-projects/spring-boot/issues/36653
-                @SuppressWarnings("unchecked")
-                final var result = (List<ConcurContribEntry>) mockingDetails(contributionClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation);
-                activeIds(result.stream().map(ConcurContribEntry::getConcorContributionId).collect(Collectors.toSet()));
+                @SuppressWarnings("unchecked") final var result = (List<ConcorContribEntry>) mockingDetails(contributionClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation);
+                activeIds(result.stream().map(ConcorContribEntry::getConcorContributionId).collect(Collectors.toSet()));
                 return result;
-            }).when(contributionClientSpy).getContributions("ACTIVE");
+            }).when(contributionClientSpy).getContributions("ACTIVE", 0, 10);
             return this;
         }
 
@@ -71,11 +70,11 @@ public class ContributionProcessSpy {
             final var idSet = Set.copyOf(activeIds); // defensive copy
             doAnswer(invocation -> {
                 @SuppressWarnings("unchecked")
-                var result = (List<ConcurContribEntry>) mockingDetails(contributionClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation);
+                var result = (List<ConcorContribEntry>) mockingDetails(contributionClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation);
                 result = result.stream().filter(concurContribEntry -> idSet.contains(concurContribEntry.getConcorContributionId())).toList();
-                activeIds(result.stream().map(ConcurContribEntry::getConcorContributionId).collect(Collectors.toSet()));
+                activeIds(result.stream().map(ConcorContribEntry::getConcorContributionId).collect(Collectors.toSet()));
                 return result;
-            }).when(contributionClientSpy).getContributions("ACTIVE");
+            }).when(contributionClientSpy).getContributions("ACTIVE", 0, 10);
             return this;
         }
 

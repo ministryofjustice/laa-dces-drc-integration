@@ -12,8 +12,9 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.config.Feature;
+import uk.gov.justice.laa.crime.dces.integration.enums.ContributionRecordStatus;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
+import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcorContribEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionReqForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
@@ -21,6 +22,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.C
 import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +45,7 @@ public class ContributionService implements FileService {
             if (!feature.incomingIsolated()) {
                 return contributionClient.sendLogContributionProcessed(updateLogContributionRequest);
             } else {
+                log.info("Not updating MAAT DB because feature.incomingIsolated is set to True");
                 return 0; // avoid updating MAAT DB.
             }
         } catch (MaatApiClientException | WebClientResponseException | HttpServerErrorException e) {
@@ -54,20 +57,30 @@ public class ContributionService implements FileService {
     @Timed(value = "laa_dces_drc_service_process_contributions_daily_files",
             description = "Time taken to process the daily contributions files from DRC and passing this for downstream processing.")
     public boolean processDailyFiles() {
-        Map<String, CONTRIBUTIONS> successfulContributions = new HashMap<>();
-        Map<String, String> failedContributions = new HashMap<>();
-        // get all the values to process via maat call
-        List<ConcurContribEntry> contributionsList = contributionClient.getContributions("ACTIVE");
-        sendContributionsToDrc(contributionsList, successfulContributions, failedContributions);
+        int defaultNoOfRecord = feature.noOfContributionRecords();
+        List<ConcorContribEntry> contributionsList;
+        List<Integer> receivedContributionFileIds = new ArrayList<>();
+        int startingId = 0;
+        do {
+            Map<String, CONTRIBUTIONS> successfulContributions = new HashMap<>();
+            Map<String, String> failedContributions = new HashMap<>();
+            contributionsList = contributionClient.getContributions(ContributionRecordStatus.ACTIVE.name(), startingId, defaultNoOfRecord);
+            if (contributionsList != null && !contributionsList.isEmpty()) {
+                sendContributionsToDrc(contributionsList, successfulContributions, failedContributions);
+                Integer contributionFileId = updateContributionsAndCreateFile(successfulContributions, failedContributions);
+                receivedContributionFileIds.add(contributionFileId);
+                log.info("Created contribution-file ID {}", contributionFileId);
+                startingId = contributionsList.get(contributionsList.size() - 1).getConcorContributionId();
+            }
+        } while (contributionsList != null && contributionsList.size() == defaultNoOfRecord);
 
-        return updateContributionsAndCreateFile(successfulContributions, failedContributions) != null;
+        return !receivedContributionFileIds.isEmpty() && !receivedContributionFileIds.contains(null);
     }
 
-
     @Retry(name = SERVICE_NAME)
-    public void sendContributionsToDrc(List<ConcurContribEntry> contributionsList, Map<String, CONTRIBUTIONS> successfulContributions, Map<String,String> failedContributions){
+    public void sendContributionsToDrc(List<ConcorContribEntry> contributionsList, Map<String, CONTRIBUTIONS> successfulContributions, Map<String, String> failedContributions) {
         // for each contribution sent by MAAT API
-        for (ConcurContribEntry contribEntry : contributionsList) {
+        for (ConcorContribEntry contribEntry : contributionsList) {
             final int concorContributionId = contribEntry.getConcorContributionId();
             // convert string into objects
             CONTRIBUTIONS currentContribution;
@@ -134,6 +147,8 @@ public class ContributionService implements FileService {
 
     @Retry(name = SERVICE_NAME)
     public Integer contributionUpdateRequest(String xmlContent, List<String> concorContributionIdList, int numberOfRecords, String fileName, String fileAckXML) throws HttpServerErrorException {
+        log.info("Sending contribution update request to MAAT API for {}", concorContributionIdList);
+
         ContributionUpdateRequest request = ContributionUpdateRequest.builder()
                 .recordsSent(numberOfRecords)
                 .xmlContent(xmlContent)
@@ -143,6 +158,7 @@ public class ContributionService implements FileService {
         if (!feature.outgoingIsolated()) {
             return contributionClient.updateContributions(request);
         } else {
+            log.info("Not updating contributions because feature.outgoingIsolated is set to True");
             return 0;
         }
     }

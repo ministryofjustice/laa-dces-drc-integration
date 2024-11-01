@@ -12,7 +12,7 @@ import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PostExchange;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.MaatApiClientFactory;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.client.MaatApiClient;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
+import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcorContribEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
 
@@ -22,7 +22,7 @@ import java.util.List;
 @HttpExchange("/debt-collection-enforcement")
 public interface ContributionClient extends MaatApiClient {
     @GetExchange("/concor-contribution-files")
-    List<ConcurContribEntry> getContributions(@RequestParam String status);
+    List<ConcorContribEntry> getContributions(@RequestParam String status, @RequestParam Integer startingId, @RequestParam Integer numberOfRecords);
 
     @PostExchange("/create-contribution-file")
     @Valid
