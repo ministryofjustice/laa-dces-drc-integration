@@ -13,9 +13,10 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.config.Feature;
+import uk.gov.justice.laa.crime.dces.integration.enums.ContributionRecordStatus;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
+import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcorContribEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionReqForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
@@ -28,6 +29,7 @@ import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
 import java.math.BigInteger;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +58,7 @@ public class ContributionService implements FileService {
             if (!feature.incomingIsolated()) {
                 result = contributionClient.sendLogContributionProcessed(updateLogContributionRequest);
             } else {
+                log.info("Not updating MAAT DB because feature.incomingIsolated is set to True");
                 result = 0; // avoid updating MAAT DB.
             }
             logContributionAsyncEvent(updateLogContributionRequest, OK);
@@ -81,21 +84,30 @@ public class ContributionService implements FileService {
             description = "Time taken to process the daily contributions files from DRC and passing this for downstream processing.")
     public boolean processDailyFiles() {
         batchId = eventService.generateBatchId();
+        int defaultNoOfRecord = feature.noOfContributionRecords();
+        List<ConcorContribEntry> contributionsList;
+        List<Integer> receivedContributionFileIds = new ArrayList<>();
+        int startingId = 0;
+        do {
+            Map<String, CONTRIBUTIONS> successfulContributions = new HashMap<>();
+            Map<String, String> failedContributions = new HashMap<>();
+            contributionsList = contributionClient.getContributions(ContributionRecordStatus.ACTIVE.name(), startingId, defaultNoOfRecord);
+            String successfulPayload = "Fetched "+contributionsList.size()+" concorContribution entries";
+            eventService.logConcor(null, FETCHED_FROM_MAAT, batchId, null, OK, successfulPayload);
+            if (contributionsList != null && !contributionsList.isEmpty()) {
+                sendContributionsToDrc(contributionsList, successfulContributions, failedContributions);
+                Integer contributionFileId = updateContributionsAndCreateFile(successfulContributions, failedContributions);
+                receivedContributionFileIds.add(contributionFileId);
+                log.info("Created contribution-file ID {}", contributionFileId);
+                startingId = contributionsList.get(contributionsList.size() - 1).getConcorContributionId();
+            }
+        } while (contributionsList != null && contributionsList.size() == defaultNoOfRecord);
 
-        Map<String, CONTRIBUTIONS> successfulContributions = new HashMap<>();
-        Map<String, String> failedContributions = new HashMap<>();
-
-        List<ConcurContribEntry> contributionsList = contributionClient.getContributions("ACTIVE");
-        String successfulPayload = "Fetched "+contributionsList.size()+" concorContribution entries";
-        eventService.logConcor(null, FETCHED_FROM_MAAT, batchId, null, OK, successfulPayload);
-
-        sendContributionsToDrc(contributionsList, successfulContributions, failedContributions);
-        return updateContributionsAndCreateFile(successfulContributions, failedContributions) != null;
+        return !receivedContributionFileIds.isEmpty() && !receivedContributionFileIds.contains(null);
     }
 
-
     @Retry(name = SERVICE_NAME)
-    public void sendContributionsToDrc(List<ConcurContribEntry> contributionsList, Map<String, CONTRIBUTIONS> successfulContributions, Map<String,String> failedContributions){
+    public void sendContributionsToDrc(List<ConcorContribEntry> contributionsList, Map<String, CONTRIBUTIONS> successfulContributions, Map<String, String> failedContributions) {
         // for each contribution sent by MAAT API
         for (ConcurContribEntry contribEntry : contributionsList) {
             final BigInteger concorContributionId = BigInteger.valueOf(contribEntry.getConcorContributionId());
@@ -128,6 +140,7 @@ public class ContributionService implements FileService {
                 successfulContributions.put(concorContributionId.toString(), currentContribution);
                 eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, OK, null);
             } catch (Exception e) {
+                log.warn("Failed to send contribution data to DRC, concorContributionId = {}", concorContributionId, e);
                 // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
                 failedContributions.put(concorContributionId.toString(), e.getClass().getName() + ": " + e.getMessage());
                 eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, INTERNAL_SERVER_ERROR, "Failed to send contribution data to DRC");
@@ -164,6 +177,8 @@ public class ContributionService implements FileService {
 
     @Retry(name = SERVICE_NAME)
     public Integer contributionUpdateRequest(String xmlContent, List<String> concorContributionIdList, int numberOfRecords, String fileName, String fileAckXML) throws HttpServerErrorException {
+        log.info("Sending contribution update request to MAAT API for {}", concorContributionIdList);
+
         ContributionUpdateRequest request = ContributionUpdateRequest.builder()
                 .recordsSent(numberOfRecords)
                 .xmlContent(xmlContent)
@@ -173,6 +188,7 @@ public class ContributionService implements FileService {
         if (!feature.outgoingIsolated()) {
             return contributionClient.updateContributions(request);
         } else {
+            log.info("Not updating contributions because feature.outgoingIsolated is set to True");
             return 0;
         }
     }

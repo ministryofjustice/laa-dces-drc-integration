@@ -58,6 +58,7 @@ public class FdcService implements FileService {
             if (!feature.incomingIsolated()) {
                 result = fdcClient.sendLogFdcProcessed(updateLogFdcRequest);
             } else {
+                log.info("Not updating MAAT DB because feature.incomingIsolated is set to True");
                 result = 0; // avoid updating MAAT DB.
             }
             logFdcAsyncEvent(updateLogFdcRequest, OK);
@@ -202,6 +203,7 @@ public class FdcService implements FileService {
             if (!feature.outgoingIsolated()) {
                 return fdcClient.executeFdcGlobalUpdate();
             } else {
+                log.info("Not executing FDC Global Update because feature.outgoingIsolated is set to True");
                 return new FdcGlobalUpdateResponse(true, 0);
             }
         } catch (HttpServerErrorException e) {
@@ -248,6 +250,7 @@ public class FdcService implements FileService {
         if (!feature.outgoingIsolated()) {
             return fdcClient.updateFdcs(request);
         } else {
+            log.info("Not updating FDCs because feature.outgoingIsolated is set to True");
             return 0;
         }
     }

@@ -294,6 +294,13 @@ jobs:
           environment: dev
           token: ${CIRCLE_CI_TOKEN_DEV}
 
+  deploy-test:
+    executor: cloud-platform-executor
+    steps:
+      - deploy-to:
+          environment: test
+          token: ${CIRCLE_CI_TOKEN_TEST}
+
   deploy-uat:
     executor: cloud-platform-executor
     steps:
@@ -349,6 +356,15 @@ workflows:
       - deploy-dev:
           requires:
             - build_and_push_image
+
+      - hold_install_on_test:
+          type: approval
+          requires:
+            - build_and_push_image
+
+      - deploy-test:
+          requires:
+            - hold_install_on_test
 
       - hold_install_on_uat:
           type: approval
@@ -410,6 +426,15 @@ workflows:
       - deploy-dev:
           requires:
             - hold_install_on_dev
+
+      - hold_install_on_test:
+          type: approval
+          requires:
+            - build_and_push_image
+
+      - deploy-test:
+          requires:
+            - hold_install_on_test
 
       - hold_install_on_uat:
           type: approval

@@ -49,7 +49,7 @@ services:
     oAuthEnabled: true
     maxBufferSize: 16
   drc-client-api:
-    baseUrl: https://advantisclientapi.advantis-ase.p.azurewebsites.net/
+    baseUrl: ${DRC_API_BASE_URL}
     oAuthEnabled: false
 
 scheduling:

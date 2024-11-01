@@ -10,6 +10,8 @@ env:
     value: {{ .Values.sentry_dsn }}
   - name: HOST_ENV
     value: {{ .Values.java.host_env }}
+  - name: DRC_API_BASE_URL
+    value: {{.Values.drc.baseUrl }}
   - name: MAAT_API_BASE_URL
     value: {{ .Values.maatApi.baseUrl }}
   - name: MAAT_API_REGISTRATION_ID
