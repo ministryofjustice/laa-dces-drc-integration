@@ -79,7 +79,6 @@ spec:
             periodSeconds: {{ .Values.actuator.readiness.periodSeconds }}
             timeoutSeconds: {{ .Values.actuator.readiness.timeoutSeconds }}
             failureThreshold: {{ .Values.actuator.readiness.failureThreshold }}
-          {{ include "laa-dces-drc-integration.env-vars" . | nindent 10 }}
           envFrom:
             - secretRef:
                 name: feature
@@ -87,9 +86,12 @@ spec:
             - secretRef:
                 name: dces-datasource
                 optional: false
+            {{/* All the keys defined in config-variables secret mentioned below will become environment variables, but only if
+             same named variables haven't already been defined via the env: tag, here or in _environment.tpl */}}
             - secretRef:
-                name: config-overrides
+                name: config-variables
                 optional: true
+          {{ include "laa-dces-drc-integration.env-vars" . | nindent 10 }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
