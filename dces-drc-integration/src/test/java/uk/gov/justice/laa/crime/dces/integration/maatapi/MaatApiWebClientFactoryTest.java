@@ -17,7 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.web.reactive.function.client.WebClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.config.ServicesConfiguration;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
+import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcorContribEntry;
 
 import java.io.IOException;
 
@@ -65,7 +65,7 @@ class MaatApiWebClientFactoryTest {
 
     @Test
     void givenAnyParameters_whenMaatApiWebClientIsInvoked_thenTheCorrectWebClientShouldBeReturned() throws JsonProcessingException {
-        ConcurContribEntry expectedResponse = new ConcurContribEntry(1,"xmlContent");
+        ConcorContribEntry expectedResponse = new ConcorContribEntry(1, "xmlContent");
         expectedResponse.setConcorContributionId(1);
         expectedResponse.setXmlContent("xmlContent");
         setupValidResponse(expectedResponse);
@@ -75,9 +75,9 @@ class MaatApiWebClientFactoryTest {
         assertThat(actualWebClient).isNotNull();
         assertThat(actualWebClient).isInstanceOf(WebClient.class);
 
-        ConcurContribEntry response = mockWebClientRequest(actualWebClient);
+        ConcorContribEntry response = mockWebClientRequest(actualWebClient);
         assert response != null;
-        assertThat(response).isInstanceOf(ConcurContribEntry.class);
+        assertThat(response).isInstanceOf(ConcorContribEntry.class);
         assertThat(response.getConcorContributionId()).isEqualTo(expectedResponse.getConcorContributionId());
     }
 
@@ -89,12 +89,12 @@ class MaatApiWebClientFactoryTest {
                 .addHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE));
     }
 
-    private ConcurContribEntry mockWebClientRequest(WebClient webClient) {
+    private ConcorContribEntry mockWebClientRequest(WebClient webClient) {
         return webClient
                 .get()
                 .uri(configuration.getMaatApi().getBaseUrl())
                 .retrieve()
-                .bodyToMono(ConcurContribEntry.class)
+                .bodyToMono(ConcorContribEntry.class)
                 .block();
     }
 }

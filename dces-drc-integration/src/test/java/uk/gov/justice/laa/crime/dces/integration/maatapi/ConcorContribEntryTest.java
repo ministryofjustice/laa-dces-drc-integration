@@ -2,12 +2,11 @@ package uk.gov.justice.laa.crime.dces.integration.maatapi;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcurContribEntry;
-
+import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcorContribEntry;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @SpringBootTest
-class ConcurContribEntryTest {
+class ConcorContribEntryTest {
     private static final int DEFAULT_ID = 1;
     private static final String DEFAULT_XML = "XML";
 
@@ -15,7 +14,7 @@ class ConcurContribEntryTest {
     @Test
     void givenMaatApiResponse_whenGetIdIsInvoked_thenCorrectIdIsReturned() {
         int expectedId = 3;
-        ConcurContribEntry expectedResponse = new ConcurContribEntry(
+        ConcorContribEntry expectedResponse = new ConcorContribEntry(
                 expectedId, DEFAULT_XML
         );
         assertThat(expectedResponse.getConcorContributionId()).isEqualTo(expectedId);
@@ -24,7 +23,7 @@ class ConcurContribEntryTest {
     @Test
     void givenMaatApiResponse_whenGetTotalFilesIsInvoked_thenCorrectTotalFilesIsReturned() {
         String expectedXMLContent = "XML_TEST";
-        ConcurContribEntry expectedResponse = new ConcurContribEntry(
+        ConcorContribEntry expectedResponse = new ConcorContribEntry(
                 DEFAULT_ID, "XML_TEST"
         );
         assertThat(expectedResponse.getXmlContent()).isEqualTo(expectedXMLContent);
@@ -33,7 +32,7 @@ class ConcurContribEntryTest {
     @Test
     void givenMaatApiResponse_whenSetTotalFilesIsInvoked_thenTotalFilesIsUpdated() {
         String expectedXMLContent = "XML_TEST_2";
-        ConcurContribEntry response = new ConcurContribEntry(
+        ConcorContribEntry response = new ConcorContribEntry(
                 DEFAULT_ID, DEFAULT_XML
         );
         assertThat(response.getXmlContent()).isEqualTo(DEFAULT_XML);
@@ -47,7 +46,7 @@ class ConcurContribEntryTest {
     @Test
     void givenMaatApiResponse_whenSetIdIsInvoked_thenIdIsUpdated() {
         int expectedId = 3;
-        ConcurContribEntry response = new ConcurContribEntry(
+        ConcorContribEntry response = new ConcorContribEntry(
                 DEFAULT_ID, DEFAULT_XML
         );
         assertThat(response.getConcorContributionId()).isEqualTo(DEFAULT_ID);
@@ -60,9 +59,9 @@ class ConcurContribEntryTest {
 
     @Test
     void givenMaatApiResponse_whenToStringInvoked_thenAStringIsReturned() {
-        String expectedEstring = String.format("ConcurContribEntry(" +
+        String expectedEstring = String.format("ConcorContribEntry(" +
                 "concorContributionId=%s, xmlContent=%s)", DEFAULT_ID, DEFAULT_XML);
-        ConcurContribEntry response = new ConcurContribEntry(
+        ConcorContribEntry response = new ConcorContribEntry(
                 DEFAULT_ID, DEFAULT_XML
         );
 

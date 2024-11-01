@@ -46,7 +46,7 @@ import static org.mockito.Mockito.when;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @WireMockTest(httpPort = 1111)
 class ContributionServiceTest {
-	private static final String GET_URL = "/debt-collection-enforcement/concor-contribution-files?status=ACTIVE";
+	private static final String GET_URL = "/debt-collection-enforcement/concor-contribution-files?status=ACTIVE&startingId=0&numberOfRecords=5";
 	private static final String UPDATE_URL = "/debt-collection-enforcement/create-contribution-file";
 
 	private static final List<StubMapping> customStubs = new ArrayList<>();
@@ -84,16 +84,37 @@ class ContributionServiceTest {
 		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
 		when(contributionsMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
+		when(feature.noOfContributionRecords()).thenReturn(5);
 		doNothing().when(drcClient).sendConcorContributionReqToDrc(any());
 
 		boolean result = contributionService.processDailyFiles();
-
-		verify(contributionsMapperUtils, times(2)).mapLineXMLToObject(any());
-		verify(contributionsMapperUtils).generateFileXML(any(), any());
-		verify(drcClient, times(2)).sendConcorContributionReqToDrc(any());
+		//testing the number of times the methods are called to ensure the correct number of records are processed.
+		verify(contributionsMapperUtils, times(8)).mapLineXMLToObject(any());
+		verify(contributionsMapperUtils, times(2)).generateFileXML(any(), any());
+		verify(drcClient, times(8)).sendConcorContributionReqToDrc(any());
 		softly.assertThat(result).isTrue();
 		verify(anonymisingDataService, never()).anonymise(any());
 	}
+
+
+	@Test
+	void testWhenContributionHasFewerRecords() throws JAXBException {
+		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());
+		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
+		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
+		when(contributionsMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
+		when(feature.noOfContributionRecords()).thenReturn(4);
+		doNothing().when(drcClient).sendConcorContributionReqToDrc(any());
+
+		boolean result = contributionService.processDailyFiles();
+		//testing the number of times the methods are called to ensure the correct number of records are processed.
+		verify(contributionsMapperUtils, times(3)).mapLineXMLToObject(any());
+		verify(contributionsMapperUtils, times(1)).generateFileXML(any(), any());
+		verify(drcClient, times(3)).sendConcorContributionReqToDrc(any());
+		softly.assertThat(result).isTrue();
+		verify(anonymisingDataService, never()).anonymise(any());
+	}
+
 
 	@Test
 	void testXMLValidWhenOutgoingAnonymizedFlagIsFalse() throws JAXBException {
@@ -102,6 +123,7 @@ class ContributionServiceTest {
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
 		when(contributionsMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
 		doNothing().when(drcClient).sendConcorContributionReqToDrc(any());
+		when(feature.noOfContributionRecords()).thenReturn(5);
 		when(feature.outgoingAnonymized()).thenReturn(false);
 
 		contributionService.processDailyFiles();
@@ -172,7 +194,7 @@ class ContributionServiceTest {
 		// setup
 		customStubs.add(stubFor(post(UPDATE_URL).atPriority(1)
 				.willReturn(serverError())));
-
+		when(feature.noOfContributionRecords()).thenReturn(5);
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());
 		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");

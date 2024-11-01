@@ -100,7 +100,7 @@ commands:
           command: |
             kubectl wait --for=condition=ready pod/${POD_NAME} --timeout=60s -n ${NAMESPACE}
             kubectl exec -n ${NAMESPACE} ${POD_NAME} -- ./gradlew --no-daemon clean compileIntegrationTestJava processIntegrationTestResources
-            kubectl exec -n ${NAMESPACE} ${POD_NAME} -- ./gradlew integrationTest -Dorg.gradle.jvmargs=-Xmx2g
+            kubectl exec -n ${NAMESPACE} ${POD_NAME} -- ./gradlew integrationTest -Dorg.gradle.jvmargs=""
       - run:
           name: Fetch Integration Test results
           command: |
@@ -159,7 +159,7 @@ jobs:
   build:
     environment:
       # Configure the JVM and Gradle to avoid OOM errors
-      _JAVA_OPTIONS: "-Xmx3g"
+      _JAVA_OPTIONS: ""
       GRADLE_OPTS: "-Dorg.gradle.daemon=true -Dorg.gradle.workers.max=2"
     docker:
       - image: cimg/openjdk:17.0.4
@@ -204,7 +204,7 @@ jobs:
 
   test_and_assemble:
     environment:
-      _JAVA_OPTIONS: "-Xmx3g"
+      _JAVA_OPTIONS: ""
       GRADLE_OPTS: "-Dorg.gradle.daemon=true -Dorg.gradle.workers.max=2"
     docker:
       - image: cimg/openjdk:17.0.4
@@ -294,6 +294,13 @@ jobs:
           environment: dev
           token: ${CIRCLE_CI_TOKEN_DEV}
 
+  deploy-test:
+    executor: cloud-platform-executor
+    steps:
+      - deploy-to:
+          environment: test
+          token: ${CIRCLE_CI_TOKEN_TEST}
+
   deploy-uat:
     executor: cloud-platform-executor
     steps:
@@ -349,6 +356,15 @@ workflows:
       - deploy-dev:
           requires:
             - build_and_push_image
+
+      - hold_install_on_test:
+          type: approval
+          requires:
+            - build_and_push_image
+
+      - deploy-test:
+          requires:
+            - hold_install_on_test
 
       - hold_install_on_uat:
           type: approval
@@ -410,6 +426,15 @@ workflows:
       - deploy-dev:
           requires:
             - hold_install_on_dev
+
+      - hold_install_on_test:
+          type: approval
+          requires:
+            - build_and_push_image
+
+      - deploy-test:
+          requires:
+            - hold_install_on_test
 
       - hold_install_on_uat:
           type: approval
