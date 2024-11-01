@@ -86,6 +86,8 @@ class ContributionServiceTest {
 		}
 	}
 
+	@SuppressWarnings("squid:S5961") // suppress the "too many asserts" error. Asserting just the
+									 // right things have been logged is over the max of 25 already.
 	@Test
 	void testXMLValid() throws JAXBException {
 		CONTRIBUTIONS testContribution = createTestContribution();

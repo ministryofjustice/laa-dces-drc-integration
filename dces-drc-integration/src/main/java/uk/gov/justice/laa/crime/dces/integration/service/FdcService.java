@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.crime.dces.integration.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.micrometer.core.annotation.Timed;
@@ -95,6 +96,7 @@ public class FdcService implements FileService {
         return updateFdcAndCreateFile(successfulFdcs, failedFdcs) != null;
     }
 
+    @SuppressWarnings("squid:S2147") // as per above. Needed until exception refactor.
     @Retry(name = SERVICE_NAME)
     void sendFdcToDrc(List<Fdc> fdcList, List<Fdc> successfulFdcs, Map<String,String> failedFdcs) {
         fdcList.forEach(currentFdc -> {
@@ -112,13 +114,24 @@ public class FdcService implements FileService {
                 }
                 successfulFdcs.add(currentFdc);
                 eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, OK, null);
-            } catch (Exception e) {
-                // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
-                failedFdcs.put(Integer.toString(fdcId), e.getClass().getName() + ": " + e.getMessage());
-                eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, INTERNAL_SERVER_ERROR, e.getMessage());
+            } catch (MaatApiClientException e){
+                handleDrcSentError(e, e.getStatusCode(), currentFdc, failedFdcs);
+            } catch (WebClientResponseException e){
+                handleDrcSentError(e, e.getStatusCode(), currentFdc, failedFdcs);
+            } catch (HttpServerErrorException e){
+                handleDrcSentError(e, e.getStatusCode(), currentFdc, failedFdcs);
+            } catch (JsonProcessingException e) {
+                handleDrcSentError(e, INTERNAL_SERVER_ERROR, currentFdc, failedFdcs);
             }
         });
     }
+
+    private void handleDrcSentError(Exception e, HttpStatusCode httpStatusCode, Fdc currentFdc, Map<String,String> failedFdcs) {
+        // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
+        failedFdcs.put(Integer.toString(currentFdc.getId().intValue()), e.getClass().getName() + ": " + e.getMessage());
+        eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, httpStatusCode, e.getMessage());
+    }
+
 
     @SuppressWarnings("squid:S2147") // as per above, due to difference in superclasses.
     private Integer updateFdcAndCreateFile(List<Fdc> successfulFdcs, Map<String, String> failedFdcs) {

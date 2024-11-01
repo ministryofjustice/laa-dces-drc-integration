@@ -176,7 +176,7 @@ class FdcIntegrationTest {
 
 		whenProcessDailyFilesRuns_thenTheyAreQueriedSentAndInCreatedFile(updatedIds);
 
-		assertNormalSuccessEventLogging(3);
+		assertFdcEventLogging(13, 4,1,4,3,5);
 	}
 
 	/**
@@ -201,18 +201,9 @@ class FdcIntegrationTest {
 
 		whenProcessDailyFilesRuns_thenTheyAreQueriedSentAndInCreatedFile(updatedIds);
 
-		assertNormalSuccessEventLogging(3);
+		assertFdcEventLogging(13, 4,1,4,3,5);
 	}
 
-	private void assertNormalSuccessEventLogging(int numberOfRecords) {
-		Map<EventType, List<CaseSubmissionEntity>> savedEventsByType = getEventTypeListMap(numberOfRecords*3+4);
-		// check all successful
-		softly.assertThat(savedEventsByType.size()).isEqualTo(4); // Fdc should save 4 types of EventTypes.
-		assertEventNumberStatus(savedEventsByType.get(EventType.FDC_GLOBAL_UPDATE), 1, HttpStatus.OK, true);
-		assertEventNumberStatus(savedEventsByType.get(EventType.FETCHED_FROM_MAAT), numberOfRecords+1, HttpStatus.OK, true);
-		assertEventNumberStatus(savedEventsByType.get(EventType.SENT_TO_DRC), numberOfRecords, HttpStatus.OK, true);
-		assertEventNumberStatus(savedEventsByType.get(EventType.UPDATED_IN_MAAT), numberOfRecords+2, HttpStatus.OK, true);
-	}
 
 	/**
      * <h4>Scenario:</h4>
@@ -427,6 +418,16 @@ class FdcIntegrationTest {
                 .updatedIdsShouldBeSent(true)
                 .contributionFileExpected(true).build();
         runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.REQUESTED);
+
+
+		Map<EventType, List<CaseSubmissionEntity>> savedEventsByType = getEventTypeListMap(10);
+		// check all successful
+		softly.assertThat(savedEventsByType.size()).isEqualTo(4); // Fdc should save 4 types of EventTypes.
+		assertEventNumberStatus(savedEventsByType.get(EventType.FDC_GLOBAL_UPDATE), 1, HttpStatus.OK, true);
+		assertEventNumberStatus(savedEventsByType.get(EventType.FETCHED_FROM_MAAT), 4, HttpStatus.OK, true);
+		assertEventNumberStatus(savedEventsByType.get(EventType.SENT_TO_DRC), 3, HttpStatus.BAD_REQUEST, true);
+		assertEventNumberStatus(savedEventsByType.get(EventType.UPDATED_IN_MAAT), 1, HttpStatus.OK, false);
+		assertEventNumberStatus(savedEventsByType.get(EventType.UPDATED_IN_MAAT), 1, HttpStatus.INTERNAL_SERVER_ERROR, false);
     }
 
     /**
@@ -460,6 +461,8 @@ class FdcIntegrationTest {
                 .updatedIdsShouldBeSent(false)
                 .contributionFileExpected(false).build();
         runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.WAITING_ITEMS);
+
+		assertFdcEventLogging(4, 3,1,1,0,2);
     }
 
     /**
@@ -493,6 +496,8 @@ class FdcIntegrationTest {
                 .updatedIdsShouldBeSent(false)
                 .contributionFileExpected(false).build();
         runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.WAITING_ITEMS);
+
+		assertFdcEventLogging(4, 3,1,1,0,2);
     }
 
     /**
@@ -528,6 +533,8 @@ class FdcIntegrationTest {
                 .updatedIdsShouldBeSent(false)
                 .contributionFileExpected(false).build();
         runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.WAITING_ITEMS);
+
+		assertFdcEventLogging(4, 3,1,1,0,2);
     }
 
     /**
@@ -563,6 +570,8 @@ class FdcIntegrationTest {
                 .updatedIdsShouldBeSent(false)
                 .contributionFileExpected(false).build();
         runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.WAITING_ITEMS);
+
+		assertFdcEventLogging(4, 3,1,1,0,2);
     }
 
     /**
@@ -595,6 +604,8 @@ class FdcIntegrationTest {
                 .updatedIdsShouldBeSent(false)
                 .contributionFileExpected(false).build();
         runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.SENT);
+
+		assertFdcEventLogging(4, 3,1,1,0,2);
     }
 
     /**
@@ -629,6 +640,8 @@ class FdcIntegrationTest {
                 .updatedIdsShouldBeSent(false)
                 .contributionFileExpected(false).build();
         runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.WAITING_ITEMS);
+
+		assertFdcEventLogging(4, 3,1,1,0,2);
     }
 
     /**
@@ -663,6 +676,8 @@ class FdcIntegrationTest {
                 .updatedIdsShouldBeSent(false)
                 .contributionFileExpected(false).build();
         runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.WAITING_ITEMS);
+
+		assertFdcEventLogging(4, 3,1,1,0,2);
     }
 
     /**
@@ -696,6 +711,8 @@ class FdcIntegrationTest {
                 .updatedIdsShouldBeSent(false)
                 .contributionFileExpected(false).build();
         runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.WAITING_ITEMS);
+
+		assertFdcEventLogging(4, 3,1,1,0,2);
     }
 
     /**
@@ -759,6 +776,7 @@ class FdcIntegrationTest {
         });
     }
 
+
 	// helper methods.
 	@NotNull
 	private Map<EventType, List<CaseSubmissionEntity>> getEventTypeListMap(int numberOfAsserts) {
@@ -768,18 +786,14 @@ class FdcIntegrationTest {
 		return getMapOfLoggedEvents(savedEventsList);
 	}
 
-	private int getIdForEventType(EventType eventType){
-		EventTypeEntity eventEntity = eventTypeRepository.getEventTypeEntityByDescriptionEquals(eventType.getName());
-		return eventEntity.getId();
-	}
-
-	private Map<EventType, List<CaseSubmissionEntity>> getMapOfLoggedEvents(List<CaseSubmissionEntity> eventSubmissionList) {
-		return eventSubmissionList.stream().collect(Collectors.groupingBy(x-> getEventType(x.getEventType())));
-	}
-
-	private EventType getEventType(int eventTypeId){
-		Optional<EventTypeEntity> eventEntity = eventTypeRepository.findById(eventTypeId);
-		return Stream.of(EventType.values()).filter(x-> x.getName().equals(eventEntity.get().getDescription())).findFirst().get();
+	private void assertFdcEventLogging(int totalExpected, int numTypesExpected, int numGlobalUpdate, int numFetchedFromMaat, int numSentToDrc, int numUpdatedInMaat) {
+		Map<EventType, List<CaseSubmissionEntity>> savedEventsByType = getEventTypeListMap(totalExpected);
+		// check all successful
+		softly.assertThat(savedEventsByType.size()).isEqualTo(numTypesExpected); // Fdc should save 4 types of EventTypes.
+		assertEventNumberStatus(savedEventsByType.get(EventType.FDC_GLOBAL_UPDATE), numGlobalUpdate, HttpStatus.OK, true);
+		assertEventNumberStatus(savedEventsByType.get(EventType.FETCHED_FROM_MAAT), numFetchedFromMaat, HttpStatus.OK, true);
+		assertEventNumberStatus(savedEventsByType.get(EventType.SENT_TO_DRC), numSentToDrc, HttpStatus.OK, true);
+		assertEventNumberStatus(savedEventsByType.get(EventType.UPDATED_IN_MAAT), numUpdatedInMaat, HttpStatus.OK, true);
 	}
 
 	private void assertEventNumberStatus(List<CaseSubmissionEntity> eventSubmissionList, int numExpected, HttpStatusCode httpStatus, boolean isOnlyExpected){
@@ -787,11 +801,26 @@ class FdcIntegrationTest {
 			softly.assertThat(numExpected).isEqualTo(0);
 		}
 		else {
-			long foundEvents = eventSubmissionList.stream().filter(x -> httpStatus.value() == x.getHttpStatus()).count();
+			int foundEvents = (int) eventSubmissionList.stream().filter(x -> httpStatus.value() == x.getHttpStatus()).count();
 			softly.assertThat(foundEvents).isEqualTo(numExpected);
 			if (isOnlyExpected) {
 				softly.assertThat(foundEvents).isEqualTo(eventSubmissionList.size());
 			}
 		}
+	}
+
+	private EventType getEventType(int eventTypeId){
+		Optional<EventTypeEntity> eventEntity = eventTypeRepository.findById(eventTypeId);
+		return Stream.of(EventType.values()).filter(x-> x.getName().equals(eventEntity.get().getDescription())).findFirst().get();
+	}
+
+
+	private int getIdForEventType(EventType eventType){
+		EventTypeEntity eventEntity = eventTypeRepository.getEventTypeEntityByDescriptionEquals(eventType.getName());
+		return eventEntity.getId();
+	}
+
+	private Map<EventType, List<CaseSubmissionEntity>> getMapOfLoggedEvents(List<CaseSubmissionEntity> eventSubmissionList) {
+		return eventSubmissionList.stream().collect(Collectors.groupingBy(x-> getEventType(x.getEventType())));
 	}
 }
