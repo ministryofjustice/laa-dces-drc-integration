@@ -109,7 +109,7 @@ public class ContributionService implements FileService {
     @Retry(name = SERVICE_NAME)
     public void sendContributionsToDrc(List<ConcorContribEntry> contributionsList, Map<String, CONTRIBUTIONS> successfulContributions, Map<String, String> failedContributions) {
         // for each contribution sent by MAAT API
-        for (ConcurContribEntry contribEntry : contributionsList) {
+        for (ConcorContribEntry contribEntry : contributionsList) {
             final BigInteger concorContributionId = BigInteger.valueOf(contribEntry.getConcorContributionId());
             // convert string into objects
             CONTRIBUTIONS currentContribution;

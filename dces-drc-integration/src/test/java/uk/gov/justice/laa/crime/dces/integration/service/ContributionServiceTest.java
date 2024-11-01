@@ -105,19 +105,39 @@ class ContributionServiceTest {
 		softly.assertThat(result).isTrue();
 		verify(anonymisingDataService, never()).anonymise(any());
 
-		verify(eventService, times(9)).logConcor(any(), any(), any(), any(), any(), any());
+		verify(eventService, times(30)).logConcor(any(), any(), any(), any(), any(), any());
 		// verify each event is logged.
-		verify(eventService).logConcor(null, EventType.FETCHED_FROM_MAAT, testBatchId, null, OK, "Fetched 2 concorContribution entries");
-		verify(eventService).logConcor(BigInteger.valueOf(1234), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
-		verify(eventService).logConcor(BigInteger.valueOf(9876), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(null, EventType.FETCHED_FROM_MAAT, testBatchId, null, OK, "Fetched 5 concorContribution entries");
+		verify(eventService).logConcor(BigInteger.valueOf(1111), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(BigInteger.valueOf(2222), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(BigInteger.valueOf(3333), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(BigInteger.valueOf(4444), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(BigInteger.valueOf(5555), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(null, EventType.FETCHED_FROM_MAAT, testBatchId, null, OK, "Fetched 3 concorContribution entries");
+		verify(eventService).logConcor(BigInteger.valueOf(1000), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(BigInteger.valueOf(6666), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(BigInteger.valueOf(7777), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
 
-		verify(eventService).logConcor(BigInteger.valueOf(1234), EventType.SENT_TO_DRC, testBatchId, testContribution, OK, null);
-		verify(eventService).logConcor(BigInteger.valueOf(9876), EventType.SENT_TO_DRC, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(BigInteger.valueOf(1111), EventType.SENT_TO_DRC, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(BigInteger.valueOf(2222), EventType.SENT_TO_DRC, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(BigInteger.valueOf(3333), EventType.SENT_TO_DRC, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(BigInteger.valueOf(4444), EventType.SENT_TO_DRC, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(BigInteger.valueOf(5555), EventType.SENT_TO_DRC, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(BigInteger.valueOf(1000), EventType.SENT_TO_DRC, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(BigInteger.valueOf(6666), EventType.SENT_TO_DRC, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(BigInteger.valueOf(7777), EventType.SENT_TO_DRC, testBatchId, testContribution, OK, null);
 
-		verify(eventService).logConcor(BigInteger.valueOf(1234), EventType.UPDATED_IN_MAAT, testBatchId, testContribution, OK, null);
-		verify(eventService).logConcor(BigInteger.valueOf(9876), EventType.UPDATED_IN_MAAT, testBatchId, testContribution, OK, null);
-		verify(eventService).logConcor(null, EventType.UPDATED_IN_MAAT, testBatchId, null, OK, "Successfully Sent:2");
-		verify(eventService).logConcor(null, EventType.UPDATED_IN_MAAT, testBatchId, null, OK, "Failed To Send:0");
+		verify(eventService).logConcor(BigInteger.valueOf(1111), EventType.UPDATED_IN_MAAT, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(BigInteger.valueOf(2222), EventType.UPDATED_IN_MAAT, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(BigInteger.valueOf(3333), EventType.UPDATED_IN_MAAT, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(BigInteger.valueOf(4444), EventType.UPDATED_IN_MAAT, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(BigInteger.valueOf(5555), EventType.UPDATED_IN_MAAT, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(BigInteger.valueOf(1000), EventType.UPDATED_IN_MAAT, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(BigInteger.valueOf(6666), EventType.UPDATED_IN_MAAT, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(BigInteger.valueOf(7777), EventType.UPDATED_IN_MAAT, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(null, EventType.UPDATED_IN_MAAT, testBatchId, null, OK, "Successfully Sent:5");
+		verify(eventService).logConcor(null, EventType.UPDATED_IN_MAAT, testBatchId, null, OK, "Successfully Sent:3");
+		verify(eventService, times(2)).logConcor(null, EventType.UPDATED_IN_MAAT, testBatchId, null, OK, "Failed To Send:0");
 
 	}
 
