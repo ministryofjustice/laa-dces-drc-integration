@@ -103,7 +103,7 @@ class ContributionServiceTest {
 		verify(drcClient, times(2)).sendConcorContributionReqToDrc(any());
 		softly.assertThat(result).isTrue();
 		verify(anonymisingDataService, never()).anonymise(any());
-		verify(eventService, times(8)).logConcor(any(), any(), any(), any(), any(), any());
+		verify(eventService, times(9)).logConcor(any(), any(), any(), any(), any(), any());
 
 		// verify each event is logged.
 		verify(eventService).logConcor(null, EventType.FETCHED_FROM_MAAT, testBatchId, null, OK, "Fetched 2 concorContribution entries");
@@ -116,6 +116,7 @@ class ContributionServiceTest {
 		verify(eventService).logConcor(BigInteger.valueOf(1234), EventType.UPDATED_IN_MAAT, testBatchId, testContribution, OK, null);
 		verify(eventService).logConcor(BigInteger.valueOf(9876), EventType.UPDATED_IN_MAAT, testBatchId, testContribution, OK, null);
 		verify(eventService).logConcor(null, EventType.UPDATED_IN_MAAT, testBatchId, null, OK, "Successfully Sent:2");
+		verify(eventService).logConcor(null, EventType.UPDATED_IN_MAAT, testBatchId, null, OK, "Failed To Send:0");
 
 	}
 

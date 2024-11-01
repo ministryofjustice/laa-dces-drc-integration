@@ -148,10 +148,6 @@ public class ContributionService implements FileService {
             try {
                 contributionFileId = contributionUpdateRequest(xmlFile, successfulIdList, successfulIdList.size(), fileName, ackXml);
                 log.info("Created Concor contribution-file ID {} from {} Concor contribution IDs [{}]", contributionFileId, successfulIdList.size(), String.join(", ", successfulIdList));
-                // Explicitly log the Concor contribution IDs that were updated:
-                for(Map.Entry<String, CONTRIBUTIONS> contribEntry: successfulContributions.entrySet()){
-                    eventService.logConcor(new BigInteger(contribEntry.getKey()), UPDATED_IN_MAAT, batchId, contribEntry.getValue(), OK, null);
-                }
             } catch (MaatApiClientException | WebClientResponseException | HttpServerErrorException e) {
                 // We're rethrowing the exception, therefore avoid logging the stack trace to prevent logging the same trace multiple times.
                 String payload = "Failed to create Concor contribution-file. Investigation needed. State of files will be out of sync! [" + e.getClass().getName() + "(" + e.getMessage() + ")]";
@@ -185,6 +181,7 @@ public class ContributionService implements FileService {
         // log success and failure numbers.
         eventService.logConcor(null, UPDATED_IN_MAAT, batchId, null, OK, "Successfully Sent:"+ successfulContributions.size());
         eventService.logConcor(null, UPDATED_IN_MAAT, batchId, null, (failedContributions.size()>0?INTERNAL_SERVER_ERROR:OK), "Failed To Send:"+ failedContributions.size());
+        // Explicitly log the Concor contribution IDs that were updated:
         for(Map.Entry<String, CONTRIBUTIONS> currentContribution: successfulContributions.entrySet()){
             eventService.logConcor(new BigInteger(currentContribution.getKey()),UPDATED_IN_MAAT, batchId, currentContribution.getValue(), OK, null);
         }
