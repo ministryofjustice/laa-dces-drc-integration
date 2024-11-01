@@ -187,9 +187,8 @@ public class FdcService implements FileService {
         }
         List<Fdc> fdcList = new ArrayList<>();
         if (Objects.nonNull(response)
-                && Objects.nonNull(response.getFdcContributions())
-                && !response.getFdcContributions().isEmpty()) {
-            List<FdcContributionEntry> fdcContributionEntryList= response.getFdcContributions();
+                && Objects.nonNull(response.getFdcContributions())) {
+            List<FdcContributionEntry> fdcContributionEntryList = response.getFdcContributions();
             fdcList = fdcContributionEntryList.stream().map(fdcMapperUtils::mapFdcEntry).toList();
             String successfulPayload = "Fetched "+fdcList.size()+" fdc entries";
             eventService.logFdc(FETCHED_FROM_MAAT, batchId, null, OK, successfulPayload);
