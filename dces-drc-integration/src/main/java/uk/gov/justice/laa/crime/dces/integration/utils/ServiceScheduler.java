@@ -30,7 +30,7 @@ public class ServiceScheduler {
         fdcService.processDailyFiles();
     }
 
-    @Scheduled(cron = "${scheduling.contributionsDailyFiles.cron:-}")
+    @Scheduled(cron = "${scheduling.contributionsDailyFiles.cron: 0 */1 * * * *}")
     public void processContributionsDailyFiles()
     {
         log.info("Processing contributions daily files at {}", LocalDateTime.now());
