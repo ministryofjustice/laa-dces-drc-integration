@@ -1,7 +1,6 @@
 package uk.gov.justice.laa.crime.dces.integration.utils;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -30,7 +29,7 @@ public class ServiceScheduler {
         fdcService.processDailyFiles();
     }
 
-    @Scheduled(cron = "${scheduling.contributionsDailyFiles.cron: 0 */1 * * * *}")
+    @Scheduled(cron = "${scheduling.contributionsDailyFiles.cron:-}")
     public void processContributionsDailyFiles()
     {
         log.info("Processing contributions daily files at {}", LocalDateTime.now());
