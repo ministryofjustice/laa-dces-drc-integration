@@ -48,6 +48,7 @@ services:
     registrationId: ${MAAT_API_REGISTRATION_ID}
     oAuthEnabled: true
     maxBufferSize: 16
+    noOfContributionRecords: ${GET_CONTRIBUTION_BATCH_SIZE:300}
   drc-client-api:
     baseUrl: ${DRC_API_BASE_URL}
     oAuthEnabled: false

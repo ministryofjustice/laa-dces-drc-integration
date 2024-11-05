@@ -6,6 +6,7 @@ import io.micrometer.core.annotation.Timed;
 import jakarta.xml.bind.JAXBException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
@@ -48,6 +49,8 @@ public class ContributionService implements FileService {
     private final AnonymisingDataService anonymisingDataService;
     private final EventService eventService;
     private BigInteger batchId;
+    @Value("${services.maat-api.getContributionBatchSize:350}")
+    private int getContributionBatchSize;
 
     @SuppressWarnings("squid:S2147")  // Duplicate code is catch blocks. However they cannot be merged, due to lacking
     // a shared superclass with .getStatusCode() Same with the throws, to avoid the compiler complaining about throwing
@@ -84,14 +87,13 @@ public class ContributionService implements FileService {
             description = "Time taken to process the daily contributions files from DRC and passing this for downstream processing.")
     public boolean processDailyFiles() {
         batchId = eventService.generateBatchId();
-        int defaultNoOfRecord = feature.noOfContributionRecords();
         List<ConcorContribEntry> contributionsList;
         List<Integer> receivedContributionFileIds = new ArrayList<>();
         int startingId = 0;
         do {
             Map<String, CONTRIBUTIONS> successfulContributions = new HashMap<>();
             Map<String, String> failedContributions = new HashMap<>();
-            contributionsList = contributionClient.getContributions(ContributionRecordStatus.ACTIVE.name(), startingId, defaultNoOfRecord);
+            contributionsList = contributionClient.getContributions(ContributionRecordStatus.ACTIVE.name(), startingId, getContributionBatchSize);
             String successfulPayload = "Fetched "+contributionsList.size()+" concorContribution entries";
             eventService.logConcor(null, FETCHED_FROM_MAAT, batchId, null, OK, successfulPayload);
             if (contributionsList != null && !contributionsList.isEmpty()) {
@@ -101,7 +103,7 @@ public class ContributionService implements FileService {
                 log.info("Created contribution-file ID {}", contributionFileId);
                 startingId = contributionsList.get(contributionsList.size() - 1).getConcorContributionId();
             }
-        } while (contributionsList != null && contributionsList.size() == defaultNoOfRecord);
+        } while (contributionsList != null && contributionsList.size() == getContributionBatchSize);
 
         return !receivedContributionFileIds.isEmpty() && !receivedContributionFileIds.contains(null);
     }
