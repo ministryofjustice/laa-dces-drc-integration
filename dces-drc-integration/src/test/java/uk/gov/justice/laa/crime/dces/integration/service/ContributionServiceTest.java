@@ -8,10 +8,12 @@ import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -68,6 +70,9 @@ class ContributionServiceTest {
 	@Autowired
 	private ContributionService contributionService;
 
+	@Value("${services.maat-api.getContributionBatchSize:0}")
+	private int defaultGetContributionBatchSize;
+
 	@MockBean
 	private EventService eventService;
 
@@ -82,10 +87,16 @@ class ContributionServiceTest {
 		}
 	}
 
+	@BeforeEach
+	void setGetContributionSize(){
+		ReflectionTestUtils.setField(contributionService, "getContributionBatchSize", defaultGetContributionBatchSize);
+	}
+
 	@SuppressWarnings("squid:S5961") // suppress the "too many asserts" error. Asserting just the
 									 // right things have been logged is over the max of 25 already.
 	@Test
 	void testXMLValid() throws JAXBException {
+		ReflectionTestUtils.setField(contributionService, "getContributionBatchSize", 5);
 		CONTRIBUTIONS testContribution = createTestContribution();
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(testContribution);
 		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
@@ -159,6 +170,7 @@ class ContributionServiceTest {
 
 	@Test
 	void testXMLValidWhenOutgoingAnonymizedFlagIsFalse() throws JAXBException {
+		ReflectionTestUtils.setField(contributionService, "getContributionBatchSize", 5);
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());
 		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
@@ -248,6 +260,7 @@ class ContributionServiceTest {
 		// setup
 		customStubs.add(stubFor(post(UPDATE_URL).atPriority(1)
 				.willReturn(serverError())));
+		ReflectionTestUtils.setField(contributionService, "getContributionBatchSize", 5);
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());
 		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
