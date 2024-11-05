@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
-import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionEntity;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventTypeEntity;
@@ -31,8 +30,6 @@ public class EventLogAssertService {
     private CaseSubmissionRepository caseSubmissionRepository;
     @Autowired
     private EventTypeRepository eventTypeRepository;
-    @Autowired
-    private EventService eventService;
     private BigInteger batchId;
     private SoftAssertions softly;
 
@@ -52,8 +49,18 @@ public class EventLogAssertService {
     public void assertFdcEventLogging(int totalExpected, int numTypesExpected, int numGlobalUpdate, int numFetchedFromMaat, int numSentToDrc, int numUpdatedInMaat) {
         Map<EventType, List<CaseSubmissionEntity>> savedEventsByType = getEventTypeListMap(totalExpected);
         // check all successful
-        softly.assertThat(savedEventsByType.size()).isEqualTo(numTypesExpected); // Fdc should save 4 types of EventTypes.
+        assertEventBasics(savedEventsByType, numTypesExpected, numFetchedFromMaat, numSentToDrc, numUpdatedInMaat); // Fdc should save 4 types of EventTypes.
         assertEventNumberStatus(savedEventsByType.get(EventType.FDC_GLOBAL_UPDATE), numGlobalUpdate, HttpStatus.OK, true);
+    }
+
+    public void assertConcorEventLogging(int totalExpected, int numTypesExpected, int numFetchedFromMaat, int numSentToDrc, int numUpdatedInMaat) {
+        Map<EventType, List<CaseSubmissionEntity>> savedEventsByType = getEventTypeListMap(totalExpected);
+        // check all successful
+        assertEventBasics(savedEventsByType, numTypesExpected, numFetchedFromMaat, numSentToDrc, numUpdatedInMaat);
+    }
+
+    private void assertEventBasics(Map<EventType, List<CaseSubmissionEntity>> savedEventsByType, int numTypesExpected, int numFetchedFromMaat, int numSentToDrc, int numUpdatedInMaat){
+        softly.assertThat(savedEventsByType.size()).isEqualTo(numTypesExpected); // Concor should save 3 types of EventTypes.
         assertEventNumberStatus(savedEventsByType.get(EventType.FETCHED_FROM_MAAT), numFetchedFromMaat, HttpStatus.OK, true);
         assertEventNumberStatus(savedEventsByType.get(EventType.SENT_TO_DRC), numSentToDrc, HttpStatus.OK, true);
         assertEventNumberStatus(savedEventsByType.get(EventType.UPDATED_IN_MAAT), numUpdatedInMaat, HttpStatus.OK, true);
@@ -71,6 +78,21 @@ public class EventLogAssertService {
             }
         }
     }
+
+    public void assertCaseSubmissionsEqual(CaseSubmissionEntity caseSubmission, CaseSubmissionEntity expectedCaseSubmission){
+        softly.assertThat(caseSubmission.getFdcId()).isEqualTo(expectedCaseSubmission.getFdcId());
+        softly.assertThat(caseSubmission.getConcorContributionId()).isEqualTo(expectedCaseSubmission.getConcorContributionId());
+        softly.assertThat(caseSubmission.getPayload()).isEqualTo(expectedCaseSubmission.getPayload());
+        softly.assertThat(caseSubmission.getEventType()).isEqualTo(expectedCaseSubmission.getEventType());
+        softly.assertThat(caseSubmission.getProcessedDate().toLocalDate().toString()).isEqualTo(expectedCaseSubmission.getProcessedDate().toLocalDate().toString());
+        softly.assertThat(caseSubmission.getHttpStatus()).isEqualTo(expectedCaseSubmission.getHttpStatus());
+        softly.assertThat(caseSubmission.getConcorContributionId()).isEqualTo(expectedCaseSubmission.getConcorContributionId());
+        softly.assertThat(caseSubmission.getRecordType()).isEqualTo(expectedCaseSubmission.getRecordType());
+        softly.assertThat(caseSubmission.getBatchId()).isEqualTo(expectedCaseSubmission.getBatchId());
+        softly.assertThat(caseSubmission.getMaatId()).isEqualTo(expectedCaseSubmission.getMaatId());
+        softly.assertThat(caseSubmission.getTraceId()).isEqualTo(expectedCaseSubmission.getTraceId());
+    }
+
 
     private EventType getEventType(int eventTypeId){
         Optional<EventTypeEntity> eventEntity = eventTypeRepository.findById(eventTypeId);

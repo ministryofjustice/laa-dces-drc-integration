@@ -26,7 +26,6 @@ import uk.gov.justice.laa.crime.dces.integration.datasource.model.RecordType;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionRepository;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsStatus;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcAccelerationType;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
@@ -36,11 +35,11 @@ import uk.gov.justice.laa.crime.dces.integration.service.EventLogAssertService;
 
 import java.math.BigInteger;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -69,8 +68,6 @@ class FdcIntegrationTest {
 
 	@Captor
 	ArgumentCaptor<CaseSubmissionEntity> caseSubmissionEntityArgumentCaptor;
-	@Captor
-	ArgumentCaptor<Fdc> fdcArgumentCaptor;
 
 	private static final String USER_AUDIT = "DCES";
 	private static final BigInteger testBatchId = BigInteger.valueOf(-555L);
@@ -135,20 +132,18 @@ class FdcIntegrationTest {
 	}
 
 	// Just verify we're submitting what is expected to the DB. Persistence testing itself is done elsewhere.
-	private void assertProcessFdcCaseSubmissionCreation(UpdateLogFdcRequest fdcLogRequest, HttpStatusCode expectedStatusCode) {
-		verify(eventService).logFdc(eq(EventType.DRC_ASYNC_RESPONSE), eq(null), fdcArgumentCaptor.capture(), eq(expectedStatusCode), eq(fdcLogRequest.getErrorText()));
+	private void assertProcessFdcCaseSubmissionCreation(UpdateLogFdcRequest request, HttpStatusCode expectedStatusCode) {
+		CaseSubmissionEntity expectedCaseSubmission = CaseSubmissionEntity.builder()
+				.fdcId(BigInteger.valueOf(request.getFdcId()))
+				.payload(request.getErrorText())
+				.eventType(eventLogAssertService.getIdForEventType(EventType.DRC_ASYNC_RESPONSE))
+				.httpStatus(expectedStatusCode.value())
+				.recordType(RecordType.FDC.getName())
+				.processedDate(LocalDateTime.now())
+				.build();
 		verify(caseSubmissionRepository).save(caseSubmissionEntityArgumentCaptor.capture());
-		CaseSubmissionEntity caseSubmission = caseSubmissionEntityArgumentCaptor.getValue();
-		softly.assertThat(caseSubmission.getFdcId().intValue()).isEqualTo(fdcLogRequest.getFdcId());
-		softly.assertThat(caseSubmission.getPayload()).isEqualTo(fdcLogRequest.getErrorText());
-		softly.assertThat(caseSubmission.getEventType()).isEqualTo(eventLogAssertService.getIdForEventType(EventType.DRC_ASYNC_RESPONSE));
-		softly.assertThat(caseSubmission.getProcessedDate().toLocalDate().toString()).isEqualTo(LocalDate.now().toString());
-		softly.assertThat(caseSubmission.getHttpStatus()).isEqualTo(expectedStatusCode.value());
-		softly.assertThat(caseSubmission.getConcorContributionId()).isNull();
-		softly.assertThat(caseSubmission.getRecordType()).isEqualTo(RecordType.FDC.getName());
-		softly.assertThat(caseSubmission.getBatchId()).isNull();
-		softly.assertThat(caseSubmission.getMaatId()).isNull();
-		softly.assertThat(caseSubmission.getTraceId()).isNull();
+		CaseSubmissionEntity actualCaseSubmission = caseSubmissionEntityArgumentCaptor.getValue();
+		eventLogAssertService.assertCaseSubmissionsEqual(actualCaseSubmission, expectedCaseSubmission);
 	}
 
     /**
