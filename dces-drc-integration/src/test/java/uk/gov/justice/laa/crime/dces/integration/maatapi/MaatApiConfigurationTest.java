@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.env.Environment;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.config.ServicesConfiguration;
+import uk.gov.justice.laa.crime.dces.integration.config.ServicesConfiguration;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @SpringBootTest

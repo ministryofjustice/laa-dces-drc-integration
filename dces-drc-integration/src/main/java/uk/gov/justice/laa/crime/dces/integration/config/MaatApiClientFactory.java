@@ -1,10 +1,10 @@
-package uk.gov.justice.laa.crime.dces.integration.maatapi;
+package uk.gov.justice.laa.crime.dces.integration.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.support.WebClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.client.MaatApiClient;
+import uk.gov.justice.laa.crime.dces.integration.client.MaatApiClient;
 
 public class MaatApiClientFactory {
 

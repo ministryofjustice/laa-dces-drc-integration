@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.maatapi;
+package uk.gov.justice.laa.crime.dces.integration.config;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.netty.resolver.DefaultAddressResolverGroup;
@@ -28,8 +28,6 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
-import uk.gov.justice.laa.crime.dces.integration.config.WebClientMetricsFilter;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.config.ServicesConfiguration;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
 
 import java.time.Duration;
