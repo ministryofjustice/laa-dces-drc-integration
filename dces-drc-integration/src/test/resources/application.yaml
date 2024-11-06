@@ -3,6 +3,7 @@ services:
     baseUrl: http://localhost:1111
     registrationId: MATT_API_REG_ID
     oAuthEnabled: false
+    getContributionBatchSize: 350
   drc-client-api:
     baseUrl: http://localhost:2222
     oAuthEnabled: false

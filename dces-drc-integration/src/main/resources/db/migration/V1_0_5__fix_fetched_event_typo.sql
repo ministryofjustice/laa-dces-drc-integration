@@ -1,0 +1,1 @@
+UPDATE event_type SET description = 'FetchedFromMAAT' WHERE description = 'FetchedFomMAAT';

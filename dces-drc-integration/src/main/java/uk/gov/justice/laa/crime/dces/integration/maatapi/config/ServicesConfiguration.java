@@ -35,6 +35,8 @@ public class ServicesConfiguration {
         private boolean oAuthEnabled;
 
         private int maxBufferSize = 1;
+
+        private int getContributionBatchSize;
     }
 
     @Data

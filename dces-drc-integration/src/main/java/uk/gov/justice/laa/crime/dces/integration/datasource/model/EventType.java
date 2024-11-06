@@ -7,8 +7,9 @@ import lombok.Getter;
 @Getter
 public enum EventType {
 
-    FETCHED_FROM_MAAT("FetchedFomMAAT"),
+    FETCHED_FROM_MAAT("FetchedFromMAAT"),
     SENT_TO_DRC("SyncRequestResponseToDrc"),
+    FDC_GLOBAL_UPDATE("FdcGlobalUpdate"),
     UPDATED_IN_MAAT("SyncResponseLoggedToMAAT"),
     DRC_ASYNC_RESPONSE("AsyncRequestResponseFromDrc");
     private final String name;

@@ -7,9 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.ack.CONTRIBUTIONSFILEACK;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.ack.ObjectFactory;
 
-import javax.xml.datatype.DatatypeConfigurationException;
-import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.XMLGregorianCalendar;
 import java.io.StringWriter;
 import java.math.BigInteger;
 import java.time.LocalDate;
@@ -26,16 +23,6 @@ public class MapperUtils {
     protected MapperUtils() throws JAXBException {
         JAXBContext jaxbContext = JAXBContext.newInstance(ObjectFactory.class);
         ackMarshaller = jaxbContext.createMarshaller();
-    }
-
-    protected XMLGregorianCalendar generateDate(LocalDate date) {
-        if(Objects.isNull(date)){return null;}
-        try {
-            return DatatypeFactory.newInstance().newXMLGregorianCalendar(date.toString());
-        } catch (DatatypeConfigurationException e) {
-            log.error("Error parsing LocalDate to xmlGregorianCalendar: {}", date);
-            return null;
-        }
     }
 
     public String generateAckXML(String fileName, LocalDate date, Integer failedLines, Integer successfulLines){
