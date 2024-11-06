@@ -3,7 +3,6 @@ package uk.gov.justice.laa.crime.dces.integration.service;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
-import lombok.SneakyThrows;
 import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
@@ -14,11 +13,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.config.Feature;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
@@ -247,6 +248,31 @@ class FdcServiceTest {
 	}
 
 	@Test
+	void testFdcGlobalUpdateFailureUnauthorised() {
+		// setup
+		when(fdcMapperUtils.generateFileXML(any())).thenReturn("<xml>ValidXML</xml>");
+		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
+		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
+		when(fdcMapperUtils.generateAckXML(any(),any(),any(),any())).thenReturn("<xml>ValidAckXML</xml>");
+		doNothing().when(drcClient).sendFdcReqToDrc(any());
+		customStubs.add(stubFor(post(PREPARE_URL).atPriority(1)
+				.willReturn(unauthorized())));
+		// run
+		boolean successful = fdcService.processDailyFiles();
+
+
+		// test
+		verify(fdcMapperUtils).generateFileXML(any());
+		verify(fdcMapperUtils).generateFileName(any());
+		verify(fdcMapperUtils).generateAckXML(any(),any(),any(),any());
+		verify(fdcMapperUtils,times(12)).mapFdcEntry(any());
+		softly.assertThat(successful).isTrue();
+		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
+		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
+		WireMock.verify(1, postRequestedFor(urlEqualTo(UPDATE_URL)));
+	}
+
+	@Test
 	void testGetFdcError() {
 		// setup
 		customStubs.add(stubFor(get(GET_URL).atPriority(1)
@@ -276,6 +302,52 @@ class FdcServiceTest {
 		softly.assertThat(successful).isFalse();
 		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
 		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
+		WireMock.verify(0, getRequestedFor(urlEqualTo(UPDATE_URL)));
+		verify(fdcMapperUtils,times(0)).generateFileXML(any());
+	}
+
+	@Test
+	void testDrcUpdateUnauthorised() {
+		// setup
+		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
+		Mockito.doThrow(new MaatApiClientException(HttpStatus.UNAUTHORIZED, "Test Unauthorised")).when(drcClient).sendFdcReqToDrc(any());
+		// do
+		boolean successful = fdcService.processDailyFiles();
+		// test
+		softly.assertThat(successful).isFalse();
+		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
+		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
+		verify(drcClient, times(12)).sendFdcReqToDrc(any());
+		WireMock.verify(0, getRequestedFor(urlEqualTo(UPDATE_URL)));
+		verify(fdcMapperUtils,times(0)).generateFileXML(any());
+	}
+	@Test
+	void testDrcUpdateInternalServerError() {
+		// setup
+		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
+		Mockito.doThrow(new HttpServerErrorException(HttpStatus.UNAUTHORIZED, "Test Unauthorised")).when(drcClient).sendFdcReqToDrc(any());
+		// do
+		boolean successful = fdcService.processDailyFiles();
+		// test
+		softly.assertThat(successful).isFalse();
+		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
+		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
+		verify(drcClient, times(12)).sendFdcReqToDrc(any());
+		WireMock.verify(0, getRequestedFor(urlEqualTo(UPDATE_URL)));
+		verify(fdcMapperUtils,times(0)).generateFileXML(any());
+	}
+	@Test
+	void testDrcUpdateWebClientException() {
+		// setup
+		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
+		Mockito.doThrow(new WebClientResponseException(403,"Failed", null, null, null)).when(drcClient).sendFdcReqToDrc(any());
+		// do
+		boolean successful = fdcService.processDailyFiles();
+		// test
+		softly.assertThat(successful).isFalse();
+		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
+		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
+		verify(drcClient, times(12)).sendFdcReqToDrc(any());
 		WireMock.verify(0, getRequestedFor(urlEqualTo(UPDATE_URL)));
 		verify(fdcMapperUtils,times(0)).generateFileXML(any());
 	}
@@ -332,7 +404,18 @@ class FdcServiceTest {
 		softly.assertThat(exception.getStatusCode().is4xxClientError()).isTrue();
 	}
 
-	@SneakyThrows
+	@Test
+	void testProcessFdcUpdateWhenServerFailure() {
+		String errorText = "The request has failed to process";
+		UpdateLogFdcRequest dataRequest = UpdateLogFdcRequest.builder()
+				.fdcId(500)
+				.errorText(errorText)
+				.build();
+		var exception = catchThrowableOfType(() -> fdcService.processFdcUpdate(dataRequest), HttpServerErrorException.class);
+		softly.assertThat(exception).isNotNull();
+		softly.assertThat(exception.getStatusCode().is5xxServerError()).isTrue();
+	}
+
 	Fdc createExpectedFdc(Integer id, Integer maatId, String sentenceDate, String calculationDate, String finalCost, String lgfsTotal, String agfsTotal){
 		Fdc fdc = new Fdc();
 		fdc.setId(BigInteger.valueOf(id));
