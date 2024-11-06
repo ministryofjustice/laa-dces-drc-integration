@@ -13,6 +13,9 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.util.Objects;
 
+/**
+ * Used by MaatApiWebClientConfiguration to add metrics to the MAAT API WebClient
+ */
 @RequiredArgsConstructor
 public class WebClientMetricsFilter implements ExchangeFilterFunction {
 

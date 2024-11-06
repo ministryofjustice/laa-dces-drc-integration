@@ -6,6 +6,8 @@ import io.micrometer.core.annotation.Timed;
 import jakarta.xml.bind.JAXBException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -21,6 +23,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContrib
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
 
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,6 +36,7 @@ import java.util.Objects;
 @Slf4j
 public class ContributionService implements FileService {
     private static final String SERVICE_NAME = "ContributionService";
+    private static final URI DUPLICATE_TYPE = URI.create("https://laa-debt-colleection.service.justice.gov.uk/problem-types#duplicate-id");
     private final ContributionsMapperUtils contributionsMapperUtils;
     private final ContributionClient contributionClient;
     private final DrcClient drcClient;
@@ -45,7 +49,7 @@ public class ContributionService implements FileService {
             if (!feature.incomingIsolated()) {
                 return contributionClient.sendLogContributionProcessed(updateLogContributionRequest);
             } else {
-                log.info("Not updating MAAT DB because feature.incomingIsolated is set to True");
+                log.info("processContributionUpdate: not calling MAAT API sendLogContributionProcessed() because `feature.incoming-isolated=true`");
                 return 0; // avoid updating MAAT DB.
             }
         } catch (MaatApiClientException | WebClientResponseException | HttpServerErrorException e) {
@@ -107,6 +111,17 @@ public class ContributionService implements FileService {
                     log.debug("Skipping contribution data to DRC, JSON = [{}]", json);
                 }
                 successfulContributions.put(Integer.toString(concorContributionId), currentContribution);
+            } catch (WebClientResponseException e) {
+                if (e.getStatusCode().isSameCodeAs(HttpStatus.CONFLICT)) {
+                    ProblemDetail problemDetail = e.getResponseBodyAs(ProblemDetail.class);
+                    if (problemDetail != null && DUPLICATE_TYPE.equals(problemDetail.getType())) {
+                        log.info("Ignoring duplicate contribution data to DRC, concorContributionId = {}, maatId = {}", concorContributionId, currentContribution.getMaatId());
+                        successfulContributions.put(Integer.toString(concorContributionId), currentContribution);
+                        continue;
+                    }
+                }
+                log.warn("Failed to send contribution data to DRC, concorContributionId = {}", concorContributionId, e);
+                failedContributions.put(Integer.toString(concorContributionId), e.getClass().getName() + ": " + e.getMessage());
             } catch (Exception e) {
                 log.warn("Failed to send contribution data to DRC, concorContributionId = {}", concorContributionId, e);
                 // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
@@ -158,7 +173,7 @@ public class ContributionService implements FileService {
         if (!feature.outgoingIsolated()) {
             return contributionClient.updateContributions(request);
         } else {
-            log.info("Not updating contributions because feature.outgoingIsolated is set to True");
+            log.info("contributionUpdateRequest: Not calling MAAT API updateContributions() because `feature.outgoing-isolated=true`");
             return 0;
         }
     }

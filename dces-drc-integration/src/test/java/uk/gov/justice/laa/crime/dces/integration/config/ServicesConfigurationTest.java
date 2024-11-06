@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.maatapi;
+package uk.gov.justice.laa.crime.dces.integration.config;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -6,12 +6,11 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.env.Environment;
-import uk.gov.justice.laa.crime.dces.integration.config.ServicesConfiguration;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @SpringBootTest
 @EnableConfigurationProperties(value = ServicesConfiguration.class)
-class MaatApiConfigurationTest {
+class ServicesConfigurationTest {
 
     @Autowired
     @Qualifier("servicesConfiguration")

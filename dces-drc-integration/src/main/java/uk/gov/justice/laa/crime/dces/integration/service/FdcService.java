@@ -5,6 +5,8 @@ import io.github.resilience4j.retry.annotation.Retry;
 import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -23,6 +25,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.Fdc
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 
 import java.math.BigInteger;
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,6 +38,7 @@ import java.util.Objects;
 @Slf4j
 public class FdcService implements FileService {
     private static final String SERVICE_NAME = "FdcService";
+    private static final URI DUPLICATE_TYPE = URI.create("https://laa-debt-colleection.service.justice.gov.uk/problem-types#duplicate-id");
     public static final String REQUESTED_STATUS = "REQUESTED";
     private final FdcMapperUtils fdcMapperUtils;
     private final FdcClient fdcClient;
@@ -49,7 +53,7 @@ public class FdcService implements FileService {
             if (!feature.incomingIsolated()) {
                 return fdcClient.sendLogFdcProcessed(updateLogFdcRequest);
             } else {
-                log.info("Not updating MAAT DB because feature.incomingIsolated is set to True");
+                log.info("processFdcUpdate: Not calling MAAT API sendLogFdcProcessed() because `feature.incoming-isolated=true`");
                 return 0; // avoid updating MAAT DB.
             }
         } catch (MaatApiClientException | WebClientResponseException | HttpServerErrorException e) {
@@ -76,7 +80,7 @@ public class FdcService implements FileService {
 
     @Retry(name = SERVICE_NAME)
     void sendFdcToDrc(List<Fdc> fdcList, List<Fdc> successfulFdcs, Map<String,String> failedFdcs) {
-        fdcList.forEach(currentFdc -> {
+        for (Fdc currentFdc : fdcList) {
             // TODO: DB Log the fetch for each item
             int fdcId = currentFdc.getId().intValue();
             try {
@@ -91,6 +95,17 @@ public class FdcService implements FileService {
                 }
                 successfulFdcs.add(currentFdc);
                 // TODO: DB Log sent to DRC, capture error etc.
+            } catch (WebClientResponseException e) {
+                if (e.getStatusCode().isSameCodeAs(HttpStatus.CONFLICT)) {
+                    ProblemDetail problemDetail = e.getResponseBodyAs(ProblemDetail.class);
+                    if (problemDetail != null && DUPLICATE_TYPE.equals(problemDetail.getType())) {
+                        log.info("Ignoring duplicate FDC data to DRC, fdcId = {}, maatId = {}", fdcId, currentFdc.getMaatId());
+                        successfulFdcs.add(currentFdc);
+                        continue;
+                    }
+                }
+                log.warn("Failed to send FDC data to DRC. fdcId = {}", fdcId, e);
+                failedFdcs.put(Integer.toString(fdcId), e.getClass().getName() + ": " + e.getMessage());
             } catch (Exception e) {
                 log.warn("Failed to send FDC data to DRC. fdcId = {}", fdcId, e);
                 // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
@@ -98,7 +113,7 @@ public class FdcService implements FileService {
             }
 
 
-        });
+        }
     }
 
     private Integer updateFdcAndCreateFile(List<Fdc> successfulFdcs, Map<String, String> failedFdcs) {
@@ -172,7 +187,7 @@ public class FdcService implements FileService {
             if (!feature.outgoingIsolated()) {
                 return fdcClient.executeFdcGlobalUpdate();
             } else {
-                log.info("Not executing FDC Global Update because feature.outgoingIsolated is set to True");
+                log.info("callFdcGlobalUpdate: Not calling MAAT API executeFdcGlobalUpdate() because `feature.outgoing-isolated=true`");
                 return new FdcGlobalUpdateResponse(true, 0);
             }
         } catch (HttpServerErrorException e) {
@@ -215,7 +230,7 @@ public class FdcService implements FileService {
         if (!feature.outgoingIsolated()) {
             return fdcClient.updateFdcs(request);
         } else {
-            log.info("Not updating FDCs because feature.outgoingIsolated is set to True");
+            log.info("fdcUpdateRequest: Not calling MAAT API updateFdcs() because `feature.outgoing-isolated=true`");
             return 0;
         }
     }

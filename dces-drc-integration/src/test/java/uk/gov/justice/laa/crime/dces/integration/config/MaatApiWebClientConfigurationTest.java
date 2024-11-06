@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.maatapi;
+package uk.gov.justice.laa.crime.dces.integration.config;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,8 +16,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.web.reactive.function.client.WebClient;
-import uk.gov.justice.laa.crime.dces.integration.config.MaatApiWebClientFactory;
-import uk.gov.justice.laa.crime.dces.integration.config.ServicesConfiguration;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcorContribEntry;
 
 import java.io.IOException;
@@ -28,9 +26,9 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class MaatApiWebClientFactoryTest {
+class MaatApiWebClientConfigurationTest {
 
-    MaatApiWebClientFactory maatApiWebClientFactory;
+    MaatApiWebClientConfiguration maatApiWebClientFactory;
     private static MockWebServer mockWebServer;
 
     @Autowired
@@ -56,7 +54,7 @@ class MaatApiWebClientFactoryTest {
         mockWebServer.start();
         configuration.getMaatApi().setBaseUrl(String.format("http://localhost:%s", mockWebServer.getPort()));
 
-        maatApiWebClientFactory = new MaatApiWebClientFactory(meterRegistry);
+        maatApiWebClientFactory = new MaatApiWebClientConfiguration(meterRegistry);
     }
 
     @AfterAll
