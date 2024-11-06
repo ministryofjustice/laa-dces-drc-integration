@@ -16,6 +16,11 @@ public class DateConvertor {
         throw new IllegalStateException("Utility class");
     }
 
+    /**
+     * Returns an XMLGregorianCalendar object of the supplied dateString
+     * @param  date LocalDate to be converted.
+     * @return      XMLGregorianCalendar of the supplied date.
+     */
     public static XMLGregorianCalendar convertToXMLGregorianCalendar(LocalDate date) {
         if (Objects.isNull(date)) {
             return null;
@@ -26,5 +31,14 @@ public class DateConvertor {
             log.error("Error parsing LocalDate to xmlGregorianCalendar: {}", date);
             return null;
         }
+    }
+
+    /**
+     * Returns an XMLGregorianCalendar object of the supplied dateString
+     * @param  dateString String representing the date. In the format of yyyy-MM-dd
+     * @return      XMLGregorianCalendar of the supplied date.
+     */
+    public static XMLGregorianCalendar convertToXMLGregorianCalendar(String dateString){
+        return DatatypeFactory.newDefaultInstance().newXMLGregorianCalendar(dateString);
     }
 }

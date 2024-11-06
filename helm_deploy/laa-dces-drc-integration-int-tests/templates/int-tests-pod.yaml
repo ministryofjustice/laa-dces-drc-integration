@@ -24,6 +24,9 @@ spec:
         - secretRef:
             name: dces-datasource
             optional: false
+        - secretRef:
+            name: config-variables
+            optional: true
       resources:
         {{- toYaml .Values.resources | nindent 8 }}
   restartPolicy: Never

@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -15,6 +17,7 @@ import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.config.Feature;
 import uk.gov.justice.laa.crime.dces.integration.enums.ContributionRecordStatus;
+import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcorContribEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionReqForDrc;
@@ -23,6 +26,11 @@ import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContrib
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
 
+import static uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType.*;
+import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+
+import java.math.BigInteger;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -43,32 +51,55 @@ public class ContributionService implements FileService {
     private final ObjectMapper objectMapper;
     private final Feature feature;
     private final AnonymisingDataService anonymisingDataService;
+    private final EventService eventService;
+    private BigInteger batchId;
+    @Value("${services.maat-api.getContributionBatchSize:350}")
+    private int getContributionBatchSize;
 
+    @SuppressWarnings("squid:S2147")  // Duplicate code is catch blocks. However they cannot be merged, due to lacking
+    // a shared superclass with .getStatusCode() Same with the throws, to avoid the compiler complaining about throwing
+    // a generic "Exception" back up the chain.
     public Integer processContributionUpdate(UpdateLogContributionRequest updateLogContributionRequest) {
         try {
+            int result;
             if (!feature.incomingIsolated()) {
-                return contributionClient.sendLogContributionProcessed(updateLogContributionRequest);
+                result = contributionClient.sendLogContributionProcessed(updateLogContributionRequest);
             } else {
                 log.info("processContributionUpdate: not calling MAAT API sendLogContributionProcessed() because `feature.incoming-isolated=true`");
                 return 0; // avoid updating MAAT DB.
             }
-        } catch (MaatApiClientException | WebClientResponseException | HttpServerErrorException e) {
-            log.info("Failed to processContributionUpdate", e);
+            logContributionAsyncEvent(updateLogContributionRequest, OK);
+            return result;
+        } catch (WebClientResponseException e){
+            logContributionAsyncEvent(updateLogContributionRequest, e.getStatusCode());
+            throw e;
+        } catch (HttpServerErrorException e ){
+            logContributionAsyncEvent(updateLogContributionRequest, e.getStatusCode());
+            throw e;
+        } catch (MaatApiClientException  e) {
+            logContributionAsyncEvent(updateLogContributionRequest, e.getStatusCode());
             throw e;
         }
+    }
+
+    private void logContributionAsyncEvent(UpdateLogContributionRequest updateLogContributionRequest, HttpStatusCode httpStatusCode){
+        BigInteger concorId = BigInteger.valueOf(updateLogContributionRequest.getConcorId());
+        eventService.logConcor(concorId, DRC_ASYNC_RESPONSE, null, null, httpStatusCode, updateLogContributionRequest.getErrorText());
     }
 
     @Timed(value = "laa_dces_drc_service_process_contributions_daily_files",
             description = "Time taken to process the daily contributions files from DRC and passing this for downstream processing.")
     public boolean processDailyFiles() {
-        int defaultNoOfRecord = feature.noOfContributionRecords();
+        batchId = eventService.generateBatchId();
         List<ConcorContribEntry> contributionsList;
         List<Integer> receivedContributionFileIds = new ArrayList<>();
         int startingId = 0;
         do {
             Map<String, CONTRIBUTIONS> successfulContributions = new HashMap<>();
             Map<String, String> failedContributions = new HashMap<>();
-            contributionsList = contributionClient.getContributions(ContributionRecordStatus.ACTIVE.name(), startingId, defaultNoOfRecord);
+            contributionsList = contributionClient.getContributions(ContributionRecordStatus.ACTIVE.name(), startingId, getContributionBatchSize);
+            String successfulPayload = "Fetched "+contributionsList.size()+" concorContribution entries";
+            eventService.logConcor(null, FETCHED_FROM_MAAT, batchId, null, OK, successfulPayload);
             if (contributionsList != null && !contributionsList.isEmpty()) {
                 sendContributionsToDrc(contributionsList, successfulContributions, failedContributions);
                 Integer contributionFileId = updateContributionsAndCreateFile(successfulContributions, failedContributions);
@@ -76,7 +107,7 @@ public class ContributionService implements FileService {
                 log.info("Created contribution-file ID {}", contributionFileId);
                 startingId = contributionsList.get(contributionsList.size() - 1).getConcorContributionId();
             }
-        } while (contributionsList != null && contributionsList.size() == defaultNoOfRecord);
+        } while (contributionsList != null && contributionsList.size() == getContributionBatchSize);
 
         return !receivedContributionFileIds.isEmpty() && !receivedContributionFileIds.contains(null);
     }
@@ -85,7 +116,7 @@ public class ContributionService implements FileService {
     public void sendContributionsToDrc(List<ConcorContribEntry> contributionsList, Map<String, CONTRIBUTIONS> successfulContributions, Map<String, String> failedContributions) {
         // for each contribution sent by MAAT API
         for (ConcorContribEntry contribEntry : contributionsList) {
-            final int concorContributionId = contribEntry.getConcorContributionId();
+            final BigInteger concorContributionId = BigInteger.valueOf(contribEntry.getConcorContributionId());
             // convert string into objects
             CONTRIBUTIONS currentContribution;
             try {
@@ -94,14 +125,16 @@ public class ContributionService implements FileService {
                     // anonymize the data when flag is true - only for non production environments
                     currentContribution = anonymisingDataService.anonymise(currentContribution);
                 }
+                eventService.logConcor(concorContributionId, FETCHED_FROM_MAAT, batchId, currentContribution, OK, null);
             } catch (JAXBException e) {
+                failedContributions.put(concorContributionId.toString(), e.getClass().getName() + ": " + e.getMessage());
                 log.error("Failed to unmarshal contribution data XML, concorContributionId = {}", concorContributionId, e);
-                failedContributions.put(Integer.toString(concorContributionId), e.getClass().getName() + ": " + e.getMessage());
+                eventService.logConcor(concorContributionId, FETCHED_FROM_MAAT, batchId, null, INTERNAL_SERVER_ERROR, "Failed to unmarshal contribution data XML");
                 continue;
             }
 
             try {
-                final var request = ConcorContributionReqForDrc.of(concorContributionId, currentContribution);
+                final var request = ConcorContributionReqForDrc.of(concorContributionId.intValue(), currentContribution);
                 if (!feature.outgoingIsolated()) {
                     drcClient.sendConcorContributionReqToDrc(request);
                     log.info("Sent contribution data to DRC, concorContributionId = {}, maatId = {}", concorContributionId, currentContribution.getMaatId());
@@ -110,22 +143,26 @@ public class ContributionService implements FileService {
                     final var json = objectMapper.writeValueAsString(request);
                     log.debug("Skipping contribution data to DRC, JSON = [{}]", json);
                 }
-                successfulContributions.put(Integer.toString(concorContributionId), currentContribution);
+                successfulContributions.put(concorContributionId.toString(), currentContribution);
+                eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, OK, null);
             } catch (WebClientResponseException e) {
                 if (e.getStatusCode().isSameCodeAs(HttpStatus.CONFLICT)) {
                     ProblemDetail problemDetail = e.getResponseBodyAs(ProblemDetail.class);
                     if (problemDetail != null && DUPLICATE_TYPE.equals(problemDetail.getType())) {
                         log.info("Ignoring duplicate contribution data to DRC, concorContributionId = {}, maatId = {}", concorContributionId, currentContribution.getMaatId());
-                        successfulContributions.put(Integer.toString(concorContributionId), currentContribution);
+                        successfulContributions.put(concorContributionId.toString(), currentContribution);
+                        eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, OK, null);
                         continue;
                     }
                 }
                 log.warn("Failed to send contribution data to DRC, concorContributionId = {}", concorContributionId, e);
-                failedContributions.put(Integer.toString(concorContributionId), e.getClass().getName() + ": " + e.getMessage());
+                failedContributions.put(concorContributionId.toString(), e.getClass().getName() + ": " + e.getMessage());
+                eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, INTERNAL_SERVER_ERROR, "Failed to send contribution data to DRC");
             } catch (Exception e) {
                 log.warn("Failed to send contribution data to DRC, concorContributionId = {}", concorContributionId, e);
                 // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
-                failedContributions.put(Integer.toString(concorContributionId), e.getClass().getName() + ": " + e.getMessage());
+                failedContributions.put(concorContributionId.toString(), e.getClass().getName() + ": " + e.getMessage());
+                eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, INTERNAL_SERVER_ERROR, "Failed to send contribution data to DRC");
             }
         }
     }
@@ -140,23 +177,20 @@ public class ContributionService implements FileService {
             String xmlFile = contributionsMapperUtils.generateFileXML(successfulContributions.values().stream().toList(), fileName);
             String ackXml = contributionsMapperUtils.generateAckXML(fileName, dateGenerated.toLocalDate(), failedContributions.size(), successfulContributions.size());
             List<String> successfulIdList = successfulContributions.keySet().stream().toList();
-
-            // Failed XML lines to be logged. Need to use this to set the ATOMIC UPDATE's ack field.
-            if (!failedContributions.isEmpty()) {
-                log.info("Failed to send {} Concor contributions", failedContributions.size());
-            }
             try {
                 contributionFileId = contributionUpdateRequest(xmlFile, successfulIdList, successfulIdList.size(), fileName, ackXml);
-                // Explicitly log the Concor contribution IDs that were updated:
                 log.info("Created Concor contribution-file ID {} from {} Concor contribution IDs [{}]", contributionFileId, successfulIdList.size(), String.join(", ", successfulIdList));
             } catch (MaatApiClientException | WebClientResponseException | HttpServerErrorException e) {
                 // We're rethrowing the exception, therefore avoid logging the stack trace to prevent logging the same trace multiple times.
-                log.error("Failed to create Concor contribution-file. Investigation needed. State of files will be out of sync! [" + e.getClass().getName() + "(" + e.getMessage() + ")]");
+                String payload = "Failed to create Concor contribution-file. Investigation needed. State of files will be out of sync! [" + e.getClass().getName() + "(" + e.getMessage() + ")]";
                 // If failed, we want to handle this. As it will mean the whole process failed for current day.
                 // TODO: Need to figure how we're going to log a failed call to the ATOMIC UPDATE.
+                eventService.logConcor(null, UPDATED_IN_MAAT, batchId, null, INTERNAL_SERVER_ERROR, payload);
                 throw e;
             }
         }
+        logMaatUpdateEvents(successfulContributions, failedContributions);
+
         return contributionFileId;
     }
 
@@ -175,6 +209,16 @@ public class ContributionService implements FileService {
         } else {
             log.info("contributionUpdateRequest: Not calling MAAT API updateContributions() because `feature.outgoing-isolated=true`");
             return 0;
+        }
+    }
+
+    private void logMaatUpdateEvents(Map<String, CONTRIBUTIONS> successfulContributions, Map<String, String> failedContributions) {
+        // log success and failure numbers.
+        eventService.logConcor(null, UPDATED_IN_MAAT, batchId, null, OK, "Successfully Sent:"+ successfulContributions.size());
+        eventService.logConcor(null, UPDATED_IN_MAAT, batchId, null, (failedContributions.size()>0?INTERNAL_SERVER_ERROR:OK), "Failed To Send:"+ failedContributions.size());
+        // Explicitly log the Concor contribution IDs that were updated:
+        for(Map.Entry<String, CONTRIBUTIONS> currentContribution: successfulContributions.entrySet()){
+            eventService.logConcor(new BigInteger(currentContribution.getKey()),UPDATED_IN_MAAT, batchId, currentContribution.getValue(), OK, null);
         }
     }
 }

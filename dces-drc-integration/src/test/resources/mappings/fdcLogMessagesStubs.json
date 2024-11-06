@@ -44,6 +44,30 @@
           "message": "Some message"
         }
       }
+    },
+    {
+      "scenarioName": "failedBasicRequest500",
+      "request": {
+        "urlPath": "/debt-collection-enforcement/log-fdc-response",
+        "method": "POST",
+        "bodyPatterns": [
+          {
+            "equalToJson": "{ \"fdcId\": 500  }",
+            "ignoreArrayOrder": true,
+            "ignoreExtraElements": true
+          }
+        ]
+      },
+      "response": {
+        "status": 500,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "code": "Internal Server Error",
+          "message": "Some message"
+        }
+      }
     }
   ]
 }

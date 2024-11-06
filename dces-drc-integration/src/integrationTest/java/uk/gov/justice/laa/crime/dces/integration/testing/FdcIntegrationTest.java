@@ -5,13 +5,25 @@ import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionEntity;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.RecordType;
+import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionRepository;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsStatus;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcAccelerationType;
@@ -19,9 +31,17 @@ import uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
 import uk.gov.justice.laa.crime.dces.integration.service.spy.FdcProcessSpy;
 import uk.gov.justice.laa.crime.dces.integration.service.spy.SpyFactory;
+import uk.gov.justice.laa.crime.dces.integration.service.EventLogAssertService;
 
+import java.math.BigInteger;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @EnabledIf(expression = "#{environment['sentry.environment'] == 'development'}", loadContext = true)
 @SpringBootTest
@@ -37,9 +57,22 @@ class FdcIntegrationTest {
 	@Autowired
 	private FdcService fdcService;
 
-	private static final String USER_AUDIT = "DCES";
+	@SpyBean
+	private EventService eventService;
 
-    @Builder
+	@SpyBean
+	private CaseSubmissionRepository caseSubmissionRepository;
+
+	@Autowired
+	private EventLogAssertService eventLogAssertService;
+
+	@Captor
+	ArgumentCaptor<CaseSubmissionEntity> caseSubmissionEntityArgumentCaptor;
+
+	private static final String USER_AUDIT = "DCES";
+	private static final BigInteger testBatchId = BigInteger.valueOf(-555L);
+
+	@Builder
     private record CheckOptions(
             boolean drcStubShouldSucceed,
             boolean updatedIdsShouldBeRequested,
@@ -48,8 +81,21 @@ class FdcIntegrationTest {
     }
 
 	@AfterEach
-	void afterTestAssertAll(){
+	public void afterTestAssertAll(){
+		eventLogAssertService.deleteAllByBatchId(testBatchId);
 		softly.assertAll();
+	}
+
+	// set a unique batchId which cannot be from actual data. So we can clear down post-test.
+	@BeforeEach
+	public void setBatchIdToTest(){
+		eventLogAssertService.deleteAllByBatchId(testBatchId);
+		when(eventService.generateBatchId()).thenReturn(testBatchId);
+	}
+	@BeforeAll
+	public void setupHelper(){
+		eventLogAssertService.setBatchId(testBatchId);
+		eventLogAssertService.setSoftly(softly);
 	}
 
 	@Test
@@ -59,6 +105,18 @@ class FdcIntegrationTest {
 				.build();
 		final Integer response = fdcService.processFdcUpdate(updateLogFdcRequest);
 		softly.assertThat(response).isPositive();
+		assertProcessFdcCaseSubmissionCreation(updateLogFdcRequest, HttpStatus.OK);
+	}
+
+	@Test
+	void testProcessFdcUpdateWhenFoundWithText() {
+		final var updateLogFdcRequest = UpdateLogFdcRequest.builder()
+				.fdcId(31774046)
+				.errorText("testProcessFdcUpdateWhenFoundWithText")
+				.build();
+		final Integer response = fdcService.processFdcUpdate(updateLogFdcRequest);
+		softly.assertThat(response).isPositive();
+		assertProcessFdcCaseSubmissionCreation(updateLogFdcRequest, HttpStatus.OK);
 	}
 
 	@Test
@@ -70,6 +128,22 @@ class FdcIntegrationTest {
 				.build();
 		softly.assertThatThrownBy(() -> fdcService.processFdcUpdate(updateLogFdcRequest))
 				.isInstanceOf(WebClientResponseException.class);
+		assertProcessFdcCaseSubmissionCreation(updateLogFdcRequest, HttpStatus.NOT_FOUND);
+	}
+
+	// Just verify we're submitting what is expected to the DB. Persistence testing itself is done elsewhere.
+	private void assertProcessFdcCaseSubmissionCreation(UpdateLogFdcRequest request, HttpStatusCode expectedStatusCode) {
+		CaseSubmissionEntity expectedCaseSubmission = CaseSubmissionEntity.builder()
+				.fdcId(BigInteger.valueOf(request.getFdcId()))
+				.payload(request.getErrorText())
+				.eventType(eventLogAssertService.getIdForEventType(EventType.DRC_ASYNC_RESPONSE))
+				.httpStatus(expectedStatusCode.value())
+				.recordType(RecordType.FDC.getName())
+				.processedDate(LocalDateTime.now())
+				.build();
+		verify(caseSubmissionRepository).save(caseSubmissionEntityArgumentCaptor.capture());
+		CaseSubmissionEntity actualCaseSubmission = caseSubmissionEntityArgumentCaptor.getValue();
+		eventLogAssertService.assertCaseSubmissionsEqual(actualCaseSubmission, expectedCaseSubmission);
 	}
 
     /**
@@ -93,9 +167,11 @@ class FdcIntegrationTest {
 		final var updatedIds = spyFactory.createFdcDelayedPickupTestData(FdcTestType.POSITIVE, 3);
 
 		whenProcessDailyFilesRuns_thenTheyAreQueriedSentAndInCreatedFile(updatedIds);
+
+		eventLogAssertService.assertFdcEventLogging(13, 4,1,4,3,5);
 	}
 
-    /**
+	/**
      * <h4>Scenario:</h4>
      * <p>A positive integration test to check that the "positive acceleration decode condition" logic can correctly
      *    identify the correct set of WAITING_ITEMS fdc_contributions records, to convert to REQUESTED status, and then
@@ -116,9 +192,12 @@ class FdcIntegrationTest {
 		final var updatedIds = spyFactory.createFastTrackTestData(FdcAccelerationType.POSITIVE, FdcTestType.POSITIVE, 3);
 
 		whenProcessDailyFilesRuns_thenTheyAreQueriedSentAndInCreatedFile(updatedIds);
+
+		eventLogAssertService.assertFdcEventLogging(13, 4,1,4,3,5);
 	}
 
-    /**
+
+	/**
      * <h4>Scenario:</h4>
      * <p>A positive integration test to check that the "negative acceleration decode condition" logic can correctly
      *    identify the correct set of WAITING_ITEMS fdc_contributions records, to convert to REQUESTED status, and then
@@ -288,6 +367,14 @@ class FdcIntegrationTest {
                 .updatedIdsShouldBeSent(false)
                 .contributionFileExpected(true).build();
         runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.SENT);
+
+		Map<EventType, List<CaseSubmissionEntity>> savedEventsByType = eventLogAssertService.getEventTypeListMap(4);
+		// check all successful
+		softly.assertThat(savedEventsByType.size()).isEqualTo(3); // Fdc should save 4 types of EventTypes.
+		eventLogAssertService.assertEventNumberStatus(savedEventsByType.get(EventType.FDC_GLOBAL_UPDATE), 1, HttpStatus.OK, true);
+		eventLogAssertService.assertEventNumberStatus(savedEventsByType.get(EventType.FETCHED_FROM_MAAT), 1, HttpStatus.OK, true);
+		eventLogAssertService.assertEventNumberStatus(savedEventsByType.get(EventType.SENT_TO_DRC), 0, HttpStatus.OK, true);
+		eventLogAssertService.assertEventNumberStatus(savedEventsByType.get(EventType.UPDATED_IN_MAAT), 2, HttpStatus.OK, true);
     }
 
     /**
@@ -323,6 +410,16 @@ class FdcIntegrationTest {
                 .updatedIdsShouldBeSent(true)
                 .contributionFileExpected(true).build();
         runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.REQUESTED);
+
+
+		Map<EventType, List<CaseSubmissionEntity>> savedEventsByType = eventLogAssertService.getEventTypeListMap(10);
+		// check all successful
+		softly.assertThat(savedEventsByType.size()).isEqualTo(4); // Fdc should save 4 types of EventTypes.
+		eventLogAssertService.assertEventNumberStatus(savedEventsByType.get(EventType.FDC_GLOBAL_UPDATE), 1, HttpStatus.OK, true);
+		eventLogAssertService.assertEventNumberStatus(savedEventsByType.get(EventType.FETCHED_FROM_MAAT), 4, HttpStatus.OK, true);
+		eventLogAssertService.assertEventNumberStatus(savedEventsByType.get(EventType.SENT_TO_DRC), 3, HttpStatus.BAD_REQUEST, true);
+		eventLogAssertService.assertEventNumberStatus(savedEventsByType.get(EventType.UPDATED_IN_MAAT), 1, HttpStatus.OK, false);
+		eventLogAssertService.assertEventNumberStatus(savedEventsByType.get(EventType.UPDATED_IN_MAAT), 1, HttpStatus.INTERNAL_SERVER_ERROR, false);
     }
 
     /**
@@ -356,6 +453,8 @@ class FdcIntegrationTest {
                 .updatedIdsShouldBeSent(false)
                 .contributionFileExpected(false).build();
         runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.WAITING_ITEMS);
+
+		eventLogAssertService.assertFdcEventLogging(4, 3,1,1,0,2);
     }
 
     /**
@@ -389,6 +488,8 @@ class FdcIntegrationTest {
                 .updatedIdsShouldBeSent(false)
                 .contributionFileExpected(false).build();
         runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.WAITING_ITEMS);
+
+		eventLogAssertService.assertFdcEventLogging(4, 3,1,1,0,2);
     }
 
     /**
@@ -424,6 +525,8 @@ class FdcIntegrationTest {
                 .updatedIdsShouldBeSent(false)
                 .contributionFileExpected(false).build();
         runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.WAITING_ITEMS);
+
+		eventLogAssertService.assertFdcEventLogging(4, 3,1,1,0,2);
     }
 
     /**
@@ -459,6 +562,8 @@ class FdcIntegrationTest {
                 .updatedIdsShouldBeSent(false)
                 .contributionFileExpected(false).build();
         runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.WAITING_ITEMS);
+
+		eventLogAssertService.assertFdcEventLogging(4, 3,1,1,0,2);
     }
 
     /**
@@ -491,6 +596,8 @@ class FdcIntegrationTest {
                 .updatedIdsShouldBeSent(false)
                 .contributionFileExpected(false).build();
         runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.SENT);
+
+		eventLogAssertService.assertFdcEventLogging(4, 3,1,1,0,2);
     }
 
     /**
@@ -525,6 +632,8 @@ class FdcIntegrationTest {
                 .updatedIdsShouldBeSent(false)
                 .contributionFileExpected(false).build();
         runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.WAITING_ITEMS);
+
+		eventLogAssertService.assertFdcEventLogging(4, 3,1,1,0,2);
     }
 
     /**
@@ -559,6 +668,8 @@ class FdcIntegrationTest {
                 .updatedIdsShouldBeSent(false)
                 .contributionFileExpected(false).build();
         runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.WAITING_ITEMS);
+
+		eventLogAssertService.assertFdcEventLogging(4, 3,1,1,0,2);
     }
 
     /**
@@ -592,6 +703,8 @@ class FdcIntegrationTest {
                 .updatedIdsShouldBeSent(false)
                 .contributionFileExpected(false).build();
         runProcessDailyFilesAndCheckResults(updatedIds, checkOptions, FdcContributionsStatus.WAITING_ITEMS);
+
+		eventLogAssertService.assertFdcEventLogging(4, 3,1,1,0,2);
     }
 
     /**
@@ -654,4 +767,5 @@ class FdcIntegrationTest {
             }
         });
     }
+
 }
