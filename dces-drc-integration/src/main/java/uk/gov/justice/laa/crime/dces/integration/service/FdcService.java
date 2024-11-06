@@ -38,7 +38,7 @@ import java.util.Objects;
 @Slf4j
 public class FdcService implements FileService {
     private static final String SERVICE_NAME = "FdcService";
-    private static final URI DUPLICATE_TYPE = URI.create("https://laa-debt-colleection.service.justice.gov.uk/problem-types#duplicate-id");
+    private static final URI DUPLICATE_TYPE = URI.create("https://laa-debt-collection.service.justice.gov.uk/problem-types#duplicate-id");
     public static final String REQUESTED_STATUS = "REQUESTED";
     private final FdcMapperUtils fdcMapperUtils;
     private final FdcClient fdcClient;

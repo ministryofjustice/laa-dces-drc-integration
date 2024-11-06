@@ -36,7 +36,7 @@ import java.util.Objects;
 @Slf4j
 public class ContributionService implements FileService {
     private static final String SERVICE_NAME = "ContributionService";
-    private static final URI DUPLICATE_TYPE = URI.create("https://laa-debt-colleection.service.justice.gov.uk/problem-types#duplicate-id");
+    private static final URI DUPLICATE_TYPE = URI.create("https://laa-debt-collection.service.justice.gov.uk/problem-types#duplicate-id");
     private final ContributionsMapperUtils contributionsMapperUtils;
     private final ContributionClient contributionClient;
     private final DrcClient drcClient;
