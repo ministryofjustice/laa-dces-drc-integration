@@ -32,7 +32,7 @@ class ContributionClientTest {
  * <p>1. The last ID in the second batch is not the same as the last ID in the previous batch, proving that a new batch has been returned.</p>
 **/
  @Test
-  void getContributions() {
+  void givenMultiPageData_whenSecondPageIsRequested_thenSecondPageDataIsReturned() {
     final var ignored = spyFactory.updateConcorContributionStatus(ConcorContributionStatus.ACTIVE, 5);
     List<ConcorContribEntry> contributionsList;
     int startingId = 0;
