@@ -4,23 +4,42 @@ import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionEntity;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.RecordType;
+import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionRepository;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
+import uk.gov.justice.laa.crime.dces.integration.service.EventLogAssertService;
 import uk.gov.justice.laa.crime.dces.integration.service.spy.ContributionProcessSpy;
 import uk.gov.justice.laa.crime.dces.integration.service.spy.SpyFactory;
 
+import java.math.BigInteger;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
+
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @EnabledIf(expression = "#{environment['sentry.environment'] == 'development'}", loadContext = true)
 @SpringBootTest
@@ -30,15 +49,40 @@ class ContributionIntegrationTest {
     @InjectSoftAssertions
     private SoftAssertions softly;
 
+    @SpyBean
+    private EventService eventService;
+
+    @SpyBean
+    private CaseSubmissionRepository caseSubmissionRepository;
+
     @Autowired
     private SpyFactory spyFactory;
 
     @Autowired
     private ContributionService contributionService;
 
+    @Autowired
+    private EventLogAssertService eventLogAssertService;
+    @Captor
+    ArgumentCaptor<CaseSubmissionEntity> caseSubmissionEntityArgumentCaptor;
+
+    private static final BigInteger testBatchId = BigInteger.valueOf(-333L);
+
     @AfterEach
     void assertAll() {
+        eventLogAssertService.deleteAllByBatchId(testBatchId);
         softly.assertAll();
+    }
+
+    @BeforeEach
+    public void setBatchIdToTest(){
+        eventLogAssertService.deleteAllByBatchId(testBatchId);
+        when(eventService.generateBatchId()).thenReturn(testBatchId);
+    }
+    @BeforeAll
+    public void setupHelper(){
+        eventLogAssertService.setBatchId(testBatchId);
+        eventLogAssertService.setSoftly(softly);
     }
 
     @Test
@@ -50,6 +94,7 @@ class ContributionIntegrationTest {
                 .build();
         softly.assertThatThrownBy(() -> contributionService.processContributionUpdate(updateLogContributionRequest))
                 .isInstanceOf(WebClientResponseException.class);
+        assertProcessConcorCaseSubmissionCreation(updateLogContributionRequest, HttpStatus.NOT_FOUND);
     }
 
     @Test
@@ -61,6 +106,22 @@ class ContributionIntegrationTest {
                 .build();
         final Integer response = contributionService.processContributionUpdate(updateLogContributionRequest);
         softly.assertThat(response).isPositive();
+        assertProcessConcorCaseSubmissionCreation(updateLogContributionRequest, HttpStatus.OK);
+    }
+
+    // Just verify we're submitting what is expected to the DB. Persistence testing itself is done elsewhere.
+    private void assertProcessConcorCaseSubmissionCreation(UpdateLogContributionRequest request, HttpStatusCode expectedStatusCode) {
+        CaseSubmissionEntity expectedCaseSubmission = CaseSubmissionEntity.builder()
+                .concorContributionId(BigInteger.valueOf(request.getConcorId()))
+                .payload(request.getErrorText())
+                .eventType(eventLogAssertService.getIdForEventType(EventType.DRC_ASYNC_RESPONSE))
+                .httpStatus(expectedStatusCode.value())
+                .recordType(RecordType.CONTRIBUTION.getName())
+                .processedDate(LocalDateTime.now())
+                .build();
+        verify(caseSubmissionRepository).save(caseSubmissionEntityArgumentCaptor.capture());
+        CaseSubmissionEntity actualCaseSubmission = caseSubmissionEntityArgumentCaptor.getValue();
+        eventLogAssertService.assertCaseSubmissionsEqual(actualCaseSubmission, expectedCaseSubmission);
     }
 
     /**
@@ -142,6 +203,8 @@ class ContributionIntegrationTest {
         softly.assertThat(contributionFile.getDateSent()).isBetween(startDate, endDate);
         concorContributions.forEach(concorContribution ->
                 softly.assertThat(contributionFile.getXmlContent()).contains("<maat_id>" + concorContribution.getRepId() + "</maat_id>"));
+
+        eventLogAssertService.assertConcorEventLogging(12, 3,4,3,5);
     }
 
     /**
@@ -205,6 +268,7 @@ class ContributionIntegrationTest {
             softly.assertThat(watched.getXmlFileName()).isNull();
             softly.assertThat(watched.getXmlFileResult()).isNull();
         }
+        eventLogAssertService.assertConcorEventLogging(1, 1,1,0,0);
     }
 
     /**
@@ -265,5 +329,14 @@ class ContributionIntegrationTest {
         }
         softly.assertThat(concorContributions.get(0).getStatus()).isEqualTo(ConcorContributionStatus.ACTIVE); // 5.
         softly.assertThat(concorContributions.get(1).getStatus()).isEqualTo(ConcorContributionStatus.ACTIVE);
+
+
+        Map<EventType, List<CaseSubmissionEntity>> savedEventsByType = eventLogAssertService.getEventTypeListMap(10);
+        softly.assertThat(savedEventsByType.size()).isEqualTo(3); // Fdc should save 4 types of EventTypes.
+        eventLogAssertService.assertEventNumberStatus(savedEventsByType.get(EventType.FETCHED_FROM_MAAT), 4, HttpStatus.OK, true);
+        eventLogAssertService.assertEventNumberStatus(savedEventsByType.get(EventType.SENT_TO_DRC), 1, HttpStatus.OK, false); // 1 sends successfully.
+        eventLogAssertService.assertEventNumberStatus(savedEventsByType.get(EventType.SENT_TO_DRC), 2, HttpStatus.INTERNAL_SERVER_ERROR, false); // 2 send fails
+        eventLogAssertService.assertEventNumberStatus(savedEventsByType.get(EventType.UPDATED_IN_MAAT), 2, HttpStatus.OK, false); // it should update successfully.
+        eventLogAssertService.assertEventNumberStatus(savedEventsByType.get(EventType.UPDATED_IN_MAAT), 1, HttpStatus.INTERNAL_SERVER_ERROR, false); // this is the single 500 which tracks there were failures.
     }
 }

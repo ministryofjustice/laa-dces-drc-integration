@@ -2,6 +2,7 @@ package uk.gov.justice.laa.crime.dces.integration.datasource;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionEntity;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
@@ -20,7 +21,7 @@ import java.util.Objects;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class CaseSubmissionService {
+public class EventService {
 
     private final CaseSubmissionRepository caseSubmissionRepository;
     private final EventTypeRepository eventTypeRepository;
@@ -33,7 +34,7 @@ public class CaseSubmissionService {
         return caseSubmissionRepository.save(entity);
     }
 
-    public boolean logFdcEvent(EventType eventType, BigInteger batchId, BigInteger traceId, Fdc fdcObject, Integer httpStatusCode, String payload){
+    public boolean logFdc(EventType eventType, BigInteger batchId, BigInteger traceId, Fdc fdcObject, HttpStatusCode httpStatusCode, String payload){
         // default fdcObject if null is passed. No ids is a valid scenario.
         fdcObject = Objects.requireNonNullElse(fdcObject, new Fdc());
 
@@ -44,7 +45,11 @@ public class CaseSubmissionService {
         return true;
     }
 
-    public boolean logContributionEvent(BigInteger concorContributionId, EventType eventType, BigInteger batchId, BigInteger traceId, CONTRIBUTIONS contributionsObject, Integer httpStatusCode, String payload){
+    public boolean logFdc(EventType eventType, BigInteger batchId, Fdc fdcObject, HttpStatusCode httpStatusCode, String payload){
+        return logFdc(eventType, batchId, null, fdcObject, httpStatusCode, payload);
+    }
+
+    public boolean logConcor(BigInteger concorContributionId, EventType eventType, BigInteger batchId, BigInteger traceId, CONTRIBUTIONS contributionsObject, HttpStatusCode httpStatusCode, String payload){
         // default fdcObject if null is passed. No ids is a valid scenario.
         contributionsObject = Objects.requireNonNullElse(contributionsObject, new CONTRIBUTIONS());
 
@@ -55,7 +60,12 @@ public class CaseSubmissionService {
         return true;
     }
 
-    private CaseSubmissionEntity createCaseSubmissionEntity(EventType eventType, BigInteger batchId, BigInteger traceId, BigInteger maatId, Integer httpStatus, String payload){
+    public boolean logConcor(BigInteger concorContributionId, EventType eventType, BigInteger batchId, CONTRIBUTIONS contributionsObject, HttpStatusCode httpStatusCode, String payload){
+        return logConcor(concorContributionId, eventType, batchId, null, contributionsObject, httpStatusCode, payload);
+    }
+
+    private CaseSubmissionEntity createCaseSubmissionEntity(EventType eventType, BigInteger batchId, BigInteger traceId, BigInteger maatId, HttpStatusCode httpStatusCode, String payload){
+        Integer httpStatus = (Objects.nonNull(httpStatusCode)) ? httpStatusCode.value() : null;
         var caseSubmissionEntity = CaseSubmissionEntity.builder()
                 .batchId(batchId)
                 .traceId(traceId)

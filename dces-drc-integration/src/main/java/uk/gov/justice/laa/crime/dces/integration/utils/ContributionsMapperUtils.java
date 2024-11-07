@@ -67,7 +67,7 @@ public class ContributionsMapperUtils extends MapperUtils{
 
     private ContributionFile.Header generateHeader (ObjectFactory of, List<CONTRIBUTIONS> contributionsList, String fileName){
         ContributionFile.Header header = of.createContributionFileHeader();
-        header.setDateGenerated(generateDate(LocalDate.now()));
+        header.setDateGenerated(DateConvertor.convertToXMLGregorianCalendar(LocalDate.now()));
         // TODO: Get generation method for the headers resolved.
         header.setFilename(fileName);
         header.setId(BigInteger.valueOf(123));

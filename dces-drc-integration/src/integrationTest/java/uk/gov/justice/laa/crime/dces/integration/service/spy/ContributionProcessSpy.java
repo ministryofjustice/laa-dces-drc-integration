@@ -18,7 +18,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mockingDetails;
 
@@ -62,7 +62,7 @@ public class ContributionProcessSpy {
                 @SuppressWarnings("unchecked") final var result = (List<ConcorContribEntry>) mockingDetails(contributionClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation);
                 activeIds(result.stream().map(ConcorContribEntry::getConcorContributionId).collect(Collectors.toSet()));
                 return result;
-            }).when(contributionClientSpy).getContributions("ACTIVE", 0, 10);
+            }).when(contributionClientSpy).getContributions(eq("ACTIVE"), eq(0), anyInt());
             return this;
         }
 
@@ -74,7 +74,7 @@ public class ContributionProcessSpy {
                 result = result.stream().filter(concurContribEntry -> idSet.contains(concurContribEntry.getConcorContributionId())).toList();
                 activeIds(result.stream().map(ConcorContribEntry::getConcorContributionId).collect(Collectors.toSet()));
                 return result;
-            }).when(contributionClientSpy).getContributions("ACTIVE", 0, 10);
+            }).when(contributionClientSpy).getContributions(eq("ACTIVE"), eq(0), anyInt());
             return this;
         }
 
