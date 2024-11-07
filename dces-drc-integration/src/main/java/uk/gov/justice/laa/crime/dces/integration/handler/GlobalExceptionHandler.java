@@ -5,7 +5,6 @@ import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSourceResolvable;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -75,9 +74,19 @@ public class GlobalExceptionHandler {
         if (ex instanceof ErrorResponse resp) { // includes ResponseStatusException and MaatApiClientException.
             pd = resp.getBody();
         } else if (ex instanceof RestClientResponseException resp) { // includes HttpServerErrorException.
-            pd = ProblemDetail.forStatusAndDetail(resp.getStatusCode(), resp.getMessage());
+            try {
+                // can throw IllegalStateException if not created by Spring internal error handlers:
+                pd = resp.getResponseBodyAs(ProblemDetail.class);
+            } catch (IllegalStateException ise) {
+                pd = ProblemDetail.forStatusAndDetail(resp.getStatusCode(), resp.getMessage());
+            }
         } else if (ex instanceof WebClientResponseException resp) {
-            pd = ProblemDetail.forStatusAndDetail(resp.getStatusCode(), resp.getMessage());
+            try {
+                // throws IllegalStateException if not created by ClientResponse.createException()/createError():
+                pd = resp.getResponseBodyAs(ProblemDetail.class);
+            } catch (IllegalStateException ise) {
+                pd = ProblemDetail.forStatusAndDetail(resp.getStatusCode(), resp.getMessage());
+            }
         }
         if (pd == null) {
             pd = ProblemDetail.forStatusAndDetail(INTERNAL_SERVER_ERROR, ex.getMessage());
