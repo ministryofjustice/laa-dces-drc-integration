@@ -5,17 +5,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.MeterRegistry;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.web.reactive.function.client.WebClient;
+import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestConfig;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.config.ServicesConfiguration;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcorContribEntry;
 
@@ -25,21 +24,18 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-@SpringBootTest
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class MaatApiWebClientFactoryTest {
+class MaatApiWebClientFactoryTest extends ApplicationTestConfig {
 
     MaatApiWebClientFactory maatApiWebClientFactory;
-    private static MockWebServer mockWebServer;
+    @Autowired
+    MeterRegistry meterRegistry;
 
     @Autowired
     private ObjectMapper mapper;
 
     @Autowired
     private WebClient.Builder webClientBuilder;
-
-    @Autowired
-    private MeterRegistry meterRegistry;
+    private MockWebServer mockWebServer;
 
     @Qualifier("servicesConfiguration")
     @Autowired
@@ -47,8 +43,7 @@ class MaatApiWebClientFactoryTest {
     @MockBean
     OAuth2AuthorizedClientManager authorizedClientManager;
 
-
-    @BeforeAll
+    @BeforeEach
     public void setup() throws IOException {
 
         mockWebServer = new MockWebServer();
@@ -58,7 +53,7 @@ class MaatApiWebClientFactoryTest {
         maatApiWebClientFactory = new MaatApiWebClientFactory(meterRegistry);
     }
 
-    @AfterAll
+    @AfterEach
     void shutDown() throws IOException {
         mockWebServer.shutdown();
     }

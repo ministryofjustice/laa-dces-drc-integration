@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestConfig;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionEntity;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.RecordType;
@@ -14,7 +13,6 @@ import java.math.BigInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@SpringBootTest
 @RequiredArgsConstructor
 class DatabaseServiceTest extends ApplicationTestConfig {
 

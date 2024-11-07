@@ -28,7 +28,7 @@ spring:
         jwt:
           issuer-uri: http://testurl
   datasource:
-    url: jdbc:postgresql://localhost:${DB_PORT}/db_name
+    url: jdbc:postgresql://localhost:${DB_PORT:5432}/db_name
     username: test
     password: test
     driver-class-name: org.postgresql.Driver
@@ -44,9 +44,18 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
-    url: jdbc:postgresql://localhost:${DB_PORT}/db_name
+    url: jdbc:postgresql://localhost:${DB_PORT:5432}/db_name
     user: test
     password: test
   # the following stops the ServiceSheduler from running in test profile
   profiles:
     active: test
+
+resilience4j:
+  retry:
+    configs:
+      default:
+        max-attempts: 3
+        wait-duration: 2s
+        retry-exceptions:
+          - org.springframework.web.reactive.function.client.WebClientRequestException

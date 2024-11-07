@@ -4,19 +4,18 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestConfig;
 import uk.gov.justice.laa.crime.dces.integration.config.DrcApiWebClientConfiguration;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.config.ServicesConfiguration;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionReqForDrc;
@@ -35,11 +34,9 @@ import static org.assertj.core.api.AssertionsForClassTypes.failBecauseExceptionW
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-@SpringBootTest
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class DrcApiClientTest {
-    private static MockWebServer mockWebServer;
-    DrcApiWebClientConfiguration drcApiWebClientConfiguration;
+class DrcApiClientTest extends ApplicationTestConfig {
+    public DrcApiWebClientConfiguration drcApiWebClientConfiguration;
+    private MockWebServer mockWebServer;
 
     @Autowired
     private WebClient.Builder webClientBuilder;
@@ -51,15 +48,15 @@ class DrcApiClientTest {
     @Autowired
     private ServicesConfiguration configuration;
 
-    @BeforeAll
+    @BeforeEach
     public void setup() throws IOException {
         mockWebServer = new MockWebServer();
-        mockWebServer.start();
+        mockWebServer.start(0);
         configuration.getDrcClientApi().setBaseUrl(String.format("http://localhost:%s", mockWebServer.getPort()));
         drcApiWebClientConfiguration = new DrcApiWebClientConfiguration();
     }
 
-    @AfterAll
+    @AfterEach
     void shutDown() throws IOException {
         mockWebServer.shutdown();
     }

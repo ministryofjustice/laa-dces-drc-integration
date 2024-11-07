@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestConfig;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.ContributionFile;
 
@@ -26,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 @SpringBootTest
 @ExtendWith(SoftAssertionsExtension.class)
-class ContributionsMapperUtilsTest {
+class ContributionsMapperUtilsTest extends ApplicationTestConfig {
 
 	public static final java.lang.String UPDATE = "update";
 	@InjectSoftAssertions

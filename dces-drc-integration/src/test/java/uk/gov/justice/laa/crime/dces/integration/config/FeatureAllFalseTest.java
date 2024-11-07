@@ -3,7 +3,6 @@ package uk.gov.justice.laa.crime.dces.integration.config;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.TestPropertySource;
 import uk.gov.justice.laa.crime.dces.integration.controller.StubAckFromDrcController;
@@ -12,7 +11,6 @@ import uk.gov.justice.laa.crime.dces.integration.controller.TempTestController;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@SpringBootTest
 @TestPropertySource(properties = """
         feature.stub-ack-endpoints=false
         feature.temp-test-endpoints=false
@@ -20,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
         feature.outgoing-isolated=false
         feature.outgoing-anonymized=false
         """)
-class FeatureAllFalseTest {
+class FeatureAllFalseTest extends ApplicationTestConfig {
     @Autowired
     private Feature feature;
     @Autowired

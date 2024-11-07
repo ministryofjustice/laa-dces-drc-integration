@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionReqForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcReqForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
@@ -15,7 +16,8 @@ import javax.xml.datatype.DatatypeFactory;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-class JacksonConfigurationTest {
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+class JacksonConfigurationTest extends ApplicationTestConfig {
     @Autowired
     private ObjectMapper objectMapper;
 

@@ -9,13 +9,12 @@ import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.web.client.HttpServerErrorException;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
+import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestConfig;
 import uk.gov.justice.laa.crime.dces.integration.config.Feature;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
@@ -42,10 +41,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(SoftAssertionsExtension.class)
-@SpringBootTest
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @WireMockTest(httpPort = 1111)
-class ContributionServiceTest {
+class ContributionServiceTest extends ApplicationTestConfig {
 	private static final String GET_URL = "/debt-collection-enforcement/concor-contribution-files?status=ACTIVE&startingId=0&numberOfRecords=5";
 	private static final String UPDATE_URL = "/debt-collection-enforcement/create-contribution-file";
 

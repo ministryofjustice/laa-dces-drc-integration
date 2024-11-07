@@ -16,7 +16,7 @@ import static org.mockito.Mockito.when;
 
 
 @SpringBootTest
-class DrcApiWebClientConfigurationTest {
+class DrcApiWebClientConfigurationTest extends ApplicationTestConfig {
 
     @Mock
     private ServicesConfiguration servicesConfiguration;

@@ -2,11 +2,12 @@ package uk.gov.justice.laa.crime.dces.integration.maatapi;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestConfig;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcorContribEntry;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @SpringBootTest
-class ConcorContribEntryTest {
+class ConcorContribEntryTest extends ApplicationTestConfig {
     private static final int DEFAULT_ID = 1;
     private static final String DEFAULT_XML = "XML";
 
