@@ -47,7 +47,7 @@ import static org.springframework.http.HttpStatus.*;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @WireMockTest(httpPort = 1111)
 class ContributionServiceTest {
-	private static final String GET_URL = "/debt-collection-enforcement/concor-contribution-files?status=ACTIVE&startingId=0&numberOfRecords=5";
+	private static final String GET_URL = "/debt-collection-enforcement/concor-contribution-files?status=ACTIVE&concorContributionId=0&numberOfRecords=5";
 	private static final String UPDATE_URL = "/debt-collection-enforcement/create-contribution-file";
 
 	private static final List<StubMapping> customStubs = new ArrayList<>();
