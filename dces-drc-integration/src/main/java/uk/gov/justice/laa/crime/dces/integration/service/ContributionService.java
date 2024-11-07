@@ -6,18 +6,17 @@ import io.micrometer.core.annotation.Timed;
 import jakarta.xml.bind.JAXBException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ProblemDetail;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ProblemDetail;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.config.Feature;
-import uk.gov.justice.laa.crime.dces.integration.enums.ContributionRecordStatus;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
+import uk.gov.justice.laa.crime.dces.integration.enums.ContributionRecordStatus;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcorContribEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionReqForDrc;
@@ -25,10 +24,6 @@ import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
-
-import static uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType.*;
-import static org.springframework.http.HttpStatus.OK;
-import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
 import java.math.BigInteger;
 import java.net.URI;
@@ -38,6 +33,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static org.springframework.http.HttpStatus.OK;
+import static uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType.DRC_ASYNC_RESPONSE;
+import static uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType.FETCHED_FROM_MAAT;
+import static uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType.SENT_TO_DRC;
+import static uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType.UPDATED_IN_MAAT;
 
 @RequiredArgsConstructor
 @Service
@@ -146,12 +149,12 @@ public class ContributionService implements FileService {
                 successfulContributions.put(concorContributionId.toString(), currentContribution);
                 eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, OK, null);
             } catch (WebClientResponseException e) {
-                if (e.getStatusCode().isSameCodeAs(HttpStatus.CONFLICT)) {
+                if (e.getStatusCode().isSameCodeAs(CONFLICT)) {
                     ProblemDetail problemDetail = e.getResponseBodyAs(ProblemDetail.class);
                     if (problemDetail != null && DUPLICATE_TYPE.equals(problemDetail.getType())) {
-                        log.info("Ignoring duplicate contribution data to DRC, concorContributionId = {}, maatId = {}", concorContributionId, currentContribution.getMaatId());
+                        log.info("Ignoring duplicate contribution error response from DRC, concorContributionId = {}, maatId = {}", concorContributionId, currentContribution.getMaatId());
                         successfulContributions.put(concorContributionId.toString(), currentContribution);
-                        eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, OK, null);
+                        eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, CONFLICT, null);
                         continue;
                     }
                 }

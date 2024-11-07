@@ -6,7 +6,6 @@ import io.github.resilience4j.retry.annotation.Retry;
 import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.stereotype.Service;
@@ -26,10 +25,6 @@ import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequ
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 
-import static uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType.*;
-import static org.springframework.http.HttpStatus.OK;
-import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
-
 import java.math.BigInteger;
 import java.net.URI;
 import java.time.LocalDateTime;
@@ -38,6 +33,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static org.springframework.http.HttpStatus.OK;
+import static uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType.DRC_ASYNC_RESPONSE;
+import static uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType.FDC_GLOBAL_UPDATE;
+import static uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType.FETCHED_FROM_MAAT;
+import static uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType.SENT_TO_DRC;
+import static uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType.UPDATED_IN_MAAT;
 
 @RequiredArgsConstructor
 @Service
@@ -121,14 +125,12 @@ public class FdcService implements FileService {
             } catch (MaatApiClientException e){
                 handleDrcSentError(e, e.getStatusCode(), currentFdc, failedFdcs);
             } catch (WebClientResponseException e){
-                if (e.getStatusCode().isSameCodeAs(HttpStatus.CONFLICT)) {
+                if (e.getStatusCode().isSameCodeAs(CONFLICT)) {
                     ProblemDetail problemDetail = e.getResponseBodyAs(ProblemDetail.class);
                     if (problemDetail != null && DUPLICATE_TYPE.equals(problemDetail.getType())) {
-                        // TODO: Do we need to log this if have a specific duplicate-id event:
-                        log.info("Ignoring duplicate FDC data to DRC, fdcId = {}, maatId = {}", fdcId, currentFdc.getMaatId());
+                        log.info("Ignoring duplicate FDC error response from DRC, fdcId = {}, maatId = {}", fdcId, currentFdc.getMaatId());
                         successfulFdcs.add(currentFdc);
-                        // TODO: Probably should record duplicate-id event:
-                        eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, OK, null);
+                        eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, CONFLICT, null);
                         continue;
                     }
                 }
