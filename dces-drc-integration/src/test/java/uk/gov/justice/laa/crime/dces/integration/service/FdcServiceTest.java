@@ -16,6 +16,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
@@ -30,19 +31,30 @@ import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.ok;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.serverError;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.unauthorized;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.AssertionsForClassTypes.catchThrowableOfType;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.intThat;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
 import static uk.gov.justice.laa.crime.dces.integration.utils.DateConvertor.convertToXMLGregorianCalendar;
 
 @ExtendWith(SoftAssertionsExtension.class)
@@ -345,8 +357,34 @@ class FdcServiceTest extends ApplicationTestConfig {
 		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
 		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
 		verify(drcClient, times(12)).sendFdcReqToDrc(any());
-		WireMock.verify(0, getRequestedFor(urlEqualTo(UPDATE_URL)));
+		WireMock.verify(0, postRequestedFor(urlEqualTo(UPDATE_URL)));
 		verify(fdcMapperUtils,times(0)).generateFileXML(any());
+	}
+
+	@Test
+	void testDrcUpdateWebClientConflictException() {
+		// setup
+		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
+		when(fdcMapperUtils.generateFileXML(any())).thenReturn("<xml>ValidXML</xml>");
+		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
+		when(fdcMapperUtils.generateAckXML(anyString(), any(), intThat(n -> n != 0), anyInt())).thenThrow(new IllegalStateException("failed != 0"));
+		when(fdcMapperUtils.generateAckXML(anyString(), any(), eq(0), anyInt())).thenReturn("<xml>ValidAckXML</xml>");
+		// Setting WebClientResponseException body & MIME type is not enough for `#getResponseAs(Class)` to work.
+		// There's also a non-blocking `bodyDecodeFunction` set by `ClientResponse.createException()`/`createError()`.
+		var problemDetail = ProblemDetail.forStatus(409);
+		problemDetail.setType(URI.create("https://laa-debt-collection.service.justice.gov.uk/problem-types#duplicate-id"));
+		var exception = new WebClientResponseException(409, "Conflict", null, null, null);
+		exception.setBodyDecodeFunction(clazz -> clazz.isAssignableFrom(ProblemDetail.class) ? problemDetail : null);
+		Mockito.doThrow(exception).when(drcClient).sendFdcReqToDrc(any());
+		// do
+		boolean successful = fdcService.processDailyFiles();
+		// test
+		softly.assertThat(successful).isTrue();
+		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
+		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
+		verify(drcClient, times(12)).sendFdcReqToDrc(any());
+		WireMock.verify(1, postRequestedFor(urlEqualTo(UPDATE_URL)));
+		verify(fdcMapperUtils,times(1)).generateFileXML(any());
 	}
 
 	@Test

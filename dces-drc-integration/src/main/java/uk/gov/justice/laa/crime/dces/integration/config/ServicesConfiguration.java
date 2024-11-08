@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.maatapi.config;
+package uk.gov.justice.laa.crime.dces.integration.config;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;

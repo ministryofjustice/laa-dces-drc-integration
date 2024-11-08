@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
 import org.springframework.stereotype.Component;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.config.ServicesConfiguration;
+import uk.gov.justice.laa.crime.dces.integration.config.ServicesConfiguration;
 import uk.gov.justice.laa.crime.dces.integration.utils.auth.OAuthTokenUtil;
 
 import static io.restassured.filter.log.LogDetail.ALL;

@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.crime.dces.integration.maatapi;
+package uk.gov.justice.laa.crime.dces.integration.config;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -50,7 +50,7 @@ class MaatApiWebClientFactoryTest extends ApplicationTestConfig {
         mockWebServer.start();
         configuration.getMaatApi().setBaseUrl(String.format("http://localhost:%s", mockWebServer.getPort()));
 
-        maatApiWebClientFactory = new MaatApiWebClientFactory(meterRegistry);
+        maatApiWebClientFactory = new MaatApiWebClientConfiguration(meterRegistry);
     }
 
     @AfterEach

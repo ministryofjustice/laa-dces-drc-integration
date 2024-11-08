@@ -11,11 +11,14 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.ProblemDetail;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestConfig;
 import uk.gov.justice.laa.crime.dces.integration.config.Feature;
@@ -28,6 +31,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.O
 import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
 
 import java.math.BigInteger;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,6 +43,10 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.AssertionsForClassTypes.catchThrowableOfType;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.intThat;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -219,6 +227,30 @@ class ContributionServiceTest extends ApplicationTestConfig {
 		verify(contributionsMapperUtils).generateFileXML(any(), any());
 		verify(drcClient, times(0)).sendConcorContributionReqToDrc(any()); // not called when feature.outgoing-isolated=true.
 		softly.assertThat(result).isTrue();
+	}
+
+	@Test
+	void testDrcUpdateWebClientConflictException() throws JAXBException {
+		// setup
+		ReflectionTestUtils.setField(contributionService, "getContributionBatchSize", 5);
+		when(contributionsMapperUtils.mapLineXMLToObject(anyString())).thenReturn(createTestContribution());
+		when(contributionsMapperUtils.generateFileXML(any(), anyString())).thenReturn("ValidXML");
+		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
+		when(contributionsMapperUtils.generateAckXML(anyString(), any(), intThat(n -> n != 0), anyInt())).thenThrow(new IllegalStateException("failed != 0"));
+		when(contributionsMapperUtils.generateAckXML(anyString(), any(), eq(0), anyInt())).thenReturn("ValidAckXML");
+		// Setting WebClientResponseException body & MIME type is not enough for `#getResponseAs(Class)` to work.
+		// There's also a non-blocking `bodyDecodeFunction` set by `ClientResponse.createException()`/`createError()`.
+		var problemDetail = ProblemDetail.forStatus(409);
+		problemDetail.setType(URI.create("https://laa-debt-collection.service.justice.gov.uk/problem-types#duplicate-id"));
+		var exception = new WebClientResponseException(409, "Conflict", null, null, null);
+		exception.setBodyDecodeFunction(clazz -> clazz.isAssignableFrom(ProblemDetail.class) ? problemDetail : null);
+		Mockito.doThrow(exception).when(drcClient).sendConcorContributionReqToDrc(any());
+		// do
+		boolean successful = contributionService.processDailyFiles();
+		// test (asking for batch size of 5 makes WireMock return 8 records)
+		softly.assertThat(successful).isTrue();
+		verify(contributionsMapperUtils, times(8)).mapLineXMLToObject(any());
+		verify(drcClient, times(8)).sendConcorContributionReqToDrc(any());
 	}
 
 	@Test
