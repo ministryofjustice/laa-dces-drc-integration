@@ -14,8 +14,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.web.reactive.function.client.WebClient;
-import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestConfig;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.config.ServicesConfiguration;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcorContribEntry;
 
 import java.io.IOException;
@@ -24,9 +22,9 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-class MaatApiWebClientFactoryTest extends ApplicationTestConfig {
+class MaatApiWebClientConfigurationTest extends ApplicationTestConfig {
 
-    MaatApiWebClientFactory maatApiWebClientFactory;
+    MaatApiWebClientConfiguration maatApiWebClientFactory;
     @Autowired
     MeterRegistry meterRegistry;
 

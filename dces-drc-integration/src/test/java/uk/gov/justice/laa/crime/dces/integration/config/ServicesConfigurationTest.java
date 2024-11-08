@@ -5,12 +5,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.core.env.Environment;
-import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestConfig;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.config.ServicesConfiguration;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @EnableConfigurationProperties(value = ServicesConfiguration.class)
-class MaatApiConfigurationTest extends ApplicationTestConfig {
+class ServicesConfigurationTest extends ApplicationTestConfig {
 
     @Autowired
     @Qualifier("servicesConfiguration")
