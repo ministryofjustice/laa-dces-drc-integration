@@ -1,11 +1,11 @@
-package uk.gov.justice.laa.crime.dces.integration.maatapi;
+package uk.gov.justice.laa.crime.dces.integration.config;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.web.reactive.function.client.WebClient;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.client.MaatApiClient;
+import uk.gov.justice.laa.crime.dces.integration.client.MaatApiClientBase;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @SpringBootTest
@@ -17,8 +17,8 @@ class MaatApiClientFactoryTest {
 
     @Test
     void givenAnyParameters_whenMaatApiClientIsInvoked_thenTheCorrectClientShouldBeReturned() {
-        MaatApiClient actualMaatApiClient = MaatApiClientFactory.maatApiClient(maatApiWebClient, MaatApiClient.class);
+        MaatApiClientBase actualMaatApiClient = MaatApiClientFactory.maatApiClient(maatApiWebClient, MaatApiClientBase.class);
         assertThat(actualMaatApiClient).isNotNull();
-        assertThat(actualMaatApiClient).isInstanceOf(MaatApiClient.class);
+        assertThat(actualMaatApiClient).isInstanceOf(MaatApiClientBase.class);
     }
 }

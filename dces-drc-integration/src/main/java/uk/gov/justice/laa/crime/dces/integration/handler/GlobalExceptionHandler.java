@@ -5,7 +5,6 @@ import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSourceResolvable;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -75,13 +74,31 @@ public class GlobalExceptionHandler {
         if (ex instanceof ErrorResponse resp) { // includes ResponseStatusException and MaatApiClientException.
             pd = resp.getBody();
         } else if (ex instanceof RestClientResponseException resp) { // includes HttpServerErrorException.
-            pd = ProblemDetail.forStatusAndDetail(resp.getStatusCode(), resp.getMessage());
+            try {
+                pd = resp.getResponseBodyAs(ProblemDetail.class);
+            } catch (Exception e) {
+                // getResponseBodyAs can throw IllegalStateException, RestClientException, etc. if not
+                // created by Spring internal error handlers or there is a problem with deserialization.
+                // If it does, then the ProblemDetail will be created in the `if (pd == null)` below.
+            }
+            if (pd == null) {
+                pd = ProblemDetail.forStatusAndDetail(resp.getStatusCode(), resp.getMessage());
+            }
         } else if (ex instanceof WebClientResponseException resp) {
-            pd = ProblemDetail.forStatusAndDetail(resp.getStatusCode(), resp.getMessage());
-        }
-        if (pd == null) {
+            try {
+                pd = resp.getResponseBodyAs(ProblemDetail.class);
+            } catch (Exception e) {
+                // getResponseBodyAs can throw IllegalStateException, etc. if not created by
+                // ClientResponse.createError()/createException() or there is a problem with deserialization.
+                // If it does, then the ProblemDetail will be created in the `if (pd == null)` below.
+            }
+            if (pd == null) {
+                pd = ProblemDetail.forStatusAndDetail(resp.getStatusCode(), resp.getMessage());
+            }
+        } else {
             pd = ProblemDetail.forStatusAndDetail(INTERNAL_SERVER_ERROR, ex.getMessage());
         }
+        //assert pd != null;
         return ResponseEntity.status(pd.getStatus()).body(addTraceId(pd));
     }
 
