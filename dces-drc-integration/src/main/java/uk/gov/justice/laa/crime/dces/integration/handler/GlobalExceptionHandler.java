@@ -75,22 +75,30 @@ public class GlobalExceptionHandler {
             pd = resp.getBody();
         } else if (ex instanceof RestClientResponseException resp) { // includes HttpServerErrorException.
             try {
-                // can throw IllegalStateException if not created by Spring internal error handlers:
                 pd = resp.getResponseBodyAs(ProblemDetail.class);
-            } catch (IllegalStateException ise) {
+            } catch (Exception e) {
+                // getResponseBodyAs can throw IllegalStateException, RestClientException, etc. if not
+                // created by Spring internal error handlers or there is a problem with deserialization.
+                // If it does, then the ProblemDetail will be created in the `if (pd == null)` below.
+            }
+            if (pd == null) {
                 pd = ProblemDetail.forStatusAndDetail(resp.getStatusCode(), resp.getMessage());
             }
         } else if (ex instanceof WebClientResponseException resp) {
             try {
-                // throws IllegalStateException if not created by ClientResponse.createException()/createError():
                 pd = resp.getResponseBodyAs(ProblemDetail.class);
-            } catch (IllegalStateException ise) {
+            } catch (Exception e) {
+                // getResponseBodyAs can throw IllegalStateException, etc. if not created by
+                // ClientResponse.createError()/createException() or there is a problem with deserialization.
+                // If it does, then the ProblemDetail will be created in the `if (pd == null)` below.
+            }
+            if (pd == null) {
                 pd = ProblemDetail.forStatusAndDetail(resp.getStatusCode(), resp.getMessage());
             }
-        }
-        if (pd == null) {
+        } else {
             pd = ProblemDetail.forStatusAndDetail(INTERNAL_SERVER_ERROR, ex.getMessage());
         }
+        //assert pd != null;
         return ResponseEntity.status(pd.getStatus()).body(addTraceId(pd));
     }
 

@@ -68,7 +68,7 @@ public class FdcService implements FileService {
                 result = fdcClient.sendLogFdcProcessed(updateLogFdcRequest);
             } else {
                 log.info("processFdcUpdate: Not calling MAAT API sendLogFdcProcessed() because `feature.incoming-isolated=true`");
-                return 0; // avoid updating MAAT DB.
+                result = 0; // avoid updating MAAT DB.
             }
             logFdcAsyncEvent(updateLogFdcRequest, OK);
             return result;
