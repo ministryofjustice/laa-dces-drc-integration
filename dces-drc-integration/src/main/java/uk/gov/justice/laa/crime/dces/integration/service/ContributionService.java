@@ -69,7 +69,7 @@ public class ContributionService implements FileService {
                 result = contributionClient.sendLogContributionProcessed(updateLogContributionRequest);
             } else {
                 log.info("processContributionUpdate: not calling MAAT API sendLogContributionProcessed() because `feature.incoming-isolated=true`");
-                return 0; // avoid updating MAAT DB.
+                result = 0; // avoid updating MAAT DB.
             }
             logContributionAsyncEvent(updateLogContributionRequest, OK);
             return result;
