@@ -3,10 +3,9 @@ package uk.gov.justice.laa.crime.dces.integration.utils;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.specification.RequestSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
 import org.springframework.stereotype.Component;
-import uk.gov.justice.laa.crime.dces.integration.config.ServicesConfiguration;
+import uk.gov.justice.laa.crime.dces.integration.config.ServicesProperties;
 import uk.gov.justice.laa.crime.dces.integration.utils.auth.OAuthTokenUtil;
 
 import static io.restassured.filter.log.LogDetail.ALL;
@@ -21,8 +20,8 @@ public class RequestSpecificationBuilder {
     private String MAAT_CD_AUTH_TOKEN_URI;
 
     @Autowired
-    private RequestSpecificationBuilder(@Qualifier("servicesConfiguration") ServicesConfiguration configuration, OAuth2ClientProperties oauthProperties) {
-        this.MAAT_CD_BASE_URL = configuration.getMaatApi().getBaseUrl();
+    private RequestSpecificationBuilder(ServicesProperties services, OAuth2ClientProperties oauthProperties) {
+        this.MAAT_CD_BASE_URL = services.getMaatApi().getBaseUrl();
         OAuth2ClientProperties.Provider maatProvider = oauthProperties.getProvider().get("maatapi");
         this.MAAT_CD_AUTH_TOKEN_URI = maatProvider.getTokenUri();
         OAuth2ClientProperties.Registration maatRegistration = oauthProperties.getRegistration().get("maatapi");

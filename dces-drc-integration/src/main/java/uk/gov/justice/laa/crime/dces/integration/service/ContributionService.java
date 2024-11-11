@@ -14,7 +14,7 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
-import uk.gov.justice.laa.crime.dces.integration.config.Feature;
+import uk.gov.justice.laa.crime.dces.integration.config.FeatureProperties;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.enums.ContributionRecordStatus;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
@@ -52,7 +52,7 @@ public class ContributionService implements FileService {
     private final ContributionClient contributionClient;
     private final DrcClient drcClient;
     private final ObjectMapper objectMapper;
-    private final Feature feature;
+    private final FeatureProperties feature;
     private final AnonymisingDataService anonymisingDataService;
     private final EventService eventService;
     private BigInteger batchId;

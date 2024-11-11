@@ -4,6 +4,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.netty.resolver.DefaultAddressResolverGroup;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -42,22 +43,29 @@ public class MaatApiWebClientConfiguration {
     private final MeterRegistry meterRegistry;
 
     @Bean
-    public ContributionClient contributionClient(WebClient maatApiWebClient) {
+    public ContributionClient contributionClient(@Qualifier("maatApiWebClient") WebClient maatApiWebClient) {
         return MaatApiClientFactory.maatApiClient(maatApiWebClient, ContributionClient.class);
     }
 
     @Bean
-    public FdcClient fdcClient(WebClient maatApiWebClient) {
+    public FdcClient fdcClient(@Qualifier("maatApiWebClient") WebClient maatApiWebClient) {
         return MaatApiClientFactory.maatApiClient(maatApiWebClient, FdcClient.class);
     }
 
-    @Bean
+    /**
+     * Constructs the managed Bean of class `WebClient` in the Spring context used to talk to the MAAT API.
+     *
+     * @param webClientBuilder `WebClient.Builder` instance injected by Sprint Boot.
+     * @param services Our services configuration properties (used to obtain the MAAT API base URL).
+     * @param authorizedClientManager OAuth configuration injected by Spring Boot.
+     * @return a configured `WebClient` instance.
+     */
+    @Bean("maatApiWebClient")
     public WebClient maatApiWebClient(
             WebClient.Builder webClientBuilder,
-            ServicesConfiguration servicesConfiguration,
+            ServicesProperties services,
             OAuth2AuthorizedClientManager authorizedClientManager
     ) {
-
         ConnectionProvider provider = ConnectionProvider.builder("custom")
                 .maxConnections(500)
                 .maxIdleTime(Duration.ofSeconds(20))
@@ -68,7 +76,7 @@ public class MaatApiWebClientConfiguration {
 
         // Clone Boot's auto-config WebClient.Builder, then add our customizations before build().
         WebClient.Builder builder = webClientBuilder.clone()
-            .baseUrl(servicesConfiguration.getMaatApi().getBaseUrl())
+            .baseUrl(services.getMaatApi().getBaseUrl())
             .filter(addLaaTransactionIdToRequest())
             .filter(logClientResponse())
             .filter(handleErrorResponse())
@@ -83,12 +91,12 @@ public class MaatApiWebClientConfiguration {
             .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
             .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
-        if (servicesConfiguration.getMaatApi().isOAuthEnabled()) {
+        if (services.getMaatApi().isOAuthEnabled()) {
             ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2Client =
                     new ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
 
             oauth2Client.setDefaultClientRegistrationId(
-                    servicesConfiguration.getMaatApi().getRegistrationId()
+                    services.getMaatApi().getRegistrationId()
             );
 
             builder.filter(oauth2Client);
@@ -96,7 +104,7 @@ public class MaatApiWebClientConfiguration {
 
         final ExchangeStrategies strategies = ExchangeStrategies.builder()
             .codecs(codecs -> codecs.defaultCodecs().maxInMemorySize(
-                convertMaxBufferSize(servicesConfiguration.getMaatApi().getMaxBufferSize())
+                convertMaxBufferSize(services.getMaatApi().getMaxBufferSize())
                 ))
             .build();
         builder.exchangeStrategies(strategies);
