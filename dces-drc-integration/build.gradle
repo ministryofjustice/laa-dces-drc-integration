@@ -118,6 +118,7 @@ dependencies {
 	testImplementation 'org.testcontainers:testcontainers:1.19.7'
 	testImplementation 'org.testcontainers:postgresql:1.19.3'
 	testImplementation 'org.testcontainers:localstack'
+	testImplementation 'org.testcontainers:circleci:1.17.3'
 }
 
 jacoco {
