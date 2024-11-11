@@ -22,7 +22,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
-import uk.gov.justice.laa.crime.dces.integration.config.Feature;
+import uk.gov.justice.laa.crime.dces.integration.config.FeatureProperties;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
@@ -83,7 +83,7 @@ class FdcServiceTest {
 	private DrcClient drcClient;
 
 	@MockBean
-	private Feature feature;
+	private FeatureProperties feature;
 
 	@MockBean
 	private EventService eventService;

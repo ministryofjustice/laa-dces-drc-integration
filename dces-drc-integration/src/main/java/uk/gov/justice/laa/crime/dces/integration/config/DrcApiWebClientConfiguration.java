@@ -3,6 +3,7 @@ package uk.gov.justice.laa.crime.dces.integration.config;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.resolver.DefaultAddressResolverGroup;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.ssl.NoSuchSslBundleException;
 import org.springframework.boot.ssl.SslBundle;
 import org.springframework.boot.ssl.SslBundles;
@@ -11,6 +12,9 @@ import org.springframework.boot.ssl.SslOptions;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
+import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.support.WebClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
@@ -28,7 +32,7 @@ public class DrcApiWebClientConfiguration {
     private static final String SSL_BUNDLE_NAME = "client-auth";
 
     @Bean
-    DrcClient drcClient(final WebClient drcApiWebClient) {
+    DrcClient drcClient(@Qualifier("drcApiWebClient") final WebClient drcApiWebClient) {
         final HttpServiceProxyFactory httpServiceProxyFactory =
                 HttpServiceProxyFactory.builderFor(WebClientAdapter.create(drcApiWebClient)).build();
         return httpServiceProxyFactory.createClient(DrcClient.class);
@@ -38,14 +42,18 @@ public class DrcApiWebClientConfiguration {
      * Constructs the managed Bean of class `WebClient` in the Spring context used to talk to the DRC API.
      *
      * @param webClientBuilder `WebClient.Builder` instance injected by Sprint Boot.
-     * @param servicesConfiguration Our services configuration (used to obtain the DRC API base URL).
+     * @param services Our services configuration properties (used to obtain the DRC API base URL).
      * @param sslBundles `SslBundles` instance injected by Spring Boot.
+     * @param clientRegistrationRepository `ClientRegistrationRepository` instance injected by Spring Boot.
+     * @param authorizedClientRepository `OAuth2AuthorizedClientRepository` instance injected by Spring Boot.
      * @return a configured `WebClient` instance.
      */
-    @Bean
+    @Bean("drcApiWebClient")
     public WebClient drcApiWebClient(final WebClient.Builder webClientBuilder,
-                                     final ServicesConfiguration servicesConfiguration,
-                                     final SslBundles sslBundles) {
+                                     final ServicesProperties services,
+                                     final SslBundles sslBundles,
+                                     final ClientRegistrationRepository clientRegistrationRepository,
+                                     final OAuth2AuthorizedClientRepository authorizedClientRepository) {
         final ConnectionProvider provider = ConnectionProvider.builder("custom")
                 .maxConnections(500)
                 .maxIdleTime(Duration.ofSeconds(20))
@@ -53,10 +61,23 @@ public class DrcApiWebClientConfiguration {
                 .pendingAcquireTimeout(Duration.ofSeconds(60))
                 .evictInBackground(Duration.ofSeconds(120))
                 .build();
-        return webClientBuilder.clone() // clone Boot's auto-config WebClient.Builder, then add our customizations before build().
-                .baseUrl(servicesConfiguration.getDrcClientApi().getBaseUrl())
-                .clientConnector(new ReactorClientHttpConnector(createHttpClient(provider, sslBundles)))
-                .build();
+        // Clone Boot's auto-config WebClient.Builder, then add our customizations before build().
+        WebClient.Builder builder = webClientBuilder.clone()
+                .baseUrl(services.getDrcClientApi().getBaseUrl())
+                .clientConnector(new ReactorClientHttpConnector(createHttpClient(provider, sslBundles)));
+
+        if (services.getDrcClientApi().isOAuthEnabled()) {
+            if (clientRegistrationRepository != null && authorizedClientRepository != null) {
+                final var oauth2 = new ServletOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrationRepository,
+                                                                                           authorizedClientRepository);
+                oauth2.setDefaultClientRegistrationId("drc-client-api");
+                builder.apply(oauth2.oauth2Configuration());
+            } else {
+                log.warn("OAuth2 not enabled because no client registration or authorized client repository provided.");
+            }
+        }
+
+        return builder.build();
     }
 
     /**
@@ -64,14 +85,14 @@ public class DrcApiWebClientConfiguration {
      * It exists to keep the unit tests compiling without adding another required parameter to them all.
      */
     public WebClient drcApiWebClient(final WebClient.Builder webClientBuilder,
-                                     final ServicesConfiguration servicesConfiguration) {
-        return drcApiWebClient(webClientBuilder, servicesConfiguration, null);
+                                     final ServicesProperties services) {
+        return drcApiWebClient(webClientBuilder, services, null, null, null);
     }
 
     /**
      * Helper method to generate the netty `HttpClient` for the `WebClient` instance used to talk to the DRC API.
      *
-     * @param provider Connection provider (specified the connection pooling for clients - if not for this we could have
+     * @param provider Connection provider specified the connection pooling for clients - if not for this we could have
      *                 used `webClientBuilder.apply(webClientSsl.fromBundle(clientAuthBundle))` instead of all this.
      * @param sslBundles Spring Boot's injected set of SSL bundles.
      * @return a configured `HttpClient` instance ready to use with `WebClient.Builder`.

@@ -10,7 +10,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
@@ -40,19 +39,18 @@ class MaatApiWebClientConfigurationTest {
     @Autowired
     private MeterRegistry meterRegistry;
 
-    @Qualifier("servicesConfiguration")
     @Autowired
-    private ServicesConfiguration configuration;
+    private ServicesProperties services;
+
     @MockBean
     OAuth2AuthorizedClientManager authorizedClientManager;
-
 
     @BeforeAll
     public void setup() throws IOException {
 
         mockWebServer = new MockWebServer();
         mockWebServer.start();
-        configuration.getMaatApi().setBaseUrl(String.format("http://localhost:%s", mockWebServer.getPort()));
+        services.getMaatApi().setBaseUrl(String.format("http://localhost:%s", mockWebServer.getPort()));
 
         maatApiWebClientFactory = new MaatApiWebClientConfiguration(meterRegistry);
     }
@@ -69,7 +67,7 @@ class MaatApiWebClientConfigurationTest {
         expectedResponse.setXmlContent("xmlContent");
         setupValidResponse(expectedResponse);
 
-        WebClient actualWebClient = maatApiWebClientFactory.maatApiWebClient(webClientBuilder, configuration, authorizedClientManager);
+        WebClient actualWebClient = maatApiWebClientFactory.maatApiWebClient(webClientBuilder, services, authorizedClientManager);
 
         assertThat(actualWebClient).isNotNull();
         assertThat(actualWebClient).isInstanceOf(WebClient.class);
@@ -91,7 +89,7 @@ class MaatApiWebClientConfigurationTest {
     private ConcorContribEntry mockWebClientRequest(WebClient webClient) {
         return webClient
                 .get()
-                .uri(configuration.getMaatApi().getBaseUrl())
+                .uri(services.getMaatApi().getBaseUrl())
                 .retrieve()
                 .bodyToMono(ConcorContribEntry.class)
                 .block();

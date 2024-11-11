@@ -18,9 +18,9 @@ import static org.assertj.core.api.Assertions.assertThat;
         feature.outgoing-isolated=true
         feature.outgoing-anonymized=true
         """)
-class FeatureAllTrueTest {
+class FeaturePropertiesAllTrueTest {
     @Autowired
-    private Feature feature;
+    private FeatureProperties feature;
     @Autowired
     private ApplicationContext context;
 

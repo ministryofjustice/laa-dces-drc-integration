@@ -71,6 +71,8 @@ spring:
         provider:
           maatapi:
             token-uri: ${MAAT_API_OAUTH_URL}
+          drc-client-api:
+            token-uri: ${DRC_API_OAUTH_URL}
         registration:
           maatapi:
             client-id: ${MAAT_API_OAUTH_CLIENT_ID}
@@ -78,6 +80,12 @@ spring:
             authorization-grant-type: client_credentials
             scope:
               - ${MAAT_API_OAUTH_SCOPE}
+          drc-client-api:
+            client-id: ${DRC_API_OAUTH_CLIENT_ID}
+            client-secret: ${DRC_API_OAUTH_CLIENT_SECRET}
+            authorization-grant-type: client_credentials
+            scope:
+              - ${DRC_API_OAUTH_SCOPE}
       resource-server:
         jwt:
           issuer-uri: ${LAA_DCES_DRC_INTEGRATION_RESOURCE_SERVER_ISSUER_URI}
