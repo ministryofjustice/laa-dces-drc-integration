@@ -20,7 +20,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
-import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestConfig;
+import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestBase;
 import uk.gov.justice.laa.crime.dces.integration.config.FeatureProperties;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
@@ -57,10 +57,8 @@ import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.OK;
 
 @ExtendWith(SoftAssertionsExtension.class)
-//@SpringBootTest
-//@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @WireMockTest(httpPort = 1111)
-class ContributionServiceTest extends ApplicationTestConfig {
+class ContributionServiceTest extends ApplicationTestBase {
     private static final String GET_URL = "/debt-collection-enforcement/concor-contribution-files?status=ACTIVE&concorContributionId=0&numberOfRecords=5";
 	private static final String UPDATE_URL = "/debt-collection-enforcement/create-contribution-file";
 

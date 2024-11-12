@@ -20,7 +20,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
-import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestConfig;
+import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestBase;
 import uk.gov.justice.laa.crime.dces.integration.config.FeatureProperties;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
@@ -59,7 +59,7 @@ import static uk.gov.justice.laa.crime.dces.integration.utils.DateConvertor.conv
 
 @ExtendWith(SoftAssertionsExtension.class)
 @WireMockTest(httpPort = 1111)
-class FdcServiceTest extends ApplicationTestConfig {
+class FdcServiceTest extends ApplicationTestBase {
 	private static final String GET_URL = "/debt-collection-enforcement/fdc-contribution-files?status=REQUESTED";
 	private static final String PREPARE_URL = "/debt-collection-enforcement/prepare-fdc-contributions-files";
 	private static final String UPDATE_URL = "/debt-collection-enforcement/create-fdc-file";

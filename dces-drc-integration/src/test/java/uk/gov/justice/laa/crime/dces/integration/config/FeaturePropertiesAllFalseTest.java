@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
         feature.outgoing-isolated=false
         feature.outgoing-anonymized=false
         """)
-class FeaturePropertiesAllFalseTest extends ApplicationTestConfig {
+class FeaturePropertiesAllFalseTest extends ApplicationTestBase {
     @Autowired
     private FeatureProperties feature;
     @Autowired

@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.crime.dces.integration.config;
 
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -8,7 +9,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Testcontainers
 @SpringBootTest
-public abstract class ApplicationTestConfig {
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public class ApplicationTestBase {
 
 
     @Container

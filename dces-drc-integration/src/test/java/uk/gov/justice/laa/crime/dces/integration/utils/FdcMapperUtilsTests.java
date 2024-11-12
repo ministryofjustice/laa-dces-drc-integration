@@ -7,7 +7,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestConfig;
+import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestBase;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.ObjectFactory;
@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @ExtendWith(SoftAssertionsExtension.class)
-class FdcMapperUtilsTests extends ApplicationTestConfig {
+class FdcMapperUtilsTests extends ApplicationTestBase {
 
 	private static final BigInteger DEFAULT_ID = BigInteger.valueOf(111111);
 	private static final BigInteger DEFAULT_MAAT_ID = BigInteger.valueOf(222222);

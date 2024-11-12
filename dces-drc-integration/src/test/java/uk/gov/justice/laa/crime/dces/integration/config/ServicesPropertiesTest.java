@@ -8,7 +8,7 @@ import org.springframework.core.env.Environment;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @EnableConfigurationProperties(value = ServicesProperties.class)
-class ServicesPropertiesTest extends ApplicationTestConfig {
+class ServicesPropertiesTest extends ApplicationTestBase {
     @Autowired
     private ServicesProperties services;
 

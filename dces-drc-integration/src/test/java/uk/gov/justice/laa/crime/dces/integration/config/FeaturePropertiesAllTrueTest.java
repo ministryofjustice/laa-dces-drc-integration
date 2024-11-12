@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
         feature.outgoing-anonymized=true
         """)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-class FeaturePropertiesAllTrueTest extends ApplicationTestConfig {
+class FeaturePropertiesAllTrueTest extends ApplicationTestBase {
     @Autowired
     private FeatureProperties feature;
     @Autowired

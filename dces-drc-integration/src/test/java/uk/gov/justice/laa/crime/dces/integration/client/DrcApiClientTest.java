@@ -8,15 +8,13 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestConfig;
+import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestBase;
 import uk.gov.justice.laa.crime.dces.integration.config.DrcApiWebClientConfiguration;
 import uk.gov.justice.laa.crime.dces.integration.config.ServicesProperties;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionReqForDrc;
@@ -35,7 +33,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.failBecauseExceptionW
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-class DrcApiClientTest extends ApplicationTestConfig {
+class DrcApiClientTest extends ApplicationTestBase {
     public DrcApiWebClientConfiguration drcApiWebClientConfiguration;
     private MockWebServer mockWebServer;
 

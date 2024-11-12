@@ -7,7 +7,7 @@ import uk.gov.justice.laa.crime.dces.integration.client.MaatApiClientBase;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-class MaatApiClientFactoryTest extends ApplicationTestConfig {
+class MaatApiClientFactoryTest extends ApplicationTestBase {
 
     @MockBean(name = "maatApiWebClient")
     WebClient maatApiWebClient;

@@ -6,7 +6,7 @@ import org.springframework.boot.test.autoconfigure.actuate.observability.AutoCon
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestConfig;
+import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestBase;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -15,7 +15,7 @@ import static uk.gov.justice.laa.crime.dces.integration.utils.RestTestUtils.getH
 
 @AutoConfigureMockMvc
 @AutoConfigureObservability
-class DcesDrcErrorControllerTest extends ApplicationTestConfig {
+class DcesDrcErrorControllerTest extends ApplicationTestBase {
 
     @Autowired
     private MockMvc mockMvc;

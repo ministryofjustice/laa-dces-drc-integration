@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-class JacksonConfigurationTest extends ApplicationTestConfig {
+class JacksonConfigurationTest extends ApplicationTestBase {
     @Autowired
     private ObjectMapper objectMapper;
 
