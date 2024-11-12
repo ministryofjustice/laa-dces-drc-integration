@@ -3,14 +3,12 @@ package uk.gov.justice.laa.crime.dces.integration.config;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.env.Environment;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-@SpringBootTest
 @EnableConfigurationProperties(value = ServicesProperties.class)
-class ServicesPropertiesTest {
+class ServicesPropertiesTest extends ApplicationTestBase {
     @Autowired
     private ServicesProperties services;
 

@@ -112,6 +112,12 @@ dependencies {
 	testImplementation "com.squareup.okhttp3:mockwebserver"
 	testImplementation "net.javacrumbs.shedlock:shedlock-provider-inmemory:$versions.shedlockVersion"
 	testImplementation "net.serenity-bdd:serenity-rest-assured:$versions.serenityVersion"
+
+	testImplementation 'org.testcontainers:junit-jupiter'
+	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+	testImplementation 'org.testcontainers:testcontainers:1.19.7'
+	testImplementation 'org.testcontainers:postgresql:1.19.3'
+	testImplementation 'org.testcontainers:localstack'
 }
 
 jacoco {
