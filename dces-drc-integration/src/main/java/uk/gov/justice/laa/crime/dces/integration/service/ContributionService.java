@@ -76,12 +76,6 @@ public class ContributionService implements FileService {
         } catch (WebClientResponseException e){
             logContributionAsyncEvent(updateLogContributionRequest, e.getStatusCode());
             throw e;
-        } catch (HttpServerErrorException e ){
-            logContributionAsyncEvent(updateLogContributionRequest, e.getStatusCode());
-            throw e;
-        } catch (MaatApiClientException  e) {
-            logContributionAsyncEvent(updateLogContributionRequest, e.getStatusCode());
-            throw e;
         }
     }
 

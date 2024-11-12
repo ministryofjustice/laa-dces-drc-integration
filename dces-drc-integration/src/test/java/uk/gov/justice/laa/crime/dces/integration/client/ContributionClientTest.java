@@ -2,6 +2,7 @@ package uk.gov.justice.laa.crime.dces.integration.client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.MeterRegistry;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterAll;
@@ -14,37 +15,41 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import uk.gov.justice.laa.crime.dces.integration.config.DrcApiWebClientConfiguration;
+import uk.gov.justice.laa.crime.dces.integration.config.MaatApiWebClientConfiguration;
 import uk.gov.justice.laa.crime.dces.integration.config.ServicesProperties;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionReqForDrc;
-import uk.gov.justice.laa.crime.dces.integration.model.FdcReqForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
-import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.failBecauseExceptionWasNotThrown;
+import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class DrcApiClientTest {
+class ContributionClientTest {
     private static MockWebServer mockWebServer;
-    DrcApiWebClientConfiguration drcApiWebClientConfiguration;
+    MaatApiWebClientConfiguration maatApiWebClientConfiguration;
 
     @Autowired
     private WebClient.Builder webClientBuilder;
 
     @Autowired
+    private MeterRegistry meterRegistry;
+
+    @Autowired
     private ObjectMapper mapper;
+
+    @Autowired
+    private OAuth2AuthorizedClientManager oAuth2AuthorizedClientManager;
 
     @Autowired
     private ServicesProperties services;
@@ -53,8 +58,8 @@ class DrcApiClientTest {
     public void setup() throws IOException {
         mockWebServer = new MockWebServer();
         mockWebServer.start();
-        services.getDrcClientApi().setBaseUrl(String.format("http://localhost:%s", mockWebServer.getPort()));
-        drcApiWebClientConfiguration = new DrcApiWebClientConfiguration();
+        services.getMaatApi().setBaseUrl(String.format("http://localhost:%s", mockWebServer.getPort()));
+        maatApiWebClientConfiguration = new MaatApiWebClientConfiguration(meterRegistry);
     }
 
     @AfterAll
@@ -65,7 +70,7 @@ class DrcApiClientTest {
     @Test
     void test_whenWebClientIsRequested_thenDrcWebClientIsReturned() {
 
-        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(webClientBuilder, services);
+        WebClient actualWebClient = maatApiWebClientConfiguration.maatApiWebClient(webClientBuilder, services, oAuth2AuthorizedClientManager);
 
         assertThat(actualWebClient).isNotNull();
         assertThat(actualWebClient).isInstanceOf(WebClient.class);
@@ -76,81 +81,50 @@ class DrcApiClientTest {
 
         ConcorContributionReqForDrc concorContributionReqForDrc = ConcorContributionReqForDrc.of(99, fakeCONTRIBUTIONS());
         setupSuccessfulResponse();
-        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(webClientBuilder, services);
+        WebClient actualWebClient = maatApiWebClientConfiguration.maatApiWebClient(webClientBuilder, services, oAuth2AuthorizedClientManager);
 
-        ResponseEntity<Void> response = callDrcClient(actualWebClient, concorContributionReqForDrc);
+        ResponseEntity<Void> response = callMaatClient(actualWebClient, concorContributionReqForDrc);
         String body = mockWebServer.takeRequest().getBody().readUtf8();
         assertThat(body).matches("\\{\"data\":\\{\"concorContributionId\":99,\"concorContributionObj\":\\{.+}},\"meta\":\\{}}");
         assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
     }
 
     @Test
-    void test_whenWebClientIsInvokedWithMissingMaatId_thenErrorResponse() throws JsonProcessingException, InterruptedException {
+    void test_whenWebClientThrowsBadRequest_thenErrorResponse() throws JsonProcessingException, InterruptedException {
+        setupErrorCodeTest(HttpStatus.BAD_REQUEST);
+    }
 
+    @Test
+    void test_whenWebClientThrowsInternalError_thenErrorResponseIsCorrect() throws JsonProcessingException, InterruptedException {
+        setupErrorCodeTest(HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    @Test
+    void test_whenWebClientThrowsConflict_thenErrorResponseIsCorrect() throws JsonProcessingException, InterruptedException {
+        setupErrorCodeTest(HttpStatus.CONFLICT);
+    }
+    @Test
+    void test_whenWebClientThrowsNotFound_thenErrorResponseIsCorrect() throws JsonProcessingException, InterruptedException {
+        setupErrorCodeTest(HttpStatus.NOT_FOUND);
+    }
+
+    private void setupErrorCodeTest(HttpStatus expectedStatus) throws JsonProcessingException, InterruptedException {
         ConcorContributionReqForDrc concorContributionReqForDrc = ConcorContributionReqForDrc.of(0, new CONTRIBUTIONS());
-        setupProblemDetailResponse(fakeProblemDetail());
-        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(webClientBuilder, services);
+        setupProblemDetailResponse(fakeProblemDetail(expectedStatus));
+        WebClient actualWebClient = maatApiWebClientConfiguration.maatApiWebClient(webClientBuilder, services, oAuth2AuthorizedClientManager);
         try {
-            callDrcClient(actualWebClient, concorContributionReqForDrc);
+            callMaatClient(actualWebClient, concorContributionReqForDrc);
             failBecauseExceptionWasNotThrown(WebClientResponseException.class);
         } catch (WebClientResponseException e) {
             String body = mockWebServer.takeRequest().getBody().readUtf8();
             assertThat(body).matches("\\{\"data\":\\{\"concorContributionId\":0,\"concorContributionObj\":\\{.*}},\"meta\":\\{}}");
-            assertThat(e.getStatusCode().is4xxClientError() || e.getStatusCode().is5xxServerError()).isTrue();
+            assertThat(e.getStatusCode()).isEqualTo(expectedStatus);
         }
     }
 
-    @Test
-    void test_whenFdcWebClientIsInvoked_thenSuccessfulResponse() throws InterruptedException, DatatypeConfigurationException {
-
-        FdcReqForDrc request = FdcReqForDrc.of(99, fakeFdc());
-        setupSuccessfulResponse();
-        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(webClientBuilder, services);
-
-        ResponseEntity<Void> response = callDrcClient(actualWebClient, request);
-        String body = mockWebServer.takeRequest().getBody().readUtf8();
-        assertThat(body).matches("\\{\"data\":\\{\"fdcId\":99,\"fdcObj\":\\{.+}},\"meta\":\\{}}");
-        assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
-    }
-
-    @Test
-    void test_whenFdcWebClientIsInvokedWithMissingMaatId_thenErrorResponse() throws JsonProcessingException, InterruptedException {
-
-        FdcReqForDrc request = FdcReqForDrc.of(0, new FdcFile.FdcList.Fdc());
-        setupProblemDetailResponse(fakeProblemDetail());
-        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(webClientBuilder, services);
-
-        try {
-            callDrcClient(actualWebClient, request);
-            failBecauseExceptionWasNotThrown(WebClientResponseException.class);
-        } catch (WebClientResponseException e) {
-            String body = mockWebServer.takeRequest().getBody().readUtf8();
-            assertThat(body).matches("\\{\"data\":\\{\"fdcId\":0,\"fdcObj\":\\{.*}},\"meta\":\\{}}");
-            assertThat(e.getStatusCode().is4xxClientError() || e.getStatusCode().is5xxServerError()).isTrue();
-        }
-    }
-
-
-    @Test
-    void test_whenWebClientIsInvokedWithServerError_thenCorrectErrorThrown() throws JsonProcessingException, InterruptedException {
-
-        ConcorContributionReqForDrc concorContributionReqForDrc = ConcorContributionReqForDrc.of(0, new CONTRIBUTIONS());
-        setupProblemDetailResponse(fakeProblemDetailError());
-        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(webClientBuilder, services);
-        try {
-            callDrcClient(actualWebClient, concorContributionReqForDrc);
-            failBecauseExceptionWasNotThrown(WebClientResponseException.class);
-        } catch (WebClientResponseException e) {
-            String body = mockWebServer.takeRequest().getBody().readUtf8();
-            assertThat(body).matches("\\{\"data\":\\{\"concorContributionId\":0,\"concorContributionObj\":\\{.*}},\"meta\":\\{}}");
-            assertThat(e.getStatusCode().is4xxClientError() || e.getStatusCode().is5xxServerError()).isTrue();
-        }
-    }
-
-    private <T> ResponseEntity<Void> callDrcClient(WebClient actualWebClient, T request) {
+    private <T> ResponseEntity<Void> callMaatClient(WebClient actualWebClient, T request) {
         return actualWebClient
                 .post()
-                .uri(services.getDrcClientApi().getBaseUrl())
+                .uri(services.getMaatApi().getBaseUrl())
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .retrieve()
@@ -180,26 +154,8 @@ class DrcApiClientTest {
         return contribution;
     }
 
-    private FdcFile.FdcList.Fdc fakeFdc() throws DatatypeConfigurationException {
-        var factory = new uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.ObjectFactory();
-        var fdc = factory.createFdcFileFdcListFdc();
-        fdc.setId(BigInteger.valueOf(12));
-        fdc.setMaatId(BigInteger.valueOf(16));
-        fdc.setAgfsTotal(BigDecimal.valueOf(1000.00));
-        fdc.setLgfsTotal(BigDecimal.valueOf(2000.00));
-        fdc.setFinalCost(BigDecimal.valueOf(3000.00));
-        var cal = DatatypeFactory.newInstance().newXMLGregorianCalendar("2024-09-25");
-        fdc.setSentenceDate(cal);
-        fdc.setCalculationDate(cal);
-        return fdc;
-    }
-
-    private ProblemDetail fakeProblemDetail() {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Invalid request");
-    }
-
-    private ProblemDetail fakeProblemDetailError() {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, HttpStatus.UNAUTHORIZED.getReasonPhrase());
+    private ProblemDetail fakeProblemDetail(HttpStatus httpStatusCode) {
+        return ProblemDetail.forStatusAndDetail(httpStatusCode, httpStatusCode.getReasonPhrase());
     }
 
     private void setupSuccessfulResponse() {

@@ -19,13 +19,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
-import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.config.FeatureProperties;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
@@ -221,8 +219,7 @@ class FdcServiceTest {
 		verify(eventService).logFdc(EventType.FETCHED_FROM_MAAT, testBatchId, actualFdc2, HttpStatus.OK, null);
 		verify(eventService).logFdc(EventType.FETCHED_FROM_MAAT, testBatchId, null, HttpStatus.OK, "Fetched 12 fdc entries");
 
-
-		verify(eventService).logFdc(EventType.FDC_GLOBAL_UPDATE, testBatchId, null, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to complete FDC global update [500 Received error 500 INTERNAL_SERVER_ERROR due to Internal Server Error]");
+		verify(eventService).logFdc(EventType.FDC_GLOBAL_UPDATE, testBatchId, null, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to complete FDC global update [500 Internal Server Error from POST http://localhost:1111/debt-collection-enforcement/prepare-fdc-contributions-files]");
 
 		verify(eventService).logFdc(EventType.SENT_TO_DRC, testBatchId, actualFdc1, HttpStatus.OK, null);
 		verify(eventService).logFdc(EventType.SENT_TO_DRC, testBatchId, actualFdc2, HttpStatus.OK, null);
@@ -291,7 +288,7 @@ class FdcServiceTest {
 				.willReturn(serverError())));
 		// do
 		softly.assertThatThrownBy(() -> fdcService.processDailyFiles())
-				.isInstanceOf(HttpServerErrorException.class);
+				.isInstanceOf(WebClientResponseException.class);
 		// test
 		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
 		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
@@ -322,7 +319,7 @@ class FdcServiceTest {
 	void testDrcUpdateUnauthorised() {
 		// setup
 		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
-		Mockito.doThrow(new MaatApiClientException(HttpStatus.UNAUTHORIZED, "Test Unauthorised")).when(drcClient).sendFdcReqToDrc(any());
+		Mockito.doThrow(new WebClientResponseException(401, "Test Unauthorised", null, null, null)).when(drcClient).sendFdcReqToDrc(any());
 		// do
 		boolean successful = fdcService.processDailyFiles();
 		// test
@@ -337,7 +334,7 @@ class FdcServiceTest {
 	void testDrcUpdateInternalServerError() {
 		// setup
 		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
-		Mockito.doThrow(new HttpServerErrorException(HttpStatus.UNAUTHORIZED, "Test Unauthorised")).when(drcClient).sendFdcReqToDrc(any());
+		Mockito.doThrow(new WebClientResponseException(500, "Test Unauthorised", null, null, null)).when(drcClient).sendFdcReqToDrc(any());
 		// do
 		boolean successful = fdcService.processDailyFiles();
 		// test
@@ -404,7 +401,7 @@ class FdcServiceTest {
 
 		// do
 		softly.assertThatThrownBy(() -> fdcService.processDailyFiles())
-				.isInstanceOf(HttpServerErrorException.class);
+				.isInstanceOf(WebClientResponseException.class);
 		// test
 		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
 		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
@@ -437,7 +434,7 @@ class FdcServiceTest {
 				.fdcId(9)
 				.errorText(errorText)
 				.build();
-		var exception = catchThrowableOfType(() -> fdcService.processFdcUpdate(dataRequest), MaatApiClientException.class);
+		var exception = catchThrowableOfType(() -> fdcService.processFdcUpdate(dataRequest), WebClientResponseException.class);
 		softly.assertThat(exception).isNotNull();
 		softly.assertThat(exception.getStatusCode().is4xxClientError()).isTrue();
 	}
@@ -449,7 +446,7 @@ class FdcServiceTest {
 				.fdcId(500)
 				.errorText(errorText)
 				.build();
-		var exception = catchThrowableOfType(() -> fdcService.processFdcUpdate(dataRequest), HttpServerErrorException.class);
+		var exception = catchThrowableOfType(() -> fdcService.processFdcUpdate(dataRequest), WebClientResponseException.class);
 		softly.assertThat(exception).isNotNull();
 		softly.assertThat(exception.getStatusCode().is5xxServerError()).isTrue();
 	}
