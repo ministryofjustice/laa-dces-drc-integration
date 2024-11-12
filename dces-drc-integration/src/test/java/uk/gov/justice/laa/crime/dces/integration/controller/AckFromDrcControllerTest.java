@@ -10,7 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
@@ -75,7 +75,7 @@ class AckFromDrcControllerTest {
                 .concorId(9)
                 .errorText("Failed to process")
                 .build();
-        var serviceResponse = new MaatApiClientException(HttpStatus.BAD_REQUEST, "BAD_REQUEST");
+        var serviceResponse = new WebClientResponseException(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), null, null, null);
         when(contributionService.processContributionUpdate(updateLogContributionRequest)).thenThrow(serviceResponse);
 
         ConcorContributionAckFromDrc concorContributionAckFromDrc = ConcorContributionAckFromDrc.of(9, "Failed to process");
@@ -115,7 +115,7 @@ class AckFromDrcControllerTest {
                 .fdcId(9)
                 .errorText("Failed to process")
                 .build();
-        var serviceResponse = new MaatApiClientException(HttpStatus.BAD_REQUEST, "BAD_REQUEST");
+        var serviceResponse = new WebClientResponseException(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), null,null,null);
         when(fdcService.processFdcUpdate(updateLogFdcRequest)).thenThrow(serviceResponse);
 
         FdcAckFromDrc fdcAckFromDrc = FdcAckFromDrc.of(9, "Failed to process");

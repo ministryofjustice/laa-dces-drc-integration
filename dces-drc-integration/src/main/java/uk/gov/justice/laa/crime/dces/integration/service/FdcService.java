@@ -107,7 +107,6 @@ public class FdcService implements FileService {
 
     // Component Methods
 
-
     private int fdcGlobalUpdate() {
         FdcGlobalUpdateResponse globalUpdateResponse;
         try {
@@ -241,7 +240,7 @@ public class FdcService implements FileService {
     }
 
     @Retry(name = SERVICE_NAME)
-    private Integer executeFdcUpdateRequestCall(String xmlContent, List<String> fdcIdList, int numberOfRecords, String fileName, String fileAckXML) throws HttpServerErrorException {
+    private Integer executeFdcUpdateRequestCall(String xmlContent, List<String> fdcIdList, int numberOfRecords, String fileName, String fileAckXML) {
         FdcUpdateRequest request = FdcUpdateRequest.builder()
                 .recordsSent(numberOfRecords)
                 .xmlContent(xmlContent)
