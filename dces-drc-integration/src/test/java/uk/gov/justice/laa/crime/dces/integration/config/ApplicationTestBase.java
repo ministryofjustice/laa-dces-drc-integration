@@ -9,9 +9,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Testcontainers
 @SpringBootTest
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class ApplicationTestBase {
-
 
     @Container
     @ServiceConnection
