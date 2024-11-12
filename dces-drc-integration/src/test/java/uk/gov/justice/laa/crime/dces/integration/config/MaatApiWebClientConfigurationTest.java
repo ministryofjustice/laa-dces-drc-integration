@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
@@ -35,9 +36,9 @@ class MaatApiWebClientConfigurationTest extends ApplicationTestConfig {
     private WebClient.Builder webClientBuilder;
     private MockWebServer mockWebServer;
 
-    @Qualifier("servicesConfiguration")
     @Autowired
-    private ServicesConfiguration configuration;
+    private ServicesProperties services;
+
     @MockBean
     OAuth2AuthorizedClientManager authorizedClientManager;
 
@@ -46,7 +47,7 @@ class MaatApiWebClientConfigurationTest extends ApplicationTestConfig {
 
         mockWebServer = new MockWebServer();
         mockWebServer.start();
-        configuration.getMaatApi().setBaseUrl(String.format("http://localhost:%s", mockWebServer.getPort()));
+        services.getMaatApi().setBaseUrl(String.format("http://localhost:%s", mockWebServer.getPort()));
 
         maatApiWebClientFactory = new MaatApiWebClientConfiguration(meterRegistry);
     }
@@ -63,7 +64,7 @@ class MaatApiWebClientConfigurationTest extends ApplicationTestConfig {
         expectedResponse.setXmlContent("xmlContent");
         setupValidResponse(expectedResponse);
 
-        WebClient actualWebClient = maatApiWebClientFactory.maatApiWebClient(webClientBuilder, configuration, authorizedClientManager);
+        WebClient actualWebClient = maatApiWebClientFactory.maatApiWebClient(webClientBuilder, services, authorizedClientManager);
 
         assertThat(actualWebClient).isNotNull();
         assertThat(actualWebClient).isInstanceOf(WebClient.class);
@@ -85,7 +86,7 @@ class MaatApiWebClientConfigurationTest extends ApplicationTestConfig {
     private ConcorContribEntry mockWebClientRequest(WebClient webClient) {
         return webClient
                 .get()
-                .uri(configuration.getMaatApi().getBaseUrl())
+                .uri(services.getMaatApi().getBaseUrl())
                 .retrieve()
                 .bodyToMono(ConcorContribEntry.class)
                 .block();

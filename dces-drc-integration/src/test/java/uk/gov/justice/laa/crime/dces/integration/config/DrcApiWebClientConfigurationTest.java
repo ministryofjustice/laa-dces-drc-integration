@@ -18,7 +18,7 @@ import static org.mockito.Mockito.when;
 class DrcApiWebClientConfigurationTest extends ApplicationTestConfig {
 
     @Mock
-    private ServicesConfiguration servicesConfiguration;
+    private ServicesProperties services;
 
     @Mock
     private WebClient.Builder webClientBuilder;
@@ -27,15 +27,15 @@ class DrcApiWebClientConfigurationTest extends ApplicationTestConfig {
     private WebClient webClient;
 
     @Mock
-    private ServicesConfiguration.DrcClientApi drcClientApi;
+    private ServicesProperties.DrcClientApi drcClientApi;
 
     @InjectMocks
     private DrcApiWebClientConfiguration drcApiWebClientConfiguration;
 
     @BeforeEach
     void setUp() {
-        when(servicesConfiguration.getDrcClientApi()).thenReturn(drcClientApi);
-        when(servicesConfiguration.getDrcClientApi().getBaseUrl()).thenReturn("http://localhost:8080");
+        when(services.getDrcClientApi()).thenReturn(drcClientApi);
+        when(services.getDrcClientApi().getBaseUrl()).thenReturn("http://localhost:8080");
         when(webClientBuilder.clone()).thenReturn(webClientBuilder);
         when(webClientBuilder.baseUrl(anyString())).thenReturn(webClientBuilder);
         when(webClientBuilder.filter(any())).thenReturn(webClientBuilder);
@@ -45,7 +45,7 @@ class DrcApiWebClientConfigurationTest extends ApplicationTestConfig {
 
     @Test
     void shouldReturnWebClientWhenDrcApiWebClientIsCalled() {
-        WebClient result = drcApiWebClientConfiguration.drcApiWebClient(webClientBuilder, servicesConfiguration);
+        WebClient result = drcApiWebClientConfiguration.drcApiWebClient(webClientBuilder, services);
         assertNotNull(result);
     }
 

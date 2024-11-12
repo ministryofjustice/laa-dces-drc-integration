@@ -43,9 +43,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *                           This causes daily processing data to be anonymized before being sent to the DRC.
  */
 @ConfigurationProperties(prefix = "feature")
-public record Feature(boolean stubAckEndpoints   /* feature.stub-ack-endpoints */,
-                      boolean tempTestEndpoints  /* feature.temp-test-endpoints */,
-                      boolean incomingIsolated   /* feature.incoming-isolated */,
-                      boolean outgoingIsolated   /* feature.outgoing-isolated */,
-                      boolean outgoingAnonymized /* feature.outgoing-anonymized */) {
+public record FeatureProperties(boolean stubAckEndpoints   /* feature.stub-ack-endpoints */,
+                                boolean tempTestEndpoints  /* feature.temp-test-endpoints */,
+                                boolean incomingIsolated   /* feature.incoming-isolated */,
+                                boolean outgoingIsolated   /* feature.outgoing-isolated */,
+                                boolean outgoingAnonymized /* feature.outgoing-anonymized */) {
 }

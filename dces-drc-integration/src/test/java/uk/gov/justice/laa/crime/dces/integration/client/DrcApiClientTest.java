@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
@@ -17,7 +18,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestConfig;
 import uk.gov.justice.laa.crime.dces.integration.config.DrcApiWebClientConfiguration;
-import uk.gov.justice.laa.crime.dces.integration.config.ServicesConfiguration;
+import uk.gov.justice.laa.crime.dces.integration.config.ServicesProperties;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionReqForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcReqForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
@@ -44,15 +45,14 @@ class DrcApiClientTest extends ApplicationTestConfig {
     @Autowired
     private ObjectMapper mapper;
 
-    @Qualifier("servicesConfiguration")
     @Autowired
-    private ServicesConfiguration configuration;
+    private ServicesProperties services;
 
     @BeforeEach
     public void setup() throws IOException {
         mockWebServer = new MockWebServer();
         mockWebServer.start(0);
-        configuration.getDrcClientApi().setBaseUrl(String.format("http://localhost:%s", mockWebServer.getPort()));
+        services.getDrcClientApi().setBaseUrl(String.format("http://localhost:%s", mockWebServer.getPort()));
         drcApiWebClientConfiguration = new DrcApiWebClientConfiguration();
     }
 
@@ -64,7 +64,7 @@ class DrcApiClientTest extends ApplicationTestConfig {
     @Test
     void test_whenWebClientIsRequested_thenDrcWebClientIsReturned() {
 
-        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(webClientBuilder, configuration);
+        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(webClientBuilder, services);
 
         assertThat(actualWebClient).isNotNull();
         assertThat(actualWebClient).isInstanceOf(WebClient.class);
@@ -75,7 +75,7 @@ class DrcApiClientTest extends ApplicationTestConfig {
 
         ConcorContributionReqForDrc concorContributionReqForDrc = ConcorContributionReqForDrc.of(99, fakeCONTRIBUTIONS());
         setupSuccessfulResponse();
-        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(webClientBuilder, configuration);
+        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(webClientBuilder, services);
 
         ResponseEntity<Void> response = callDrcClient(actualWebClient, concorContributionReqForDrc);
         String body = mockWebServer.takeRequest().getBody().readUtf8();
@@ -88,7 +88,7 @@ class DrcApiClientTest extends ApplicationTestConfig {
 
         ConcorContributionReqForDrc concorContributionReqForDrc = ConcorContributionReqForDrc.of(0, new CONTRIBUTIONS());
         setupProblemDetailResponse(fakeProblemDetail());
-        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(webClientBuilder, configuration);
+        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(webClientBuilder, services);
         try {
             callDrcClient(actualWebClient, concorContributionReqForDrc);
             failBecauseExceptionWasNotThrown(WebClientResponseException.class);
@@ -104,7 +104,7 @@ class DrcApiClientTest extends ApplicationTestConfig {
 
         FdcReqForDrc request = FdcReqForDrc.of(99, fakeFdc());
         setupSuccessfulResponse();
-        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(webClientBuilder, configuration);
+        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(webClientBuilder, services);
 
         ResponseEntity<Void> response = callDrcClient(actualWebClient, request);
         String body = mockWebServer.takeRequest().getBody().readUtf8();
@@ -117,7 +117,7 @@ class DrcApiClientTest extends ApplicationTestConfig {
 
         FdcReqForDrc request = FdcReqForDrc.of(0, new FdcFile.FdcList.Fdc());
         setupProblemDetailResponse(fakeProblemDetail());
-        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(webClientBuilder, configuration);
+        WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(webClientBuilder, services);
 
         try {
             callDrcClient(actualWebClient, request);
@@ -132,7 +132,7 @@ class DrcApiClientTest extends ApplicationTestConfig {
     private <T> ResponseEntity<Void> callDrcClient(WebClient actualWebClient, T request) {
         return actualWebClient
                 .post()
-                .uri(configuration.getDrcClientApi().getBaseUrl())
+                .uri(services.getDrcClientApi().getBaseUrl())
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .retrieve()

@@ -57,15 +57,6 @@ public class TempTestController {
     }
 
     /**
-     * Forward to the '/hello' service at Advantis, that returns 'hello there!' as plain text.
-     */
-    @GetMapping(value = "/hello")
-    public String forwardHello() {
-        log.info("Received GET {}/hello", PREFIX);
-        return drcClient.hello();
-    }
-
-    /**
      * Forward a hard-coded fake FDC to the fdc endpoint at Advantis.
      */
     @GetMapping(value = "/fdc")
