@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import uk.gov.justice.laa.crime.dces.integration.controller.StubAckFromDrcController;
 import uk.gov.justice.laa.crime.dces.integration.controller.TempTestController;
@@ -18,7 +19,8 @@ import static org.assertj.core.api.Assertions.assertThat;
         feature.outgoing-isolated=true
         feature.outgoing-anonymized=true
         """)
-class FeaturePropertiesAllTrueTest {
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+class FeaturePropertiesAllTrueTest extends ApplicationTestBase {
     @Autowired
     private FeatureProperties feature;
     @Autowired

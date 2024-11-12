@@ -10,17 +10,16 @@ import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.ProblemDetail;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
+import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestBase;
 import uk.gov.justice.laa.crime.dces.integration.config.FeatureProperties;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
@@ -56,11 +55,9 @@ import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.OK;
 
 @ExtendWith(SoftAssertionsExtension.class)
-@SpringBootTest
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @WireMockTest(httpPort = 1111)
-class ContributionServiceTest {
-	private static final String GET_URL = "/debt-collection-enforcement/concor-contribution-files?status=ACTIVE&concorContributionId=0&numberOfRecords=5";
+class ContributionServiceTest extends ApplicationTestBase {
+    private static final String GET_URL = "/debt-collection-enforcement/concor-contribution-files?status=ACTIVE&concorContributionId=0&numberOfRecords=5";
 	private static final String UPDATE_URL = "/debt-collection-enforcement/create-contribution-file";
 
 	private static final List<StubMapping> customStubs = new ArrayList<>();
@@ -106,7 +103,7 @@ class ContributionServiceTest {
 	}
 
 	@SuppressWarnings("squid:S5961") // suppress the "too many asserts" error. Asserting just the
-									 // right things have been logged is over the max of 25 already.
+	// right things have been logged is over the max of 25 already.
 	@Test
 	void testXMLValid() throws JAXBException {
 		ReflectionTestUtils.setField(contributionService, "getContributionBatchSize", 5);

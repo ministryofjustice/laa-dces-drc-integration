@@ -173,6 +173,14 @@ jobs:
           key: v1-gradle-wrapper-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
       - restore_cache:
           key: v1-gradle-cache-{{ checksum "build.gradle" }}
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Set Docker Host
+          command: export DOCKER_HOST=tcp://localhost:2375
+      - run:
+          name: Set Testcontainers Host Override
+          command: export TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal
       - run:
           name: Install Dependencies and Build
           command: ./gradlew clean build
@@ -220,6 +228,14 @@ jobs:
           key: v1-gradle-wrapper-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
       - restore_cache:
           key: v1-gradle-cache-{{ checksum "build.gradle" }}
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Set Docker Host
+          command: export DOCKER_HOST=tcp://localhost:2375
+      - run:
+          name: Set Testcontainers Host Override
+          command: export TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal
       - run:
           name: Run tests
           command: ./gradlew test
