@@ -5,12 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.MeterRegistry;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
@@ -18,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestBase;
 import uk.gov.justice.laa.crime.dces.integration.config.MaatApiWebClientConfiguration;
 import uk.gov.justice.laa.crime.dces.integration.config.ServicesProperties;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionReqForDrc;
@@ -29,15 +28,13 @@ import java.io.IOException;
 import java.math.BigInteger;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
+import static org.assertj.core.api.AssertionsForClassTypes.failBecauseExceptionWasNotThrown;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-@SpringBootTest
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class ContributionClientTest {
-    private static MockWebServer mockWebServer;
-    MaatApiWebClientConfiguration maatApiWebClientConfiguration;
+class ContributionClientTest extends ApplicationTestBase {
+    public MaatApiWebClientConfiguration maatApiWebClientConfiguration;
+    private MockWebServer mockWebServer;
 
     @Autowired
     private WebClient.Builder webClientBuilder;
@@ -54,15 +51,15 @@ class ContributionClientTest {
     @Autowired
     private ServicesProperties services;
 
-    @BeforeAll
+    @BeforeEach
     public void setup() throws IOException {
         mockWebServer = new MockWebServer();
-        mockWebServer.start();
+        mockWebServer.start(0);
         services.getMaatApi().setBaseUrl(String.format("http://localhost:%s", mockWebServer.getPort()));
         maatApiWebClientConfiguration = new MaatApiWebClientConfiguration(meterRegistry);
     }
 
-    @AfterAll
+    @AfterEach
     void shutDown() throws IOException {
         mockWebServer.shutdown();
     }
