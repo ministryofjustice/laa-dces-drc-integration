@@ -23,7 +23,7 @@ import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestBase;
 import uk.gov.justice.laa.crime.dces.integration.config.FeatureProperties;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
-import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.external.FdcProcessedRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 
@@ -407,31 +407,31 @@ class FdcServiceTest extends ApplicationTestBase {
 
 	@Test
 	void testProcessFdcUpdateWhenSuccessful() {
-		UpdateLogFdcRequest dataRequest = UpdateLogFdcRequest.builder()
+		FdcProcessedRequest dataRequest = FdcProcessedRequest.builder()
 				.fdcId(911)
 				.build();
-		Integer response = fdcService.processFdcUpdate(dataRequest);
+		Integer response = fdcService.handleFdcProcessedAck(dataRequest);
 		softly.assertThat(response).isEqualTo(1111);
 	}
 
 	@Test
 	void testProcessFdcUpdateWhenIncomingIsolated() {
 		when(feature.incomingIsolated()).thenReturn(true);
-		UpdateLogFdcRequest dataRequest = UpdateLogFdcRequest.builder()
+		FdcProcessedRequest dataRequest = FdcProcessedRequest.builder()
 				.fdcId(911)
 				.build();
-		Integer response = fdcService.processFdcUpdate(dataRequest);
+		Integer response = fdcService.handleFdcProcessedAck(dataRequest);
 		softly.assertThat(response).isEqualTo(0); // so MAAT DB not touched
 	}
 
 	@Test
 	void testProcessFdcUpdateWhenFailed() {
 		String errorText = "The request has failed to process";
-		UpdateLogFdcRequest dataRequest = UpdateLogFdcRequest.builder()
+		FdcProcessedRequest dataRequest = FdcProcessedRequest.builder()
 				.fdcId(9)
 				.errorText(errorText)
 				.build();
-		var exception = catchThrowableOfType(() -> fdcService.processFdcUpdate(dataRequest), WebClientResponseException.class);
+		var exception = catchThrowableOfType(() -> fdcService.handleFdcProcessedAck(dataRequest), WebClientResponseException.class);
 		softly.assertThat(exception).isNotNull();
 		softly.assertThat(exception.getStatusCode().is4xxClientError()).isTrue();
 	}
@@ -439,11 +439,11 @@ class FdcServiceTest extends ApplicationTestBase {
 	@Test
 	void testProcessFdcUpdateWhenServerFailure() {
 		String errorText = "The request has failed to process";
-		UpdateLogFdcRequest dataRequest = UpdateLogFdcRequest.builder()
+		FdcProcessedRequest dataRequest = FdcProcessedRequest.builder()
 				.fdcId(500)
 				.errorText(errorText)
 				.build();
-		var exception = catchThrowableOfType(() -> fdcService.processFdcUpdate(dataRequest), WebClientResponseException.class);
+		var exception = catchThrowableOfType(() -> fdcService.handleFdcProcessedAck(dataRequest), WebClientResponseException.class);
 		softly.assertThat(exception).isNotNull();
 		softly.assertThat(exception.getStatusCode().is5xxServerError()).isTrue();
 	}

@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
 import uk.gov.justice.laa.crime.dces.integration.client.FdcClient;
-import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.external.FdcProcessedRequest;
 
 import java.util.List;
 
@@ -45,7 +45,7 @@ public class FdcLoggingProcessSpy {
 
         public FdcLoggingProcessSpyBuilder traceSendLogFdcProcessed() {
             doAnswer(invocation -> {
-                final var argument = (UpdateLogFdcRequest) invocation.getArgument(0);
+                final var argument = (FdcProcessedRequest) invocation.getArgument(0);
                 fdcContributionId(argument.getFdcId()).errorText(argument.getErrorText());
                 // Because FdcClient is a proxied interface, cannot just call `invocation.callRealMethod()` here.
                 // https://github.com/spring-projects/spring-boot/issues/36653

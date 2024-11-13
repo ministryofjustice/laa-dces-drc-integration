@@ -10,7 +10,7 @@ import org.springframework.web.service.annotation.PostExchange;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsResponse;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcGlobalUpdateResponse;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcUpdateRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.external.FdcProcessedRequest;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -29,7 +29,7 @@ public interface FdcClient extends MaatApiClientBase {
 
   @PostExchange("/log-fdc-response")
   @Valid
-  Integer sendLogFdcProcessed(@RequestBody UpdateLogFdcRequest updateLogFdcRequest);
+  Integer sendLogFdcProcessed(@RequestBody FdcProcessedRequest fdcProcessedRequest);
 
   /** For testing only? */
   @GetExchange("/final-defence-cost")

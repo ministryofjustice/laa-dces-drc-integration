@@ -25,7 +25,7 @@ import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.RecordType;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionRepository;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsStatus;
-import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.external.FdcProcessedRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcAccelerationType;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
@@ -100,21 +100,21 @@ class FdcIntegrationTest {
 
 	@Test
 	void testProcessFdcUpdateWhenFound() {
-		final var updateLogFdcRequest = UpdateLogFdcRequest.builder()
+		final var updateLogFdcRequest = FdcProcessedRequest.builder()
 				.fdcId(31774046)
 				.build();
-		final Integer response = fdcService.processFdcUpdate(updateLogFdcRequest);
+		final Integer response = fdcService.handleFdcProcessedAck(updateLogFdcRequest);
 		softly.assertThat(response).isPositive();
 		assertProcessFdcCaseSubmissionCreation(updateLogFdcRequest, HttpStatus.OK);
 	}
 
 	@Test
 	void testProcessFdcUpdateWhenFoundWithText() {
-		final var updateLogFdcRequest = UpdateLogFdcRequest.builder()
+		final var updateLogFdcRequest = FdcProcessedRequest.builder()
 				.fdcId(31774046)
 				.errorText("testProcessFdcUpdateWhenFoundWithText")
 				.build();
-		final Integer response = fdcService.processFdcUpdate(updateLogFdcRequest);
+		final Integer response = fdcService.handleFdcProcessedAck(updateLogFdcRequest);
 		softly.assertThat(response).isPositive();
 		assertProcessFdcCaseSubmissionCreation(updateLogFdcRequest, HttpStatus.OK);
 	}
@@ -122,17 +122,17 @@ class FdcIntegrationTest {
 	@Test
 	void testProcessFdcUpdateWhenNotFound() {
 		final String errorText = "Error Text updated successfully.";
-		final var updateLogFdcRequest = UpdateLogFdcRequest.builder()
+		final var updateLogFdcRequest = FdcProcessedRequest.builder()
 				.fdcId(9)
 				.errorText(errorText)
 				.build();
-		softly.assertThatThrownBy(() -> fdcService.processFdcUpdate(updateLogFdcRequest))
+		softly.assertThatThrownBy(() -> fdcService.handleFdcProcessedAck(updateLogFdcRequest))
 				.isInstanceOf(WebClientResponseException.class);
 		assertProcessFdcCaseSubmissionCreation(updateLogFdcRequest, HttpStatus.NOT_FOUND);
 	}
 
 	// Just verify we're submitting what is expected to the DB. Persistence testing itself is done elsewhere.
-	private void assertProcessFdcCaseSubmissionCreation(UpdateLogFdcRequest request, HttpStatusCode expectedStatusCode) {
+	private void assertProcessFdcCaseSubmissionCreation(FdcProcessedRequest request, HttpStatusCode expectedStatusCode) {
 		CaseSubmissionEntity expectedCaseSubmission = CaseSubmissionEntity.builder()
 				.fdcId(BigInteger.valueOf(request.getFdcId()))
 				.payload(request.getErrorText())

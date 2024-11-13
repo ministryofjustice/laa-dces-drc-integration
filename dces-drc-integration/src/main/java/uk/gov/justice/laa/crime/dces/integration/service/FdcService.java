@@ -22,7 +22,7 @@ import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributi
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcGlobalUpdateResponse;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcReqForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcUpdateRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.external.FdcProcessedRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 
@@ -66,16 +66,16 @@ public class FdcService implements FileService {
      * <li>If error text is present, will instead log it to the MAAT DB as an error for the associated contribution file.</li>
      * <li>Logs details received in the DCES Event Database.</li>
      * </ul>
-     * @param updateLogFdcRequest Contains the details of the FDC which has been processed by the DRC.
+     * @param fdcProcessedRequest Contains the details of the FDC which has been processed by the DRC.
      * @return FileID of the file associated with the fdcId
      */
-    public Integer processFdcUpdate(UpdateLogFdcRequest updateLogFdcRequest) {
+    public Integer handleFdcProcessedAck(FdcProcessedRequest fdcProcessedRequest) {
         try {
-            int result = executeFdcUpdateCall(updateLogFdcRequest);
-            logFdcAsyncEvent(updateLogFdcRequest, OK);
+            int result = executeFdcProcessedAckCall(fdcProcessedRequest);
+            logFdcAsyncEvent(fdcProcessedRequest, OK);
             return result;
         } catch (WebClientResponseException e){
-            logFdcAsyncEvent(updateLogFdcRequest, e.getStatusCode());
+            logFdcAsyncEvent(fdcProcessedRequest, e.getStatusCode());
             throw e;
         }
     }
@@ -147,17 +147,19 @@ public class FdcService implements FileService {
             int fdcId = currentFdc.getId().intValue();
             try {
                 executeSendFdcToDrcCall(currentFdc, fdcId, failedFdcs);
-                successfulFdcs.add(currentFdc);
                 eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, OK, null);
+                successfulFdcs.add(currentFdc);
             } catch (WebClientResponseException e){
                 if (e.getStatusCode().isSameCodeAs(CONFLICT)) {
                     ProblemDetail problemDetail = e.getResponseBodyAs(ProblemDetail.class);
                     if (problemDetail != null && DUPLICATE_TYPE.equals(problemDetail.getType())) {
                         log.info("Ignoring duplicate FDC error response from DRC, fdcId = {}, maatId = {}", currentFdc.getId(), currentFdc.getMaatId());
+                        eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, CONFLICT, null);
                         successfulFdcs.add(currentFdc);
                         continue;
                     }
                 }
+                // if not CONFLICT, or not duplicate, then just log it.
                 logDrcSentError(e, e.getStatusCode(), currentFdc, failedFdcs);
             }
         }
@@ -181,7 +183,7 @@ public class FdcService implements FileService {
             if (!failedFdcs.isEmpty()) {
                 log.info("Failed to send {} FDC contributions", failedFdcs.size());
             }
-            contributionFileId = executeFdcUpdateRequestCall(xmlFile, successfulIdList, successfulIdList.size(), fileName, ackXml);
+            contributionFileId = executeFdcFileCreateCall(xmlFile, successfulIdList, successfulIdList.size(), fileName, ackXml);
         }
         logMaatUpdateEvent(successfulFdcs, failedFdcs);
         return contributionFileId;
@@ -189,10 +191,10 @@ public class FdcService implements FileService {
 
     // External Call Executions Methods
 
-    private int executeFdcUpdateCall(UpdateLogFdcRequest updateLogFdcRequest) {
+    private int executeFdcProcessedAckCall(FdcProcessedRequest fdcProcessedRequest) {
         int result;
         if (!feature.incomingIsolated()) {
-            result = fdcClient.sendLogFdcProcessed(updateLogFdcRequest);
+            result = fdcClient.sendLogFdcProcessed(fdcProcessedRequest);
         } else {
             log.info("processFdcUpdate: Not calling MAAT API sendLogFdcProcessed() because `feature.incoming-isolated=true`");
             result = 0; // avoid updating MAAT DB.
@@ -240,7 +242,7 @@ public class FdcService implements FileService {
     }
 
     @Retry(name = SERVICE_NAME)
-    private Integer executeFdcUpdateRequestCall(String xmlContent, List<String> fdcIdList, int numberOfRecords, String fileName, String fileAckXML) {
+    private Integer executeFdcFileCreateCall(String xmlContent, List<String> fdcIdList, int numberOfRecords, String fileName, String fileAckXML) {
         FdcUpdateRequest request = FdcUpdateRequest.builder()
                 .recordsSent(numberOfRecords)
                 .xmlContent(xmlContent)
@@ -271,10 +273,10 @@ public class FdcService implements FileService {
         }
     }
 
-    private void logFdcAsyncEvent(UpdateLogFdcRequest updateLogFdcRequest, HttpStatusCode httpStatusCode){
+    private void logFdcAsyncEvent(FdcProcessedRequest fdcProcessedRequest, HttpStatusCode httpStatusCode){
         Fdc idHolder = new Fdc();
-        idHolder.setId(BigInteger.valueOf(updateLogFdcRequest.getFdcId()));
-        eventService.logFdc(DRC_ASYNC_RESPONSE, null, idHolder, httpStatusCode, updateLogFdcRequest.getErrorText());
+        idHolder.setId(BigInteger.valueOf(fdcProcessedRequest.getFdcId()));
+        eventService.logFdc(DRC_ASYNC_RESPONSE, null, idHolder, httpStatusCode, fdcProcessedRequest.getErrorText());
     }
 
     private void logGlobalUpdatePayload(HttpStatusCode httpStatus, String message){

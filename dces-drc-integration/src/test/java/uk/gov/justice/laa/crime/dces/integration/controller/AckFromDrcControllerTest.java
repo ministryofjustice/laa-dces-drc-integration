@@ -14,7 +14,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.external.FdcProcessedRequest;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
 import uk.gov.justice.laa.crime.dces.integration.service.TraceService;
@@ -91,11 +91,11 @@ class AckFromDrcControllerTest {
     @Test
     void testFdcWhenDownstreamResponseIsValid() throws Exception {
 
-        UpdateLogFdcRequest updateLogFdcRequest = UpdateLogFdcRequest.builder()
+        FdcProcessedRequest fdcProcessedRequest = FdcProcessedRequest.builder()
                 .fdcId(99)
                 .build();
         Integer serviceResponse = 1111;
-        when(fdcService.processFdcUpdate(updateLogFdcRequest)).thenReturn(serviceResponse);
+        when(fdcService.handleFdcProcessedAck(fdcProcessedRequest)).thenReturn(serviceResponse);
 
         FdcAckFromDrc fdcAckFromDrc = FdcAckFromDrc.of(99, null);
 
@@ -111,12 +111,12 @@ class AckFromDrcControllerTest {
     @Test
     void testFdcWhenDownstreamResponseIsNotValid() throws Exception {
 
-        UpdateLogFdcRequest updateLogFdcRequest = UpdateLogFdcRequest.builder()
+        FdcProcessedRequest fdcProcessedRequest = FdcProcessedRequest.builder()
                 .fdcId(9)
                 .errorText("Failed to process")
                 .build();
         var serviceResponse = new WebClientResponseException(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), null,null,null);
-        when(fdcService.processFdcUpdate(updateLogFdcRequest)).thenThrow(serviceResponse);
+        when(fdcService.handleFdcProcessedAck(fdcProcessedRequest)).thenThrow(serviceResponse);
 
         FdcAckFromDrc fdcAckFromDrc = FdcAckFromDrc.of(9, "Failed to process");
         final String requestBody = mapper.writeValueAsString(fdcAckFromDrc);
