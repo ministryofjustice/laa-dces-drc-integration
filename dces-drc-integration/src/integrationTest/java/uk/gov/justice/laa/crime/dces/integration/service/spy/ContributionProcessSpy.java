@@ -6,9 +6,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcorContribEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionReqForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
@@ -85,7 +85,7 @@ public class ContributionProcessSpy {
                 final int concorContributionId = ((ConcorContributionReqForDrc) invocation.getArgument(0)).data().concorContributionId();
                 sentId(concorContributionId);
                 if (!stubResults.test(concorContributionId)) {
-                    throw new MaatApiClientException(HttpStatus.BAD_REQUEST, "BAD_REQUEST");
+                    throw new WebClientResponseException(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), null, null, null);
                 }
                 return null;
             }).when(drcClientSpy).sendConcorContributionReqToDrc(any());

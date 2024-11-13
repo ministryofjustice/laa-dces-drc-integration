@@ -6,9 +6,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.client.FdcClient;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionEntry;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsResponse;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcGlobalUpdateResponse;
@@ -83,7 +83,7 @@ public class FdcProcessSpy {
         final int fdcId = ((FdcReqForDrc) invocation.getArgument(0)).data().fdcId();
         sentId(fdcId);
         if (!stubResults.test(fdcId)) {
-          throw new MaatApiClientException(HttpStatus.BAD_REQUEST, "BAD_REQUEST");
+          throw new WebClientResponseException(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(),null,null,null);
         }
         return null;
       }).when(drcClientSpy).sendFdcReqToDrc(any());

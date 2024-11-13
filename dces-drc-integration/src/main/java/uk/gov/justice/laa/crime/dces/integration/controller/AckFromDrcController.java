@@ -18,7 +18,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFrom
 import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.exception.ErrorResponse;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.external.FdcProcessedRequest;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
 
@@ -51,11 +51,11 @@ public class AckFromDrcController {
                     schema = @Schema(implementation = ErrorResponse.class)))
     public void fdc(@NotNull @RequestBody final FdcAckFromDrc fdcAckFromDrc) {
         log.info("Received FDC acknowledgement from DRC {}", fdcAckFromDrc);
-        UpdateLogFdcRequest updateLogFdcRequest = UpdateLogFdcRequest.builder()
+        FdcProcessedRequest fdcProcessedRequest = FdcProcessedRequest.builder()
                 .fdcId(fdcAckFromDrc.data().fdcId())
                 .errorText(fdcAckFromDrc.data().errorText())
                 .build();
-        fdcService.processFdcUpdate(updateLogFdcRequest);
+        fdcService.handleFdcProcessedAck(fdcProcessedRequest);
     }
 
     @Timed(value = "laa_dces_drc_service_process_drc_update_contributions",

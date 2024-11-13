@@ -17,14 +17,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.ProblemDetail;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestBase;
 import uk.gov.justice.laa.crime.dces.integration.config.FeatureProperties;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
 import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.ObjectFactory;
@@ -262,8 +260,8 @@ class ContributionServiceTest extends ApplicationTestBase {
 		when(eventService.generateBatchId()).thenReturn(testBatchId);
 
 		softly.assertThatThrownBy(() -> contributionService.processDailyFiles())
-				.isInstanceOf(HttpServerErrorException.class)
-				.hasMessageContaining("INTERNAL_SERVER_ERROR");
+				.isInstanceOf(WebClientResponseException.class)
+				.hasMessageContaining("500 Internal Server Error");
 		verify(contributionsMapperUtils, times(2)).mapLineXMLToObject(any());
 		// failure to generate the xml should return a null xmlString.
 		verify(contributionsMapperUtils).generateFileXML(any(), any());
@@ -278,7 +276,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 		verify(eventService).logConcor(BigInteger.valueOf(1234), EventType.SENT_TO_DRC, testBatchId, testContribution, OK, null);
 		verify(eventService).logConcor(BigInteger.valueOf(9876), EventType.SENT_TO_DRC, testBatchId, testContribution, OK, null);
 
-		verify(eventService).logConcor(null, EventType.UPDATED_IN_MAAT, testBatchId, null, INTERNAL_SERVER_ERROR, "Failed to create Concor contribution-file. Investigation needed. State of files will be out of sync! [org.springframework.web.client.HttpServerErrorException(500 Received error 500 INTERNAL_SERVER_ERROR due to Internal Server Error)]");
+		verify(eventService).logConcor(null, EventType.UPDATED_IN_MAAT, testBatchId, null, INTERNAL_SERVER_ERROR, "Failed to create Concor contribution-file. Investigation needed. State of files will be out of sync! [org.springframework.web.reactive.function.client.WebClientResponseException$InternalServerError(500 Internal Server Error from POST http://localhost:1111/debt-collection-enforcement/create-contribution-file)]");
 
 	}
 
@@ -304,7 +302,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 		doNothing().when(drcClient).sendConcorContributionReqToDrc(any());
 		// do
 		softly.assertThatThrownBy(() -> contributionService.processDailyFiles())
-				.isInstanceOf(HttpServerErrorException.class);
+				.isInstanceOf(WebClientResponseException.class);
 		// test
 		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
 		WireMock.verify(1, postRequestedFor(urlEqualTo(UPDATE_URL)));
@@ -338,7 +336,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 				.concorId(9)
 				.errorText(errorText)
 				.build();
-		var exception = catchThrowableOfType(() -> contributionService.processContributionUpdate(dataRequest), MaatApiClientException.class);
+		var exception = catchThrowableOfType(() -> contributionService.processContributionUpdate(dataRequest), WebClientResponseException.class);
 		softly.assertThat(exception).isNotNull();
 		softly.assertThat(exception.getStatusCode().is4xxClientError()).isTrue();
 		verify(eventService).logConcor(BigInteger.valueOf(9),EventType.DRC_ASYNC_RESPONSE,null,null, BAD_REQUEST, errorText);

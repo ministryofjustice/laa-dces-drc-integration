@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager;
@@ -18,7 +17,6 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction;
-import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
@@ -28,7 +26,6 @@ import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.FdcClient;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
 
 import java.time.Duration;
 import java.util.UUID;
@@ -79,7 +76,6 @@ public class MaatApiWebClientConfiguration {
             .baseUrl(services.getMaatApi().getBaseUrl())
             .filter(addLaaTransactionIdToRequest())
             .filter(logClientResponse())
-            .filter(handleErrorResponse())
                 .filter(new WebClientMetricsFilter(meterRegistry, MAAT_API_WEBCLIENT_REQUESTS))
             .clientConnector(new ReactorClientHttpConnector(
                 HttpClient.create(provider)
@@ -132,35 +128,6 @@ public class MaatApiWebClientConfiguration {
         authorizedClientManager.setAuthorizedClientProvider(authorizedClientProvider);
 
         return authorizedClientManager;
-    }
-
-    // TODO: Eventually remove this filter function and rely on default WebClientResponseException subclasses.
-    private ExchangeFilterFunction handleErrorResponse() {
-        return ExchangeFilterFunction.ofResponseProcessor(
-                clientResponse -> {
-                    if (!clientResponse.statusCode().isError()) {
-                        return Mono.just(clientResponse);
-                    }
-                    HttpStatus httpStatus = HttpStatus.resolve(clientResponse.statusCode().value());
-                    if (httpStatus == null) { // can be null if remote end returns an invalid statusCode
-                        httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
-                    }
-                    String errorMessage = String.format("Received error %s due to %s",
-                            clientResponse.statusCode(), httpStatus.getReasonPhrase()
-                    );
-
-                    if (httpStatus.is5xxServerError()) {
-                        return Mono.error(new HttpServerErrorException(httpStatus, errorMessage));
-                    }
-
-                    // TODO: Gradually move all statuses to the subclasses of WebClientResponseException that this creates:
-                    if (httpStatus.equals(HttpStatus.NOT_FOUND) || httpStatus.equals(HttpStatus.CONFLICT)) {
-                        return clientResponse.createError();
-                    }
-
-                    return Mono.error(new MaatApiClientException(httpStatus, errorMessage));
-                }
-        );
     }
 
     ExchangeFilterFunction addLaaTransactionIdToRequest() {

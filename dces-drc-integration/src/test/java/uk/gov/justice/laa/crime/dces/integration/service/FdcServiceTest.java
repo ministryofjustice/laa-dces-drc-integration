@@ -17,15 +17,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
-import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestBase;
 import uk.gov.justice.laa.crime.dces.integration.config.FeatureProperties;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
-import uk.gov.justice.laa.crime.dces.integration.maatapi.exception.MaatApiClientException;
-import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogFdcRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.external.FdcProcessedRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 
@@ -136,13 +134,13 @@ class FdcServiceTest extends ApplicationTestBase {
 
 		verify(eventService).logFdc(EventType.FETCHED_FROM_MAAT, testBatchId, actualFdc1, HttpStatus.OK, null);
 		verify(eventService).logFdc(EventType.FETCHED_FROM_MAAT, testBatchId, actualFdc2, HttpStatus.OK, null);
-		verify(eventService).logFdc(EventType.FETCHED_FROM_MAAT, testBatchId, null, HttpStatus.OK, "Fetched 12 fdc entries");
+		verify(eventService).logFdc(EventType.FETCHED_FROM_MAAT, testBatchId, null, HttpStatus.OK, "Fetched:12");
 
 		verify(eventService).logFdc(EventType.SENT_TO_DRC, testBatchId, actualFdc1, HttpStatus.OK, null);
 		verify(eventService).logFdc(EventType.SENT_TO_DRC, testBatchId, actualFdc2, HttpStatus.OK, null);
 		verify(eventService, times(12)).logFdc(eq(EventType.SENT_TO_DRC), eq(testBatchId), any(), eq(HttpStatus.OK), eq(null));
 
-		verify(eventService).logFdc(EventType.FDC_GLOBAL_UPDATE, testBatchId, null, HttpStatus.OK, "Updated 3 fdc entries");
+		verify(eventService).logFdc(EventType.FDC_GLOBAL_UPDATE, testBatchId, null, HttpStatus.OK, "Updated:3");
 
 		verify(eventService).logFdc(EventType.UPDATED_IN_MAAT, testBatchId, actualFdc1, HttpStatus.OK, null);
 		verify(eventService).logFdc(EventType.UPDATED_IN_MAAT, testBatchId, actualFdc2, HttpStatus.OK, null);
@@ -216,10 +214,9 @@ class FdcServiceTest extends ApplicationTestBase {
 
 		verify(eventService).logFdc(EventType.FETCHED_FROM_MAAT, testBatchId, actualFdc1, HttpStatus.OK, null);
 		verify(eventService).logFdc(EventType.FETCHED_FROM_MAAT, testBatchId, actualFdc2, HttpStatus.OK, null);
-		verify(eventService).logFdc(EventType.FETCHED_FROM_MAAT, testBatchId, null, HttpStatus.OK, "Fetched 12 fdc entries");
+		verify(eventService).logFdc(EventType.FETCHED_FROM_MAAT, testBatchId, null, HttpStatus.OK, "Fetched:12");
 
-
-		verify(eventService).logFdc(EventType.FDC_GLOBAL_UPDATE, testBatchId, null, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to complete FDC global update [500 Received error 500 INTERNAL_SERVER_ERROR due to Internal Server Error]");
+		verify(eventService).logFdc(EventType.FDC_GLOBAL_UPDATE, testBatchId, null, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to complete FDC global update [500 Internal Server Error from POST http://localhost:1111/debt-collection-enforcement/prepare-fdc-contributions-files]");
 
 		verify(eventService).logFdc(EventType.SENT_TO_DRC, testBatchId, actualFdc1, HttpStatus.OK, null);
 		verify(eventService).logFdc(EventType.SENT_TO_DRC, testBatchId, actualFdc2, HttpStatus.OK, null);
@@ -288,7 +285,7 @@ class FdcServiceTest extends ApplicationTestBase {
 				.willReturn(serverError())));
 		// do
 		softly.assertThatThrownBy(() -> fdcService.processDailyFiles())
-				.isInstanceOf(HttpServerErrorException.class);
+				.isInstanceOf(WebClientResponseException.class);
 		// test
 		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
 		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
@@ -319,7 +316,7 @@ class FdcServiceTest extends ApplicationTestBase {
 	void testDrcUpdateUnauthorised() {
 		// setup
 		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
-		Mockito.doThrow(new MaatApiClientException(HttpStatus.UNAUTHORIZED, "Test Unauthorised")).when(drcClient).sendFdcReqToDrc(any());
+		Mockito.doThrow(new WebClientResponseException(401, "Test Unauthorised", null, null, null)).when(drcClient).sendFdcReqToDrc(any());
 		// do
 		boolean successful = fdcService.processDailyFiles();
 		// test
@@ -334,7 +331,7 @@ class FdcServiceTest extends ApplicationTestBase {
 	void testDrcUpdateInternalServerError() {
 		// setup
 		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
-		Mockito.doThrow(new HttpServerErrorException(HttpStatus.UNAUTHORIZED, "Test Unauthorised")).when(drcClient).sendFdcReqToDrc(any());
+		Mockito.doThrow(new WebClientResponseException(500, "Test Unauthorised", null, null, null)).when(drcClient).sendFdcReqToDrc(any());
 		// do
 		boolean successful = fdcService.processDailyFiles();
 		// test
@@ -401,7 +398,7 @@ class FdcServiceTest extends ApplicationTestBase {
 
 		// do
 		softly.assertThatThrownBy(() -> fdcService.processDailyFiles())
-				.isInstanceOf(HttpServerErrorException.class);
+				.isInstanceOf(WebClientResponseException.class);
 		// test
 		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
 		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
@@ -410,31 +407,31 @@ class FdcServiceTest extends ApplicationTestBase {
 
 	@Test
 	void testProcessFdcUpdateWhenSuccessful() {
-		UpdateLogFdcRequest dataRequest = UpdateLogFdcRequest.builder()
+		FdcProcessedRequest dataRequest = FdcProcessedRequest.builder()
 				.fdcId(911)
 				.build();
-		Integer response = fdcService.processFdcUpdate(dataRequest);
+		Integer response = fdcService.handleFdcProcessedAck(dataRequest);
 		softly.assertThat(response).isEqualTo(1111);
 	}
 
 	@Test
 	void testProcessFdcUpdateWhenIncomingIsolated() {
 		when(feature.incomingIsolated()).thenReturn(true);
-		UpdateLogFdcRequest dataRequest = UpdateLogFdcRequest.builder()
+		FdcProcessedRequest dataRequest = FdcProcessedRequest.builder()
 				.fdcId(911)
 				.build();
-		Integer response = fdcService.processFdcUpdate(dataRequest);
+		Integer response = fdcService.handleFdcProcessedAck(dataRequest);
 		softly.assertThat(response).isEqualTo(0); // so MAAT DB not touched
 	}
 
 	@Test
 	void testProcessFdcUpdateWhenFailed() {
 		String errorText = "The request has failed to process";
-		UpdateLogFdcRequest dataRequest = UpdateLogFdcRequest.builder()
+		FdcProcessedRequest dataRequest = FdcProcessedRequest.builder()
 				.fdcId(9)
 				.errorText(errorText)
 				.build();
-		var exception = catchThrowableOfType(() -> fdcService.processFdcUpdate(dataRequest), MaatApiClientException.class);
+		var exception = catchThrowableOfType(() -> fdcService.handleFdcProcessedAck(dataRequest), WebClientResponseException.class);
 		softly.assertThat(exception).isNotNull();
 		softly.assertThat(exception.getStatusCode().is4xxClientError()).isTrue();
 	}
@@ -442,11 +439,11 @@ class FdcServiceTest extends ApplicationTestBase {
 	@Test
 	void testProcessFdcUpdateWhenServerFailure() {
 		String errorText = "The request has failed to process";
-		UpdateLogFdcRequest dataRequest = UpdateLogFdcRequest.builder()
+		FdcProcessedRequest dataRequest = FdcProcessedRequest.builder()
 				.fdcId(500)
 				.errorText(errorText)
 				.build();
-		var exception = catchThrowableOfType(() -> fdcService.processFdcUpdate(dataRequest), HttpServerErrorException.class);
+		var exception = catchThrowableOfType(() -> fdcService.handleFdcProcessedAck(dataRequest), WebClientResponseException.class);
 		softly.assertThat(exception).isNotNull();
 		softly.assertThat(exception.getStatusCode().is5xxServerError()).isTrue();
 	}
