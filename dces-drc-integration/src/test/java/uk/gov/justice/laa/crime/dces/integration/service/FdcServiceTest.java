@@ -134,13 +134,13 @@ class FdcServiceTest extends ApplicationTestBase {
 
 		verify(eventService).logFdc(EventType.FETCHED_FROM_MAAT, testBatchId, actualFdc1, HttpStatus.OK, null);
 		verify(eventService).logFdc(EventType.FETCHED_FROM_MAAT, testBatchId, actualFdc2, HttpStatus.OK, null);
-		verify(eventService).logFdc(EventType.FETCHED_FROM_MAAT, testBatchId, null, HttpStatus.OK, "Fetched 12 fdc entries");
+		verify(eventService).logFdc(EventType.FETCHED_FROM_MAAT, testBatchId, null, HttpStatus.OK, "Fetched:12");
 
 		verify(eventService).logFdc(EventType.SENT_TO_DRC, testBatchId, actualFdc1, HttpStatus.OK, null);
 		verify(eventService).logFdc(EventType.SENT_TO_DRC, testBatchId, actualFdc2, HttpStatus.OK, null);
 		verify(eventService, times(12)).logFdc(eq(EventType.SENT_TO_DRC), eq(testBatchId), any(), eq(HttpStatus.OK), eq(null));
 
-		verify(eventService).logFdc(EventType.FDC_GLOBAL_UPDATE, testBatchId, null, HttpStatus.OK, "Updated 3 fdc entries");
+		verify(eventService).logFdc(EventType.FDC_GLOBAL_UPDATE, testBatchId, null, HttpStatus.OK, "Updated:3");
 
 		verify(eventService).logFdc(EventType.UPDATED_IN_MAAT, testBatchId, actualFdc1, HttpStatus.OK, null);
 		verify(eventService).logFdc(EventType.UPDATED_IN_MAAT, testBatchId, actualFdc2, HttpStatus.OK, null);
@@ -214,7 +214,7 @@ class FdcServiceTest extends ApplicationTestBase {
 
 		verify(eventService).logFdc(EventType.FETCHED_FROM_MAAT, testBatchId, actualFdc1, HttpStatus.OK, null);
 		verify(eventService).logFdc(EventType.FETCHED_FROM_MAAT, testBatchId, actualFdc2, HttpStatus.OK, null);
-		verify(eventService).logFdc(EventType.FETCHED_FROM_MAAT, testBatchId, null, HttpStatus.OK, "Fetched 12 fdc entries");
+		verify(eventService).logFdc(EventType.FETCHED_FROM_MAAT, testBatchId, null, HttpStatus.OK, "Fetched:12");
 
 		verify(eventService).logFdc(EventType.FDC_GLOBAL_UPDATE, testBatchId, null, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to complete FDC global update [500 Internal Server Error from POST http://localhost:1111/debt-collection-enforcement/prepare-fdc-contributions-files]");
 

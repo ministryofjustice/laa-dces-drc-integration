@@ -95,19 +95,19 @@ public class FdcService implements FileService {
     @Timed(value = "laa_dces_drc_service_process_fdc_daily_files",
             description = "Time taken to process the daily FDC files from DRC and passing this for downstream processing.")
     public boolean processDailyFiles() {
-        batchId = eventService.generateBatchId();
+        List<Fdc> fdcList;
         List<Fdc> successfulFdcs = new ArrayList<>();
         Map<String,String> failedFdcs = new HashMap<>();
-        int globalUpdateResult = fdcGlobalUpdate();
-        List<Fdc> fdcList = getFdcList();
+        batchId = eventService.generateBatchId();
+        fdcGlobalUpdate();
+        fdcList = getFdcList();
         sendFdcListToDrc(fdcList, successfulFdcs, failedFdcs);
-        logNumberDiscepancies(globalUpdateResult, fdcList.size(), successfulFdcs.size());
         return updateFdcAndCreateFile(successfulFdcs, failedFdcs) != null;
     }
 
     // Component Methods
 
-    private int fdcGlobalUpdate() {
+    private void fdcGlobalUpdate() {
         FdcGlobalUpdateResponse globalUpdateResponse;
         try {
             globalUpdateResponse = executeFdcGlobalUpdateCall();
@@ -115,14 +115,13 @@ public class FdcService implements FileService {
             // if global update fails, log and continue process as there might be other fdcs available for processing.
             String message = String.format("Failed to complete FDC global update [%s]", e.getMessage());
             logGlobalUpdatePayload(e.getStatusCode(), message);
-            return 0;
+            return;
         }
         // call is either true, or exception.
         int numUpdates = globalUpdateResponse.getNumberOfUpdates();
-        String logMessage = String.format("Updated %s fdc entries", numUpdates);
+        String logMessage = String.format("Updated:%s", numUpdates);
         eventService.logFdc(FDC_GLOBAL_UPDATE, batchId, null, OK, logMessage);
         log.info(logMessage);
-        return numUpdates;
     }
 
     @Retry(name = SERVICE_NAME)
@@ -132,10 +131,12 @@ public class FdcService implements FileService {
         List<Fdc> fdcList = new ArrayList<>();
         if (Objects.nonNull(response)
                 && Objects.nonNull(response.getFdcContributions())) {
+            // mapped fetched list into our objects.
             List<FdcContributionEntry> fdcContributionEntryList = response.getFdcContributions();
             fdcList = fdcContributionEntryList.stream().map(fdcMapperUtils::mapFdcEntry).toList();
-            String successfulPayload = "Fetched "+fdcList.size()+" fdc entries";
+            String successfulPayload = String.format("Fetched:%s",fdcList.size());
             eventService.logFdc(FETCHED_FROM_MAAT, batchId, null, OK, successfulPayload);
+            log.info(successfulPayload);
         }
         return fdcList;
     }
@@ -263,15 +264,6 @@ public class FdcService implements FileService {
     }
 
     // Logging Methods
-
-    private void logNumberDiscepancies(int globalUpdateCount, int getFdcCount, int successfullySentFdcCount) {
-        if (globalUpdateCount != getFdcCount) {
-            log.info("FDC contribution count discrepancy: {} affected by FDC global update, {} from getFdcs", globalUpdateCount, getFdcCount);
-        }
-        if (getFdcCount != successfullySentFdcCount) {
-            log.info("FDC contribution count discrepancy: {} from getFdcs, {} successfully sent", getFdcCount, successfullySentFdcCount);
-        }
-    }
 
     private void logFdcAsyncEvent(FdcProcessedRequest fdcProcessedRequest, HttpStatusCode httpStatusCode){
         Fdc idHolder = new Fdc();
