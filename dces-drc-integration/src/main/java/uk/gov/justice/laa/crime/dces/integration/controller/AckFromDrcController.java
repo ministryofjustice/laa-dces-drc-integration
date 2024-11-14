@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.exception.ErrorResponse;
-import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionProcessedRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.FdcProcessedRequest;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
@@ -75,10 +75,10 @@ public class AckFromDrcController {
                     schema = @Schema(implementation = ErrorResponse.class)))
     public void concorContribution(@NotNull @RequestBody final ConcorContributionAckFromDrc concorContributionAckFromDrc) {
         log.info("Received concorContribution acknowledgement from DRC {}", concorContributionAckFromDrc);
-        UpdateLogContributionRequest updateLogContributionRequest = UpdateLogContributionRequest.builder()
+        ContributionProcessedRequest contributionProcessedRequest = ContributionProcessedRequest.builder()
                 .concorId(concorContributionAckFromDrc.data().concorContributionId())
                 .errorText(concorContributionAckFromDrc.data().errorText())
                 .build();
-        contributionService.processContributionUpdate(updateLogContributionRequest);
+        contributionService.handleContributionProcessedAck(contributionProcessedRequest);
     }
 }

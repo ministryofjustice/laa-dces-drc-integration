@@ -9,7 +9,7 @@ import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PostExchange;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcorContribEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionProcessedRequest;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -27,7 +27,7 @@ public interface ContributionClient extends MaatApiClientBase {
 
     @PostExchange("/log-contribution-response")
     @Valid
-    Integer sendLogContributionProcessed(@RequestBody UpdateLogContributionRequest updateLogContributionRequest);
+    Integer sendLogContributionProcessed(@RequestBody ContributionProcessedRequest contributionProcessedRequest);
 
     /** For testing only? */
     @GetExchange("/contributions")

@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class UpdateLogContributionRequest {
+public class ContributionProcessedRequest {
     private final Integer concorId;
     private final String errorText;
 }

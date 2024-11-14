@@ -24,7 +24,7 @@ import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.RecordType;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionRepository;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
-import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionProcessedRequest;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
 import uk.gov.justice.laa.crime.dces.integration.service.EventLogAssertService;
 import uk.gov.justice.laa.crime.dces.integration.service.spy.ContributionProcessSpy;
@@ -88,11 +88,11 @@ class ContributionIntegrationTest {
     @Test
     void testProcessContributionUpdateWhenNotFound() {
         final String errorText = "The request has failed to process";
-        final var updateLogContributionRequest = UpdateLogContributionRequest.builder()
+        final var updateLogContributionRequest = ContributionProcessedRequest.builder()
                 .concorId(9)
                 .errorText(errorText)
                 .build();
-        softly.assertThatThrownBy(() -> contributionService.processContributionUpdate(updateLogContributionRequest))
+        softly.assertThatThrownBy(() -> contributionService.handleContributionProcessedAck(updateLogContributionRequest))
                 .isInstanceOf(WebClientResponseException.class);
         assertProcessConcorCaseSubmissionCreation(updateLogContributionRequest, HttpStatus.NOT_FOUND);
     }
@@ -100,17 +100,17 @@ class ContributionIntegrationTest {
     @Test
     void testProcessContributionUpdateWhenFound() {
         final String errorText = "Error Text updated successfully.";
-        final var updateLogContributionRequest = UpdateLogContributionRequest.builder()
+        final var updateLogContributionRequest = ContributionProcessedRequest.builder()
                 .concorId(47959912)
                 .errorText(errorText)
                 .build();
-        final Integer response = contributionService.processContributionUpdate(updateLogContributionRequest);
+        final Integer response = contributionService.handleContributionProcessedAck(updateLogContributionRequest);
         softly.assertThat(response).isPositive();
         assertProcessConcorCaseSubmissionCreation(updateLogContributionRequest, HttpStatus.OK);
     }
 
     // Just verify we're submitting what is expected to the DB. Persistence testing itself is done elsewhere.
-    private void assertProcessConcorCaseSubmissionCreation(UpdateLogContributionRequest request, HttpStatusCode expectedStatusCode) {
+    private void assertProcessConcorCaseSubmissionCreation(ContributionProcessedRequest request, HttpStatusCode expectedStatusCode) {
         CaseSubmissionEntity expectedCaseSubmission = CaseSubmissionEntity.builder()
                 .concorContributionId(BigInteger.valueOf(request.getConcorId()))
                 .payload(request.getErrorText())

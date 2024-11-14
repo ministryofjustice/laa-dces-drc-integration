@@ -25,6 +25,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.FdcUpdateRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.FdcProcessedRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
+import uk.gov.justice.laa.crime.dces.integration.utils.FileServiceUtils;
 
 import java.math.BigInteger;
 import java.net.URI;
@@ -49,7 +50,6 @@ import static uk.gov.justice.laa.crime.dces.integration.datasource.model.EventTy
 @Slf4j
 public class FdcService implements FileService {
     private static final String SERVICE_NAME = "FdcService";
-    private static final URI DUPLICATE_TYPE = URI.create("https://laa-debt-collection.service.justice.gov.uk/problem-types#duplicate-id");
     public static final String REQUESTED_STATUS = "REQUESTED";
     private final FdcMapperUtils fdcMapperUtils;
     private final FdcClient fdcClient;
@@ -151,15 +151,12 @@ public class FdcService implements FileService {
                 eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, OK, null);
                 successfulFdcs.add(currentFdc);
             } catch (WebClientResponseException e){
-                if (e.getStatusCode().isSameCodeAs(CONFLICT)) {
-                    ProblemDetail problemDetail = e.getResponseBodyAs(ProblemDetail.class);
-                    if (problemDetail != null && DUPLICATE_TYPE.equals(problemDetail.getType())) {
+                if (FileServiceUtils.isDrcConflict(e)) {
                         log.info("Ignoring duplicate FDC error response from DRC, fdcId = {}, maatId = {}", currentFdc.getId(), currentFdc.getMaatId());
                         eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, CONFLICT, null);
                         successfulFdcs.add(currentFdc);
                         continue;
                     }
-                }
                 // if not CONFLICT, or not duplicate, then just log it.
                 logDrcSentError(e, e.getStatusCode(), currentFdc, failedFdcs);
             }
@@ -298,9 +295,9 @@ public class FdcService implements FileService {
 
     private void logFileCreationError(Exception e, HttpStatusCode httpStatusCode) {
         // We're rethrowing the exception, therefore avoid logging the stack trace to prevent logging the same trace multiple times.
-        log.error("Failed to create FDC contribution-file. Investigation needed. State of files will be out of sync! [" + e.getClass().getSimpleName() + "(" + e.getMessage() + ")]");
+        log.error("Failed to create FDC contribution-file. Investigation needed. State of files will be out of sync! [{}({})]", e.getClass().getSimpleName(), e.getMessage());
         // If failed, we want to handle this. As it will mean the whole process failed for current day.
-        eventService.logFdc(UPDATED_IN_MAAT, batchId,null, httpStatusCode, e.getMessage());
+        eventService.logFdc(UPDATED_IN_MAAT, batchId,null, httpStatusCode, String.format("Failed to create contribution-file: [%s]",e.getMessage()));
     }
 
 }
