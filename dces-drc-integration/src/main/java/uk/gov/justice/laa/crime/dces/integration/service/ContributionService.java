@@ -56,7 +56,16 @@ public class ContributionService implements FileService {
     @Value("${services.maat-api.getContributionBatchSize:350}")
     private int getContributionBatchSize;
 
-    // main methods
+    /**
+     * Method which logs that a specific contribution has been processed by the Debt Recovery Company.
+     * <ul>
+     * <li>Will log a success by incrementing the successful count of the associated contribution file.</li>
+     * <li>If error text is present, will instead log it to the MAAT DB as an error for the associated contribution file.</li>
+     * <li>Logs details received in the DCES Event Database.</li>
+     * </ul>
+     * @param contributionProcessedRequest Contains the details of the concor contribution which has been processed by the DRC.
+     * @return FileID of the file associated with the fdcId
+     */
     public Integer handleContributionProcessedAck(ContributionProcessedRequest contributionProcessedRequest) {
         try {
             return executeContributionProcessedAckCall(contributionProcessedRequest);
@@ -66,6 +75,17 @@ public class ContributionService implements FileService {
         }
     }
 
+    /**
+     * Method which will process any Final Defence Cost entries in the correct state for sending to the
+     * Debt Recovery Company.
+     * <ul>
+     * <li>Obtains a full list of all concor contributions eligible for processing.</li>
+     * <li>Sends each to the DRC</li>
+     * <li>Creates a Contributions File for the sent concor contributions.</li>
+     * <li>Updates each successfully processed concor contributions to SENT in MAAT.</li>
+     * </ul>
+     * @return If the process was executed successfully, and the contribution file has been created.
+     */
     @Timed(value = "laa_dces_drc_service_process_contributions_daily_files",
             description = "Time taken to process the daily contributions files from DRC and passing this for downstream processing.")
     public boolean processDailyFiles() {
