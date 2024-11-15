@@ -95,7 +95,7 @@ public class FdcService implements FileService {
     public boolean processDailyFiles() {
         List<Fdc> fdcList;
         List<Fdc> successfulFdcs = new ArrayList<>();
-        Map<String,String> failedFdcs = new LinkedHashMap<>();
+        Map<BigInteger,String> failedFdcs = new LinkedHashMap<>();
         batchId = eventService.generateBatchId();
         fdcGlobalUpdate();
         fdcList = getFdcList();
@@ -139,7 +139,7 @@ public class FdcService implements FileService {
         return fdcList;
     }
 
-    private void sendFdcListToDrc(List<Fdc> fdcList, List<Fdc> successfulFdcs, Map<String,String> failedFdcs) {
+    private void sendFdcListToDrc(List<Fdc> fdcList, List<Fdc> successfulFdcs, Map<BigInteger,String> failedFdcs) {
         for (Fdc currentFdc : fdcList) {
             eventService.logFdc(FETCHED_FROM_MAAT, batchId, currentFdc, OK, null);
             int fdcId = currentFdc.getId().intValue();
@@ -160,7 +160,7 @@ public class FdcService implements FileService {
         }
     }
 
-    private Integer updateFdcAndCreateFile(List<Fdc> successfulFdcs, Map<String, String> failedFdcs) {
+    private Integer updateFdcAndCreateFile(List<Fdc> successfulFdcs, Map<BigInteger, String> failedFdcs) {
         // If any contributions were sent, then finish off with updates and create the file:
         Integer contributionFileId = null;
         if (Objects.nonNull(successfulFdcs) && !successfulFdcs.isEmpty()) {
@@ -222,7 +222,7 @@ public class FdcService implements FileService {
     }
 
     @Retry(name = SERVICE_NAME)
-    private void executeSendFdcToDrcCall(Fdc currentFdc, int fdcId, Map<String,String> failedFdcs) {
+    private void executeSendFdcToDrcCall(Fdc currentFdc, int fdcId, Map<BigInteger,String> failedFdcs) {
         final var request = FdcReqForDrc.of(fdcId, currentFdc);
         if (!feature.outgoingIsolated()) {
             drcClient.sendFdcReqToDrc(request);
@@ -276,13 +276,13 @@ public class FdcService implements FileService {
         log.atLevel(isFailureState?Level.ERROR:Level.INFO).log("payload");
     }
 
-    private void logDrcSentError(Exception e, HttpStatusCode httpStatusCode, Fdc currentFdc, Map<String,String> failedFdcs) {
+    private void logDrcSentError(Exception e, HttpStatusCode httpStatusCode, Fdc currentFdc, Map<BigInteger,String> failedFdcs) {
         // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
-        failedFdcs.put(Integer.toString(currentFdc.getId().intValue()), e.getClass().getSimpleName() + ": " + e.getMessage());
+        failedFdcs.put(currentFdc.getId(), e.getClass().getSimpleName() + ": " + e.getMessage());
         eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, httpStatusCode, e.getMessage());
     }
 
-    private void logMaatUpdateEvent(List<Fdc> successfulFdcs, Map<String, String> failedFdcs) {
+    private void logMaatUpdateEvent(List<Fdc> successfulFdcs, Map<BigInteger, String> failedFdcs) {
         // log success and failure numbers.
         eventService.logFdc(UPDATED_IN_MAAT, batchId, null, OK, "Successfully Sent:"+ successfulFdcs.size());
         eventService.logFdc(UPDATED_IN_MAAT, batchId, null, (failedFdcs.size()>0?INTERNAL_SERVER_ERROR:OK), "Failed To Send:"+ failedFdcs.size());
