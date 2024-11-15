@@ -9,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.event.Level;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ProblemDetail;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -28,10 +27,9 @@ import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 import uk.gov.justice.laa.crime.dces.integration.utils.FileServiceUtils;
 
 import java.math.BigInteger;
-import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -97,7 +95,7 @@ public class FdcService implements FileService {
     public boolean processDailyFiles() {
         List<Fdc> fdcList;
         List<Fdc> successfulFdcs = new ArrayList<>();
-        Map<String,String> failedFdcs = new HashMap<>();
+        Map<String,String> failedFdcs = new LinkedHashMap<>();
         batchId = eventService.generateBatchId();
         fdcGlobalUpdate();
         fdcList = getFdcList();
@@ -124,7 +122,7 @@ public class FdcService implements FileService {
         log.info(logMessage);
     }
 
-    @Retry(name = SERVICE_NAME)
+
     private List<Fdc> getFdcList() throws HttpServerErrorException{
         FdcContributionsResponse response;
         response = executeGetFdcContributionsCall();
@@ -141,7 +139,6 @@ public class FdcService implements FileService {
         return fdcList;
     }
 
-    @Retry(name = SERVICE_NAME)
     private void sendFdcListToDrc(List<Fdc> fdcList, List<Fdc> successfulFdcs, Map<String,String> failedFdcs) {
         for (Fdc currentFdc : fdcList) {
             eventService.logFdc(FETCHED_FROM_MAAT, batchId, currentFdc, OK, null);
@@ -210,6 +207,7 @@ public class FdcService implements FileService {
         }
     }
 
+    @Retry(name = SERVICE_NAME)
     private FdcContributionsResponse executeGetFdcContributionsCall() {
         FdcContributionsResponse response;
         try {
@@ -223,6 +221,7 @@ public class FdcService implements FileService {
         return response;
     }
 
+    @Retry(name = SERVICE_NAME)
     private void executeSendFdcToDrcCall(Fdc currentFdc, int fdcId, Map<String,String> failedFdcs) {
         final var request = FdcReqForDrc.of(fdcId, currentFdc);
         if (!feature.outgoingIsolated()) {

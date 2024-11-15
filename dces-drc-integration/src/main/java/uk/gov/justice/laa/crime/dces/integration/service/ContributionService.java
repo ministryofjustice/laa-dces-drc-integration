@@ -27,7 +27,6 @@ import uk.gov.justice.laa.crime.dces.integration.utils.FileServiceUtils;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,9 +75,9 @@ public class ContributionService implements FileService {
         int startingId = 0;
         do {
             Map<BigInteger, CONTRIBUTIONS> successfulContributions = new LinkedHashMap<>();
-            Map<BigInteger, String> failedContributions = new HashMap<>();
+            Map<BigInteger, String> failedContributions = new LinkedHashMap<>();
             contributionsList = getContributionList(startingId);
-            if (contributionsList != null && !contributionsList.isEmpty()) {
+            if (!contributionsList.isEmpty()) {
                 sendContributionListToDrc(contributionsList, successfulContributions, failedContributions);
                 Integer contributionFileId = updateContributionsAndCreateFile(successfulContributions, failedContributions);
 
@@ -86,7 +85,7 @@ public class ContributionService implements FileService {
                 log.info("Created contribution-file ID {}", contributionFileId);
                 startingId = contributionsList.get(contributionsList.size() - 1).getConcorContributionId();
             }
-        } while (contributionsList != null && contributionsList.size() == getContributionBatchSize);
+        } while (contributionsList.size() == getContributionBatchSize);
 
         return !receivedContributionFileIds.isEmpty() && !receivedContributionFileIds.contains(null);
     }
@@ -98,26 +97,25 @@ public class ContributionService implements FileService {
         return executeGetContributionsCall(startingId);
     }
 
-    // TODO reduce complexity more.
-    @Retry(name = SERVICE_NAME)
     private void sendContributionListToDrc(List<ConcorContribEntry> contributionsList, Map<BigInteger, CONTRIBUTIONS> successfulContributions, Map<BigInteger, String> failedContributions) {
         // for each contribution sent by MAAT API
         for (ConcorContribEntry contribEntry : contributionsList) {
             final BigInteger concorContributionId = BigInteger.valueOf(contribEntry.getConcorContributionId());
             CONTRIBUTIONS currentContribution = mapContributionXmlToObject(concorContributionId, contribEntry.getXmlContent(), failedContributions);
-            if(Objects.isNull(currentContribution)){ continue; }
-            try {
-                executeSendConcorToDrcCall(concorContributionId, currentContribution, failedContributions);
-                eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, OK, null);
-                successfulContributions.put(concorContributionId, currentContribution);
-            } catch (WebClientResponseException e) {
-                if(FileServiceUtils.isDrcConflict(e)){
-                    log.info("Ignoring duplicate contribution error response from DRC, concorContributionId = {}, maatId = {}", concorContributionId, currentContribution.getMaatId());
-                    eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, CONFLICT, null);
+            if (Objects.nonNull(currentContribution)) {
+                try {
+                    executeSendConcorToDrcCall(concorContributionId, currentContribution, failedContributions);
+                    eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, OK, null);
                     successfulContributions.put(concorContributionId, currentContribution);
-                    continue;
+                } catch (WebClientResponseException e) {
+                    if (FileServiceUtils.isDrcConflict(e)) {
+                        log.info("Ignoring duplicate contribution error response from DRC, concorContributionId = {}, maatId = {}", concorContributionId, currentContribution.getMaatId());
+                        eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, CONFLICT, null);
+                        successfulContributions.put(concorContributionId, currentContribution);
+                        continue;
+                    }
+                    logDrcSendError(e, e.getStatusCode(), concorContributionId, currentContribution, failedContributions);
                 }
-                logDrcSendError(e, e.getStatusCode(), concorContributionId, currentContribution, failedContributions);
             }
         }
     }
@@ -160,6 +158,7 @@ public class ContributionService implements FileService {
 
     // External Call Executions Methods
 
+    @Retry(name = SERVICE_NAME)
     private int executeContributionProcessedAckCall(ContributionProcessedRequest contributionProcessedRequest) {
         int result;
         if (!feature.incomingIsolated()) {
@@ -172,12 +171,14 @@ public class ContributionService implements FileService {
         return result;
     }
 
+    @Retry(name = SERVICE_NAME)
     private List<ConcorContribEntry> executeGetContributionsCall(int startingId) {
         List<ConcorContribEntry> contributionsList = contributionClient.getContributions(ContributionRecordStatus.ACTIVE.name(), startingId, getContributionBatchSize);
         eventService.logConcor(null, FETCHED_FROM_MAAT, batchId, null, OK, String.format("Fetched:%s",contributionsList.size()));
         return contributionsList;
     }
 
+    @Retry(name = SERVICE_NAME)
     private void executeSendConcorToDrcCall(BigInteger concorContributionId, CONTRIBUTIONS currentContribution, Map<BigInteger, String> failedContributions) {
         final var request = ConcorContributionReqForDrc.of(concorContributionId.intValue(), currentContribution);
         if (!feature.outgoingIsolated()) {
@@ -189,7 +190,6 @@ public class ContributionService implements FileService {
                 final var json = objectMapper.writeValueAsString(request);
                 log.debug("Skipping contribution data to DRC, JSON = [{}]", json);
             } catch (JsonProcessingException e) {
-                failedContributions.put(concorContributionId, e.getClass().getName() + ": " + e.getMessage());
                 logDrcSendError(e, INTERNAL_SERVER_ERROR, concorContributionId, currentContribution, failedContributions);
             }
         }

@@ -335,7 +335,7 @@ class ContributionIntegrationTest {
         softly.assertThat(savedEventsByType.size()).isEqualTo(3); // Fdc should save 4 types of EventTypes.
         eventLogAssertService.assertEventNumberStatus(savedEventsByType.get(EventType.FETCHED_FROM_MAAT), 4, HttpStatus.OK, true);
         eventLogAssertService.assertEventNumberStatus(savedEventsByType.get(EventType.SENT_TO_DRC), 1, HttpStatus.OK, false); // 1 sends successfully.
-        eventLogAssertService.assertEventNumberStatus(savedEventsByType.get(EventType.SENT_TO_DRC), 2, HttpStatus.INTERNAL_SERVER_ERROR, false); // 2 send fails
+        eventLogAssertService.assertEventNumberStatus(savedEventsByType.get(EventType.SENT_TO_DRC), 2, HttpStatus.BAD_REQUEST, false); // 2 send fails
         eventLogAssertService.assertEventNumberStatus(savedEventsByType.get(EventType.UPDATED_IN_MAAT), 2, HttpStatus.OK, false); // it should update successfully.
         eventLogAssertService.assertEventNumberStatus(savedEventsByType.get(EventType.UPDATED_IN_MAAT), 1, HttpStatus.INTERNAL_SERVER_ERROR, false); // this is the single 500 which tracks there were failures.
     }
