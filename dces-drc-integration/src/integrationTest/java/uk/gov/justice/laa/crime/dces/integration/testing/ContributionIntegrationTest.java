@@ -88,25 +88,25 @@ class ContributionIntegrationTest {
     @Test
     void testProcessContributionUpdateWhenNotFound() {
         final String errorText = "The request has failed to process";
-        final var updateLogContributionRequest = ContributionProcessedRequest.builder()
+        final var contributionProcessedRequest = ContributionProcessedRequest.builder()
                 .concorId(9)
                 .errorText(errorText)
                 .build();
-        softly.assertThatThrownBy(() -> contributionService.handleContributionProcessedAck(updateLogContributionRequest))
+        softly.assertThatThrownBy(() -> contributionService.handleContributionProcessedAck(contributionProcessedRequest))
                 .isInstanceOf(WebClientResponseException.class);
-        assertProcessConcorCaseSubmissionCreation(updateLogContributionRequest, HttpStatus.NOT_FOUND);
+        assertProcessConcorCaseSubmissionCreation(contributionProcessedRequest, HttpStatus.NOT_FOUND);
     }
 
     @Test
     void testProcessContributionUpdateWhenFound() {
         final String errorText = "Error Text updated successfully.";
-        final var updateLogContributionRequest = ContributionProcessedRequest.builder()
+        final var contributionProcessedRequest = ContributionProcessedRequest.builder()
                 .concorId(47959912)
                 .errorText(errorText)
                 .build();
-        final Integer response = contributionService.handleContributionProcessedAck(updateLogContributionRequest);
+        final Integer response = contributionService.handleContributionProcessedAck(contributionProcessedRequest);
         softly.assertThat(response).isPositive();
-        assertProcessConcorCaseSubmissionCreation(updateLogContributionRequest, HttpStatus.OK);
+        assertProcessConcorCaseSubmissionCreation(contributionProcessedRequest, HttpStatus.OK);
     }
 
     // Just verify we're submitting what is expected to the DB. Persistence testing itself is done elsewhere.
