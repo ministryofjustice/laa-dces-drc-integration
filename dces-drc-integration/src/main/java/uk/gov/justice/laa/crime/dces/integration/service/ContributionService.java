@@ -169,7 +169,7 @@ public class ContributionService implements FileService {
         }
 
         if (feature.outgoingAnonymized()) {
-            // anonymize the data when flag is true - only for non production environments
+            log.info("Feature:OutgoingAnonymized: contribution data will be anonymized.");
             currentContribution = anonymisingDataService.anonymise(currentContribution);
         }
         eventService.logConcor(concorContributionId, FETCHED_FROM_MAAT, batchId, currentContribution, OK, null);
