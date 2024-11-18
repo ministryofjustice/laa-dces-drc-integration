@@ -76,7 +76,7 @@ public class ContributionService implements FileService {
     }
 
     /**
-     * Method which will process any Final Defence Cost entries in the correct state for sending to the
+     * Method which will process any Concor Contribution entries in the correct state for sending to the
      * Debt Recovery Company.
      * <ul>
      * <li>Obtains a full list of all concor contributions eligible for processing.</li>
