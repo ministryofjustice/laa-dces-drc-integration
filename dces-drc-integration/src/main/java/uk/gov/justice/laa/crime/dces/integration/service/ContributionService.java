@@ -143,7 +143,7 @@ public class ContributionService implements FileService {
     private Integer updateContributionsAndCreateFile(Map<BigInteger, CONTRIBUTIONS> successfulContributions, Map<BigInteger, String> failedContributions) {
         // If any contributions were sent, then create XML file:
         Integer contributionFileId = null;
-        if (Objects.nonNull(successfulContributions) && !successfulContributions.isEmpty()) {
+        if (!successfulContributions.isEmpty()) {
             // Setup and make MAAT API "ATOMIC UPDATE" REST call below:
             LocalDateTime dateGenerated = LocalDateTime.now();
             String fileName = contributionsMapperUtils.generateFileName(dateGenerated);
