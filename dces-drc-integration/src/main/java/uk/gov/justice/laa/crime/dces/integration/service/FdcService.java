@@ -191,7 +191,7 @@ public class FdcService implements FileService {
         if (!feature.incomingIsolated()) {
             result = fdcClient.sendLogFdcProcessed(fdcProcessedRequest);
         } else {
-            log.info("processFdcUpdate: Not calling MAAT API sendLogFdcProcessed() because `feature.incoming-isolated=true`");
+            log.info("Feature:IncomingIsolated: processFdcUpdate: Skipping MAAT API sendLogFdcProcessed() call");
             result = 0; // avoid updating MAAT DB.
         }
         return result;
@@ -202,7 +202,7 @@ public class FdcService implements FileService {
         if (!feature.outgoingIsolated()) {
             return fdcClient.executeFdcGlobalUpdate();
         } else {
-            log.info("callFdcGlobalUpdate: Not calling MAAT API executeFdcGlobalUpdate() because `feature.outgoing-isolated=true`");
+            log.info("Feature:OutgoingIsolated: callFdcGlobalUpdate: Skipping MAAT API executeFdcGlobalUpdate() call");
             return new FdcGlobalUpdateResponse(true, 0);
         }
     }
@@ -229,7 +229,7 @@ public class FdcService implements FileService {
             log.info("Sent FDC data to DRC, fdcId = {}, maatId = {}", fdcId, currentFdc.getMaatId());
         } else {
             try {
-                log.info("Skipping FDC data to DRC, fdcId = {}, maatId = {}", fdcId, currentFdc.getMaatId());
+                log.info("Feature:OutgoingIsolated: Skipping FDC data to DRC, fdcId = {}, maatId = {}", fdcId, currentFdc.getMaatId());
                 final var json = objectMapper.writeValueAsString(request);
                 log.debug("Skipping FDC data to DRC, JSON = [{}]", json);
             } catch (JsonProcessingException e) {
@@ -254,7 +254,7 @@ public class FdcService implements FileService {
                 throw e;
             }
         } else {
-            log.info("fdcUpdateRequest: Not calling MAAT API updateFdcs() because `feature.outgoing-isolated=true`");
+            log.info("Feature:OutgoingIsolated: fdcUpdateRequest: Skipping MAAT API updateFdcs() call");
             return 0;
         }
     }

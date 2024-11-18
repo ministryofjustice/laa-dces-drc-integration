@@ -184,7 +184,7 @@ public class ContributionService implements FileService {
         if (!feature.incomingIsolated()) {
             result = contributionClient.sendLogContributionProcessed(contributionProcessedRequest);
         } else {
-            log.info("processContributionUpdate: not calling MAAT API sendLogContributionProcessed() because `feature.incoming-isolated=true`");
+            log.info("Feature:IncomingIsolated: processContributionUpdate: Skipping MAAT API sendLogContributionProcessed() call");
             result = 0; // avoid updating MAAT DB.
         }
         logContributionAsyncEvent(contributionProcessedRequest, OK);
@@ -205,7 +205,7 @@ public class ContributionService implements FileService {
             drcClient.sendConcorContributionReqToDrc(request);
             log.info("Sent contribution data to DRC, concorContributionId = {}, maatId = {}", concorContributionId, currentContribution.getMaatId());
         } else {
-            log.info("Skipping contribution data to DRC, concorContributionId = {}, maatId = {}", concorContributionId, currentContribution.getMaatId());
+            log.info("Feature:OutgoingIsolated: Skipping contribution data to DRC, concorContributionId = {}, maatId = {}", concorContributionId, currentContribution.getMaatId());
             try {
                 final var json = objectMapper.writeValueAsString(request);
                 log.debug("Skipping contribution data to DRC, JSON = [{}]", json);
@@ -233,7 +233,7 @@ public class ContributionService implements FileService {
                 throw e;
             }
         } else {
-            log.info("contributionUpdateRequest: Not calling MAAT API updateContributions() because `feature.outgoing-isolated=true`");
+            log.info("Feature:OutgoingIsolated: contributionUpdateRequest: Skipping MAAT API updateContributions() call");
             return 0;
         }
     }
