@@ -163,7 +163,7 @@ public class FdcService implements FileService {
     private Integer updateFdcAndCreateFile(List<Fdc> successfulFdcs, Map<BigInteger, String> failedFdcs) {
         // If any contributions were sent, then finish off with updates and create the file:
         Integer contributionFileId = null;
-        if (Objects.nonNull(successfulFdcs) && !successfulFdcs.isEmpty()) {
+        if (!successfulFdcs.isEmpty()) {
             // Construct other parameters for the "ATOMIC UPDATE" call.
             LocalDateTime dateGenerated = LocalDateTime.now();
             String fileName = fdcMapperUtils.generateFileName(dateGenerated);
