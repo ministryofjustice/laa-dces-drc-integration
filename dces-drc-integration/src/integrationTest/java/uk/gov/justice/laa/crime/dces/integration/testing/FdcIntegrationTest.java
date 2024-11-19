@@ -100,35 +100,35 @@ class FdcIntegrationTest {
 
 	@Test
 	void testProcessFdcUpdateWhenFound() {
-		final var updateLogFdcRequest = FdcProcessedRequest.builder()
+		final var fdcProcessedRequest = FdcProcessedRequest.builder()
 				.fdcId(31774046)
 				.build();
-		final Integer response = fdcService.handleFdcProcessedAck(updateLogFdcRequest);
+		final Integer response = fdcService.handleFdcProcessedAck(fdcProcessedRequest);
 		softly.assertThat(response).isPositive();
-		assertProcessFdcCaseSubmissionCreation(updateLogFdcRequest, HttpStatus.OK);
+		assertProcessFdcCaseSubmissionCreation(fdcProcessedRequest, HttpStatus.OK);
 	}
 
 	@Test
 	void testProcessFdcUpdateWhenFoundWithText() {
-		final var updateLogFdcRequest = FdcProcessedRequest.builder()
+		final var fdcProcessedRequest = FdcProcessedRequest.builder()
 				.fdcId(31774046)
 				.errorText("testProcessFdcUpdateWhenFoundWithText")
 				.build();
-		final Integer response = fdcService.handleFdcProcessedAck(updateLogFdcRequest);
+		final Integer response = fdcService.handleFdcProcessedAck(fdcProcessedRequest);
 		softly.assertThat(response).isPositive();
-		assertProcessFdcCaseSubmissionCreation(updateLogFdcRequest, HttpStatus.OK);
+		assertProcessFdcCaseSubmissionCreation(fdcProcessedRequest, HttpStatus.OK);
 	}
 
 	@Test
 	void testProcessFdcUpdateWhenNotFound() {
 		final String errorText = "Error Text updated successfully.";
-		final var updateLogFdcRequest = FdcProcessedRequest.builder()
+		final var fdcProcessedRequest = FdcProcessedRequest.builder()
 				.fdcId(9)
 				.errorText(errorText)
 				.build();
-		softly.assertThatThrownBy(() -> fdcService.handleFdcProcessedAck(updateLogFdcRequest))
+		softly.assertThatThrownBy(() -> fdcService.handleFdcProcessedAck(fdcProcessedRequest))
 				.isInstanceOf(WebClientResponseException.class);
-		assertProcessFdcCaseSubmissionCreation(updateLogFdcRequest, HttpStatus.NOT_FOUND);
+		assertProcessFdcCaseSubmissionCreation(fdcProcessedRequest, HttpStatus.NOT_FOUND);
 	}
 
 	// Just verify we're submitting what is expected to the DB. Persistence testing itself is done elsewhere.

@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
-import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionProcessedRequest;
 
 import java.util.List;
 
@@ -45,7 +45,7 @@ public class ContributionLoggingProcessSpy {
 
         public ContributionLoggingProcessSpyBuilder traceSendLogContributionProcessed() {
             doAnswer(invocation -> {
-                final var argument = (UpdateLogContributionRequest) invocation.getArgument(0);
+                final var argument = (ContributionProcessedRequest) invocation.getArgument(0);
                 concorContributionId(argument.getConcorId());
                 errorText(argument.getErrorText());
                 // Because ContributionClient is a proxied interface, cannot just call `invocation.callRealMethod()` here.
