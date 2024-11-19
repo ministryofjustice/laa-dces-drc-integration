@@ -1,9 +1,0 @@
-spring:
-  ssl:
-    bundle:
-      pem:
-        client-auth:
-          keystore:
-            certificate: ${CLIENT_AUTH_CERTIFICATE}
-            private-key: ${CLIENT_AUTH_PRIVATE_KEY}
-            private-key-password: ${CLIENT_AUTH_PRIVATE_KEY_PASSWORD}

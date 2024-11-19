@@ -90,11 +90,7 @@ public class MaatApiWebClientConfiguration {
         if (services.getMaatApi().isOAuthEnabled()) {
             ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2Client =
                     new ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
-
-            oauth2Client.setDefaultClientRegistrationId(
-                    services.getMaatApi().getRegistrationId()
-            );
-
+            oauth2Client.setDefaultClientRegistrationId("maatapi");
             builder.filter(oauth2Client);
         }
 
