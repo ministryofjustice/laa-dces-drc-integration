@@ -23,7 +23,7 @@ import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestBase;
 import uk.gov.justice.laa.crime.dces.integration.config.FeatureProperties;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
-import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionProcessedRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.ObjectFactory;
 import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
@@ -108,11 +108,11 @@ class ContributionServiceTest extends ApplicationTestBase {
 	void testXMLValid() throws JAXBException {
 		ReflectionTestUtils.setField(contributionService, "getContributionBatchSize", 5);
 		CONTRIBUTIONS testContribution = createTestContribution();
+		when(eventService.generateBatchId()).thenReturn(testBatchId);
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(testContribution);
 		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
 		when(contributionsMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
-		when(eventService.generateBatchId()).thenReturn(testBatchId);
 		doNothing().when(drcClient).sendConcorContributionReqToDrc(any());
 
 		boolean result = contributionService.processDailyFiles();
@@ -125,13 +125,13 @@ class ContributionServiceTest extends ApplicationTestBase {
 
 		verify(eventService, times(30)).logConcor(any(), any(), any(), any(), any(), any());
 		// verify each event is logged.
-		verify(eventService).logConcor(null, EventType.FETCHED_FROM_MAAT, testBatchId, null, OK, "Fetched 5 concorContribution entries");
+		verify(eventService).logConcor(null, EventType.FETCHED_FROM_MAAT, testBatchId, null, OK, "Fetched:5");
 		verify(eventService).logConcor(BigInteger.valueOf(1111), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
 		verify(eventService).logConcor(BigInteger.valueOf(2222), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
 		verify(eventService).logConcor(BigInteger.valueOf(3333), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
 		verify(eventService).logConcor(BigInteger.valueOf(4444), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
 		verify(eventService).logConcor(BigInteger.valueOf(5555), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
-		verify(eventService).logConcor(null, EventType.FETCHED_FROM_MAAT, testBatchId, null, OK, "Fetched 3 concorContribution entries");
+		verify(eventService).logConcor(null, EventType.FETCHED_FROM_MAAT, testBatchId, null, OK, "Fetched:3");
 		verify(eventService).logConcor(BigInteger.valueOf(1000), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
 		verify(eventService).logConcor(BigInteger.valueOf(6666), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
 		verify(eventService).logConcor(BigInteger.valueOf(7777), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
@@ -269,14 +269,14 @@ class ContributionServiceTest extends ApplicationTestBase {
 
 		verify(eventService, times(6)).logConcor(any(), any(), any(), any(), any(), any());
 		// verify each event is logged.
-		verify(eventService).logConcor(null, EventType.FETCHED_FROM_MAAT, testBatchId, null, OK, "Fetched 2 concorContribution entries");
+		verify(eventService).logConcor(null, EventType.FETCHED_FROM_MAAT, testBatchId, null, OK, "Fetched:2");
 		verify(eventService).logConcor(BigInteger.valueOf(1234), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
 		verify(eventService).logConcor(BigInteger.valueOf(9876), EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
 
 		verify(eventService).logConcor(BigInteger.valueOf(1234), EventType.SENT_TO_DRC, testBatchId, testContribution, OK, null);
 		verify(eventService).logConcor(BigInteger.valueOf(9876), EventType.SENT_TO_DRC, testBatchId, testContribution, OK, null);
 
-		verify(eventService).logConcor(null, EventType.UPDATED_IN_MAAT, testBatchId, null, INTERNAL_SERVER_ERROR, "Failed to create Concor contribution-file. Investigation needed. State of files will be out of sync! [org.springframework.web.reactive.function.client.WebClientResponseException$InternalServerError(500 Internal Server Error from POST http://localhost:1111/debt-collection-enforcement/create-contribution-file)]");
+		verify(eventService).logConcor(null, EventType.UPDATED_IN_MAAT, testBatchId, null, INTERNAL_SERVER_ERROR, "Failed to create contribution-file: [500 Internal Server Error from POST http://localhost:1111/debt-collection-enforcement/create-contribution-file]");
 
 	}
 
@@ -310,10 +310,10 @@ class ContributionServiceTest extends ApplicationTestBase {
 
 	@Test
 	void testProcessContributionUpdateWhenSuccessful() {
-		UpdateLogContributionRequest dataRequest = UpdateLogContributionRequest.builder()
+		ContributionProcessedRequest dataRequest = ContributionProcessedRequest.builder()
 				.concorId(911)
 				.build();
-		Integer response = contributionService.processContributionUpdate(dataRequest);
+		Integer response = contributionService.handleContributionProcessedAck(dataRequest);
 		softly.assertThat(response).isEqualTo(1111);
 		verify(eventService).logConcor(BigInteger.valueOf(911),EventType.DRC_ASYNC_RESPONSE,null,null, OK, null);
 	}
@@ -321,10 +321,10 @@ class ContributionServiceTest extends ApplicationTestBase {
 	@Test
 	void testProcessContributionUpdateWhenIncomingIsolated() {
 		when(feature.incomingIsolated()).thenReturn(true);
-		UpdateLogContributionRequest dataRequest = UpdateLogContributionRequest.builder()
+		ContributionProcessedRequest dataRequest = ContributionProcessedRequest.builder()
 				.concorId(911)
 				.build();
-		Integer response = contributionService.processContributionUpdate(dataRequest);
+		Integer response = contributionService.handleContributionProcessedAck(dataRequest);
 		softly.assertThat(response).isEqualTo(0); // so MAAT DB not touched
 	}
 
@@ -332,11 +332,11 @@ class ContributionServiceTest extends ApplicationTestBase {
 	@Test
 	void testProcessContributionUpdateWhenFailed() {
 		String errorText = "The request has failed to process";
-		UpdateLogContributionRequest dataRequest = UpdateLogContributionRequest.builder()
+		ContributionProcessedRequest dataRequest = ContributionProcessedRequest.builder()
 				.concorId(9)
 				.errorText(errorText)
 				.build();
-		var exception = catchThrowableOfType(() -> contributionService.processContributionUpdate(dataRequest), WebClientResponseException.class);
+		var exception = catchThrowableOfType(() -> contributionService.handleContributionProcessedAck(dataRequest), WebClientResponseException.class);
 		softly.assertThat(exception).isNotNull();
 		softly.assertThat(exception.getStatusCode().is4xxClientError()).isTrue();
 		verify(eventService).logConcor(BigInteger.valueOf(9),EventType.DRC_ASYNC_RESPONSE,null,null, BAD_REQUEST, errorText);

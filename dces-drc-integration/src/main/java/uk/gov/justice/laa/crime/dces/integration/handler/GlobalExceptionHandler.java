@@ -71,7 +71,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ProblemDetail> handleGenericException(final Exception ex) {
         log.warn("Unexpected {} occurred.", ex.getClass().getName(), ex);
         ProblemDetail pd = null;
-        if (ex instanceof ErrorResponse resp) { // includes ResponseStatusException and MaatApiClientException.
+        if (ex instanceof ErrorResponse resp) { // includes ResponseStatusException.
             pd = resp.getBody();
         } else if (ex instanceof RestClientResponseException resp) { // includes HttpServerErrorException.
             try {
