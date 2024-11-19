@@ -22,8 +22,11 @@ spec:
       {{ include "laa-dces-drc-integration-int-test.env-vars" . | nindent 6 }}
       envFrom:
         - secretRef:
-            name: dces-datasource
+            name: datasource
             optional: false
+        - secretRef:
+            name: maat-cd-api
+            optional: true
         - secretRef:
             name: config-variables
             optional: true

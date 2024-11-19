@@ -27,12 +27,17 @@ spec:
       serviceAccountName: {{ include "laa-dces-drc-integration.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      {{- if .Values.clientAuth }}
+      {{- if .Values.drcClient }}
       volumes:
-        - name: {{ .Values.clientAuth.volumeName }}
+        - name: {{ .Values.drcClient.volumeName }}
           secret:
-            secretName: {{ .Values.clientAuth.secretName }}
+            secretName: {{ .Values.drcClient.secretName }}
             optional: true
+            items:
+              - key: tls.crt
+                path: tls.crt
+              - key: tls.key
+                path: tls.key
       {{- end}}
       containers:
         - name: {{ .Chart.Name }}
@@ -49,10 +54,10 @@ spec:
               containerPort: {{ .Values.actuator.port }}
               protocol: TCP
             {{- end }}
-          {{- if .Values.clientAuth }}
+          {{- if .Values.drcClient }}
           volumeMounts:
-            - name: {{ .Values.clientAuth.volumeName }}
-              mountPath: {{ .Values.clientAuth.mountPath }}
+            - name: {{ .Values.drcClient.volumeName }}
+              mountPath: {{ .Values.drcClient.mountPath }}
               readOnly: true
           {{- end }}
           livenessProbe:
@@ -81,11 +86,17 @@ spec:
             failureThreshold: {{ .Values.actuator.readiness.failureThreshold }}
           envFrom:
             - secretRef:
-                name: feature
+                name: datasource
+                optional: false
+            - secretRef:
+                name: drc-client
                 optional: true
             - secretRef:
-                name: dces-datasource
-                optional: false
+                name: feature-flags
+                optional: true
+            - secretRef:
+                name: maat-cd-api
+                optional: true
             {{/* All the keys defined in config-variables secret mentioned below will become environment variables, but only if
              same named variables haven't already been defined via the env: tag, here or in _environment.tpl */}}
             - secretRef:
