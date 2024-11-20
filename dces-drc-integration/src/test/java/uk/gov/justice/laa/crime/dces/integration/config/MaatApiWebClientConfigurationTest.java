@@ -57,8 +57,8 @@ class MaatApiWebClientConfigurationTest extends ApplicationTestBase {
 
     @Test
     void givenAnyParameters_whenMaatApiWebClientIsInvoked_thenTheCorrectWebClientShouldBeReturned() throws JsonProcessingException {
-        ConcorContribEntry expectedResponse = new ConcorContribEntry(1, "xmlContent");
-        expectedResponse.setConcorContributionId(1);
+        ConcorContribEntry expectedResponse = new ConcorContribEntry(1L, "xmlContent");
+        expectedResponse.setConcorContributionId(1L);
         expectedResponse.setXmlContent("xmlContent");
         setupValidResponse(expectedResponse);
 

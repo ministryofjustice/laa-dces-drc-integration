@@ -16,7 +16,6 @@ import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.C
 
 import java.io.File;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -75,7 +74,7 @@ class ContributionsMapperUtilsTest extends ApplicationTestBase {
 			fail("Exception occurred in mapping from object to XML:" + e.getMessage());
 		}
 		softly.assertThat(contribution).isNotNull();
-		softly.assertThat(contribution.getId()).isEqualTo(BigInteger.valueOf(222769650));
+		softly.assertThat(contribution.getId()).isEqualTo(222769650L);
 		softly.assertThat(contribution.getFlag()).isEqualTo(UPDATE);
 	}
 
@@ -96,7 +95,7 @@ class ContributionsMapperUtilsTest extends ApplicationTestBase {
 		String generatedXML = contributionsMapperUtils.generateFileXML(cl,"filename");
 
 		softly.assertThat(contribution).isNotNull();
-		softly.assertThat(contribution.getId()).isEqualTo(BigInteger.valueOf(222769650));
+		softly.assertThat(contribution.getId()).isEqualTo(222769650L);
 		softly.assertThat(contribution.getFlag()).isEqualTo(UPDATE);
 		softly.assertThat(generatedXML).isNotNull();
 		softly.assertThat(generatedXML.length()>0).isTrue();

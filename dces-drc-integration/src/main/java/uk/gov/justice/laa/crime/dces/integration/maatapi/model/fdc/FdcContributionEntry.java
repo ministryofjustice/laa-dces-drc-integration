@@ -20,8 +20,8 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class FdcContributionEntry {
-    private Integer maatId;
-    private Integer id;
+    private Long maatId;
+    private Long id;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate sentenceOrderDate;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
@@ -38,7 +38,7 @@ public class FdcContributionEntry {
     private String accelerate;
     private BigDecimal judApportionPercent;
     private BigDecimal agfsVat;
-    private Integer contFileId;
+    private Long contFileId;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate dateReplaced;
     private FdcContributionsStatus status;

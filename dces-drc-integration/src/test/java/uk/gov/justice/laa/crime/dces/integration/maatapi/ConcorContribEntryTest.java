@@ -8,13 +8,13 @@ import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.Con
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @SpringBootTest
 class ConcorContribEntryTest extends ApplicationTestBase {
-    private static final int DEFAULT_ID = 1;
+    private static final Long DEFAULT_ID = 1L;
     private static final String DEFAULT_XML = "XML";
 
 
     @Test
     void givenMaatApiResponse_whenGetIdIsInvoked_thenCorrectIdIsReturned() {
-        int expectedId = 3;
+        Long expectedId = 3L;
         ConcorContribEntry expectedResponse = new ConcorContribEntry(
                 expectedId, DEFAULT_XML
         );
@@ -46,7 +46,7 @@ class ConcorContribEntryTest extends ApplicationTestBase {
 
     @Test
     void givenMaatApiResponse_whenSetIdIsInvoked_thenIdIsUpdated() {
-        int expectedId = 3;
+        Long expectedId = 3L;
         ConcorContribEntry response = new ConcorContribEntry(
                 DEFAULT_ID, DEFAULT_XML
         );

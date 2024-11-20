@@ -6,6 +6,6 @@ import lombok.Data;
 @Data
 @Builder
 public class FdcProcessedRequest {
-    private final Integer fdcId;
+    private final Long fdcId;
     private final String errorText;
 }

@@ -33,7 +33,6 @@ import uk.gov.justice.laa.crime.dces.integration.service.spy.FdcProcessSpy;
 import uk.gov.justice.laa.crime.dces.integration.service.spy.SpyFactory;
 import uk.gov.justice.laa.crime.dces.integration.service.EventLogAssertService;
 
-import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -70,7 +69,7 @@ class FdcIntegrationTest {
 	ArgumentCaptor<CaseSubmissionEntity> caseSubmissionEntityArgumentCaptor;
 
 	private static final String USER_AUDIT = "DCES";
-	private static final BigInteger testBatchId = BigInteger.valueOf(-555L);
+	private static final Long testBatchId = -555L;
 
 	@Builder
     private record CheckOptions(
@@ -101,7 +100,7 @@ class FdcIntegrationTest {
 	@Test
 	void testProcessFdcUpdateWhenFound() {
 		final var fdcProcessedRequest = FdcProcessedRequest.builder()
-				.fdcId(31774046)
+				.fdcId(31774046L)
 				.build();
 		final Integer response = fdcService.handleFdcProcessedAck(fdcProcessedRequest);
 		softly.assertThat(response).isPositive();
@@ -111,7 +110,7 @@ class FdcIntegrationTest {
 	@Test
 	void testProcessFdcUpdateWhenFoundWithText() {
 		final var fdcProcessedRequest = FdcProcessedRequest.builder()
-				.fdcId(31774046)
+				.fdcId(31774046L)
 				.errorText("testProcessFdcUpdateWhenFoundWithText")
 				.build();
 		final Integer response = fdcService.handleFdcProcessedAck(fdcProcessedRequest);
@@ -123,7 +122,7 @@ class FdcIntegrationTest {
 	void testProcessFdcUpdateWhenNotFound() {
 		final String errorText = "Error Text updated successfully.";
 		final var fdcProcessedRequest = FdcProcessedRequest.builder()
-				.fdcId(9)
+				.fdcId(9L)
 				.errorText(errorText)
 				.build();
 		softly.assertThatThrownBy(() -> fdcService.handleFdcProcessedAck(fdcProcessedRequest))
@@ -134,7 +133,7 @@ class FdcIntegrationTest {
 	// Just verify we're submitting what is expected to the DB. Persistence testing itself is done elsewhere.
 	private void assertProcessFdcCaseSubmissionCreation(FdcProcessedRequest request, HttpStatusCode expectedStatusCode) {
 		CaseSubmissionEntity expectedCaseSubmission = CaseSubmissionEntity.builder()
-				.fdcId(BigInteger.valueOf(request.getFdcId()))
+				.fdcId(request.getFdcId())
 				.payload(request.getErrorText())
 				.eventType(eventLogAssertService.getIdForEventType(EventType.DRC_ASYNC_RESPONSE))
 				.httpStatus(expectedStatusCode.value())

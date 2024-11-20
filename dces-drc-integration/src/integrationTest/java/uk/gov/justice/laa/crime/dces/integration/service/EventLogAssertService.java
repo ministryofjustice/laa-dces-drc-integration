@@ -13,7 +13,6 @@ import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventTypeEntit
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionRepository;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.EventTypeRepository;
 
-import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -30,10 +29,10 @@ public class EventLogAssertService {
     private CaseSubmissionRepository caseSubmissionRepository;
     @Autowired
     private EventTypeRepository eventTypeRepository;
-    private BigInteger batchId;
+    private Long batchId;
     private SoftAssertions softly;
 
-    public void deleteAllByBatchId(BigInteger batchId){
+    public void deleteAllByBatchId(Long batchId){
         caseSubmissionRepository.deleteAllByBatchId(batchId);
     }
 

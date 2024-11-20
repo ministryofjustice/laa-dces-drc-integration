@@ -175,19 +175,25 @@ tasks.register('xsd2java') {
 		ant.xjc(
 				destdir: '${jaxbTargetDir}',
 				package: 'uk.gov.justice.laa.crime.dces.integration.model.generated.fdc',
-				schema: 'src/main/resources/schemas/fdc.xsd'
+				schema: 'src/main/resources/schemas/fdc.xsd',
+				extension: 'true',
+				binding: 'src/main/resources/schemas/bindings_general.xml'
 		)
 
 		ant.xjc(
 				destdir: '${jaxbTargetDir}',
 				package: 'uk.gov.justice.laa.crime.dces.integration.model.generated.contributions',
-				schema: 'src/main/resources/schemas/contributions.xsd'
+				schema: 'src/main/resources/schemas/contributions.xsd',
+				extension: 'true',
+				binding: 'src/main/resources/schemas/bindings_general.xml'
 		)
 
 		ant.xjc(
 				destdir: '${jaxbTargetDir}',
 				package: 'uk.gov.justice.laa.crime.dces.integration.model.generated.ack',
-				schema: 'src/main/resources/schemas/fileACK.xsd'
+				schema: 'src/main/resources/schemas/fileACK.xsd',
+				extension: 'true',
+				binding: 'src/main/resources/schemas/bindings_fileACK.xml'
 		)
 	}
 }

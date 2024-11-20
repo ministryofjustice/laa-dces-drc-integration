@@ -12,9 +12,7 @@ import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributi
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.ObjectFactory;
 
-import javax.xml.datatype.XMLGregorianCalendar;
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,8 +20,8 @@ import java.util.List;
 @ExtendWith(SoftAssertionsExtension.class)
 class FdcMapperUtilsTests extends ApplicationTestBase {
 
-	private static final BigInteger DEFAULT_ID = BigInteger.valueOf(111111);
-	private static final BigInteger DEFAULT_MAAT_ID = BigInteger.valueOf(222222);
+	private static final Long DEFAULT_ID = 111111L;
+	private static final Long DEFAULT_MAAT_ID = 222222L;
 	private static final BigDecimal DEFAULT_AGFS_TOTAL = BigDecimal.valueOf(200.00);
 	private static final BigDecimal DEFAULT_FINAL_COST = BigDecimal.valueOf(300.00);
 	private static final BigDecimal DEFAULT_LGFS_TOTAL = BigDecimal.valueOf(400.00);
@@ -51,8 +49,8 @@ class FdcMapperUtilsTests extends ApplicationTestBase {
 		softly.assertThat(mappedFdc.getAgfsTotal()).isEqualTo(DEFAULT_AGFS_TOTAL);
 		softly.assertThat(mappedFdc.getLgfsTotal()).isEqualTo(DEFAULT_LGFS_TOTAL);
 		softly.assertThat(mappedFdc.getFinalCost()).isEqualTo(DEFAULT_FINAL_COST);
-		softly.assertThat(getLocalDate(mappedFdc.getCalculationDate())).isEqualTo(testInput.getDateCalculated());
-		softly.assertThat(getLocalDate(mappedFdc.getSentenceDate())).isEqualTo(testInput.getSentenceOrderDate());
+		softly.assertThat(mappedFdc.getCalculationDate()).isEqualTo(testInput.getDateCalculated());
+		softly.assertThat(mappedFdc.getSentenceDate()).isEqualTo(testInput.getSentenceOrderDate());
 
 	}
 
@@ -73,8 +71,8 @@ class FdcMapperUtilsTests extends ApplicationTestBase {
 	}
 
 	private Fdc generateDefaultFdc() {
-		XMLGregorianCalendar calculationDate = DateConvertor.convertToXMLGregorianCalendar(LocalDate.parse(DEFAULT_CALCULATION_DATE));
-		XMLGregorianCalendar sentenceDate = DateConvertor.convertToXMLGregorianCalendar(LocalDate.parse(DEFAULT_SENTENCE_DATE));
+		LocalDate calculationDate = LocalDate.parse(DEFAULT_CALCULATION_DATE);
+		LocalDate sentenceDate = LocalDate.parse(DEFAULT_SENTENCE_DATE);
 		ObjectFactory of = new ObjectFactory();
 		Fdc fdc = of.createFdcFileFdcListFdc();
 		fdc.setId(DEFAULT_ID);
@@ -89,20 +87,13 @@ class FdcMapperUtilsTests extends ApplicationTestBase {
 
 	private FdcContributionEntry generateDefaultFdcEntry(){
 		return FdcContributionEntry.builder()
-				.id(DEFAULT_ID.intValue())
-				.maatId(DEFAULT_MAAT_ID.intValue())
+				.id(DEFAULT_ID)
+				.maatId(DEFAULT_MAAT_ID)
 				.agfsCost(DEFAULT_AGFS_TOTAL)
 				.lgfsCost(DEFAULT_LGFS_TOTAL)
 				.finalCost(DEFAULT_FINAL_COST)
 				.dateCalculated(LocalDate.parse(DEFAULT_CALCULATION_DATE))
 				.sentenceOrderDate(LocalDate.parse(DEFAULT_SENTENCE_DATE)).build();
-	}
-
-	private LocalDate getLocalDate(XMLGregorianCalendar gregorianCalendar){
-		return LocalDate.of(
-				gregorianCalendar.getYear(),
-				gregorianCalendar.getMonth(),
-				gregorianCalendar.getDay());
 	}
 
 }

@@ -18,12 +18,12 @@ import java.util.List;
 public interface ContributionClient extends MaatApiClientBase {
     @GetExchange("/concor-contribution-files")
     List<ConcorContribEntry> getContributions(@RequestParam String status,
-        @RequestParam(name = "concorContributionId") Integer startingId,
+        @RequestParam(name = "concorContributionId") Long startingId,
         @RequestParam Integer numberOfRecords);
 
     @PostExchange("/create-contribution-file")
     @Valid
-    Integer updateContributions(@RequestBody ContributionUpdateRequest contributionUpdateRequest);
+    Long updateContributions(@RequestBody ContributionUpdateRequest contributionUpdateRequest);
 
     @PostExchange("/log-contribution-response")
     @Valid
