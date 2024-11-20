@@ -29,7 +29,7 @@ import java.util.Optional;
 @Configuration
 @Slf4j
 public class DrcApiWebClientConfiguration {
-    private static final String SSL_BUNDLE_NAME = "client-auth";
+    private static final String SSL_BUNDLE_NAME = "drc-client";
 
     @Bean
     DrcClient drcClient(@Qualifier("drcApiWebClient") final WebClient drcApiWebClient) {
@@ -93,13 +93,13 @@ public class DrcApiWebClientConfiguration {
      * Helper method to generate the netty `HttpClient` for the `WebClient` instance used to talk to the DRC API.
      *
      * @param provider Connection provider specified the connection pooling for clients - if not for this we could have
-     *                 used `webClientBuilder.apply(webClientSsl.fromBundle(clientAuthBundle))` instead of all this.
+     *                 used `webClientBuilder.apply(webClientSsl.fromBundle(drcClientBundle))` instead of all this.
      * @param sslBundles Spring Boot's injected set of SSL bundles.
      * @return a configured `HttpClient` instance ready to use with `WebClient.Builder`.
      */
     private static HttpClient createHttpClient(final ConnectionProvider provider, final SslBundles sslBundles) {
         HttpClient httpClient = HttpClient.create(provider);
-        final Optional<SslBundle> optBundle = getClientAuthBundle(sslBundles);
+        final Optional<SslBundle> optBundle = getDrcClientBundle(sslBundles);
         if (optBundle.isPresent()) {
             httpClient = httpClient.secure(spec -> {
                 SslOptions options = optBundle.get().getOptions();
@@ -123,12 +123,12 @@ public class DrcApiWebClientConfiguration {
     }
 
     /**
-     * Obtain the SslBundle used for client authentication if it exists.
+     * Obtain the SslBundle used for drc-client TLS client authentication if it exists.
      *
      * @param sslBundles Spring Boot's injected `SslBundles` instance.
-     * @return Optional containing the client authentication SslBundle if it exists.
+     * @return Optional containing the drc-client TLS client authentication SslBundle if it exists.
      */
-    private static Optional<SslBundle> getClientAuthBundle(final SslBundles sslBundles) {
+    private static Optional<SslBundle> getDrcClientBundle(final SslBundles sslBundles) {
         if (sslBundles != null) {
             try {
                 final SslBundle sslBundle = sslBundles.getBundle(SSL_BUNDLE_NAME);
