@@ -18,9 +18,6 @@ public class ServicesProperties {
         @NotNull
         private String baseUrl;
 
-        @NotNull
-        private String registrationId;
-
         private boolean oAuthEnabled;
 
         private int maxBufferSize = 1;

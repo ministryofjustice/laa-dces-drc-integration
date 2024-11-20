@@ -13,6 +13,7 @@ import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.Con
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionReqForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -95,7 +96,7 @@ public class ContributionProcessSpy {
         public ContributionProcessSpyBuilder traceUpdateContributions() {
             doAnswer(invocation -> {
                 final var data = (ContributionUpdateRequest) invocation.getArgument(0);
-                xmlCcIds(data.getConcorContributionIds().stream().map(Integer::valueOf).collect(Collectors.toSet()));
+                xmlCcIds(data.getConcorContributionIds().stream().map(BigInteger::intValue).collect(Collectors.toSet()));
                 recordsSent(data.getRecordsSent());
                 xmlContent(data.getXmlContent());
                 xmlFileName(data.getXmlFileName());

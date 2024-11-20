@@ -13,14 +13,6 @@ public class MaatApiExceptionResponseHandler {
 
     private static final String FORMAT_STRING = "{} :: {}";
 
-    @ExceptionHandler(MaatApiClientException.class)
-    public ResponseEntity<String> handleMaatApiClientException(
-            MaatApiClientException exception
-    ) {
-        log.error(FORMAT_STRING, exception.getStatusCode(), exception.getMessage());
-        return ResponseEntity.status(exception.getStatusCode()).body(exception.getMessage());
-    }
-
     @ExceptionHandler(WebClientResponseException.class)
     public ResponseEntity<String> handleWebClientResponseException(
             WebClientResponseException exception

@@ -44,14 +44,13 @@ logging:
 
 services:
   maat-api:
-    baseUrl: ${MAAT_API_BASE_URL}
-    registrationId: ${MAAT_API_REGISTRATION_ID}
+    baseUrl: ${MAATCDAPI_BASEURL}
     oAuthEnabled: true
     maxBufferSize: 16
     getContributionBatchSize: ${GET_CONTRIBUTION_BATCH_SIZE:300}
   drc-client-api:
-    baseUrl: ${DRC_API_BASE_URL}
-    oAuthEnabled: false
+    baseUrl: ${DRCCLIENT_BASEURL}
+    oAuthEnabled: ${DRCCLIENT_OAUTH2_ENABLED:false}
 
 scheduling:
   # default is disabled. "-"
@@ -70,22 +69,22 @@ spring:
       client:
         provider:
           maatapi:
-            token-uri: ${MAAT_API_OAUTH_URL}
+            token-uri: ${MAATCDAPI_OAUTH2_TOKENURI}
           drc-client-api:
-            token-uri: ${DRC_API_OAUTH_URL}
+            token-uri: ${DRCCLIENT_OAUTH2_TOKENURI}
         registration:
           maatapi:
-            client-id: ${MAAT_API_OAUTH_CLIENT_ID}
-            client-secret: ${MAAT_API_OAUTH_CLIENT_SECRET}
+            client-id: ${MAATCDAPI_OAUTH2_CLIENTID}
+            client-secret: ${MAATCDAPI_OAUTH2_CLIENTSECRET}
             authorization-grant-type: client_credentials
             scope:
-              - ${MAAT_API_OAUTH_SCOPE}
+              - ${MAATCDAPI_OAUTH2_SCOPE}
           drc-client-api:
-            client-id: ${DRC_API_OAUTH_CLIENT_ID}
-            client-secret: ${DRC_API_OAUTH_CLIENT_SECRET}
+            client-id: ${DRCCLIENT_OAUTH2_CLIENTID}
+            client-secret: ${DRCCLIENT_OAUTH2_CLIENTSECRET}
             authorization-grant-type: client_credentials
             scope:
-              - ${DRC_API_OAUTH_SCOPE}
+              - ${DRCCLIENT_OAUTH2_SCOPE}
       resource-server:
         jwt:
           issuer-uri: ${LAA_DCES_DRC_INTEGRATION_RESOURCE_SERVER_ISSUER_URI}

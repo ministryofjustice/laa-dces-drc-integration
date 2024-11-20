@@ -1,0 +1,9 @@
+spring:
+  ssl:
+    bundle:
+      pem:
+        drc-client:
+          keystore:
+            certificate: ${DRCCLIENT_KEYSTORE_CERTIFICATE}
+            private-key: ${DRCCLIENT_KEYSTORE_PRIVATEKEY}
+            private-key-password: ${DRCCLIENT_KEYSTORE_PRIVATEKEYPASSWORD}

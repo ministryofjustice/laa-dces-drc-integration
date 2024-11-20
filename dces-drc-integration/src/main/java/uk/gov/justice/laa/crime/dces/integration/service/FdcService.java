@@ -9,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.event.Level;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ProblemDetail;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -25,12 +24,12 @@ import uk.gov.justice.laa.crime.dces.integration.model.FdcUpdateRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.FdcProcessedRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
+import uk.gov.justice.laa.crime.dces.integration.utils.FileServiceUtils;
 
 import java.math.BigInteger;
-import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -49,7 +48,6 @@ import static uk.gov.justice.laa.crime.dces.integration.datasource.model.EventTy
 @Slf4j
 public class FdcService implements FileService {
     private static final String SERVICE_NAME = "FdcService";
-    private static final URI DUPLICATE_TYPE = URI.create("https://laa-debt-collection.service.justice.gov.uk/problem-types#duplicate-id");
     public static final String REQUESTED_STATUS = "REQUESTED";
     private final FdcMapperUtils fdcMapperUtils;
     private final FdcClient fdcClient;
@@ -97,7 +95,7 @@ public class FdcService implements FileService {
     public boolean processDailyFiles() {
         List<Fdc> fdcList;
         List<Fdc> successfulFdcs = new ArrayList<>();
-        Map<String,String> failedFdcs = new HashMap<>();
+        Map<BigInteger,String> failedFdcs = new LinkedHashMap<>();
         batchId = eventService.generateBatchId();
         fdcGlobalUpdate();
         fdcList = getFdcList();
@@ -124,7 +122,7 @@ public class FdcService implements FileService {
         log.info(logMessage);
     }
 
-    @Retry(name = SERVICE_NAME)
+
     private List<Fdc> getFdcList() throws HttpServerErrorException{
         FdcContributionsResponse response;
         response = executeGetFdcContributionsCall();
@@ -141,8 +139,7 @@ public class FdcService implements FileService {
         return fdcList;
     }
 
-    @Retry(name = SERVICE_NAME)
-    private void sendFdcListToDrc(List<Fdc> fdcList, List<Fdc> successfulFdcs, Map<String,String> failedFdcs) {
+    private void sendFdcListToDrc(List<Fdc> fdcList, List<Fdc> successfulFdcs, Map<BigInteger,String> failedFdcs) {
         for (Fdc currentFdc : fdcList) {
             eventService.logFdc(FETCHED_FROM_MAAT, batchId, currentFdc, OK, null);
             int fdcId = currentFdc.getId().intValue();
@@ -151,25 +148,22 @@ public class FdcService implements FileService {
                 eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, OK, null);
                 successfulFdcs.add(currentFdc);
             } catch (WebClientResponseException e){
-                if (e.getStatusCode().isSameCodeAs(CONFLICT)) {
-                    ProblemDetail problemDetail = e.getResponseBodyAs(ProblemDetail.class);
-                    if (problemDetail != null && DUPLICATE_TYPE.equals(problemDetail.getType())) {
+                if (FileServiceUtils.isDrcConflict(e)) {
                         log.info("Ignoring duplicate FDC error response from DRC, fdcId = {}, maatId = {}", currentFdc.getId(), currentFdc.getMaatId());
                         eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, CONFLICT, null);
                         successfulFdcs.add(currentFdc);
                         continue;
                     }
-                }
                 // if not CONFLICT, or not duplicate, then just log it.
                 logDrcSentError(e, e.getStatusCode(), currentFdc, failedFdcs);
             }
         }
     }
 
-    private Integer updateFdcAndCreateFile(List<Fdc> successfulFdcs, Map<String, String> failedFdcs) {
+    private Integer updateFdcAndCreateFile(List<Fdc> successfulFdcs, Map<BigInteger, String> failedFdcs) {
         // If any contributions were sent, then finish off with updates and create the file:
         Integer contributionFileId = null;
-        if (Objects.nonNull(successfulFdcs) && !successfulFdcs.isEmpty()) {
+        if (!successfulFdcs.isEmpty()) {
             // Construct other parameters for the "ATOMIC UPDATE" call.
             LocalDateTime dateGenerated = LocalDateTime.now();
             String fileName = fdcMapperUtils.generateFileName(dateGenerated);
@@ -197,7 +191,7 @@ public class FdcService implements FileService {
         if (!feature.incomingIsolated()) {
             result = fdcClient.sendLogFdcProcessed(fdcProcessedRequest);
         } else {
-            log.info("processFdcUpdate: Not calling MAAT API sendLogFdcProcessed() because `feature.incoming-isolated=true`");
+            log.info("Feature:IncomingIsolated: processFdcUpdate: Skipping MAAT API sendLogFdcProcessed() call");
             result = 0; // avoid updating MAAT DB.
         }
         return result;
@@ -208,11 +202,12 @@ public class FdcService implements FileService {
         if (!feature.outgoingIsolated()) {
             return fdcClient.executeFdcGlobalUpdate();
         } else {
-            log.info("callFdcGlobalUpdate: Not calling MAAT API executeFdcGlobalUpdate() because `feature.outgoing-isolated=true`");
+            log.info("Feature:OutgoingIsolated: callFdcGlobalUpdate: Skipping MAAT API executeFdcGlobalUpdate() call");
             return new FdcGlobalUpdateResponse(true, 0);
         }
     }
 
+    @Retry(name = SERVICE_NAME)
     private FdcContributionsResponse executeGetFdcContributionsCall() {
         FdcContributionsResponse response;
         try {
@@ -226,14 +221,15 @@ public class FdcService implements FileService {
         return response;
     }
 
-    private void executeSendFdcToDrcCall(Fdc currentFdc, int fdcId, Map<String,String> failedFdcs) {
+    @Retry(name = SERVICE_NAME)
+    private void executeSendFdcToDrcCall(Fdc currentFdc, int fdcId, Map<BigInteger,String> failedFdcs) {
         final var request = FdcReqForDrc.of(fdcId, currentFdc);
         if (!feature.outgoingIsolated()) {
             drcClient.sendFdcReqToDrc(request);
             log.info("Sent FDC data to DRC, fdcId = {}, maatId = {}", fdcId, currentFdc.getMaatId());
         } else {
             try {
-                log.info("Skipping FDC data to DRC, fdcId = {}, maatId = {}", fdcId, currentFdc.getMaatId());
+                log.info("Feature:OutgoingIsolated: Skipping FDC data to DRC, fdcId = {}, maatId = {}", fdcId, currentFdc.getMaatId());
                 final var json = objectMapper.writeValueAsString(request);
                 log.debug("Skipping FDC data to DRC, JSON = [{}]", json);
             } catch (JsonProcessingException e) {
@@ -258,7 +254,7 @@ public class FdcService implements FileService {
                 throw e;
             }
         } else {
-            log.info("fdcUpdateRequest: Not calling MAAT API updateFdcs() because `feature.outgoing-isolated=true`");
+            log.info("Feature:OutgoingIsolated: fdcUpdateRequest: Skipping MAAT API updateFdcs() call");
             return 0;
         }
     }
@@ -280,13 +276,13 @@ public class FdcService implements FileService {
         log.atLevel(isFailureState?Level.ERROR:Level.INFO).log("payload");
     }
 
-    private void logDrcSentError(Exception e, HttpStatusCode httpStatusCode, Fdc currentFdc, Map<String,String> failedFdcs) {
+    private void logDrcSentError(Exception e, HttpStatusCode httpStatusCode, Fdc currentFdc, Map<BigInteger,String> failedFdcs) {
         // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
-        failedFdcs.put(Integer.toString(currentFdc.getId().intValue()), e.getClass().getSimpleName() + ": " + e.getMessage());
+        failedFdcs.put(currentFdc.getId(), e.getClass().getSimpleName() + ": " + e.getMessage());
         eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, httpStatusCode, e.getMessage());
     }
 
-    private void logMaatUpdateEvent(List<Fdc> successfulFdcs, Map<String, String> failedFdcs) {
+    private void logMaatUpdateEvent(List<Fdc> successfulFdcs, Map<BigInteger, String> failedFdcs) {
         // log success and failure numbers.
         eventService.logFdc(UPDATED_IN_MAAT, batchId, null, OK, "Successfully Sent:"+ successfulFdcs.size());
         eventService.logFdc(UPDATED_IN_MAAT, batchId, null, (failedFdcs.size()>0?INTERNAL_SERVER_ERROR:OK), "Failed To Send:"+ failedFdcs.size());
@@ -298,9 +294,9 @@ public class FdcService implements FileService {
 
     private void logFileCreationError(Exception e, HttpStatusCode httpStatusCode) {
         // We're rethrowing the exception, therefore avoid logging the stack trace to prevent logging the same trace multiple times.
-        log.error("Failed to create FDC contribution-file. Investigation needed. State of files will be out of sync! [" + e.getClass().getSimpleName() + "(" + e.getMessage() + ")]");
+        log.error("Failed to create FDC contribution-file. Investigation needed. State of files will be out of sync! [{}({})]", e.getClass().getSimpleName(), e.getMessage());
         // If failed, we want to handle this. As it will mean the whole process failed for current day.
-        eventService.logFdc(UPDATED_IN_MAAT, batchId,null, httpStatusCode, e.getMessage());
+        eventService.logFdc(UPDATED_IN_MAAT, batchId,null, httpStatusCode, String.format("Failed to create contribution-file: [%s]",e.getMessage()));
     }
 
 }

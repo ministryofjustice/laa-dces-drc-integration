@@ -13,7 +13,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
-import uk.gov.justice.laa.crime.dces.integration.model.external.UpdateLogContributionRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionProcessedRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.FdcProcessedRequest;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
@@ -51,12 +51,12 @@ class AckFromDrcControllerTest {
     @Test
     void testContributionWhenDownstreamResponseIsValid() throws Exception {
 
-        UpdateLogContributionRequest updateLogContributionRequest = UpdateLogContributionRequest.builder()
+        ContributionProcessedRequest contributionProcessedRequest = ContributionProcessedRequest.builder()
                 .concorId(99)
                 .errorText("error 99")
                 .build();
         Integer serviceResponse = 1111;
-        when(contributionService.processContributionUpdate(updateLogContributionRequest)).thenReturn(serviceResponse);
+        when(contributionService.handleContributionProcessedAck(contributionProcessedRequest)).thenReturn(serviceResponse);
 
         ConcorContributionAckFromDrc concorContributionAckFromDrc = ConcorContributionAckFromDrc.of(99, "error 99");
         final String requestBody = mapper.writeValueAsString(concorContributionAckFromDrc);
@@ -71,12 +71,12 @@ class AckFromDrcControllerTest {
     @Test
     void testContributionWhenDownstreamResponseIsNotValid() throws Exception {
 
-        UpdateLogContributionRequest updateLogContributionRequest = UpdateLogContributionRequest.builder()
+        ContributionProcessedRequest contributionProcessedRequest = ContributionProcessedRequest.builder()
                 .concorId(9)
                 .errorText("Failed to process")
                 .build();
         var serviceResponse = new WebClientResponseException(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), null, null, null);
-        when(contributionService.processContributionUpdate(updateLogContributionRequest)).thenThrow(serviceResponse);
+        when(contributionService.handleContributionProcessedAck(contributionProcessedRequest)).thenThrow(serviceResponse);
 
         ConcorContributionAckFromDrc concorContributionAckFromDrc = ConcorContributionAckFromDrc.of(9, "Failed to process");
         final String requestBody = mapper.writeValueAsString(concorContributionAckFromDrc);
