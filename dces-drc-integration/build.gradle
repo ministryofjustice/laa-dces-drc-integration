@@ -11,7 +11,6 @@ plugins {
 def versions = [
 		sentryVersion          : '7.13.0',
 		springdocVersion       : '2.1.0',
-		jakartaActivation      : '2.0.1',
 		resilience4jVersion    : '2.2.0',
 		wiremockVersion        : '3.9.1',
 		notifyVersion          : '4.1.0-RELEASE',
@@ -85,12 +84,9 @@ dependencies {
 	implementation "io.github.resilience4j:resilience4j-spring-boot3:$versions.resilience4jVersion"
 
 	// XML Conversion
-	implementation "org.glassfish.jaxb:jaxb-runtime"
 	xsd2java "com.sun.xml.bind:jaxb-xjc"
 	xsd2java "com.sun.xml.bind:jaxb-impl"
 	xsd2java "com.sun.xml.bind:jaxb-core"
-	xsd2java "com.sun.activation:jakarta.activation:$versions.jakartaActivation"
-	xsd2java "jakarta.xml.bind:jakarta.xml.bind-api"
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
@@ -169,11 +165,11 @@ sonar {
 	}
 }
 
-task xsd2java() {
+tasks.register('xsd2java') {
 	doLast {
 		jaxbTargetDir.mkdirs()
 
-		ant.taskdef(name: 'xjc', classname: 'com.sun.tools.xjc.XJCTask', classpath: configurations.xsd2java.asPath)
+		ant.taskdef(name: 'xjc', classname: 'com.sun.tools.xjc.XJC2Task', classpath: configurations.xsd2java.asPath)
 		ant.jaxbTargetDir = jaxbTargetDir
 
 		ant.xjc(
@@ -196,7 +192,7 @@ task xsd2java() {
 	}
 }
 
-task integrationTest(type: Test) {
+tasks.register('integrationTest', Test) {
 	useJUnitPlatform()
 	testClassesDirs = sourceSets.integrationTest.output.classesDirs
 	classpath = sourceSets.integrationTest.runtimeClasspath
