@@ -5,6 +5,10 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.parameters.HeaderParameter;
+import io.swagger.v3.oas.models.security.OAuthFlow;
+import io.swagger.v3.oas.models.security.OAuthFlows;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -21,9 +25,21 @@ public class OpenApiConfig {
             @Value("${api.version:Test}") final String apiVersion,
             @Value("${api.contactName:Test}") final String name,
             @Value("${api.contactEmail:Test}") final String email,
-            @Value("${api.contactUrl:Test}") final String url) {
+            @Value("${api.contactUrl:Test}") final String url,
+            @Value("${spring.security.oauth2.client.provider.drc-client-api.token-uri:TestURI}") final String oAuthTokenUri) {
         return new OpenAPI()
-                .components(new Components())
+                .components(new Components()
+                    .addSecuritySchemes("OAuth2",
+                        new SecurityScheme()
+                            .type(SecurityScheme.Type.OAUTH2)
+                            .flows(new OAuthFlows()
+                                .clientCredentials(new OAuthFlow()
+                                    .tokenUrl(oAuthTokenUri)
+                                )
+                            )
+                    )
+                )
+                .addSecurityItem(new SecurityRequirement().addList("OAuth2"))
                 .info(new Info()
                         .title(title)
                         .description(description)
@@ -32,14 +48,12 @@ public class OpenApiConfig {
                 );
     }
 
-    //this group will expose the API which are ready for clients.
-    @Bean
+   @Bean
     GroupedOpenApi releasedApi() {
-        return GroupedOpenApi.builder()
-                .displayName("DCES DRC Integration")
-                .group("DCES DRC Integration Rest Api v1")
-                .pathsToMatch("/api/internal/v1/dces-drc-integration/**")
-
+        return groupedOpenApiBuilderBase()
+                .displayName("DCES DRC Integration API v1")
+                .group("1 DCES DRC Integration Rest Api v1") //This determines the order in which the groups are displayed
+                .pathsToMatch("/api/dces/v1/**")
                 .addOperationCustomizer((operation, method) -> {
                     operation.addParametersItem(
                             new HeaderParameter()
@@ -55,12 +69,33 @@ public class OpenApiConfig {
                 .build();
     }
 
-    //add the path to exclude when releasing the code in the prod.
     @Bean
     GroupedOpenApi underDevelopmentApi() {
-        return GroupedOpenApi.builder()
-                .group("DCES DRC Under Development API")
-                .pathsToExclude("/api/internal/v1/dces-drc-integration")
-                .build();
+        return groupedOpenApiBuilderBase()
+            .displayName("DCES DRC Integration API Under Development")
+            .group("3 DCES DRC API Under Development") //This determines the order in which the groups are displayed
+            .pathsToMatch("/api/dces/dev/**")
+            .addOpenApiCustomizer(openApi -> openApi.info(new Info()
+                .title("DCES DRC API Endpoints Under Development")
+                .description("Endpoints that are under development (if any), will be documented here. "  )))
+            .build();
     }
+
+  @Bean
+  GroupedOpenApi testApi() {
+    return groupedOpenApiBuilderBase()
+        .displayName("DCES DRC Integration API Test and Stub endpoints")
+        .group("2 DCES DRC API Test and Stub endpoints") //This determines the order in which the groups are displayed
+        .pathsToMatch("/api/dces/test/**", "/api/dces/v1-stub/**")
+        .addOpenApiCustomizer(openApi -> openApi.info(new Info()
+            .title("DCES DRC API Test and Stub endpoints")
+            .description("If the endpoints meant for testing and stubbing are enabled in this environment, they will be documented here. "  )))
+        .build();
+  }
+
+  private GroupedOpenApi.Builder groupedOpenApiBuilderBase() {
+    return GroupedOpenApi.builder()
+        .pathsToExclude("/error");
+  }
+
 }
