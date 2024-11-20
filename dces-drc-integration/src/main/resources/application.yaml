@@ -104,6 +104,7 @@ springdoc:
     path: /swagger-ui-custom.html
     enabled: true
     operations-sorter: method
+    api-url: ${API_URL}
   api-docs:
     path: "/api-docs"
     enabled: true

@@ -9,6 +9,8 @@ import io.swagger.v3.oas.models.security.OAuthFlow;
 import io.swagger.v3.oas.models.security.OAuthFlows;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
+import java.util.List;
 import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -26,8 +28,11 @@ public class OpenApiConfig {
             @Value("${api.contactName:Test}") final String name,
             @Value("${api.contactEmail:Test}") final String email,
             @Value("${api.contactUrl:Test}") final String url,
-            @Value("${spring.security.oauth2.client.provider.drc-client-api.token-uri:TestURI}") final String oAuthTokenUri) {
+            @Value("${spring.security.oauth2.client.provider.drc-client-api.token-uri:TestURI}") final String oAuthTokenUri,
+            @Value("${springdoc.swagger-ui.api-url:TestURL}") final String apiUrl) {
         return new OpenAPI()
+                .servers(List.of(
+                    new Server().url(apiUrl).description("API Base URL")))
                 .components(new Components()
                     .addSecuritySchemes("OAuth2",
                         new SecurityScheme()
