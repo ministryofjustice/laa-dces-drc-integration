@@ -31,8 +31,8 @@ public class OpenApiConfig {
             @Value("${springdoc.swagger-ui.oauth-token-url:TestURI}") final String oAuthTokenUri,
             @Value("${springdoc.swagger-ui.api-url:TestURL}") final String apiUrl) {
         return new OpenAPI()
-                .servers(List.of(
-                    new Server().url(apiUrl).description("API Base URL")))
+//                .servers(List.of(
+//                    new Server().url(apiUrl).description("API Base URL")))
                 .components(new Components()
                     .addSecuritySchemes("OAuth2",
                         new SecurityScheme()
