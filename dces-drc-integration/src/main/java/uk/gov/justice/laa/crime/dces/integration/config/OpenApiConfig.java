@@ -28,7 +28,7 @@ public class OpenApiConfig {
             @Value("${api.contactName:Test}") final String name,
             @Value("${api.contactEmail:Test}") final String email,
             @Value("${api.contactUrl:Test}") final String url,
-            @Value("${spring.security.oauth2.client.provider.drc-client-api.token-uri:TestURI}") final String oAuthTokenUri,
+            @Value("${springdoc.swagger-ui.oauth-token-url:TestURI}") final String oAuthTokenUri,
             @Value("${springdoc.swagger-ui.api-url:TestURL}") final String apiUrl) {
         return new OpenAPI()
                 .servers(List.of(

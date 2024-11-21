@@ -105,6 +105,7 @@ springdoc:
     enabled: true
     operations-sorter: method
     api-url: ${API_URL}
+    oauth-token-url: ${DCES_DRC_API_OAUTH_TOKEN_URL}
   api-docs:
     path: "/api-docs"
     enabled: true
