@@ -55,7 +55,7 @@ class AckFromDrcControllerTest {
                 .concorId(99L)
                 .errorText("error 99")
                 .build();
-        Integer serviceResponse = 1111;
+        Long serviceResponse = 1111L;
         when(contributionService.handleContributionProcessedAck(contributionProcessedRequest)).thenReturn(serviceResponse);
 
         ConcorContributionAckFromDrc concorContributionAckFromDrc = ConcorContributionAckFromDrc.of(99L, "error 99");
@@ -94,7 +94,7 @@ class AckFromDrcControllerTest {
         FdcProcessedRequest fdcProcessedRequest = FdcProcessedRequest.builder()
                 .fdcId(99L)
                 .build();
-        Integer serviceResponse = 1111;
+        long serviceResponse = 1111L;
         when(fdcService.handleFdcProcessedAck(fdcProcessedRequest)).thenReturn(serviceResponse);
 
         FdcAckFromDrc fdcAckFromDrc = FdcAckFromDrc.of(99L, null);

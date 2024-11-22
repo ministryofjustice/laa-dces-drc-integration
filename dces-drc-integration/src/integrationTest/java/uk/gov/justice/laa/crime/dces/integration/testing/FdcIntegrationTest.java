@@ -102,7 +102,7 @@ class FdcIntegrationTest {
 		final var fdcProcessedRequest = FdcProcessedRequest.builder()
 				.fdcId(31774046L)
 				.build();
-		final Integer response = fdcService.handleFdcProcessedAck(fdcProcessedRequest);
+		final Long response = fdcService.handleFdcProcessedAck(fdcProcessedRequest);
 		softly.assertThat(response).isPositive();
 		assertProcessFdcCaseSubmissionCreation(fdcProcessedRequest, HttpStatus.OK);
 	}
@@ -113,7 +113,7 @@ class FdcIntegrationTest {
 				.fdcId(31774046L)
 				.errorText("testProcessFdcUpdateWhenFoundWithText")
 				.build();
-		final Integer response = fdcService.handleFdcProcessedAck(fdcProcessedRequest);
+		final Long response = fdcService.handleFdcProcessedAck(fdcProcessedRequest);
 		softly.assertThat(response).isPositive();
 		assertProcessFdcCaseSubmissionCreation(fdcProcessedRequest, HttpStatus.OK);
 	}
@@ -277,7 +277,7 @@ class FdcIntegrationTest {
      * <a href="https://dsdmoj.atlassian.net/browse/DCES-358">DCES-358</a> and
      * <a href="https://dsdmoj.atlassian.net/browse/DCES-359">DCES-359</a> for test specifications.
      */
-    private void whenProcessDailyFilesRuns_thenTheyAreQueriedSentAndInCreatedFile(final Set<Integer> updatedIds) {
+    private void whenProcessDailyFilesRuns_thenTheyAreQueriedSentAndInCreatedFile(final Set<Long> updatedIds) {
         final FdcProcessSpy.FdcProcessSpyBuilder watching = spyFactory.newFdcProcessSpyBuilder()
                 .traceExecuteFdcGlobalUpdate()
                 .traceAndFilterGetFdcContributions(updatedIds)
@@ -293,7 +293,7 @@ class FdcIntegrationTest {
 
         // Fetch some items of information from the maat-api to use during validation:
 		final var fdcContributions = updatedIds.stream().map(spyFactory::getFdcContribution).toList();
-		final int contributionFileId = watched.getXmlFileResult();
+		final long contributionFileId = watched.getXmlFileResult();
 		final var contributionFile = spyFactory.getContributionsFile(contributionFileId);
 
 		softly.assertThat(watched.getGlobalUpdateResponse().isSuccessful()).isTrue(); // 1
@@ -713,7 +713,7 @@ class FdcIntegrationTest {
      * @param checkOptions                   Object specifying different test options to set or checks to perform
      * @param fdcContributionsStatusExpected The status expected at the end of this test
      */
-    private void runProcessDailyFilesAndCheckResults(final Set<Integer> updatedIds, final CheckOptions checkOptions,
+    private void runProcessDailyFilesAndCheckResults(final Set<Long> updatedIds, final CheckOptions checkOptions,
                                                      final FdcContributionsStatus fdcContributionsStatusExpected) {
         final FdcProcessSpy.FdcProcessSpyBuilder watching = spyFactory.newFdcProcessSpyBuilder()
                 .traceExecuteFdcGlobalUpdate()

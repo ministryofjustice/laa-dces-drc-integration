@@ -65,7 +65,7 @@ public class ContributionService implements FileService {
      * @param contributionProcessedRequest Contains the details of the concor contribution which has been processed by the DRC.
      * @return FileID of the file associated with the fdcId
      */
-    public Integer handleContributionProcessedAck(ContributionProcessedRequest contributionProcessedRequest) {
+    public Long handleContributionProcessedAck(ContributionProcessedRequest contributionProcessedRequest) {
         try {
             return executeContributionProcessedAckCall(contributionProcessedRequest);
         } catch (WebClientResponseException e){
@@ -178,13 +178,12 @@ public class ContributionService implements FileService {
     // External Call Executions Methods
 
     @Retry(name = SERVICE_NAME)
-    private int executeContributionProcessedAckCall(ContributionProcessedRequest contributionProcessedRequest) {
-        int result;
+    private long executeContributionProcessedAckCall(ContributionProcessedRequest contributionProcessedRequest) {
+        long result = 0L;
         if (!feature.incomingIsolated()) {
             result = contributionClient.sendLogContributionProcessed(contributionProcessedRequest);
         } else {
             log.info("Feature:IncomingIsolated: processContributionUpdate: Skipping MAAT API sendLogContributionProcessed() call");
-            result = 0; // avoid updating MAAT DB.
         }
         logContributionAsyncEvent(contributionProcessedRequest, OK);
         return result;

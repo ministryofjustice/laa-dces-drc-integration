@@ -409,8 +409,8 @@ class FdcServiceTest extends ApplicationTestBase {
 		FdcProcessedRequest dataRequest = FdcProcessedRequest.builder()
 				.fdcId(911L)
 				.build();
-		Integer response = fdcService.handleFdcProcessedAck(dataRequest);
-		softly.assertThat(response).isEqualTo(1111);
+		Long response = fdcService.handleFdcProcessedAck(dataRequest);
+		softly.assertThat(response).isEqualTo(1111L);
 	}
 
 	@Test
@@ -419,8 +419,8 @@ class FdcServiceTest extends ApplicationTestBase {
 		FdcProcessedRequest dataRequest = FdcProcessedRequest.builder()
 				.fdcId(911L)
 				.build();
-		Integer response = fdcService.handleFdcProcessedAck(dataRequest);
-		softly.assertThat(response).isEqualTo(0); // so MAAT DB not touched
+		Long response = fdcService.handleFdcProcessedAck(dataRequest);
+		softly.assertThat(response).isEqualTo(0L); // so MAAT DB not touched
 	}
 
 	@Test

@@ -103,7 +103,7 @@ class ContributionIntegrationTest {
                 .concorId(47959912L)
                 .errorText(errorText)
                 .build();
-        final Integer response = contributionService.handleContributionProcessedAck(contributionProcessedRequest);
+        final Long response = contributionService.handleContributionProcessedAck(contributionProcessedRequest);
         softly.assertThat(response).isPositive();
         assertProcessConcorCaseSubmissionCreation(contributionProcessedRequest, HttpStatus.OK);
     }
@@ -173,7 +173,7 @@ class ContributionIntegrationTest {
 
         // Fetch some items of information from the maat-api to use during validation:
         final var concorContributions = updatedIds.stream().map(spyFactory::getConcorContribution).toList();
-        final int contributionFileId = watched.getXmlFileResult();
+        final long contributionFileId = watched.getXmlFileResult();
         final var contributionFile = spyFactory.getContributionsFile(contributionFileId);
 
         softly.assertThat(updatedIds).hasSize(3).doesNotContainNull(); // 1.
@@ -301,7 +301,7 @@ class ContributionIntegrationTest {
 
         final ContributionProcessSpy.ContributionProcessSpyBuilder watching = spyFactory.newContributionProcessSpyBuilder()
                 .traceAndFilterGetContributionsActive(updatedIds)
-                .traceAndStubSendContributionUpdate(id -> !(id.equals(updatedIds.get(0)) || id.equals(updatedIds.get(1)))) // first two fail
+                .traceAndStubSendContributionUpdate(id -> !((updatedIds.get(0).equals(id)) || (updatedIds.get(1).equals(id)))) // first two fail
                 .traceUpdateContributions();
 
         // Call the processDailyFiles() method under test:
@@ -311,7 +311,7 @@ class ContributionIntegrationTest {
 
         // Fetch some items of information from the maat-api to use during validation:
         final var concorContributions = updatedIds.stream().map(spyFactory::getConcorContribution).toList();
-        final int contributionFileId = watched.getXmlFileResult();
+        final long contributionFileId = watched.getXmlFileResult();
         final var contributionFile = spyFactory.getContributionsFile(contributionFileId);
 
         softly.assertThat(updatedIds).hasSize(3).doesNotContainNull(); // 1.

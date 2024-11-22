@@ -25,9 +25,14 @@ public interface ContributionClient extends MaatApiClientBase {
     @Valid
     Long updateContributions(@RequestBody ContributionUpdateRequest contributionUpdateRequest);
 
+    /**
+     * Perform the Maat API call for logging the DRC response that a specific concor contribution has been processed
+     * @param contributionProcessedRequest Id of the processed concor contribution, and any error text associated with it.
+     * @return The ID of the file that the concor contribution can be found as part of.
+     */
     @PostExchange("/log-contribution-response")
     @Valid
-    Integer sendLogContributionProcessed(@RequestBody ContributionProcessedRequest contributionProcessedRequest);
+    Long sendLogContributionProcessed(@RequestBody ContributionProcessedRequest contributionProcessedRequest);
 
     /** For testing only? */
     @GetExchange("/contributions")

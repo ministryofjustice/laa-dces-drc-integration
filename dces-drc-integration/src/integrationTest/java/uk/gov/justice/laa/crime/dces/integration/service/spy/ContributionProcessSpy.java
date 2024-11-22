@@ -13,10 +13,10 @@ import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.Con
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionReqForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
 
-import java.math.BigInteger;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Predicate;
+import java.util.function.LongPredicate;
 import java.util.stream.Collectors;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -32,14 +32,14 @@ import static org.mockito.Mockito.mockingDetails;
 @Builder
 @Getter
 public class ContributionProcessSpy {
-    private final Set<Integer> activeIds;         // Returned from maat-api by ContributionClient.getContributions("ACTIVE")
+    private final Set<Long> activeIds;         // Returned from maat-api by ContributionClient.getContributions("ACTIVE")
     @Singular
-    private final Set<Integer> sentIds;           // Sent to the DRC by DrcClient.sendContributionUpdate(...)
-    private final Set<Integer> xmlCcIds;          // Sent to maat-api by ContributionClient.updateContribution(...)
+    private final Set<Long> sentIds;           // Sent to the DRC by DrcClient.sendContributionUpdate(...)
+    private final Set<Long> xmlCcIds;          // Sent to maat-api by ContributionClient.updateContribution(...)
     private final int recordsSent;                //  "    "    "
     private final String xmlContent;              //  "    "    "
     private final String xmlFileName;             //  "    "    "
-    private final Integer xmlFileResult;          // Returned from maat-api by ContributionClient.updateContribution(...)
+    private final Long xmlFileResult;          // Returned from maat-api by ContributionClient.updateContribution(...)
 
     private static ContributionProcessSpyBuilder builder() {
         throw new UnsupportedOperationException("Call SpyFactory.newContributionProcessSpyBuilder instead");
@@ -65,11 +65,11 @@ public class ContributionProcessSpy {
                 @SuppressWarnings("unchecked") final var result = (List<ConcorContribEntry>) mockingDetails(contributionClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation);
                 activeIds(result.stream().map(ConcorContribEntry::getConcorContributionId).collect(Collectors.toSet()));
                 return result;
-            }).when(contributionClientSpy).getContributions(eq("ACTIVE"), eq(0), anyInt());
+            }).when(contributionClientSpy).getContributions(eq("ACTIVE"), eq(0L), anyInt());
             return this;
         }
 
-        public ContributionProcessSpyBuilder traceAndFilterGetContributionsActive(final List<Integer> activeIds) {
+        public ContributionProcessSpyBuilder traceAndFilterGetContributionsActive(final List<Long> activeIds) {
             final var idSet = Set.copyOf(activeIds); // defensive copy
             doAnswer(invocation -> {
                 @SuppressWarnings("unchecked")
@@ -77,13 +77,13 @@ public class ContributionProcessSpy {
                 result = result.stream().filter(concurContribEntry -> idSet.contains(concurContribEntry.getConcorContributionId())).toList();
                 activeIds(result.stream().map(ConcorContribEntry::getConcorContributionId).collect(Collectors.toSet()));
                 return result;
-            }).when(contributionClientSpy).getContributions(eq("ACTIVE"), eq(0), anyInt());
+            }).when(contributionClientSpy).getContributions(eq("ACTIVE"), eq(0L), anyInt());
             return this;
         }
 
-        public ContributionProcessSpyBuilder traceAndStubSendContributionUpdate(final Predicate<Integer> stubResults) {
+        public ContributionProcessSpyBuilder traceAndStubSendContributionUpdate(final LongPredicate stubResults) {
             doAnswer(invocation -> {
-                final int concorContributionId = ((ConcorContributionReqForDrc) invocation.getArgument(0)).data().concorContributionId();
+                final Long concorContributionId = ((ConcorContributionReqForDrc) invocation.getArgument(0)).data().concorContributionId();
                 sentId(concorContributionId);
                 if (!stubResults.test(concorContributionId)) {
                     throw new WebClientResponseException(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), null, null, null);
@@ -96,11 +96,11 @@ public class ContributionProcessSpy {
         public ContributionProcessSpyBuilder traceUpdateContributions() {
             doAnswer(invocation -> {
                 final var data = (ContributionUpdateRequest) invocation.getArgument(0);
-                xmlCcIds(data.getConcorContributionIds().stream().map(BigInteger::intValue).collect(Collectors.toSet()));
+                xmlCcIds(new HashSet<>(data.getConcorContributionIds()));
                 recordsSent(data.getRecordsSent());
                 xmlContent(data.getXmlContent());
                 xmlFileName(data.getXmlFileName());
-                final var result = (Integer) mockingDetails(contributionClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation);
+                final var result = (Long) mockingDetails(contributionClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation);
                 xmlFileResult(result);
                 return result;
             }).when(contributionClientSpy).updateContributions(any());

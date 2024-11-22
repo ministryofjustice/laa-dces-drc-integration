@@ -66,9 +66,9 @@ public class FdcService implements FileService {
      * @param fdcProcessedRequest Contains the details of the FDC which has been processed by the DRC.
      * @return FileID of the file associated with the fdcId
      */
-    public Integer handleFdcProcessedAck(FdcProcessedRequest fdcProcessedRequest) {
+    public long handleFdcProcessedAck(FdcProcessedRequest fdcProcessedRequest) {
         try {
-            int result = executeFdcProcessedAckCall(fdcProcessedRequest);
+            long result = executeFdcProcessedAckCall(fdcProcessedRequest);
             logFdcAsyncEvent(fdcProcessedRequest, OK);
             return result;
         } catch (WebClientResponseException e){
@@ -159,9 +159,9 @@ public class FdcService implements FileService {
         }
     }
 
-    private Integer updateFdcAndCreateFile(List<Fdc> successfulFdcs, Map<Long, String> failedFdcs) {
+    private Long updateFdcAndCreateFile(List<Fdc> successfulFdcs, Map<Long, String> failedFdcs) {
         // If any contributions were sent, then finish off with updates and create the file:
-        Integer contributionFileId = null;
+        Long contributionFileId = null;
         if (!successfulFdcs.isEmpty()) {
             // Construct other parameters for the "ATOMIC UPDATE" call.
             LocalDateTime dateGenerated = LocalDateTime.now();
@@ -185,13 +185,12 @@ public class FdcService implements FileService {
 
     // External Call Executions Methods
 
-    private int executeFdcProcessedAckCall(FdcProcessedRequest fdcProcessedRequest) {
-        int result;
+    private long executeFdcProcessedAckCall(FdcProcessedRequest fdcProcessedRequest) {
+        long result = 0L;
         if (!feature.incomingIsolated()) {
             result = fdcClient.sendLogFdcProcessed(fdcProcessedRequest);
         } else {
             log.info("Feature:IncomingIsolated: processFdcUpdate: Skipping MAAT API sendLogFdcProcessed() call");
-            result = 0; // avoid updating MAAT DB.
         }
         return result;
     }
@@ -238,7 +237,7 @@ public class FdcService implements FileService {
     }
 
     @Retry(name = SERVICE_NAME)
-    private Integer executeFdcFileCreateCall(String xmlContent, List<String> fdcIdList, int numberOfRecords, String fileName, String fileAckXML) {
+    private Long executeFdcFileCreateCall(String xmlContent, List<String> fdcIdList, int numberOfRecords, String fileName, String fileAckXML) {
         FdcUpdateRequest request = FdcUpdateRequest.builder()
                 .recordsSent(numberOfRecords)
                 .xmlContent(xmlContent)
@@ -254,7 +253,7 @@ public class FdcService implements FileService {
             }
         } else {
             log.info("Feature:OutgoingIsolated: fdcUpdateRequest: Skipping MAAT API updateFdcs() call");
-            return 0;
+            return 0L;
         }
     }
 

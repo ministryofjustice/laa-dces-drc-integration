@@ -111,7 +111,7 @@ class FdcLoggingIntegrationTest {
         final FdcLoggingProcessSpy logged = logging.build();
 
         // Fetch some items of information from the maat-api to use during validation:
-        final int contributionFileId = watched.getXmlFileResult();
+        final long contributionFileId = watched.getXmlFileResult();
         final var contributionFile = spyFactory.getContributionsFile(contributionFileId);
         final var contributionFileErrors = updatedIds.stream().flatMap(id ->
                 spyFactory.getContributionFileErrorOptional(contributionFileId, id).stream()).toList();
@@ -187,7 +187,7 @@ class FdcLoggingIntegrationTest {
 
         // Fetch some items of information from the maat-api to use during validation:
         final var repIds = updatedIds.stream().map(spyFactory::getFdcContribution).map(FdcContribution::getMaatId).toList();
-        final int contributionFileId = watched.getXmlFileResult();
+        final long contributionFileId = watched.getXmlFileResult();
         final var contributionFile = spyFactory.getContributionsFile(contributionFileId);
         final var contributionFileErrors = updatedIds.stream().flatMap(id ->
                 spyFactory.getContributionFileErrorOptional(contributionFileId, id).stream()).toList();
@@ -221,7 +221,7 @@ class FdcLoggingIntegrationTest {
      * <p>
      * Testing utility method.
      */
-    private void acknowledgeFdc(final int fdcContributionId, final String errorText) throws Exception {
+    private void acknowledgeFdc(final long fdcContributionId, final String errorText) throws Exception {
         final var request = FdcAckFromDrc.of(fdcContributionId, errorText);
         String json = mapper.writeValueAsString(request);
         mockMvc.perform(post("/api/dces/v1/fdc")
@@ -233,7 +233,7 @@ class FdcLoggingIntegrationTest {
                 .andExpect(content().string(""));
     }
 
-    private void successfulFdc(final int fdcContributionId) {
+    private void successfulFdc(final long fdcContributionId) {
         try {
             acknowledgeFdc(fdcContributionId, null);
         } catch (Exception e) {
@@ -241,7 +241,7 @@ class FdcLoggingIntegrationTest {
         }
     }
 
-    private void failedFdc(final int fdcContributionId) {
+    private void failedFdc(final long fdcContributionId) {
         try {
             acknowledgeFdc(fdcContributionId, ERROR_TEXT);
         } catch (Exception e) {

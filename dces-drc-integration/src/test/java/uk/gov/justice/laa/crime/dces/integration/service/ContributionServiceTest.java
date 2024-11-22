@@ -312,8 +312,8 @@ class ContributionServiceTest extends ApplicationTestBase {
 		ContributionProcessedRequest dataRequest = ContributionProcessedRequest.builder()
 				.concorId(911L)
 				.build();
-		Integer response = contributionService.handleContributionProcessedAck(dataRequest);
-		softly.assertThat(response).isEqualTo(1111);
+		Long response = contributionService.handleContributionProcessedAck(dataRequest);
+		softly.assertThat(response).isEqualTo(1111L);
 		verify(eventService).logConcor(911L,EventType.DRC_ASYNC_RESPONSE,null,null, OK, null);
 	}
 
@@ -323,8 +323,8 @@ class ContributionServiceTest extends ApplicationTestBase {
 		ContributionProcessedRequest dataRequest = ContributionProcessedRequest.builder()
 				.concorId(911L)
 				.build();
-		Integer response = contributionService.handleContributionProcessedAck(dataRequest);
-		softly.assertThat(response).isEqualTo(0); // so MAAT DB not touched
+		Long response = contributionService.handleContributionProcessedAck(dataRequest);
+		softly.assertThat(response).isEqualTo(0L); // so MAAT DB not touched
 	}
 
 
