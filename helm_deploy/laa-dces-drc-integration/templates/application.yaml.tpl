@@ -103,7 +103,9 @@ spring:
       mappings:
         "/**":
           allowed-origins:
-            - "https://localhost"
+            {{- range .Values.ingress.mon.hosts }}
+            - "https://{{ . }}"
+            {{- end }}
           allowed-methods:
             - GET
             - POST
