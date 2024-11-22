@@ -103,8 +103,8 @@ spring:
       mappings:
         "/**":
           allowed-origins:
-            - ${MON_HOST_0}
-            - ${MON_HOST_1}
+            - https://${MON_HOST_0}
+            - https://${MON_HOST_1}
           allowed-methods:
             - GET
             - POST
