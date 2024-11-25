@@ -335,13 +335,13 @@ class ContributionServiceTest extends ApplicationTestBase {
 	void testProcessContributionUpdateWhenNotFound() {
 		String errorText = "The request has failed to process";
 		ContributionProcessedRequest dataRequest = ContributionProcessedRequest.builder()
-				.concorId(404)
+				.concorId(404L)
 				.errorText(errorText)
 				.build();
 		var exception = catchThrowableOfType(() -> contributionService.handleContributionProcessedAck(dataRequest), ErrorResponseException.class);
 		softly.assertThat(exception).isNotNull();
 		softly.assertThat(NOT_FOUND.isSameCodeAs(exception.getStatusCode())).isTrue();
-		verify(eventService).logConcor(BigInteger.valueOf(404),EventType.DRC_ASYNC_RESPONSE,null,null, NOT_FOUND, errorText);
+		verify(eventService).logConcor(404L,EventType.DRC_ASYNC_RESPONSE,null,null, NOT_FOUND, errorText);
 	}
 
 	@Test

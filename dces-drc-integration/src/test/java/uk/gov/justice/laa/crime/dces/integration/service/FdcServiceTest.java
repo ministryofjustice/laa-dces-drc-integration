@@ -430,7 +430,7 @@ class FdcServiceTest extends ApplicationTestBase {
 	void testProcessFdcUpdateWhenNotFound() {
 		String errorText = "The request has failed to process";
 		FdcProcessedRequest dataRequest = FdcProcessedRequest.builder()
-				.fdcId(404)
+				.fdcId(404L)
 				.errorText(errorText)
 				.build();
 		var exception = catchThrowableOfType(() -> fdcService.handleFdcProcessedAck(dataRequest), ErrorResponseException.class);
