@@ -23,7 +23,7 @@ class JacksonConfigurationTest extends ApplicationTestBase {
 
     @Test
     void givenAConcorContributionReqForDrc_whenItIsSerialized_thenItHasNoNulls() throws JsonProcessingException {
-        var request = ConcorContributionReqForDrc.of(123, new CONTRIBUTIONS(), null);
+        var request = ConcorContributionReqForDrc.of(123L, new CONTRIBUTIONS(), null);
         String json = objectMapper.writeValueAsString(request);
         assertThat(json).doesNotContain("null");
     }

@@ -8,7 +8,7 @@ import java.time.LocalDate;
 @Data
 @Builder
 public class ContributionFileResponse {
-    private final Integer id;
+    private final Long id;
     private final String xmlFileName;
     private final Integer recordsSent;
     private final Integer recordsReceived;

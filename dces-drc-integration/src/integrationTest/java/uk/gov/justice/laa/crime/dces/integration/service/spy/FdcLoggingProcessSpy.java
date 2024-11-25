@@ -22,11 +22,11 @@ import static org.mockito.Mockito.mockingDetails;
 @Getter
 public class FdcLoggingProcessSpy {
     @Singular
-    private final List<Integer> fdcContributionIds;            // Sent to the maat-api by FdcClient.sendLogFdcProcessed(...)
+    private final List<Long> fdcContributionIds;            // Sent to the maat-api by FdcClient.sendLogFdcProcessed(...)
     @Singular
     private final List<String> errorTexts;                     //    "    "    "
     @Singular
-    private final List<Integer> contributionFileIds;           // Returned from maat-api by FdcClient.sendLogFdcProcessed(...)
+    private final List<Long> contributionFileIds;           // Returned from maat-api by FdcClient.sendLogFdcProcessed(...)
 
     private static FdcLoggingProcessSpyBuilder builder() {
         throw new UnsupportedOperationException("Call SpyFactory.newFdcLoggingProcessSpyBuilder instead");
@@ -49,7 +49,7 @@ public class FdcLoggingProcessSpy {
                 fdcContributionId(argument.getFdcId()).errorText(argument.getErrorText());
                 // Because FdcClient is a proxied interface, cannot just call `invocation.callRealMethod()` here.
                 // https://github.com/spring-projects/spring-boot/issues/36653
-                final var result = (Integer) mockingDetails(fdcClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation);
+                final var result = (Long) mockingDetails(fdcClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation);
                 contributionFileId(result);
                 return result;
             }).when(fdcClientSpy).sendLogFdcProcessed(any());

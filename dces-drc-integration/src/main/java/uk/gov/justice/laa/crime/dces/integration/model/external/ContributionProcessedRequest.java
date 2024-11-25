@@ -6,6 +6,6 @@ import lombok.Data;
 @Data
 @Builder
 public class ContributionProcessedRequest {
-    private final Integer concorId;
+    private final Long concorId;
     private final String errorText;
 }

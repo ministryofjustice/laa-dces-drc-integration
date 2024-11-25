@@ -57,7 +57,7 @@ public class MaatApiClient {
         return response.extract().body().jsonPath().getList("fdcContributions", FdcContribution.class);
     }
 
-    public ValidatableResponse updateRepOrderSentenceOrderDateToNull(int repOrderId, Map<String, Object> repOrderFields) {
+    public ValidatableResponse updateRepOrderSentenceOrderDateToNull(long repOrderId, Map<String, Object> repOrderFields) {
         String repOrderIdParameter = "/{repId}";
         return given()
                 .spec(builder.getMaatAPICrimeApplyReqSpec())
@@ -71,7 +71,7 @@ public class MaatApiClient {
     }
 
 
-    public Set<Integer> getFdcFastTrackRepOrderIdList(int delay, LocalDate dateRecieved, int numRecords) {
+    public Set<Long> getFdcFastTrackRepOrderIdList(int delay, LocalDate dateRecieved, int numRecords) {
         ValidatableResponse response = given()
                 .spec(builder.getMaatAPICrimeApplyReqSpec())
                 .param("fdcFastTrack", "true")
@@ -83,10 +83,10 @@ public class MaatApiClient {
                 .log()
                 .all();
 
-        return response.extract().body().as(Set.class);
+        return Set.copyOf(response.extract().body().jsonPath().getList(".", Long.class));
     }
 
-    public Set<Integer> getFdcDelayedRepOrderIdList(int delay, LocalDate dateRecieved, int numRecords) {
+    public Set<Long> getFdcDelayedRepOrderIdList(int delay, LocalDate dateRecieved, int numRecords) {
         ValidatableResponse response = given()
                 .spec(builder.getMaatAPICrimeApplyReqSpec())
                 .param("fdcDelayedPickup", "true")
@@ -97,7 +97,7 @@ public class MaatApiClient {
                 .then()
                 .log()
                 .all();
-        return response.extract().body().as(Set.class);
+        return Set.copyOf(response.extract().body().jsonPath().getList(".", Long.class));
     }
 
     public FdcContribution createFdcContribution(CreateFdcContributionRequest requestBody) {
@@ -129,7 +129,7 @@ public class MaatApiClient {
         return responseFdcItem;
     }
 
-    public ValidatableResponse deleteFdcItems(int fdcId) {
+    public ValidatableResponse deleteFdcItems(long fdcId) {
         String params = "/fdc-id/{fdc-id}";
         return given()
                 .spec(builder.getMaatAPICrimeApplyReqSpec())
@@ -141,7 +141,7 @@ public class MaatApiClient {
                 .assertThat().statusCode(200);
     }
 
-    public ValidatableResponse deleteCrownCourtOutcomes(int repId) {
+    public ValidatableResponse deleteCrownCourtOutcomes(long repId) {
         return given()
                 .spec(builder.getMaatAPICrimeApplyReqSpec())
                 .pathParam("repId", repId)
@@ -163,7 +163,7 @@ public class MaatApiClient {
                 .assertThat().statusCode(200);
     }
 
-    public FdcContribution getFdcContribution(int fdcContributionId) {
+    public FdcContribution getFdcContribution(long fdcContributionId) {
         String contributionIdParameter = "/{fdcContributionId}";
         ValidatableResponse response =  given()
                 .spec(builder.getMaatAPICrimeApplyReqSpec())
@@ -187,7 +187,7 @@ public class MaatApiClient {
                 .assertThat().statusCode(200);
     }
 
-    public ContributionFileResponse getContributionFile(int contributionFileId) {
+    public ContributionFileResponse getContributionFile(long contributionFileId) {
         String contributionIdUri = "/{contributionFileId}";
         ValidatableResponse response = given()
                 .spec(builder.getMaatAPICrimeApplyReqSpec())
@@ -200,7 +200,7 @@ public class MaatApiClient {
         return response.extract().body().as(ContributionFileResponse.class);
     }
 
-    public List<Integer> updateConcorContributionStatus(UpdateConcorContributionStatusRequest concorContributionRequest) {
+    public List<Long> updateConcorContributionStatus(UpdateConcorContributionStatusRequest concorContributionRequest) {
         ValidatableResponse response = given()
                 .spec(builder.getMaatAPICrimeApplyReqSpec())
                 .body(concorContributionRequest)
@@ -210,10 +210,10 @@ public class MaatApiClient {
                 .all()
                 .assertThat().statusCode(200);
 
-        return response.extract().body().as(List.class);
+        return response.extract().body().jsonPath().getList(".", Long.class);
     }
 
-    public ConcorContributionResponseDTO getConcorContribution(int concorId) {
+    public ConcorContributionResponseDTO getConcorContribution(long concorId) {
         String contributionIdUri = "/{concorId}";
         ValidatableResponse response = given()
                 .spec(builder.getMaatAPICrimeApplyReqSpec())
@@ -226,7 +226,7 @@ public class MaatApiClient {
         return response.extract().body().as(ConcorContributionResponseDTO.class);
     }
 
-    public ContributionFileErrorResponse getContributionFileError(int contributionFileId, int contributionId) {
+    public ContributionFileErrorResponse getContributionFileError(long contributionFileId, long contributionId) {
         String contributionFileIdUri = "/{contributionFileId}/error/{contributionId}";
         ValidatableResponse response = given()
                 .spec(builder.getMaatAPICrimeApplyReqSpec())

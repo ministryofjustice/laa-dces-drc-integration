@@ -30,7 +30,6 @@ import uk.gov.justice.laa.crime.dces.integration.service.EventLogAssertService;
 import uk.gov.justice.laa.crime.dces.integration.service.spy.ContributionProcessSpy;
 import uk.gov.justice.laa.crime.dces.integration.service.spy.SpyFactory;
 
-import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -66,22 +65,22 @@ class ContributionIntegrationTest {
     @Captor
     ArgumentCaptor<CaseSubmissionEntity> caseSubmissionEntityArgumentCaptor;
 
-    private static final BigInteger testBatchId = BigInteger.valueOf(-333L);
+    private static final Long TEST_BATCH_ID = -333L;
 
     @AfterEach
     void assertAll() {
-        eventLogAssertService.deleteAllByBatchId(testBatchId);
+        eventLogAssertService.deleteAllByBatchId(TEST_BATCH_ID);
         softly.assertAll();
     }
 
     @BeforeEach
     public void setBatchIdToTest(){
-        eventLogAssertService.deleteAllByBatchId(testBatchId);
-        when(eventService.generateBatchId()).thenReturn(testBatchId);
+        eventLogAssertService.deleteAllByBatchId(TEST_BATCH_ID);
+        when(eventService.generateBatchId()).thenReturn(TEST_BATCH_ID);
     }
     @BeforeAll
     public void setupHelper(){
-        eventLogAssertService.setBatchId(testBatchId);
+        eventLogAssertService.setBatchId(TEST_BATCH_ID);
         eventLogAssertService.setSoftly(softly);
     }
 
@@ -89,7 +88,7 @@ class ContributionIntegrationTest {
     void testProcessContributionUpdateWhenNotFound() {
         final String errorText = "The request has failed to process";
         final var contributionProcessedRequest = ContributionProcessedRequest.builder()
-                .concorId(9)
+                .concorId(9L)
                 .errorText(errorText)
                 .build();
         softly.assertThatThrownBy(() -> contributionService.handleContributionProcessedAck(contributionProcessedRequest))
@@ -101,10 +100,10 @@ class ContributionIntegrationTest {
     void testProcessContributionUpdateWhenFound() {
         final String errorText = "Error Text updated successfully.";
         final var contributionProcessedRequest = ContributionProcessedRequest.builder()
-                .concorId(47959912)
+                .concorId(47959912L)
                 .errorText(errorText)
                 .build();
-        final Integer response = contributionService.handleContributionProcessedAck(contributionProcessedRequest);
+        final Long response = contributionService.handleContributionProcessedAck(contributionProcessedRequest);
         softly.assertThat(response).isPositive();
         assertProcessConcorCaseSubmissionCreation(contributionProcessedRequest, HttpStatus.OK);
     }
@@ -112,7 +111,7 @@ class ContributionIntegrationTest {
     // Just verify we're submitting what is expected to the DB. Persistence testing itself is done elsewhere.
     private void assertProcessConcorCaseSubmissionCreation(ContributionProcessedRequest request, HttpStatusCode expectedStatusCode) {
         CaseSubmissionEntity expectedCaseSubmission = CaseSubmissionEntity.builder()
-                .concorContributionId(BigInteger.valueOf(request.getConcorId()))
+                .concorContributionId(request.getConcorId())
                 .payload(request.getErrorText())
                 .eventType(eventLogAssertService.getIdForEventType(EventType.DRC_ASYNC_RESPONSE))
                 .httpStatus(expectedStatusCode.value())
@@ -174,7 +173,7 @@ class ContributionIntegrationTest {
 
         // Fetch some items of information from the maat-api to use during validation:
         final var concorContributions = updatedIds.stream().map(spyFactory::getConcorContribution).toList();
-        final int contributionFileId = watched.getXmlFileResult();
+        final long contributionFileId = watched.getXmlFileResult();
         final var contributionFile = spyFactory.getContributionsFile(contributionFileId);
 
         softly.assertThat(updatedIds).hasSize(3).doesNotContainNull(); // 1.
@@ -302,7 +301,7 @@ class ContributionIntegrationTest {
 
         final ContributionProcessSpy.ContributionProcessSpyBuilder watching = spyFactory.newContributionProcessSpyBuilder()
                 .traceAndFilterGetContributionsActive(updatedIds)
-                .traceAndStubSendContributionUpdate(id -> !(id.equals(updatedIds.get(0)) || id.equals(updatedIds.get(1)))) // first two fail
+                .traceAndStubSendContributionUpdate(id -> !((updatedIds.get(0).equals(id)) || (updatedIds.get(1).equals(id)))) // first two fail
                 .traceUpdateContributions();
 
         // Call the processDailyFiles() method under test:
@@ -312,7 +311,7 @@ class ContributionIntegrationTest {
 
         // Fetch some items of information from the maat-api to use during validation:
         final var concorContributions = updatedIds.stream().map(spyFactory::getConcorContribution).toList();
-        final int contributionFileId = watched.getXmlFileResult();
+        final long contributionFileId = watched.getXmlFileResult();
         final var contributionFile = spyFactory.getContributionsFile(contributionFileId);
 
         softly.assertThat(updatedIds).hasSize(3).doesNotContainNull(); // 1.

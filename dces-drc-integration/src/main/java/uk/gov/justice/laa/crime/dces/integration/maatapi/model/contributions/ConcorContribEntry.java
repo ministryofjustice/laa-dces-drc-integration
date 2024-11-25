@@ -15,6 +15,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ConcorContribEntry {
-    private int concorContributionId;
+    private Long concorContributionId;
     private String xmlContent;
 }

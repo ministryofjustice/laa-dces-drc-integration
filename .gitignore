@@ -1,6 +1,10 @@
 dces-drc-integration/.gradle
 dces-drc-integration/src/main/java/uk/gov/justice/laa/crime/dces/integration/model/generated/
 
+# dotenv environment variable files
+dces-drc-integration/.env
+dces-drc-integration/.env.*
+
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar

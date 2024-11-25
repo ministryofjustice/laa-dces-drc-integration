@@ -22,11 +22,9 @@ import uk.gov.justice.laa.crime.dces.integration.model.FdcReqForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile;
 
-import javax.xml.datatype.DatatypeConfigurationException;
-import javax.xml.datatype.DatatypeFactory;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.BigInteger;
+import java.time.LocalDate;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.failBecauseExceptionWasNotThrown;
@@ -69,9 +67,9 @@ class DrcApiClientTest extends ApplicationTestBase {
     }
 
     @Test
-    void test_whenWebClientIsInvoked_thenSuccessfulResponse() throws InterruptedException, DatatypeConfigurationException {
+    void test_whenWebClientIsInvoked_thenSuccessfulResponse() throws InterruptedException {
 
-        ConcorContributionReqForDrc concorContributionReqForDrc = ConcorContributionReqForDrc.of(99, fakeCONTRIBUTIONS());
+        ConcorContributionReqForDrc concorContributionReqForDrc = ConcorContributionReqForDrc.of(99L, fakeCONTRIBUTIONS());
         setupSuccessfulResponse();
         WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(webClientBuilder, services);
 
@@ -84,7 +82,7 @@ class DrcApiClientTest extends ApplicationTestBase {
     @Test
     void test_whenWebClientIsInvokedWithMissingMaatId_thenErrorResponse() throws JsonProcessingException, InterruptedException {
 
-        ConcorContributionReqForDrc concorContributionReqForDrc = ConcorContributionReqForDrc.of(0, new CONTRIBUTIONS());
+        ConcorContributionReqForDrc concorContributionReqForDrc = ConcorContributionReqForDrc.of(0L, new CONTRIBUTIONS());
         setupProblemDetailResponse(fakeProblemDetail());
         WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(webClientBuilder, services);
         try {
@@ -98,7 +96,7 @@ class DrcApiClientTest extends ApplicationTestBase {
     }
 
     @Test
-    void test_whenFdcWebClientIsInvoked_thenSuccessfulResponse() throws InterruptedException, DatatypeConfigurationException {
+    void test_whenFdcWebClientIsInvoked_thenSuccessfulResponse() throws InterruptedException {
 
         FdcReqForDrc request = FdcReqForDrc.of(99, fakeFdc());
         setupSuccessfulResponse();
@@ -131,7 +129,7 @@ class DrcApiClientTest extends ApplicationTestBase {
     @Test
     void test_whenWebClientIsInvokedWithServerError_thenCorrectErrorThrown() throws JsonProcessingException, InterruptedException {
 
-        ConcorContributionReqForDrc concorContributionReqForDrc = ConcorContributionReqForDrc.of(0, new CONTRIBUTIONS());
+        ConcorContributionReqForDrc concorContributionReqForDrc = ConcorContributionReqForDrc.of(0L, new CONTRIBUTIONS());
         setupProblemDetailResponse(fakeProblemDetailError());
         WebClient actualWebClient = drcApiWebClientConfiguration.drcApiWebClient(webClientBuilder, services);
         try {
@@ -155,16 +153,16 @@ class DrcApiClientTest extends ApplicationTestBase {
                 .block();
     }
 
-    private CONTRIBUTIONS fakeCONTRIBUTIONS() throws DatatypeConfigurationException {
+    private CONTRIBUTIONS fakeCONTRIBUTIONS() {
         var factory = new uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.ObjectFactory();
         var contribution = factory.createCONTRIBUTIONS();
-        contribution.setId(BigInteger.valueOf(3333));
-        contribution.setMaatId(BigInteger.valueOf(3338));
+        contribution.setId(3333L);
+        contribution.setMaatId(3338L);
         contribution.setFlag("NEW");
         var applicant = factory.createCONTRIBUTIONSApplicant();
         applicant.setFirstName("John");
         applicant.setLastName("Smith");
-        var cal = DatatypeFactory.newInstance().newXMLGregorianCalendar("1970-12-31");
+        var cal = LocalDate.parse("1970-12-31");
         applicant.setDob(cal);
         applicant.setNiNumber("QQ999999Q");
         contribution.setApplicant(applicant);
@@ -177,15 +175,15 @@ class DrcApiClientTest extends ApplicationTestBase {
         return contribution;
     }
 
-    private FdcFile.FdcList.Fdc fakeFdc() throws DatatypeConfigurationException {
+    private FdcFile.FdcList.Fdc fakeFdc() {
         var factory = new uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.ObjectFactory();
         var fdc = factory.createFdcFileFdcListFdc();
-        fdc.setId(BigInteger.valueOf(12));
-        fdc.setMaatId(BigInteger.valueOf(16));
+        fdc.setId(12L);
+        fdc.setMaatId(16L);
         fdc.setAgfsTotal(BigDecimal.valueOf(1000.00));
         fdc.setLgfsTotal(BigDecimal.valueOf(2000.00));
         fdc.setFinalCost(BigDecimal.valueOf(3000.00));
-        var cal = DatatypeFactory.newInstance().newXMLGregorianCalendar("2024-09-25");
+        var cal = LocalDate.parse("2024-09-25");
         fdc.setSentenceDate(cal);
         fdc.setCalculationDate(cal);
         return fdc;

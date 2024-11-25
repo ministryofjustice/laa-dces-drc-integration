@@ -22,11 +22,11 @@ import static org.mockito.Mockito.mockingDetails;
 @Getter
 public class ContributionLoggingProcessSpy {
     @Singular
-    private final List<Integer> concorContributionIds;         // Sent to the maat-api by ContributionClient.sendLogContributionProcessed(...)
+    private final List<Long> concorContributionIds;         // Sent to the maat-api by ContributionClient.sendLogContributionProcessed(...)
     @Singular
     private final List<String> errorTexts;                     //    "    "    "
     @Singular
-    private final List<Integer> contributionFileIds;           // Returned from maat-api by ContributionClient.sendLogContributionProcessed(...)
+    private final List<Long> contributionFileIds;           // Returned from maat-api by ContributionClient.sendLogContributionProcessed(...)
 
     private static ContributionLoggingProcessSpyBuilder builder() {
         throw new UnsupportedOperationException("Call SpyFactory.newContributionLoggingProcessSpyBuilder instead");
@@ -50,7 +50,7 @@ public class ContributionLoggingProcessSpy {
                 errorText(argument.getErrorText());
                 // Because ContributionClient is a proxied interface, cannot just call `invocation.callRealMethod()` here.
                 // https://github.com/spring-projects/spring-boot/issues/36653
-                final var result = (Integer) mockingDetails(contributionClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation);
+                final var result = (Long) mockingDetails(contributionClientSpy).getMockCreationSettings().getDefaultAnswer().answer(invocation);
                 contributionFileId(result);
                 return result;
             }).when(contributionClientSpy).sendLogContributionProcessed(any());

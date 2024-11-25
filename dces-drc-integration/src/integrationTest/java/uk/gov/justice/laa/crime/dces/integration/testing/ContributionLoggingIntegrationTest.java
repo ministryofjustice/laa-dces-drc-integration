@@ -110,7 +110,7 @@ class ContributionLoggingIntegrationTest {
         final ContributionLoggingProcessSpy logged = logging.build();
 
         // Fetch some items of information from the maat-api to use during validation:
-        final int contributionFileId = watched.getXmlFileResult();
+        final long contributionFileId = watched.getXmlFileResult();
         final var contributionFile = spyFactory.getContributionsFile(contributionFileId);
         final var contributionFileErrors = updatedIds.stream().flatMap(id ->
                 spyFactory.getContributionFileErrorOptional(contributionFileId, id).stream()).toList();
@@ -185,7 +185,7 @@ class ContributionLoggingIntegrationTest {
 
         // Fetch some items of information from the maat-api to use during validation:
         final var repIds = updatedIds.stream().map(spyFactory::getConcorContribution).map(ConcorContributionResponseDTO::getRepId).toList();
-        final int contributionFileId = watched.getXmlFileResult();
+        final long contributionFileId = watched.getXmlFileResult();
         final var contributionFile = spyFactory.getContributionsFile(contributionFileId);
         final var contributionFileErrors = updatedIds.stream().flatMap(id ->
                 spyFactory.getContributionFileErrorOptional(contributionFileId, id).stream()).toList();
@@ -219,7 +219,7 @@ class ContributionLoggingIntegrationTest {
      * <p>
      * Testing utility method.
      */
-    private void acknowledgeContribution(final int concorContributionId, final String errorText) throws Exception {
+    private void acknowledgeContribution(final long concorContributionId, final String errorText) throws Exception {
         final var request = ConcorContributionAckFromDrc.of(concorContributionId, errorText);
         String json = mapper.writeValueAsString(request);
         mockMvc.perform(post("/api/dces/v1/contribution")
@@ -231,7 +231,7 @@ class ContributionLoggingIntegrationTest {
                 .andExpect(content().string(""));
     }
 
-    private void successfulContribution(final int concorContributionId) {
+    private void successfulContribution(final long concorContributionId) {
         try {
             acknowledgeContribution(concorContributionId, null);
         } catch (Exception e) {
@@ -239,7 +239,7 @@ class ContributionLoggingIntegrationTest {
         }
     }
 
-    private void failedContribution(final int concorContributionId) {
+    private void failedContribution(final long concorContributionId) {
         try {
             acknowledgeContribution(concorContributionId, ERROR_TEXT);
         } catch (Exception e) {
