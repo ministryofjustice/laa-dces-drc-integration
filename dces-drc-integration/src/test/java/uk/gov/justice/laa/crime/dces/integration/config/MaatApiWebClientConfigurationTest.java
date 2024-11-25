@@ -9,6 +9,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
@@ -37,6 +38,7 @@ class MaatApiWebClientConfigurationTest extends ApplicationTestBase {
     @Autowired
     private ServicesProperties services;
 
+    @Qualifier("maatApiAuthorizedClientManager")
     @MockBean
     OAuth2AuthorizedClientManager authorizedClientManager;
 
