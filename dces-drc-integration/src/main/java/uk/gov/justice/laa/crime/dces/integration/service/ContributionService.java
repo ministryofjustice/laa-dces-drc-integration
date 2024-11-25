@@ -95,7 +95,7 @@ public class ContributionService implements FileService {
         do {
             Map<Long, CONTRIBUTIONS> successfulContributions = new LinkedHashMap<>();
             Map<Long, String> failedContributions = new LinkedHashMap<>();
-            contributionsList = getContributionList(startingId);
+            contributionsList = executeGetContributionsCall(startingId);
             if (!contributionsList.isEmpty()) {
                 sendContributionListToDrc(contributionsList, successfulContributions, failedContributions);
                 Long contributionFileId = updateContributionsAndCreateFile(successfulContributions, failedContributions);
@@ -110,11 +110,6 @@ public class ContributionService implements FileService {
     }
 
     // Component Methods
-
-    // TODO: Should this be kept? This is more for readability/formatting. Feels wrong.
-    private List<ConcorContribEntry> getContributionList(Long startingId) {
-        return executeGetContributionsCall(startingId);
-    }
 
     private void sendContributionListToDrc(List<ConcorContribEntry> contributionsList, Map<Long, CONTRIBUTIONS> successfulContributions, Map<Long, String> failedContributions) {
         // for each contribution sent by MAAT API
