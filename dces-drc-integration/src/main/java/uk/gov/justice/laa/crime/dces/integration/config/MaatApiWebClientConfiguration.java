@@ -12,7 +12,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
@@ -54,15 +53,15 @@ public class MaatApiWebClientConfiguration {
      *
      * @param webClientBuilder `WebClient.Builder` instance injected by Sprint Boot.
      * @param services Our services configuration properties (used to obtain the MAAT API base URL).
-     * @param authorizedClientManager OAuth configuration injected by Spring Boot.
+     * @param maatApiAuthorizedClientManager OAuth2AuthorizedClientManager instance configured in this class.
      * @return a configured `WebClient` instance.
      */
     @Bean("maatApiWebClient")
     public WebClient maatApiWebClient(
             WebClient.Builder webClientBuilder,
             ServicesProperties services,
-            OAuth2AuthorizedClientManager authorizedClientManager
-    ) {
+            @Qualifier("maatApiAuthorizedClientManager")
+            OAuth2AuthorizedClientManager maatApiAuthorizedClientManager) {
         ConnectionProvider provider = ConnectionProvider.builder("custom")
                 .maxConnections(500)
                 .maxIdleTime(Duration.ofSeconds(20))
@@ -89,7 +88,7 @@ public class MaatApiWebClientConfiguration {
 
         if (services.getMaatApi().isOAuthEnabled()) {
             ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2Client =
-                    new ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
+                    new ServletOAuth2AuthorizedClientExchangeFilterFunction(maatApiAuthorizedClientManager);
             oauth2Client.setDefaultClientRegistrationId("maatapi");
             builder.filter(oauth2Client);
         }
@@ -104,25 +103,17 @@ public class MaatApiWebClientConfiguration {
         return builder.build();
     }
 
-    @Bean
-    public OAuth2AuthorizedClientManager authorizedClientManager(
+    @Bean("maatApiAuthorizedClientManager")
+    public OAuth2AuthorizedClientManager maatApiAuthorizedClientManager(
             ClientRegistrationRepository clientRegistrationRepository,
             OAuth2AuthorizedClientService clientService) {
-
-
-        OAuth2AuthorizedClientProvider authorizedClientProvider =
-            OAuth2AuthorizedClientProviderBuilder.builder()
+        final var authorizedClientProvider = OAuth2AuthorizedClientProviderBuilder.builder()
                 .refreshToken()
                 .clientCredentials()
                 .build();
-
-        AuthorizedClientServiceOAuth2AuthorizedClientManager authorizedClientManager =
-            new AuthorizedClientServiceOAuth2AuthorizedClientManager(
-                clientRegistrationRepository, clientService
-        );
-
+        final var authorizedClientManager = new AuthorizedClientServiceOAuth2AuthorizedClientManager(
+                clientRegistrationRepository, clientService);
         authorizedClientManager.setAuthorizedClientProvider(authorizedClientProvider);
-
         return authorizedClientManager;
     }
 
