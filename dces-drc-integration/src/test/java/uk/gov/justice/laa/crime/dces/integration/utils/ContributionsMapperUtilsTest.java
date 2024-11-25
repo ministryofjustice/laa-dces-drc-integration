@@ -76,7 +76,34 @@ class ContributionsMapperUtilsTest extends ApplicationTestBase {
 		softly.assertThat(contribution).isNotNull();
 		softly.assertThat(contribution.getId()).isEqualTo(222769650L);
 		softly.assertThat(contribution.getFlag()).isEqualTo(UPDATE);
+		// verify date population:
+		softly.assertThat(contribution.getFlag()).isEqualTo(UPDATE);
+		softly.assertThat(contribution.getApplication().getRepStatusDate()).isEqualTo(LocalDate.of(2021,1,25));
+		softly.assertThat(contribution.getApplication().getRepOrderWithdrawalDate()).isEqualTo(LocalDate.of(2021,1,29));
+		softly.assertThat(contribution.getApplication().getSentenceDate()).isNull();
+
+
 	}
+
+	@Test
+	void testXMLLineZeroedDateTreatedAsNull() throws IOException {
+		File f = new File(getClass().getClassLoader().getResource("contributions/contributionLineZeroedDate.xml").getFile());
+		CONTRIBUTIONS contribution = null;
+		String originalXMLString = FileUtils.readText(f);
+
+		try {
+			contribution = contributionsMapperUtils.mapLineXMLToObject(originalXMLString);
+		} catch (JAXBException e) {
+			fail("Exception occurred in mapping from object to XML:" + e.getMessage());
+		}
+		softly.assertThat(contribution).isNotNull();
+		softly.assertThat(contribution.getId()).isEqualTo(222769650L);
+		softly.assertThat(contribution.getFlag()).isEqualTo(UPDATE);
+		softly.assertThat(contribution.getApplication().getRepStatusDate()).isNull();
+		softly.assertThat(contribution.getApplication().getRepOrderWithdrawalDate()).isNull();
+		softly.assertThat(contribution.getApplication().getSentenceDate()).isNull();
+	}
+
 
 	@Test
 	void testFileGenerationValid() throws IOException {

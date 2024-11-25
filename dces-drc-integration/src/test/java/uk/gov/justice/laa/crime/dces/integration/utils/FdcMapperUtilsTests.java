@@ -51,7 +51,6 @@ class FdcMapperUtilsTests extends ApplicationTestBase {
 		softly.assertThat(mappedFdc.getFinalCost()).isEqualTo(DEFAULT_FINAL_COST);
 		softly.assertThat(mappedFdc.getCalculationDate()).isEqualTo(testInput.getDateCalculated());
 		softly.assertThat(mappedFdc.getSentenceDate()).isEqualTo(testInput.getSentenceOrderDate());
-
 	}
 
 	@Test
