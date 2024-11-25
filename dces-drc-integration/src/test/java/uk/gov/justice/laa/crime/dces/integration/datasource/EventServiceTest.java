@@ -22,7 +22,6 @@ import uk.gov.justice.laa.crime.dces.integration.exception.DcesDrcServiceExcepti
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -45,11 +44,11 @@ class EventServiceTest {
     @Captor
     private ArgumentCaptor<CaseSubmissionEntity> caseSubmissionEntityArgumentCaptor;
 
-    private final BigInteger testTraceId = BigInteger.valueOf(-777);
-    private final BigInteger testBatchId = BigInteger.valueOf(-666);
-    private final BigInteger testMaatId = BigInteger.valueOf(-555);
-    private final BigInteger testFdcId = BigInteger.valueOf(-444);
-    private final BigInteger testConcorId = BigInteger.valueOf(-333);
+    private final Long testTraceId = -777L;
+    private final Long testBatchId = -666L;
+    private final Long testMaatId = -555L;
+    private final Long testFdcId = -444L;
+    private final Long testConcorId = -333L;
     private final String testPayload = "TestPayload"+ LocalDateTime.now();
 
     @Test
@@ -136,19 +135,19 @@ class EventServiceTest {
     @Test
     void whenGenerateBatchIdIsCalled_thenBatchIdIsReturned(){
         when(caseSubmissionRepository.getNextBatchId()).thenReturn(testBatchId);
-        BigInteger actualBatchId = eventService.generateBatchId();
+        Long actualBatchId = eventService.generateBatchId();
         softly.assertThat(actualBatchId).isEqualTo(testBatchId);
         softly.assertAll();
     }
     @Test
     void whenGenerateTraceIdIsCalled_thenBatchIdIsReturned(){
         when(caseSubmissionRepository.getNextTraceId()).thenReturn(testTraceId);
-        BigInteger actualTraceId = eventService.generateTraceId();
+        Long actualTraceId = eventService.generateTraceId();
         softly.assertThat(actualTraceId).isEqualTo(testTraceId);
         softly.assertAll();
     }
 
-    private CaseSubmissionEntity createExpectedCaseSubmissionEntity(RecordType recordType, Integer eventTypeId, BigInteger traceId,HttpStatusCode httpStatusCode){
+    private CaseSubmissionEntity createExpectedCaseSubmissionEntity(RecordType recordType, Integer eventTypeId, Long traceId,HttpStatusCode httpStatusCode){
         return CaseSubmissionEntity.builder()
                 .id(null) // this will not be assigned till post-save.
                 .traceId(traceId)

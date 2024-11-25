@@ -16,7 +16,6 @@ import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.C
 
 import java.io.File;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -75,9 +74,36 @@ class ContributionsMapperUtilsTest extends ApplicationTestBase {
 			fail("Exception occurred in mapping from object to XML:" + e.getMessage());
 		}
 		softly.assertThat(contribution).isNotNull();
-		softly.assertThat(contribution.getId()).isEqualTo(BigInteger.valueOf(222769650));
+		softly.assertThat(contribution.getId()).isEqualTo(222769650L);
 		softly.assertThat(contribution.getFlag()).isEqualTo(UPDATE);
+		// verify date population:
+		softly.assertThat(contribution.getFlag()).isEqualTo(UPDATE);
+		softly.assertThat(contribution.getApplication().getRepStatusDate()).isEqualTo(LocalDate.of(2021,1,25));
+		softly.assertThat(contribution.getApplication().getRepOrderWithdrawalDate()).isEqualTo(LocalDate.of(2021,1,29));
+		softly.assertThat(contribution.getApplication().getSentenceDate()).isNull();
+
+
 	}
+
+	@Test
+	void testXMLLineZeroedDateTreatedAsNull() throws IOException {
+		File f = new File(getClass().getClassLoader().getResource("contributions/contributionLineZeroedDate.xml").getFile());
+		CONTRIBUTIONS contribution = null;
+		String originalXMLString = FileUtils.readText(f);
+
+		try {
+			contribution = contributionsMapperUtils.mapLineXMLToObject(originalXMLString);
+		} catch (JAXBException e) {
+			fail("Exception occurred in mapping from object to XML:" + e.getMessage());
+		}
+		softly.assertThat(contribution).isNotNull();
+		softly.assertThat(contribution.getId()).isEqualTo(222769650L);
+		softly.assertThat(contribution.getFlag()).isEqualTo(UPDATE);
+		softly.assertThat(contribution.getApplication().getRepStatusDate()).isNull();
+		softly.assertThat(contribution.getApplication().getRepOrderWithdrawalDate()).isNull();
+		softly.assertThat(contribution.getApplication().getSentenceDate()).isNull();
+	}
+
 
 	@Test
 	void testFileGenerationValid() throws IOException {
@@ -96,7 +122,7 @@ class ContributionsMapperUtilsTest extends ApplicationTestBase {
 		String generatedXML = contributionsMapperUtils.generateFileXML(cl,"filename");
 
 		softly.assertThat(contribution).isNotNull();
-		softly.assertThat(contribution.getId()).isEqualTo(BigInteger.valueOf(222769650));
+		softly.assertThat(contribution.getId()).isEqualTo(222769650L);
 		softly.assertThat(contribution.getFlag()).isEqualTo(UPDATE);
 		softly.assertThat(generatedXML).isNotNull();
 		softly.assertThat(generatedXML.length()>0).isTrue();

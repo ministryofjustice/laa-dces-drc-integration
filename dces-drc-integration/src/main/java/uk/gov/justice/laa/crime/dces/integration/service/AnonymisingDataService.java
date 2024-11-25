@@ -7,12 +7,9 @@ import org.springframework.util.StringUtils;
 import uk.gov.justice.laa.crime.dces.integration.exception.DcesDrcServiceException;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 
-import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Optional;
-
-import static uk.gov.justice.laa.crime.dces.integration.utils.DateConvertor.convertToXMLGregorianCalendar;
 
 @Slf4j
 @Service
@@ -30,11 +27,11 @@ public class AnonymisingDataService {
             throw new DcesDrcServiceException(e.getMessage(), e);
         }
 
-        secureRandom.setSeed(contribution.getMaatId().longValue());
+        secureRandom.setSeed(contribution.getMaatId());
         faker = new Faker(secureRandom);
 
         if (hasValue(contribution.getMaatId())) {
-            contribution.setMaatId(BigInteger.valueOf(faker.number().numberBetween(100000, 999999)));
+            contribution.setMaatId((long) faker.number().numberBetween(100000, 999999));
         }
         log.info("Anonymising data for contribution with maatId {} and anonymised maat-id: {}", contribution.getMaatId(), contribution.getMaatId());
         Optional.ofNullable(contribution.getApplicant())
@@ -101,7 +98,7 @@ public class AnonymisingDataService {
 
     private void anonymisePersonalDetails(CONTRIBUTIONS.Applicant applicant) {
         Optional.ofNullable(applicant.getId())
-                .ifPresent(id -> applicant.setId(BigInteger.valueOf(faker.number().positive())));
+                .ifPresent(id -> applicant.setId((long)(faker.number().positive())));
         if (hasValue(applicant.getFirstName())) {
             applicant.setFirstName(faker.name().firstName());
         }
@@ -109,7 +106,7 @@ public class AnonymisingDataService {
             applicant.setLastName(faker.name().lastName());
         }
         Optional.ofNullable(applicant.getDob()).ifPresent(dob ->
-                applicant.setDob(convertToXMLGregorianCalendar(faker.timeAndDate().birthday()))
+                applicant.setDob(faker.timeAndDate().birthday())
         );
         if (hasValue(applicant.getNiNumber())) {
             applicant.setNiNumber(faker.idNumber().valid());
@@ -143,7 +140,7 @@ public class AnonymisingDataService {
                 details.setSortCode(String.valueOf(faker.number().numberBetween(100000, 999999)));
             }
             if (hasValue(details.getAccountNo())) {
-                details.setAccountNo(BigInteger.valueOf(faker.number().numberBetween(10000000, 99999999)));
+                details.setAccountNo((long)(faker.number().numberBetween(10000000, 99999999)));
             }
         });
     }
@@ -160,7 +157,7 @@ public class AnonymisingDataService {
                 details.setNiNumber(faker.idNumber().valid());
             }
             Optional.ofNullable(details.getDob()).ifPresent(dob ->
-                    details.setDob(convertToXMLGregorianCalendar(faker.timeAndDate().birthday()))
+                    details.setDob(faker.timeAndDate().birthday())
             );
         });
     }
@@ -251,8 +248,8 @@ public class AnonymisingDataService {
         return StringUtils.hasText(value);
     }
 
-    private boolean hasValue(BigInteger value) {
-        return value != null && value.signum() != 0;
+    private boolean hasValue(Long value) {
+        return value != null && Long.signum(value) != 0;
     }
 
 }

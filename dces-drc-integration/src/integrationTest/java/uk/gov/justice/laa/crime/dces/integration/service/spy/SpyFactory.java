@@ -56,26 +56,26 @@ public class SpyFactory {
         return new FdcLoggingProcessSpy.FdcLoggingProcessSpyBuilder(fdcClientSpy);
     }
 
-    public List<Integer> updateConcorContributionStatus(final ConcorContributionStatus status, final int recordCount) {
+    public List<Long> updateConcorContributionStatus(final ConcorContributionStatus status, final int recordCount) {
         return testDataService.updateConcorContributionStatus(status, recordCount);
     }
 
-    public Set<Integer> createFdcDelayedPickupTestData(final FdcTestType testType, final int recordsToUpdate) {
+    public Set<Long> createFdcDelayedPickupTestData(final FdcTestType testType, final int recordsToUpdate) {
         return testDataService.createDelayedPickupTestData (testType, recordsToUpdate);
     }
 
-    public FdcContribution getFdcContribution(int fdcId){
+    public FdcContribution getFdcContribution(long fdcId){
         return testDataService.getFdcContribution(fdcId);
     }
-    public ContributionFileResponse getContributionsFile(int fileId){
+    public ContributionFileResponse getContributionsFile(long fileId){
         return testDataService.getContributionFile(fileId);
     }
 
-    public ConcorContributionResponseDTO getConcorContribution(int concorId){
+    public ConcorContributionResponseDTO getConcorContribution(Long concorId){
         return testDataService.getConcorContribution(concorId);
     }
 
-    public Set<Integer> createFastTrackTestData(
+    public Set<Long> createFastTrackTestData(
             final FdcAccelerationType fdcAccelerationType, final FdcTestType testType, final int recordsToUpdate) {
         return testDataService.createFastTrackTestData(fdcAccelerationType, testType, recordsToUpdate);
     }
@@ -85,7 +85,7 @@ public class SpyFactory {
      * <p>
      * Testing utility method.
      */
-    public Optional<ContributionFileErrorResponse> getContributionFileErrorOptional(final int contributionFileId, final int contributionId) {
+    public Optional<ContributionFileErrorResponse> getContributionFileErrorOptional(final long contributionFileId, final long contributionId) {
         return Optional.ofNullable(testDataService.getContributionFileError(contributionFileId, contributionId));
     }
 }

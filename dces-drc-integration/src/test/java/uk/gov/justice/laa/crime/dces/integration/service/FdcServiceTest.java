@@ -29,8 +29,8 @@ import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.Fdc
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -56,7 +56,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.FAILED_DEPENDENCY;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
-import static uk.gov.justice.laa.crime.dces.integration.utils.DateConvertor.convertToXMLGregorianCalendar;
 
 @ExtendWith(SoftAssertionsExtension.class)
 @WireMockTest(httpPort = 1111)
@@ -86,7 +85,7 @@ class FdcServiceTest extends ApplicationTestBase {
 	@MockBean
 	private EventService eventService;
 
-	private final BigInteger testBatchId = BigInteger.valueOf(-666);
+	private final Long testBatchId = -666L;
 
 	@Captor
 	ArgumentCaptor<Fdc> fdcArgumentCaptor;
@@ -109,8 +108,8 @@ class FdcServiceTest extends ApplicationTestBase {
 		doNothing().when(drcClient).sendFdcReqToDrc(any());
 		when(eventService.generateBatchId()).thenReturn(testBatchId);
 
-		Fdc expectedFdc1 = createExpectedFdc(1000, 10000000, "2050-07-12", "2011-12-03", "3805.69","3805.69", "0");
-		Fdc expectedFdc2 = createExpectedFdc(4000, 40000000, "2000-07-12", "2014-03-20", "2283.1","2283.1", "0");
+		Fdc expectedFdc1 = createExpectedFdc(1000L, 10000000L, "2050-07-12", "2011-12-03", "3805.69","3805.69", "0");
+		Fdc expectedFdc2 = createExpectedFdc(4000L, 40000000L, "2000-07-12", "2014-03-20", "2283.1","2283.1", "0");
 
 		// run
 		boolean successful = fdcService.processDailyFiles();
@@ -187,8 +186,8 @@ class FdcServiceTest extends ApplicationTestBase {
 		customStubs.add(stubFor(post(PREPARE_URL).atPriority(1)
 				.willReturn(serverError())));
 
-		Fdc expectedFdc1 = createExpectedFdc(1000, 10000000, "2050-07-12", "2011-12-03", "3805.69","3805.69", "0");
-		Fdc expectedFdc2 = createExpectedFdc(4000, 40000000, "2000-07-12", "2014-03-20", "2283.1","2283.1", "0");
+		Fdc expectedFdc1 = createExpectedFdc(1000L, 10000000L, "2050-07-12", "2011-12-03", "3805.69","3805.69", "0");
+		Fdc expectedFdc2 = createExpectedFdc(4000L, 40000000L, "2000-07-12", "2014-03-20", "2283.1","2283.1", "0");
 
 
 		// run
@@ -411,20 +410,20 @@ class FdcServiceTest extends ApplicationTestBase {
 	@Test
 	void testProcessFdcUpdateWhenSuccessful() {
 		FdcProcessedRequest dataRequest = FdcProcessedRequest.builder()
-				.fdcId(911)
+				.fdcId(911L)
 				.build();
-		Integer response = fdcService.handleFdcProcessedAck(dataRequest);
-		softly.assertThat(response).isEqualTo(1111);
+		Long response = fdcService.handleFdcProcessedAck(dataRequest);
+		softly.assertThat(response).isEqualTo(1111L);
 	}
 
 	@Test
 	void testProcessFdcUpdateWhenIncomingIsolated() {
 		when(feature.incomingIsolated()).thenReturn(true);
 		FdcProcessedRequest dataRequest = FdcProcessedRequest.builder()
-				.fdcId(911)
+				.fdcId(911L)
 				.build();
-		Integer response = fdcService.handleFdcProcessedAck(dataRequest);
-		softly.assertThat(response).isEqualTo(0); // so MAAT DB not touched
+		Long response = fdcService.handleFdcProcessedAck(dataRequest);
+		softly.assertThat(response).isEqualTo(0L); // so MAAT DB not touched
 	}
 
 	@Test
@@ -443,7 +442,7 @@ class FdcServiceTest extends ApplicationTestBase {
 	void testProcessFdcUpdateWhenNoContFile() {
 		String errorText = "The request has failed to process";
 		FdcProcessedRequest dataRequest = FdcProcessedRequest.builder()
-				.fdcId(9)
+				.fdcId(9L)
 				.errorText(errorText)
 				.build();
 		var exception = catchThrowableOfType(() -> fdcService.handleFdcProcessedAck(dataRequest), ErrorResponseException.class);
@@ -455,7 +454,7 @@ class FdcServiceTest extends ApplicationTestBase {
 	void testProcessFdcUpdateWhenServerFailure() {
 		String errorText = "The request has failed to process";
 		FdcProcessedRequest dataRequest = FdcProcessedRequest.builder()
-				.fdcId(500)
+				.fdcId(500L)
 				.errorText(errorText)
 				.build();
 		var exception = catchThrowableOfType(() -> fdcService.handleFdcProcessedAck(dataRequest), ErrorResponseException.class);
@@ -463,12 +462,12 @@ class FdcServiceTest extends ApplicationTestBase {
 		softly.assertThat(exception.getStatusCode().is5xxServerError()).isTrue();
 	}
 
-	Fdc createExpectedFdc(Integer id, Integer maatId, String sentenceDate, String calculationDate, String finalCost, String lgfsTotal, String agfsTotal){
+	Fdc createExpectedFdc(Long id, Long maatId, String sentenceDate, String calculationDate, String finalCost, String lgfsTotal, String agfsTotal){
 		Fdc fdc = new Fdc();
-		fdc.setId(BigInteger.valueOf(id));
-		fdc.setMaatId(BigInteger.valueOf(maatId));
-		fdc.setSentenceDate(convertToXMLGregorianCalendar(sentenceDate));
-		fdc.setCalculationDate(convertToXMLGregorianCalendar(calculationDate));
+		fdc.setId(id);
+		fdc.setMaatId(maatId);
+		fdc.setSentenceDate(LocalDate.parse(sentenceDate));
+		fdc.setCalculationDate(LocalDate.parse(calculationDate));
 		fdc.setFinalCost(new BigDecimal(finalCost));
 		fdc.setLgfsTotal(new BigDecimal(lgfsTotal));
 		fdc.setAgfsTotal(new BigDecimal(agfsTotal));
@@ -485,7 +484,7 @@ class FdcServiceTest extends ApplicationTestBase {
 		softly.assertThat(fdc1.getCalculationDate()).isEqualTo(fdc2.getCalculationDate());
 	}
 
-	private Fdc getFdcFromCaptorByFdcId(BigInteger fdcId){
+	private Fdc getFdcFromCaptorByFdcId(Long fdcId){
 		Optional<Fdc> optionalFdc =  fdcArgumentCaptor.getAllValues().stream().filter(x-> x.getId().equals(fdcId)).findFirst();
 		softly.assertThat(optionalFdc.isPresent()).isTrue();
 		return optionalFdc.get();

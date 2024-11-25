@@ -11,7 +11,6 @@ import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.ObjectFacto
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 
 import java.io.StringWriter;
-import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -56,16 +55,16 @@ public class FdcMapperUtils extends MapperUtils{
 
     private FdcFile.Header generateHeader (ObjectFactory of, List<Fdc> fdcList){
         FdcFile.Header header = of.createFdcFileHeader();
-        header.setDateGenerated(DateConvertor.convertToXMLGregorianCalendar(LocalDate.now()));
+        header.setDateGenerated(LocalDate.now());
         // TODO: Get generation method for the headers resolved.
         header.setFilename("file.name");
-        header.setFileId(BigInteger.valueOf(123));
+        header.setFileId(123L);
         header.setRecordCount(getRecordCount(fdcList));
         return header;
     }
 
-    private static BigInteger getRecordCount(List<Fdc> contributionsList) {
-        return BigInteger.valueOf(Objects.nonNull(contributionsList) ? contributionsList.size(): 0 );
+    private static Long getRecordCount(List<Fdc> contributionsList) {
+        return (long)(Objects.nonNull(contributionsList) ? contributionsList.size(): 0 );
     }
 
     private FdcFile.FdcList generateFdcList(ObjectFactory of, List<FdcFile.FdcList.Fdc> fdcFileList){
@@ -77,13 +76,13 @@ public class FdcMapperUtils extends MapperUtils{
     public Fdc mapFdcEntry(FdcContributionEntry entry) {
         ObjectFactory of = new ObjectFactory();
         Fdc fdc = of.createFdcFileFdcListFdc();
-        fdc.setId(BigInteger.valueOf(entry.getId()));
-        fdc.setMaatId(BigInteger.valueOf(entry.getMaatId()));
+        fdc.setId(entry.getId());
+        fdc.setMaatId(entry.getMaatId());
         fdc.setLgfsTotal(entry.getLgfsCost());
         fdc.setAgfsTotal(entry.getAgfsCost());
         fdc.setFinalCost(entry.getFinalCost());
-        fdc.setSentenceDate(DateConvertor.convertToXMLGregorianCalendar(entry.getSentenceOrderDate()));
-        fdc.setCalculationDate(DateConvertor.convertToXMLGregorianCalendar(entry.getDateCalculated()));
+        fdc.setSentenceDate(entry.getSentenceOrderDate());
+        fdc.setCalculationDate(entry.getDateCalculated());
         return fdc;
     }
 
