@@ -102,9 +102,7 @@ spring:
     cors:
       mappings:
         "/**":
-          allowed-origins:
-            - https://mon.dev.laa-debt-collection.service.justice.gov.uk
-            - https://${MON_HOST_1}
+          allowed-origins: "*"
           allowed-methods:
             - GET
             - POST
