@@ -17,6 +17,7 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
+import org.springframework.web.ErrorResponseException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionEntity;
@@ -93,7 +94,7 @@ class ContributionIntegrationTest {
                 .errorText(errorText)
                 .build();
         softly.assertThatThrownBy(() -> contributionService.handleContributionProcessedAck(contributionProcessedRequest))
-                .isInstanceOf(WebClientResponseException.class);
+                .isInstanceOf(ErrorResponseException.class);
         assertProcessConcorCaseSubmissionCreation(contributionProcessedRequest, HttpStatus.NOT_FOUND);
     }
 
