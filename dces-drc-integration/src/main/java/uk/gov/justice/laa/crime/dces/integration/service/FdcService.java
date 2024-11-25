@@ -71,9 +71,9 @@ public class FdcService implements FileService {
             long result = executeFdcProcessedAckCall(fdcProcessedRequest);
             logFdcAsyncEvent(fdcProcessedRequest, OK);
             return result;
-        } catch (WebClientResponseException e){
+        } catch (WebClientResponseException e) {
             logFdcAsyncEvent(fdcProcessedRequest, e.getStatusCode());
-            throw e;
+            throw FileServiceUtils.translateMAATCDAPIException(e);
         }
     }
 

@@ -68,9 +68,9 @@ public class ContributionService implements FileService {
     public Long handleContributionProcessedAck(ContributionProcessedRequest contributionProcessedRequest) {
         try {
             return executeContributionProcessedAckCall(contributionProcessedRequest);
-        } catch (WebClientResponseException e){
+        } catch (WebClientResponseException e) {
             logContributionAsyncEvent(contributionProcessedRequest, e.getStatusCode());
-            throw e;
+            throw FileServiceUtils.translateMAATCDAPIException(e);
         }
     }
 

@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.ProblemDetail;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.ErrorResponseException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestBase;
@@ -50,7 +51,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.FAILED_DEPENDENCY;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.OK;
 
 @ExtendWith(SoftAssertionsExtension.class)
@@ -329,15 +332,28 @@ class ContributionServiceTest extends ApplicationTestBase {
 
 
 	@Test
-	void testProcessContributionUpdateWhenFailed() {
+	void testProcessContributionUpdateWhenNotFound() {
+		String errorText = "The request has failed to process";
+		ContributionProcessedRequest dataRequest = ContributionProcessedRequest.builder()
+				.concorId(404L)
+				.errorText(errorText)
+				.build();
+		var exception = catchThrowableOfType(() -> contributionService.handleContributionProcessedAck(dataRequest), ErrorResponseException.class);
+		softly.assertThat(exception).isNotNull();
+		softly.assertThat(NOT_FOUND.isSameCodeAs(exception.getStatusCode())).isTrue();
+		verify(eventService).logConcor(404L,EventType.DRC_ASYNC_RESPONSE,null,null, NOT_FOUND, errorText);
+	}
+
+	@Test
+	void testProcessContributionUpdateWhenNoContFile() {
 		String errorText = "The request has failed to process";
 		ContributionProcessedRequest dataRequest = ContributionProcessedRequest.builder()
 				.concorId(9L)
 				.errorText(errorText)
 				.build();
-		var exception = catchThrowableOfType(() -> contributionService.handleContributionProcessedAck(dataRequest), WebClientResponseException.class);
+		var exception = catchThrowableOfType(() -> contributionService.handleContributionProcessedAck(dataRequest), ErrorResponseException.class);
 		softly.assertThat(exception).isNotNull();
-		softly.assertThat(exception.getStatusCode().is4xxClientError()).isTrue();
+		softly.assertThat(FAILED_DEPENDENCY.isSameCodeAs(exception.getStatusCode())).isTrue();
 		verify(eventService).logConcor(9L,EventType.DRC_ASYNC_RESPONSE,null,null, BAD_REQUEST, errorText);
 	}
 

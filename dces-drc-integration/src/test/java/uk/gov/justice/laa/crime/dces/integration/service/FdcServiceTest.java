@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.web.ErrorResponseException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestBase;
@@ -53,6 +54,8 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.HttpStatus.FAILED_DEPENDENCY;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @ExtendWith(SoftAssertionsExtension.class)
 @WireMockTest(httpPort = 1111)
@@ -424,15 +427,27 @@ class FdcServiceTest extends ApplicationTestBase {
 	}
 
 	@Test
-	void testProcessFdcUpdateWhenFailed() {
+	void testProcessFdcUpdateWhenNotFound() {
+		String errorText = "The request has failed to process";
+		FdcProcessedRequest dataRequest = FdcProcessedRequest.builder()
+				.fdcId(404L)
+				.errorText(errorText)
+				.build();
+		var exception = catchThrowableOfType(() -> fdcService.handleFdcProcessedAck(dataRequest), ErrorResponseException.class);
+		softly.assertThat(exception).isNotNull();
+		softly.assertThat(NOT_FOUND.isSameCodeAs(exception.getStatusCode())).isTrue();
+	}
+
+	@Test
+	void testProcessFdcUpdateWhenNoContFile() {
 		String errorText = "The request has failed to process";
 		FdcProcessedRequest dataRequest = FdcProcessedRequest.builder()
 				.fdcId(9L)
 				.errorText(errorText)
 				.build();
-		var exception = catchThrowableOfType(() -> fdcService.handleFdcProcessedAck(dataRequest), WebClientResponseException.class);
+		var exception = catchThrowableOfType(() -> fdcService.handleFdcProcessedAck(dataRequest), ErrorResponseException.class);
 		softly.assertThat(exception).isNotNull();
-		softly.assertThat(exception.getStatusCode().is4xxClientError()).isTrue();
+		softly.assertThat(FAILED_DEPENDENCY.isSameCodeAs(exception.getStatusCode())).isTrue();
 	}
 
 	@Test
@@ -442,7 +457,7 @@ class FdcServiceTest extends ApplicationTestBase {
 				.fdcId(500L)
 				.errorText(errorText)
 				.build();
-		var exception = catchThrowableOfType(() -> fdcService.handleFdcProcessedAck(dataRequest), WebClientResponseException.class);
+		var exception = catchThrowableOfType(() -> fdcService.handleFdcProcessedAck(dataRequest), ErrorResponseException.class);
 		softly.assertThat(exception).isNotNull();
 		softly.assertThat(exception.getStatusCode().is5xxServerError()).isTrue();
 	}
