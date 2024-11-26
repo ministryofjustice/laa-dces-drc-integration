@@ -5,13 +5,11 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 
-import java.math.BigInteger;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static uk.gov.justice.laa.crime.dces.integration.utils.DateConvertor.convertToXMLGregorianCalendar;
 
 class AnonymisingDataServiceTest {
 
@@ -27,9 +25,9 @@ class AnonymisingDataServiceTest {
     @Test
     void testAnonymiseMaatId() {
 
-        BigInteger maatId = BigInteger.valueOf(123456);
+        Long maatId = 123456L;
         CONTRIBUTIONS contributions = new CONTRIBUTIONS();
-        contributions.setMaatId(BigInteger.valueOf(67867));
+        contributions.setMaatId(67867L);
 
         CONTRIBUTIONS result = anonymisingDataService.anonymise(contributions);
 
@@ -41,7 +39,7 @@ class AnonymisingDataServiceTest {
     void testAnonymiseApplicantHomeAddress() {
 
         CONTRIBUTIONS contributions = new CONTRIBUTIONS();
-        contributions.setMaatId(BigInteger.valueOf(123456));
+        contributions.setMaatId(123456L);
         CONTRIBUTIONS.Applicant applicant = new CONTRIBUTIONS.Applicant();
         applicant.setHomeAddress(getApplicantHomeAddress());
         contributions.setApplicant(applicant);
@@ -177,10 +175,10 @@ class AnonymisingDataServiceTest {
 
     private CONTRIBUTIONS.Applicant getApplicant() {
         CONTRIBUTIONS.Applicant applicantWithDefaultData = new CONTRIBUTIONS.Applicant();
-        applicantWithDefaultData.setId(BigInteger.valueOf(1212));
+        applicantWithDefaultData.setId(1212L);
         applicantWithDefaultData.setFirstName("John");
         applicantWithDefaultData.setLastName("Doe");
-        applicantWithDefaultData.setDob(convertToXMLGregorianCalendar(LocalDate.of(1989, 1, 1)));
+        applicantWithDefaultData.setDob(LocalDate.of(1989, 1, 1));
         applicantWithDefaultData.setNiNumber("AB123456C");
         applicantWithDefaultData.setLandline("0123456789");
         applicantWithDefaultData.setMobile("0773456789");
@@ -194,7 +192,7 @@ class AnonymisingDataServiceTest {
 
         CONTRIBUTIONS.Applicant.BankDetails bankDetails = new CONTRIBUTIONS.Applicant.BankDetails();
         bankDetails.setAccountName("John Doe");
-        bankDetails.setAccountNo(BigInteger.valueOf(12345678));
+        bankDetails.setAccountNo(12345678L);
         bankDetails.setSortCode("223344");
         applicantWithDefaultData.setBankDetails(bankDetails);
 
@@ -211,7 +209,7 @@ class AnonymisingDataServiceTest {
         partnerDetails.setFirstName("Jane");
         partnerDetails.setLastName("Doe");
         partnerDetails.setNiNumber("AB123456C");
-        partnerDetails.setDob(convertToXMLGregorianCalendar(LocalDate.of(1980, 1, 1)));
+        partnerDetails.setDob(LocalDate.of(1980, 1, 1));
         applicantWithDefaultData.setPartnerDetails(partnerDetails);
 
         applicantWithDefaultData.setDisabilitySummary(applicantDisabilityData());
@@ -315,7 +313,7 @@ class AnonymisingDataServiceTest {
 
     private CONTRIBUTIONS getContributions() {
         CONTRIBUTIONS contributions = new CONTRIBUTIONS();
-        contributions.setMaatId(BigInteger.valueOf(23223));
+        contributions.setMaatId(23223L);
         return contributions;
     }
 }

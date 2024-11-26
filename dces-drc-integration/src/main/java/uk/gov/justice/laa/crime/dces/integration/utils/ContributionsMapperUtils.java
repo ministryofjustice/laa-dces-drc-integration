@@ -10,7 +10,6 @@ import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.O
 import javax.xml.transform.stream.StreamSource;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -67,17 +66,17 @@ public class ContributionsMapperUtils extends MapperUtils{
 
     private ContributionFile.Header generateHeader (ObjectFactory of, List<CONTRIBUTIONS> contributionsList, String fileName){
         ContributionFile.Header header = of.createContributionFileHeader();
-        header.setDateGenerated(DateConvertor.convertToXMLGregorianCalendar(LocalDate.now()));
+        header.setDateGenerated(LocalDate.now());
         // TODO: Get generation method for the headers resolved.
         header.setFilename(fileName);
-        header.setId(BigInteger.valueOf(123));
+        header.setId(123L);
         header.setFormatVersion("5");
         header.setRecordCount(getRecordCount(contributionsList));
         return header;
     }
 
-    private static BigInteger getRecordCount(List<CONTRIBUTIONS> contributionsList) {
-        return BigInteger.valueOf(Objects.nonNull(contributionsList) ? contributionsList.size(): 0 );
+    private static Long getRecordCount(List<CONTRIBUTIONS> contributionsList) {
+        return (long) (Objects.nonNull(contributionsList) ? contributionsList.size() : 0);
     }
 
     private ContributionFile.CONTRIBUTIONSLIST generateContributionsList(ObjectFactory of, List<CONTRIBUTIONS> contributionsList){

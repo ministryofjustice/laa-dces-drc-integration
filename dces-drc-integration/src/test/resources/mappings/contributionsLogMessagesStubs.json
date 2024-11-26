@@ -22,7 +22,31 @@
       }
     },
     {
-      "scenarioName": "failedBasicRequest",
+      "scenarioName": "failedNotFoundRequest",
+      "request": {
+        "urlPath": "/debt-collection-enforcement/log-contribution-response",
+        "method": "POST",
+        "bodyPatterns": [
+          {
+            "equalToJson": "{ \"concorId\": 404  }",
+            "ignoreArrayOrder": true,
+            "ignoreExtraElements": true
+          }
+        ]
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "code": "NOT_FOUND",
+          "message": "Some message"
+        }
+      }
+    },
+    {
+      "scenarioName": "failedNoContFileRequest",
       "request": {
         "urlPath": "/debt-collection-enforcement/log-contribution-response",
         "method": "POST",
@@ -40,7 +64,7 @@
           "Content-Type": "application/json"
         },
         "jsonBody": {
-          "code": "BAD_REQUEST",
+          "code": "Object Not Found",
           "message": "Some message"
         }
       }

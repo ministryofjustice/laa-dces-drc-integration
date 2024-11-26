@@ -1,0 +1,12 @@
+<jaxb:bindings xmlns:jaxb="https://jakarta.ee/xml/ns/jaxb"
+               xmlns:xs="http://www.w3.org/2001/XMLSchema"
+               xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
+               version="3.0" jaxb:extensionBindingPrefixes="xjc">
+    <jaxb:globalBindings>
+        <xjc:javaType name="java.time.LocalDate"
+                      xmlType="xs:date"
+                      adapter="uk.gov.justice.laa.crime.dces.integration.model.adapter.LocalDateAdapter"/>
+        <jaxb:javaType name="java.lang.Long"
+                       xmlType="xs:integer" />
+    </jaxb:globalBindings>
+</jaxb:bindings>

@@ -14,7 +14,7 @@ import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributi
 public class CreateFdcContributionRequest {
   @Schema(description = "The REP ID when creating FdcContribution", example = "123")
   @NotNull
-  private int repId;
+  private long repId;
 
   @Schema(description = "LGFS completion status", example = "Y", allowableValues = "Y,N")
   @Size(max = 1)

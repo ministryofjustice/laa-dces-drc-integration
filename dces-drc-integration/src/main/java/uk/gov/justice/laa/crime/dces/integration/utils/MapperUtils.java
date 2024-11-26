@@ -8,7 +8,6 @@ import uk.gov.justice.laa.crime.dces.integration.model.generated.ack.CONTRIBUTIO
 import uk.gov.justice.laa.crime.dces.integration.model.generated.ack.ObjectFactory;
 
 import java.io.StringWriter;
-import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
@@ -30,8 +29,8 @@ public class MapperUtils {
         CONTRIBUTIONSFILEACK ackFileObject = ackFactory.createCONTRIBUTIONSFILEACK();
         ackFileObject.setFILENAME(fileName);
         ackFileObject.setDATELOADED(date.format(ackDateGeneratedFormat));
-        ackFileObject.setNOOFRECORDSREJECTED(BigInteger.valueOf(failedLines));
-        ackFileObject.setNOOFRECORDSACCEPTED(BigInteger.valueOf(successfulLines));
+        ackFileObject.setNOOFRECORDSREJECTED(failedLines);
+        ackFileObject.setNOOFRECORDSACCEPTED(successfulLines);
         return mapAckObjectToXML(ackFileObject);
     }
 

@@ -35,7 +35,7 @@ class ContributionClientTest {
   void givenMultiPageData_whenSecondPageIsRequested_thenSecondPageDataIsReturned() {
     final var ignored = spyFactory.updateConcorContributionStatus(ConcorContributionStatus.ACTIVE, 5);
     List<ConcorContribEntry> contributionsList;
-    int startingId = 0;
+    long startingId = 0L;
     contributionsList = contributionClient.getContributions(ContributionRecordStatus.ACTIVE.name(), startingId, 3);
     startingId = contributionsList.get(contributionsList.size() - 1).getConcorContributionId();
     contributionsList = contributionClient.getContributions(ContributionRecordStatus.ACTIVE.name(), startingId, 3);

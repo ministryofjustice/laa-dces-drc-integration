@@ -18,16 +18,21 @@ import java.util.List;
 public interface ContributionClient extends MaatApiClientBase {
     @GetExchange("/concor-contribution-files")
     List<ConcorContribEntry> getContributions(@RequestParam String status,
-        @RequestParam(name = "concorContributionId") Integer startingId,
+        @RequestParam(name = "concorContributionId") Long startingId,
         @RequestParam Integer numberOfRecords);
 
     @PostExchange("/create-contribution-file")
     @Valid
-    Integer updateContributions(@RequestBody ContributionUpdateRequest contributionUpdateRequest);
+    Long updateContributions(@RequestBody ContributionUpdateRequest contributionUpdateRequest);
 
+    /**
+     * Perform the Maat API call for logging the DRC response that a specific concor contribution has been processed
+     * @param contributionProcessedRequest Id of the processed concor contribution, and any error text associated with it.
+     * @return The ID of the file that the concor contribution can be found as part of.
+     */
     @PostExchange("/log-contribution-response")
     @Valid
-    Integer sendLogContributionProcessed(@RequestBody ContributionProcessedRequest contributionProcessedRequest);
+    Long sendLogContributionProcessed(@RequestBody ContributionProcessedRequest contributionProcessedRequest);
 
     /** For testing only? */
     @GetExchange("/contributions")

@@ -82,13 +82,13 @@ class TestDataServiceTest {
     assertEquals("No candidate rep orders found for fast-track pickup test type POSITIVE", exception.getMessage());
   }
 
-  private void baseFdcFastTrackVerification(FdcAccelerationType accelerationType, Set<Integer> idList, FdcTestType testType, int recordsToUpdate){
+  private void baseFdcFastTrackVerification(FdcAccelerationType accelerationType, Set<Long> idList, FdcTestType testType, int recordsToUpdate){
     when(maatApiClient.getFdcFastTrackRepOrderIdList(anyInt(),any(),anyInt())).thenReturn(idList);
     when(maatApiClient.updateRepOrder(any())).thenReturn(null);
     mockCreateFdcContribution();
     mockCreateFdcItem();
 
-    Set<Integer> returnedIds = testDataService.createFastTrackTestData(accelerationType, testType, recordsToUpdate);
+    Set<Long> returnedIds = testDataService.createFastTrackTestData(accelerationType, testType, recordsToUpdate);
 
     assertEquals(idList.size(), returnedIds.size());
     assertEquals(idList, returnedIds);
@@ -100,30 +100,30 @@ class TestDataServiceTest {
 
     // check the base fdcContribution created on all paths.
     String expectedAccel = (FdcAccelerationType.POSITIVE.equals(accelerationType)?"Y":null);
-    for(Integer id: idList){
+    for(Long id: idList){
       verify(maatApiClient).createFdcContribution(new CreateFdcContributionRequest(id, "Y", "Y", expectedAccel, WAITING_ITEMS));
     }
   }
 
   @Test
   void whenPositiveCreateFastTrackPickupTestDataCalled_ThenShouldCallEndpoints(){
-    baseFdcFastTrackVerification(FdcAccelerationType.POSITIVE, Set.of(1,2,3,4), POSITIVE, 3);
+    baseFdcFastTrackVerification(FdcAccelerationType.POSITIVE, Set.of(1L,2L,3L,4L), POSITIVE, 3);
   }
 
   @Test
   void whenPreviousCreateFastTrackPickupTestDataCalled_ThenShouldCallEndpoints(){
-    Set<Integer> idList = Set.of(1,2,3,4);
+    Set<Long> idList = Set.of(1L,2L,3L,4L);
     baseFdcFastTrackVerification(FdcAccelerationType.PREVIOUS_FDC, idList, POSITIVE, 3);
-    for(Integer id: idList){
+    for(Long id: idList){
       verify(maatApiClient).createFdcContribution(new CreateFdcContributionRequest(id, "Y", "Y", null, SENT));
     }
   }
 
   @Test
   void whenNegativeCreateFastTrackPickupTestDataCalled_ThenShouldCallEndpoints(){
-    Set<Integer> idList = Set.of(1,2,3,4);
+    Set<Long> idList = Set.of(1L,2L,3L,4L);
     baseFdcFastTrackVerification(FdcAccelerationType.NEGATIVE, idList, POSITIVE, 3);
-    for(Integer id: idList){
+    for(Long id: idList){
       FdcItem baseItem =     FdcItem.builder().fdcId(id).userCreated("DCES").dateCreated(LocalDate.now())
               .itemType(FdcItemType.LGFS).paidAsClaimed("Y").latestCostInd("Current").build();
       FdcItem negativeItem =     FdcItem.builder().fdcId(id).userCreated("DCES").dateCreated(LocalDate.now())
@@ -144,12 +144,12 @@ class TestDataServiceTest {
   }
 
   // Method to do base checks and mocks for fast track calls.
-  private void baseFdcDelayedVerification(Set<Integer> idList, FdcTestType testType, int recordsToUpdate){
+  private void baseFdcDelayedVerification(Set<Long> idList, FdcTestType testType, int recordsToUpdate){
     when(maatApiClient.getFdcDelayedRepOrderIdList(anyInt(),any(),anyInt())).thenReturn(idList);
     mockCreateFdcContribution();
     mockCreateFdcItem();
 
-    Set<Integer> returnedIds = testDataService.createDelayedPickupTestData(testType, recordsToUpdate);
+    Set<Long> returnedIds = testDataService.createDelayedPickupTestData(testType, recordsToUpdate);
 
     assertEquals(idList.size(), returnedIds.size());
     assertEquals(idList, returnedIds);
@@ -161,46 +161,46 @@ class TestDataServiceTest {
 
   @Test
   void whenPositiveCreateDelayedPickupTestDataCalled_ThenShouldCallEndpoints(){
-    baseFdcDelayedVerification(Set.of(1,2,3,4), POSITIVE, 3);
+    baseFdcDelayedVerification(Set.of(1L,2L,3L,4L), POSITIVE, 3);
   }
 
   @Test
   void whenNegativeSOD_DoBaseAndCallUpdateRepOrder(){
-    Set<Integer> idSet = Set.of(1,2,3,4);
-    when(maatApiClient.updateRepOrderSentenceOrderDateToNull(anyInt(), any())).thenReturn(null);
+    Set<Long> idSet = Set.of(1L,2L,3L,4L);
+    when(maatApiClient.updateRepOrderSentenceOrderDateToNull(anyLong(), any())).thenReturn(null);
     baseFdcDelayedVerification(idSet, NEGATIVE_SOD, 3);
-    verify(maatApiClient, times(idSet.size())).updateRepOrderSentenceOrderDateToNull(anyInt(), any());
+    verify(maatApiClient, times(idSet.size())).updateRepOrderSentenceOrderDateToNull(anyLong(), any());
   }
 
   @Test
   void whenNegativeCCO_DoBaseAndCallUpdateRepOrder(){
-    Set<Integer> idSet = Set.of(1,2,3,4);
-    when(maatApiClient.deleteCrownCourtOutcomes(anyInt())).thenReturn(null);
+    Set<Long> idSet = Set.of(1L,2L,3L,4L);
+    when(maatApiClient.deleteCrownCourtOutcomes(anyLong())).thenReturn(null);
     baseFdcDelayedVerification(idSet, NEGATIVE_CCO, 3);
-    verify(maatApiClient, times(idSet.size())).deleteCrownCourtOutcomes(anyInt());
+    verify(maatApiClient, times(idSet.size())).deleteCrownCourtOutcomes(anyLong());
   }
 
   @Test
   void whenNegativeFDCItem_DoBaseAndCallUpdateRepOrder(){
-    Set<Integer> idSet = Set.of(1,2,3,4);
-    when(maatApiClient.deleteFdcItems(anyInt())).thenReturn(null);
+    Set<Long> idSet = Set.of(1L,2L,3L,4L);
+    when(maatApiClient.deleteFdcItems(anyLong())).thenReturn(null);
     baseFdcDelayedVerification(idSet, NEGATIVE_FDC_ITEM, 3);
-    verify(maatApiClient, times(idSet.size())).deleteFdcItems(anyInt());
+    verify(maatApiClient, times(idSet.size())).deleteFdcItems(anyLong());
   }
 
   @Test
   void whenNegativePreviousFDC_DoBaseAndCallUpdateRepOrder(){
-    UpdateFdcContributionRequest expectedRequest = new UpdateFdcContributionRequest(1,1,FdcContributionsStatus.SENT.name(), FdcContributionsStatus.WAITING_ITEMS);
+    UpdateFdcContributionRequest expectedRequest = new UpdateFdcContributionRequest(1L,1L,FdcContributionsStatus.SENT.name(), FdcContributionsStatus.WAITING_ITEMS);
     when(maatApiClient.updateFdcContribution(expectedRequest)).thenReturn(null);
-    baseFdcDelayedVerification(Set.of(1), NEGATIVE_PREVIOUS_FDC, 3);
+    baseFdcDelayedVerification(Set.of(1L), NEGATIVE_PREVIOUS_FDC, 3);
     verify(maatApiClient, times(1)).updateFdcContribution(expectedRequest);
   }
 
   @Test
   void whenNegativeFdcStatus_DoBaseAndCallUpdateRepOrder(){
-    UpdateFdcContributionRequest expectedRequest = new UpdateFdcContributionRequest(1,1,null, FdcContributionsStatus.SENT);
+    UpdateFdcContributionRequest expectedRequest = new UpdateFdcContributionRequest(1L,1L,null, FdcContributionsStatus.SENT);
     when(maatApiClient.updateFdcContribution(expectedRequest)).thenReturn(null);
-    baseFdcDelayedVerification(Set.of(1), NEGATIVE_FDC_STATUS, 3);
+    baseFdcDelayedVerification(Set.of(1L), NEGATIVE_FDC_STATUS, 3);
     verify(maatApiClient, times(1)).updateFdcContribution(expectedRequest);
   }
 

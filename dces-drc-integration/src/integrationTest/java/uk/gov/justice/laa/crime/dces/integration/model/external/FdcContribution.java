@@ -12,8 +12,8 @@ import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributi
 @XmlType
 public class FdcContribution {
 
-  private Integer id;
-  private Integer maatId;
+  private Long id;
+  private Long maatId;
   private LocalDate sentenceOrderDate;
   private LocalDate dateCalculated;
   private BigDecimal finalCost;
@@ -26,7 +26,7 @@ public class FdcContribution {
   private String accelerate;
   private BigDecimal judApportionPercent;
   private BigDecimal agfsVat;
-  private Integer contFileId;
+  private Long contFileId;
   private LocalDate dateReplaced;
   private FdcContributionsStatus status;
   private String lgfsComplete;

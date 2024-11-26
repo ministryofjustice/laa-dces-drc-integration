@@ -15,16 +15,16 @@ import java.time.LocalDate;
 public class ConcorContributionResponseDTO {
 
     @NotBlank
-    private Integer id;
-    private Integer repId;
+    private Long id;
+    private Long repId;
     private LocalDate dateCreated;
     private String userCreated;
     private LocalDate dateModified;
     private String userModified;
-    private Integer seHistoryId;
+    private Long seHistoryId;
     @NotBlank
     private ConcorContributionStatus status;
-    private Integer contribFileId;
-    private Integer ackFileId;
+    private Long contribFileId;
+    private Long ackFileId;
     private String ackCode;
 }

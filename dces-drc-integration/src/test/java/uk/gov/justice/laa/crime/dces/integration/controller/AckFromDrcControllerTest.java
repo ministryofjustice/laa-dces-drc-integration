@@ -52,13 +52,13 @@ class AckFromDrcControllerTest {
     void testContributionWhenDownstreamResponseIsValid() throws Exception {
 
         ContributionProcessedRequest contributionProcessedRequest = ContributionProcessedRequest.builder()
-                .concorId(99)
+                .concorId(99L)
                 .errorText("error 99")
                 .build();
-        Integer serviceResponse = 1111;
+        Long serviceResponse = 1111L;
         when(contributionService.handleContributionProcessedAck(contributionProcessedRequest)).thenReturn(serviceResponse);
 
-        ConcorContributionAckFromDrc concorContributionAckFromDrc = ConcorContributionAckFromDrc.of(99, "error 99");
+        ConcorContributionAckFromDrc concorContributionAckFromDrc = ConcorContributionAckFromDrc.of(99L, "error 99");
         final String requestBody = mapper.writeValueAsString(concorContributionAckFromDrc);
 
         mockMvc.perform(MockMvcRequestBuilders.post(String.format(CONTRIBUTION_URL))
@@ -72,13 +72,13 @@ class AckFromDrcControllerTest {
     void testContributionWhenDownstreamResponseIsNotValid() throws Exception {
 
         ContributionProcessedRequest contributionProcessedRequest = ContributionProcessedRequest.builder()
-                .concorId(9)
+                .concorId(9L)
                 .errorText("Failed to process")
                 .build();
         var serviceResponse = new WebClientResponseException(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), null, null, null);
         when(contributionService.handleContributionProcessedAck(contributionProcessedRequest)).thenThrow(serviceResponse);
 
-        ConcorContributionAckFromDrc concorContributionAckFromDrc = ConcorContributionAckFromDrc.of(9, "Failed to process");
+        ConcorContributionAckFromDrc concorContributionAckFromDrc = ConcorContributionAckFromDrc.of(9L, "Failed to process");
         final String requestBody = mapper.writeValueAsString(concorContributionAckFromDrc);
 
         mockMvc.perform(MockMvcRequestBuilders.post(String.format(CONTRIBUTION_URL))
@@ -92,12 +92,12 @@ class AckFromDrcControllerTest {
     void testFdcWhenDownstreamResponseIsValid() throws Exception {
 
         FdcProcessedRequest fdcProcessedRequest = FdcProcessedRequest.builder()
-                .fdcId(99)
+                .fdcId(99L)
                 .build();
-        Integer serviceResponse = 1111;
+        long serviceResponse = 1111L;
         when(fdcService.handleFdcProcessedAck(fdcProcessedRequest)).thenReturn(serviceResponse);
 
-        FdcAckFromDrc fdcAckFromDrc = FdcAckFromDrc.of(99, null);
+        FdcAckFromDrc fdcAckFromDrc = FdcAckFromDrc.of(99L, null);
 
         final String requestBody = mapper.writeValueAsString(fdcAckFromDrc);
 
@@ -112,13 +112,13 @@ class AckFromDrcControllerTest {
     void testFdcWhenDownstreamResponseIsNotValid() throws Exception {
 
         FdcProcessedRequest fdcProcessedRequest = FdcProcessedRequest.builder()
-                .fdcId(9)
+                .fdcId(9L)
                 .errorText("Failed to process")
                 .build();
         var serviceResponse = new WebClientResponseException(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), null,null,null);
         when(fdcService.handleFdcProcessedAck(fdcProcessedRequest)).thenThrow(serviceResponse);
 
-        FdcAckFromDrc fdcAckFromDrc = FdcAckFromDrc.of(9, "Failed to process");
+        FdcAckFromDrc fdcAckFromDrc = FdcAckFromDrc.of(9L, "Failed to process");
         final String requestBody = mapper.writeValueAsString(fdcAckFromDrc);
 
         mockMvc.perform(MockMvcRequestBuilders.post(String.format(CONTRIBUTION_FDC_URL))
