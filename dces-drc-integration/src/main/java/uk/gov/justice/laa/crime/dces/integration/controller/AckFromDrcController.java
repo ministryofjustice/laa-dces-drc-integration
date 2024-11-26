@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,6 +41,10 @@ public class AckFromDrcController {
     @ApiResponse(responseCode = "200",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = String.class)))
+    @ApiResponse(responseCode = "404",
+        description = "Not Found.",
+        content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
+            schema = @Schema(implementation = ProblemDetail.class)))
     public void fdc(@NotNull @RequestBody final FdcAckFromDrc fdcAckFromDrc) {
         log.info("Received FDC acknowledgement from DRC {}", fdcAckFromDrc);
         FdcProcessedRequest fdcProcessedRequest = FdcProcessedRequest.builder()
@@ -56,6 +61,10 @@ public class AckFromDrcController {
     @ApiResponse(responseCode = "200",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = String.class)))
+    @ApiResponse(responseCode = "404",
+        description = "Not Found.",
+        content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
+            schema = @Schema(implementation = ProblemDetail.class)))
     public void concorContribution(@NotNull @RequestBody final ConcorContributionAckFromDrc concorContributionAckFromDrc) {
         log.info("Received concorContribution acknowledgement from DRC {}", concorContributionAckFromDrc);
         ContributionProcessedRequest contributionProcessedRequest = ContributionProcessedRequest.builder()
