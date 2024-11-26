@@ -98,18 +98,7 @@ spring:
   flyway:
     baselineOnMigrate: true
     enabled: true
-  web:
-    cors:
-      mappings:
-        "/**":
-          allowed-origins: "*"
-          allowed-methods:
-            - GET
-            - POST
-            - PUT
-            - DELETE
-          allowed-headers: "*"
-          allow-credentials: true
+
 springdoc:
   swagger-ui:
     path: /swagger-ui-custom.html

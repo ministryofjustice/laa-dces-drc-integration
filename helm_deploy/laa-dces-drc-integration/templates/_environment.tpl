@@ -18,8 +18,4 @@ env:
     value: {{ .Values.drcClient.mountPath }}/tls.key
   - name: API_URL
     value: {{ index .Values.ingress.api.hosts 0 }}
-  {{- range $index, $host := .Values.ingress.mon.hosts }}
-  - name: MON_HOST_{{ $index }}
-    value: {{ $host }}
-  {{- end }}
 {{- end -}}
