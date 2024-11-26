@@ -8,12 +8,12 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 public class ContributionFileErrorResponse {
-    private final Integer contributionFileId;
-    private final Integer contributionId;
-    private final Integer repId;
+    private final Long contributionFileId;
+    private final Long contributionId;
+    private final Long repId;
     private final String errorText;
     private final String fixAction;
-    private final Integer fdcContributionId;
-    private final Integer concorContributionId;
+    private final Long fdcContributionId;
+    private final Long concorContributionId;
     private final LocalDateTime dateCreated;
 }

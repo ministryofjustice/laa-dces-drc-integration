@@ -5,7 +5,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
-import java.math.BigInteger;
 import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
@@ -14,6 +13,6 @@ import java.util.List;
 public class ContributionUpdateRequest extends UpdateRequest{
 
     @NonNull
-    private List<BigInteger> concorContributionIds;
+    private List<Long> concorContributionIds;
 
 }

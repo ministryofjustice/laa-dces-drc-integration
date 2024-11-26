@@ -25,9 +25,8 @@ import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionReqForD
 import uk.gov.justice.laa.crime.dces.integration.model.FdcReqForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile;
 
-import javax.xml.datatype.DatatypeFactory;
 import java.math.BigDecimal;
-import java.math.BigInteger;
+import java.time.LocalDate;
 
 /**
  * This is a simple temporary controller to handle some test endpoints.
@@ -71,9 +70,9 @@ public class TempTestController {
 
     private static FdcFile.FdcList.Fdc fakeFdcObj() {
         FdcFile.FdcList.Fdc fdc = new FdcFile.FdcList.Fdc();
-        fdc.setId(BigInteger.valueOf(94));
-        fdc.setMaatId(BigInteger.valueOf(105));
-        fdc.setSentenceDate(DatatypeFactory.newDefaultInstance().newXMLGregorianCalendar("2023-05-21"));
+        fdc.setId(94L);
+        fdc.setMaatId(105L);
+        fdc.setSentenceDate(LocalDate.parse("2023-05-21"));
         fdc.setCalculationDate(null);
         fdc.setAgfsTotal(null);
         fdc.setLgfsTotal(BigDecimal.valueOf(2000.0));

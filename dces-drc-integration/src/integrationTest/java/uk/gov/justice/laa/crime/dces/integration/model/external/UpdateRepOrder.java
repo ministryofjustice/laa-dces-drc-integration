@@ -2,10 +2,8 @@ package uk.gov.justice.laa.crime.dces.integration.model.external;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.AllArgsConstructor;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
@@ -16,7 +14,7 @@ import java.time.LocalDateTime;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UpdateRepOrder {
 
-  private Integer repId;
+  private Long repId;
   @NotNull
   private String caseId;
   private String iojResult;
@@ -29,7 +27,7 @@ public class UpdateRepOrder {
   private LocalDateTime magsOutcomeDateSet;
   private LocalDate committalDate;
   private String decisionReasonCode;
-  private Integer crownRepId;
+  private Long crownRepId;
   private String crownRepOrderDecision;
   private String crownRepOrderType;
   private LocalDate crownRepOrderDate;
@@ -38,18 +36,18 @@ public class UpdateRepOrder {
   private LocalDate assessmentDateCompleted;
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
   private LocalDate sentenceOrderDate;
-  private Integer applicantHistoryId;
+  private Long applicantHistoryId;
   private String evidenceFeeLevel;
   private Integer bankAccountNo;
   private String bankAccountName;
   private String paymentMethod;
-  private Integer preferredPaymentDay;
+  private Long preferredPaymentDay;
   private String sortCode;
   private Boolean isSendToCCLF;
   @NotNull
-  private Integer areaId;
+  private Long areaId;
   @NotNull
-  private Integer cmuId;
+  private Long cmuId;
   private Boolean isCaseTransferred;
   private Boolean isBenchWarrantIssued;
   private LocalDate appealSentenceOrderChangedDate;
@@ -57,15 +55,15 @@ public class UpdateRepOrder {
   private LocalDate appealReceivedDate;
   private LocalDate appealTypeDate;
   private LocalDate appSignedDate;
-  private Integer usn;
+  private Long usn;
   private LocalDate firstCapitalReminderDate;
   private LocalDate allCapitalEvidenceReceivedDate;
-  private Integer applicationId;
+  private Long applicationId;
   private LocalDate capitalAllowanceReinstatedDate;
   private LocalDate capitalAllowanceWithheldDate;
   private LocalDate capitalEvidenceDueDate;
   private String capitalNote;
-  private Integer capitalAllowance;
+  private Long capitalAllowance;
   private Boolean isCourtCustody;
   @NotNull
   private LocalDate dateReceived;
@@ -78,7 +76,7 @@ public class UpdateRepOrder {
   private Boolean isNoCapitalDeclared;
   private String oftyOffenceType;
   private Boolean useSuppAddressForPost;
-  private Integer postalAddressId;
+  private Long postalAddressId;
   private String rorsStatus;
   private String statusReason;
   private String suppAccountCode;

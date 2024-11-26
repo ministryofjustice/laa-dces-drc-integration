@@ -12,8 +12,11 @@ import org.springframework.boot.ssl.SslOptions;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
-import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.support.WebClientAdapter;
@@ -44,16 +47,15 @@ public class DrcApiWebClientConfiguration {
      * @param webClientBuilder `WebClient.Builder` instance injected by Sprint Boot.
      * @param services Our services configuration properties (used to obtain the DRC API base URL).
      * @param sslBundles `SslBundles` instance injected by Spring Boot.
-     * @param clientRegistrationRepository `ClientRegistrationRepository` instance injected by Spring Boot.
-     * @param authorizedClientRepository `OAuth2AuthorizedClientRepository` instance injected by Spring Boot.
+     * @param drcApiAuthorizedClientManager `OAuth2AuthorizedClientManager` instance configured in this class.
      * @return a configured `WebClient` instance.
      */
     @Bean("drcApiWebClient")
     public WebClient drcApiWebClient(final WebClient.Builder webClientBuilder,
                                      final ServicesProperties services,
                                      final SslBundles sslBundles,
-                                     final ClientRegistrationRepository clientRegistrationRepository,
-                                     final OAuth2AuthorizedClientRepository authorizedClientRepository) {
+                                     @Qualifier("drcApiAuthorizedClientManager")
+                                     final OAuth2AuthorizedClientManager drcApiAuthorizedClientManager) {
         final ConnectionProvider provider = ConnectionProvider.builder("custom")
                 .maxConnections(500)
                 .maxIdleTime(Duration.ofSeconds(20))
@@ -67,17 +69,29 @@ public class DrcApiWebClientConfiguration {
                 .clientConnector(new ReactorClientHttpConnector(createHttpClient(provider, sslBundles)));
 
         if (services.getDrcClientApi().isOAuthEnabled()) {
-            if (clientRegistrationRepository != null && authorizedClientRepository != null) {
-                final var oauth2 = new ServletOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrationRepository,
-                                                                                           authorizedClientRepository);
+            if (drcApiAuthorizedClientManager != null) {
+                final var oauth2 = new ServletOAuth2AuthorizedClientExchangeFilterFunction(drcApiAuthorizedClientManager);
                 oauth2.setDefaultClientRegistrationId("drc-client-api");
-                builder.apply(oauth2.oauth2Configuration());
+                builder.filter(oauth2);
             } else {
-                log.warn("OAuth2 not enabled because no client registration or authorized client repository provided.");
+                log.warn("OAuth2 not enabled because no authorized client manager provided.");
             }
         }
-
         return builder.build();
+    }
+
+    @Bean("drcApiAuthorizedClientManager")
+    public OAuth2AuthorizedClientManager drcApiAuthorizedClientManager(
+            ClientRegistrationRepository clientRegistrationRepository,
+            OAuth2AuthorizedClientService clientService) {
+        final var authorizedClientProvider = OAuth2AuthorizedClientProviderBuilder.builder()
+                        .refreshToken() // is refresh_token needed for client_credentials?
+                        .clientCredentials()
+                        .build();
+        final var authorizedClientManager = new AuthorizedClientServiceOAuth2AuthorizedClientManager(
+                clientRegistrationRepository, clientService);
+        authorizedClientManager.setAuthorizedClientProvider(authorizedClientProvider);
+        return authorizedClientManager;
     }
 
     /**
@@ -86,7 +100,7 @@ public class DrcApiWebClientConfiguration {
      */
     public WebClient drcApiWebClient(final WebClient.Builder webClientBuilder,
                                      final ServicesProperties services) {
-        return drcApiWebClient(webClientBuilder, services, null, null, null);
+        return drcApiWebClient(webClientBuilder, services, null, null);
     }
 
     /**

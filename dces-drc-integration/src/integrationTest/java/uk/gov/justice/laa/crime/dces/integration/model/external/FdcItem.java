@@ -16,8 +16,8 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class FdcItem {
-  private int id;
-  private int fdcId;
+  private Long id;
+  private Long fdcId;
   private FdcItemType itemType;
   private String adjustmentReason;
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")

@@ -8,14 +8,14 @@ public record ConcorContributionReqForDrc(ConcorContributionReqData data, Map<St
     /**
      * @param concorContributionObj This field cannot be named `concorContribution` because of Entity Framework used by Advantis.
      */
-    public record ConcorContributionReqData(int concorContributionId, CONTRIBUTIONS concorContributionObj) {
+    public record ConcorContributionReqData(Long concorContributionId, CONTRIBUTIONS concorContributionObj) {
     }
 
-    public static ConcorContributionReqForDrc of(final int concorContributionId, final CONTRIBUTIONS concorContributionObj) {
+    public static ConcorContributionReqForDrc of(final Long concorContributionId, final CONTRIBUTIONS concorContributionObj) {
         return new ConcorContributionReqForDrc(new ConcorContributionReqData(concorContributionId, concorContributionObj), Map.of());
     }
 
-    public static ConcorContributionReqForDrc of(final int concorContributionId, final CONTRIBUTIONS concorContributionObj, final Map<String, String> meta) {
+    public static ConcorContributionReqForDrc of(final Long concorContributionId, final CONTRIBUTIONS concorContributionObj, final Map<String, String> meta) {
         return new ConcorContributionReqForDrc(new ConcorContributionReqData(concorContributionId, concorContributionObj), meta);
     }
 }
