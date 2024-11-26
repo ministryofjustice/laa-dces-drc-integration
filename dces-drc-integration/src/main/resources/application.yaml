@@ -104,6 +104,8 @@ springdoc:
     path: /swagger-ui-custom.html
     enabled: true
     operations-sorter: method
+    api-url: https://${API_URL:API URL Not Set}
+    oauth-token-url: ${DCES_DRC_API_OAUTH_TOKEN_URL:OAuth Token URL Not Set}
   api-docs:
     path: "/api-docs"
     enabled: true

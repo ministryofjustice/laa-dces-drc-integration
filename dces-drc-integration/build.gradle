@@ -10,7 +10,7 @@ plugins {
 
 def versions = [
 		sentryVersion          : '7.13.0',
-		springdocVersion       : '2.1.0',
+		springdocVersion       : '2.2.0',
 		resilience4jVersion    : '2.2.0',
 		wiremockVersion        : '3.9.1',
 		notifyVersion          : '4.1.0-RELEASE',
