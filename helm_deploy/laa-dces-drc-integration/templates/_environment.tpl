@@ -16,4 +16,6 @@ env:
     value: {{ .Values.drcClient.mountPath }}/tls.crt
   - name: DRCCLIENT_KEYSTORE_PRIVATEKEY
     value: {{ .Values.drcClient.mountPath }}/tls.key
+  - name: API_URL
+    value: {{ index .Values.ingress.api.hosts 0 }}
 {{- end -}}

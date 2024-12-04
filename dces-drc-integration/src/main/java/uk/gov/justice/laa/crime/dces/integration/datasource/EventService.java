@@ -14,7 +14,6 @@ import uk.gov.justice.laa.crime.dces.integration.exception.DcesDrcServiceExcepti
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 
-import java.math.BigInteger;
 import java.util.List;
 import java.util.Objects;
 
@@ -34,7 +33,7 @@ public class EventService {
         return caseSubmissionRepository.save(entity);
     }
 
-    public boolean logFdc(EventType eventType, BigInteger batchId, BigInteger traceId, Fdc fdcObject, HttpStatusCode httpStatusCode, String payload){
+    public boolean logFdc(EventType eventType, Long batchId, Long traceId, Fdc fdcObject, HttpStatusCode httpStatusCode, String payload){
         // default fdcObject if null is passed. No ids is a valid scenario.
         fdcObject = Objects.requireNonNullElse(fdcObject, new Fdc());
 
@@ -45,11 +44,11 @@ public class EventService {
         return true;
     }
 
-    public boolean logFdc(EventType eventType, BigInteger batchId, Fdc fdcObject, HttpStatusCode httpStatusCode, String payload){
+    public boolean logFdc(EventType eventType, Long batchId, Fdc fdcObject, HttpStatusCode httpStatusCode, String payload){
         return logFdc(eventType, batchId, null, fdcObject, httpStatusCode, payload);
     }
 
-    public boolean logConcor(BigInteger concorContributionId, EventType eventType, BigInteger batchId, BigInteger traceId, CONTRIBUTIONS contributionsObject, HttpStatusCode httpStatusCode, String payload){
+    public boolean logConcor(Long concorContributionId, EventType eventType, Long batchId, Long traceId, CONTRIBUTIONS contributionsObject, HttpStatusCode httpStatusCode, String payload){
         // default fdcObject if null is passed. No ids is a valid scenario.
         contributionsObject = Objects.requireNonNullElse(contributionsObject, new CONTRIBUTIONS());
 
@@ -60,11 +59,11 @@ public class EventService {
         return true;
     }
 
-    public boolean logConcor(BigInteger concorContributionId, EventType eventType, BigInteger batchId, CONTRIBUTIONS contributionsObject, HttpStatusCode httpStatusCode, String payload){
+    public boolean logConcor(Long concorContributionId, EventType eventType, Long batchId, CONTRIBUTIONS contributionsObject, HttpStatusCode httpStatusCode, String payload){
         return logConcor(concorContributionId, eventType, batchId, null, contributionsObject, httpStatusCode, payload);
     }
 
-    private CaseSubmissionEntity createCaseSubmissionEntity(EventType eventType, BigInteger batchId, BigInteger traceId, BigInteger maatId, HttpStatusCode httpStatusCode, String payload){
+    private CaseSubmissionEntity createCaseSubmissionEntity(EventType eventType, Long batchId, Long traceId, Long maatId, HttpStatusCode httpStatusCode, String payload){
         Integer httpStatus = (Objects.nonNull(httpStatusCode)) ? httpStatusCode.value() : null;
         var caseSubmissionEntity = CaseSubmissionEntity.builder()
                 .batchId(batchId)
@@ -77,10 +76,10 @@ public class EventService {
         return caseSubmissionEntity;
     }
 
-    public BigInteger generateBatchId(){
+    public Long generateBatchId(){
         return caseSubmissionRepository.getNextBatchId();
     }
-    public BigInteger generateTraceId(){
+    public Long generateTraceId(){
         return caseSubmissionRepository.getNextTraceId();
     }
 

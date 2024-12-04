@@ -9,6 +9,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
@@ -22,10 +23,8 @@ import uk.gov.justice.laa.crime.dces.integration.config.ServicesProperties;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionReqForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 
-import javax.xml.datatype.DatatypeConfigurationException;
-import javax.xml.datatype.DatatypeFactory;
 import java.io.IOException;
-import java.math.BigInteger;
+import java.time.LocalDate;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.failBecauseExceptionWasNotThrown;
@@ -45,6 +44,7 @@ class ContributionClientTest extends ApplicationTestBase {
     @Autowired
     private ObjectMapper mapper;
 
+    @Qualifier("maatApiAuthorizedClientManager")
     @Autowired
     private OAuth2AuthorizedClientManager oAuth2AuthorizedClientManager;
 
@@ -74,9 +74,9 @@ class ContributionClientTest extends ApplicationTestBase {
     }
 
     @Test
-    void test_whenWebClientIsInvoked_thenSuccessfulResponse() throws InterruptedException, DatatypeConfigurationException {
+    void test_whenWebClientIsInvoked_thenSuccessfulResponse() throws InterruptedException {
 
-        ConcorContributionReqForDrc concorContributionReqForDrc = ConcorContributionReqForDrc.of(99, fakeCONTRIBUTIONS());
+        ConcorContributionReqForDrc concorContributionReqForDrc = ConcorContributionReqForDrc.of(99L, fakeCONTRIBUTIONS());
         setupSuccessfulResponse();
         WebClient actualWebClient = maatApiWebClientConfiguration.maatApiWebClient(webClientBuilder, services, oAuth2AuthorizedClientManager);
 
@@ -105,7 +105,7 @@ class ContributionClientTest extends ApplicationTestBase {
     }
 
     private void setupErrorCodeTest(HttpStatus expectedStatus) throws JsonProcessingException, InterruptedException {
-        ConcorContributionReqForDrc concorContributionReqForDrc = ConcorContributionReqForDrc.of(0, new CONTRIBUTIONS());
+        ConcorContributionReqForDrc concorContributionReqForDrc = ConcorContributionReqForDrc.of(0L, new CONTRIBUTIONS());
         setupProblemDetailResponse(fakeProblemDetail(expectedStatus));
         WebClient actualWebClient = maatApiWebClientConfiguration.maatApiWebClient(webClientBuilder, services, oAuth2AuthorizedClientManager);
         try {
@@ -129,16 +129,16 @@ class ContributionClientTest extends ApplicationTestBase {
                 .block();
     }
 
-    private CONTRIBUTIONS fakeCONTRIBUTIONS() throws DatatypeConfigurationException {
+    private CONTRIBUTIONS fakeCONTRIBUTIONS() {
         var factory = new uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.ObjectFactory();
         var contribution = factory.createCONTRIBUTIONS();
-        contribution.setId(BigInteger.valueOf(3333));
-        contribution.setMaatId(BigInteger.valueOf(3338));
+        contribution.setId(3333L);
+        contribution.setMaatId(3338L);
         contribution.setFlag("NEW");
         var applicant = factory.createCONTRIBUTIONSApplicant();
         applicant.setFirstName("John");
         applicant.setLastName("Smith");
-        var cal = DatatypeFactory.newInstance().newXMLGregorianCalendar("1970-12-31");
+        var cal = LocalDate.parse("1970-12-31");
         applicant.setDob(cal);
         applicant.setNiNumber("QQ999999Q");
         contribution.setApplicant(applicant);

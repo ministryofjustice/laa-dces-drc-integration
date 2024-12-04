@@ -48,13 +48,13 @@ public class TestDataService {
    * @param recordsToUpdate Number of records to update
    * @return A set of FDC IDs updated as required
    */
-  public Set<Integer> createDelayedPickupTestData(FdcTestType testType, int recordsToUpdate){
-    Set<Integer> repOrderIds = getFdcDelayCandidateRepOrderIds(5, DATE_RECEIVED, recordsToUpdate);
-    Set<Integer> fdcIds = new HashSet<>();
+  public Set<Long> createDelayedPickupTestData(FdcTestType testType, int recordsToUpdate){
+    Set<Long> repOrderIds = getFdcDelayCandidateRepOrderIds(5, DATE_RECEIVED, recordsToUpdate);
+    Set<Long> fdcIds = new HashSet<>();
     if (repOrderIds != null && !repOrderIds.isEmpty()) {
       repOrderIds.forEach(repOrderId -> {
         FdcContribution fdcContribution = createFdcContribution(repOrderId, "Y", "Y", null, WAITING_ITEMS);
-        int fdcId = fdcContribution.getId();
+        long fdcId = fdcContribution.getId();
         fdcIds.add(fdcId);
         FdcItem fdcItem = FdcItem.builder()
                 .fdcId(fdcId)
@@ -81,16 +81,16 @@ public class TestDataService {
    * @return A set of FDC IDs updated as required
    */
 
-  public Set<Integer> createFastTrackTestData( FdcAccelerationType fdcAccelerationType, FdcTestType testType, int recordsToUpdate){
-    Set<Integer> repOrderIds = getFdcFastTrackCandidateRepOrderIds(-3, DATE_RECEIVED, recordsToUpdate);
-    Set<Integer> fdcIds = new HashSet<>();
+  public Set<Long> createFastTrackTestData( FdcAccelerationType fdcAccelerationType, FdcTestType testType, int recordsToUpdate){
+    Set<Long> repOrderIds = getFdcFastTrackCandidateRepOrderIds(-3, DATE_RECEIVED, recordsToUpdate);
+    Set<Long> fdcIds = new HashSet<>();
     if(repOrderIds == null || repOrderIds.isEmpty() ){
       throw new TestDataServiceException("No candidate rep orders found for fast-track pickup test type " + testType);
     }
     repOrderIds.forEach(repOrderId -> {
       maatApiClient.updateRepOrder(UpdateRepOrder.builder().repId(repOrderId).sentenceOrderDate(LocalDate.now().minusMonths(3)).build());
       String manualAcceleration = (fdcAccelerationType == FdcAccelerationType.POSITIVE)?"Y":null;
-      int fdcId = createFdcContribution(repOrderId, "Y", "Y", manualAcceleration, WAITING_ITEMS).getId();
+      long fdcId = createFdcContribution(repOrderId, "Y", "Y", manualAcceleration, WAITING_ITEMS).getId();
       fdcIds.add(fdcId);
 
       FdcItemBuilder fdcItemBuilder = FdcItem.builder().fdcId(fdcId).userCreated(USER_AUDIT).dateCreated(LocalDate.now());
@@ -111,7 +111,7 @@ public class TestDataService {
   return fdcIds;
   }
 
-  private void createAdditionalNegativeTypeTestData(FdcTestType testType, Integer repOrderId, Integer fdcId) {
+  private void createAdditionalNegativeTypeTestData(FdcTestType testType, Long repOrderId, Long fdcId) {
     switch (testType) {
       case NEGATIVE_SOD -> {
             Map<String, Object> repOrderWithNullSOD = new HashMap<>();
@@ -125,16 +125,16 @@ public class TestDataService {
     }
   }
 
-  private FdcContribution createFdcContribution(int repOrderId, String lgfsComplete, String agfsComplete, String manualAcceleration, FdcContributionsStatus status){
+  private FdcContribution createFdcContribution(long repOrderId, String lgfsComplete, String agfsComplete, String manualAcceleration, FdcContributionsStatus status){
     return maatApiClient.createFdcContribution(new CreateFdcContributionRequest(repOrderId, lgfsComplete, agfsComplete, manualAcceleration, status));
   }
 
-  private Set<Integer> getFdcDelayCandidateRepOrderIds(int delay, LocalDate dateReceived, int recordsToUpdate){
+  private Set<Long> getFdcDelayCandidateRepOrderIds(int delay, LocalDate dateReceived, int recordsToUpdate){
     return maatApiClient.getFdcDelayedRepOrderIdList(delay, dateReceived, recordsToUpdate);
   }
 
 
-  private Set<Integer> getFdcFastTrackCandidateRepOrderIds(int delay, LocalDate dateReceived, int recordsToUpdate){
+  private Set<Long> getFdcFastTrackCandidateRepOrderIds(int delay, LocalDate dateReceived, int recordsToUpdate){
     return maatApiClient.getFdcFastTrackRepOrderIdList(delay, dateReceived, recordsToUpdate);
   }
 
@@ -142,13 +142,13 @@ public class TestDataService {
     return maatApiClient.createFdcItem(fdcItem);
   }
 
-  public FdcContribution getFdcContribution(int fdcId){
+  public FdcContribution getFdcContribution(long fdcId){
     return maatApiClient.getFdcContribution(fdcId);
   }
-  public ContributionFileResponse getContributionFile(int fdcId){
+  public ContributionFileResponse getContributionFile(long fdcId){
     return maatApiClient.getContributionFile(fdcId);
   }
-  public List<Integer> updateConcorContributionStatus(final ConcorContributionStatus status, final int recordCount){
+  public List<Long> updateConcorContributionStatus(final ConcorContributionStatus status, final int recordCount){
     UpdateConcorContributionStatusRequest request = UpdateConcorContributionStatusRequest.builder()
             .status(status)
             .recordCount(recordCount)
@@ -156,11 +156,11 @@ public class TestDataService {
     return maatApiClient.updateConcorContributionStatus(request);
   }
 
-  public ConcorContributionResponseDTO getConcorContribution(int concorId){
+  public ConcorContributionResponseDTO getConcorContribution(Long concorId){
     return maatApiClient.getConcorContribution(concorId);
   }
 
-  public ContributionFileErrorResponse getContributionFileError(final int contributionFileId, final int contributionId){
+  public ContributionFileErrorResponse getContributionFileError(final long contributionFileId, final long contributionId){
     return maatApiClient.getContributionFileError(contributionFileId, contributionId);
 
   }

@@ -9,8 +9,6 @@ import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmission
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.RecordType;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionRepository;
 
-import java.math.BigInteger;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @RequiredArgsConstructor
@@ -38,8 +36,8 @@ class DatabaseServiceTest extends ApplicationTestBase {
 
     private CaseSubmissionEntity createExpectedCaseSubmissionEntity(RecordType recordType, Integer eventTypeId, Integer httpStatusCode) {
         return CaseSubmissionEntity.builder()
-                .fdcId(RecordType.FDC.equals(recordType) ? BigInteger.valueOf(-444) : null)
-                .concorContributionId(RecordType.CONTRIBUTION.equals(recordType) ? BigInteger.valueOf(-333) : null)
+                .fdcId(RecordType.FDC.equals(recordType) ? -444L : null)
+                .concorContributionId(RecordType.CONTRIBUTION.equals(recordType) ? -333L : null)
                 .recordType(recordType.getName())
                 .eventType(eventTypeId)
                 .httpStatus(httpStatusCode)

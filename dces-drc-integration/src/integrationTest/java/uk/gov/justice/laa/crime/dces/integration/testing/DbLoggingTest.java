@@ -16,7 +16,6 @@ import uk.gov.justice.laa.crime.dces.integration.exception.DcesDrcServiceExcepti
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -34,27 +33,27 @@ class DbLoggingTest {
   private CaseSubmissionRepository caseSubmissionRepository;
 
   private final String testPayloadString = "TestData"+ LocalDateTime.now();
-  private final BigInteger testBatchId = BigInteger.valueOf(-999);
-  private final BigInteger testTraceId = BigInteger.valueOf(-999);
+  private static final Long TEST_BATCH_ID = -999L;
+  private static final Long TEST_TRACE_ID = -999L;
 
   // Method to clear out any lingering test data that might exist.
   @AfterAll
   @BeforeAll
   public void deleteTestData(){
-    caseSubmissionRepository.deleteByBatchIdAndTraceId(testBatchId, testTraceId);
+    caseSubmissionRepository.deleteByBatchIdAndTraceId(TEST_BATCH_ID, TEST_TRACE_ID);
   }
 
   @Test
   void given_FdcAllRequiredValues_thenSaves(){
     var fdc = createTestFdc();
-    boolean response = eventService.logFdc(EventType.SENT_TO_DRC, testBatchId,testTraceId, fdc, HttpStatus.OK, testPayloadString );
+    boolean response = eventService.logFdc(EventType.SENT_TO_DRC, TEST_BATCH_ID, TEST_TRACE_ID, fdc, HttpStatus.OK, testPayloadString );
     assertTrue(response);
     clearDownData(1L);
   }
 
   @Test
   void given_FdcMinimalValues_thenSaves(){
-    boolean response = eventService.logFdc(EventType.SENT_TO_DRC, testBatchId,testTraceId, null, null, testPayloadString );
+    boolean response = eventService.logFdc(EventType.SENT_TO_DRC, TEST_BATCH_ID, TEST_TRACE_ID, null, null, testPayloadString );
     assertTrue(response);
     clearDownData(1L);
   }
@@ -62,7 +61,7 @@ class DbLoggingTest {
   @Test
   void given_ContributionAllRequiredValues_thenSaves(){
     var contribution = createTestContribution();
-    boolean response = eventService.logConcor(BigInteger.valueOf(-8888), EventType.SENT_TO_DRC,testBatchId,testTraceId, contribution, HttpStatus.OK, testPayloadString );
+    boolean response = eventService.logConcor(-8888L, EventType.SENT_TO_DRC, TEST_BATCH_ID, TEST_TRACE_ID, contribution, HttpStatus.OK, testPayloadString );
     assertTrue(response);
     clearDownData(1L);
   }
@@ -70,33 +69,33 @@ class DbLoggingTest {
   @Test
   void given_MissingTypeValue_thenError(){
     var contribution = createTestContribution();
-    assertThrows(DcesDrcServiceException.class,() -> eventService.logConcor(BigInteger.valueOf(-8888), null, testBatchId,testTraceId, contribution, HttpStatus.OK, testPayloadString ));
+    assertThrows(DcesDrcServiceException.class,() -> eventService.logConcor(-8888L, null, TEST_BATCH_ID, TEST_TRACE_ID, contribution, HttpStatus.OK, testPayloadString ));
     clearDownData(0L);
   }
 
   @Test
   void given_MissingContributionValue_thenSave(){
-    boolean response = eventService.logConcor(BigInteger.valueOf(-8888), EventType.SENT_TO_DRC, testBatchId,testTraceId, null, HttpStatus.OK, testPayloadString );
+    boolean response = eventService.logConcor(-8888L, EventType.SENT_TO_DRC, TEST_BATCH_ID, TEST_TRACE_ID, null, HttpStatus.OK, testPayloadString );
     assertTrue(response);
     clearDownData(1L);
   }
 
   private void clearDownData(Long expectedDeletions){
-    Long deletions = caseSubmissionRepository.deleteByPayloadAndBatchIdAndTraceId(testPayloadString, testBatchId, testTraceId);
+    Long deletions = caseSubmissionRepository.deleteByPayloadAndBatchIdAndTraceId(testPayloadString, TEST_BATCH_ID, TEST_TRACE_ID);
     assertEquals(expectedDeletions, deletions);
   }
 
   private CONTRIBUTIONS createTestContribution(){
     var contribution = new CONTRIBUTIONS();
-    contribution.setId(BigInteger.valueOf(1000));
-    contribution.setMaatId(BigInteger.valueOf(2000));
+    contribution.setId(1000L);
+    contribution.setMaatId(2000L);
     return contribution;
   }
 
   private Fdc createTestFdc(){
     var fdc = new Fdc();
-    fdc.setId(BigInteger.valueOf(1000));
-    fdc.setMaatId(BigInteger.valueOf(2000));
+    fdc.setId(1000L);
+    fdc.setMaatId(2000L);
     return fdc;
   }
 

@@ -23,13 +23,18 @@ public interface FdcClient extends MaatApiClientBase {
   @GetExchange("/fdc-contribution-files")
   FdcContributionsResponse getFdcContributions(@RequestParam String status);
 
+  /**
+   *
+   * @param contributionPutRequest list of fdc ids that are part of the update package.
+   * @return The Id of the fdc file generated.
+   */
   @PostExchange("/create-fdc-file")
   @Valid
-  Integer updateFdcs(@RequestBody FdcUpdateRequest contributionPutRequest);
+  Long updateFdcs(@RequestBody FdcUpdateRequest contributionPutRequest);
 
   @PostExchange("/log-fdc-response")
   @Valid
-  Integer sendLogFdcProcessed(@RequestBody FdcProcessedRequest fdcProcessedRequest);
+  Long sendLogFdcProcessed(@RequestBody FdcProcessedRequest fdcProcessedRequest);
 
   /** For testing only? */
   @GetExchange("/final-defence-cost")

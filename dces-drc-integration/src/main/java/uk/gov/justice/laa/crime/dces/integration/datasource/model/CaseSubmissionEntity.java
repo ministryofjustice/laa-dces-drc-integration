@@ -12,7 +12,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 
 /**
@@ -29,12 +28,12 @@ public class CaseSubmissionEntity {
     @Id
     @SequenceGenerator(name = "case_submission_gen_seq", sequenceName = "case_submission_id_seq", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "case_submission_gen_seq")
-    private BigInteger id;
-    private BigInteger batchId;
-    private BigInteger traceId;
-    private BigInteger maatId;
-    private BigInteger concorContributionId;
-    private BigInteger fdcId;
+    private Long id;
+    private Long batchId;
+    private Long traceId;
+    private Long maatId;
+    private Long concorContributionId;
+    private Long fdcId;
     private String recordType;
     @CreationTimestamp
     private LocalDateTime processedDate;

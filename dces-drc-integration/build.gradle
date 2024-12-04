@@ -10,7 +10,7 @@ plugins {
 
 def versions = [
 		sentryVersion          : '7.13.0',
-		springdocVersion       : '2.1.0',
+		springdocVersion       : '2.2.0',
 		resilience4jVersion    : '2.2.0',
 		wiremockVersion        : '3.9.1',
 		notifyVersion          : '4.1.0-RELEASE',
@@ -175,19 +175,25 @@ tasks.register('xsd2java') {
 		ant.xjc(
 				destdir: '${jaxbTargetDir}',
 				package: 'uk.gov.justice.laa.crime.dces.integration.model.generated.fdc',
-				schema: 'src/main/resources/schemas/fdc.xsd'
+				schema: 'src/main/resources/schemas/fdc.xsd',
+				extension: 'true',
+				binding: 'src/main/resources/schemas/bindings_general.xml'
 		)
 
 		ant.xjc(
 				destdir: '${jaxbTargetDir}',
 				package: 'uk.gov.justice.laa.crime.dces.integration.model.generated.contributions',
-				schema: 'src/main/resources/schemas/contributions.xsd'
+				schema: 'src/main/resources/schemas/contributions.xsd',
+				extension: 'true',
+				binding: 'src/main/resources/schemas/bindings_general.xml'
 		)
 
 		ant.xjc(
 				destdir: '${jaxbTargetDir}',
 				package: 'uk.gov.justice.laa.crime.dces.integration.model.generated.ack',
-				schema: 'src/main/resources/schemas/fileACK.xsd'
+				schema: 'src/main/resources/schemas/fileACK.xsd',
+				extension: 'true',
+				binding: 'src/main/resources/schemas/bindings_fileACK.xml'
 		)
 	}
 }

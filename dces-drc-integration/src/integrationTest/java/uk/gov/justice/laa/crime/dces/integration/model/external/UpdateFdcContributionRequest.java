@@ -7,8 +7,8 @@ import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributi
 @Data
 @AllArgsConstructor
 public class UpdateFdcContributionRequest {
-  private Integer fdcContributionId;
-  private Integer repId;
+  private Long fdcContributionId;
+  private Long repId;
   private String previousStatus;
   private FdcContributionsStatus newStatus;
 }
