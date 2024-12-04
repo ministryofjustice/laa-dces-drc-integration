@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS case_migration (
-                                 maatId INT PRIMARY KEY,
+                                 maat_id INT PRIMARY KEY,
                                  record_type VARCHAR(255) NOT NULL,
                                  concor_contribution_id INT,
                                  fdc_id INT,
