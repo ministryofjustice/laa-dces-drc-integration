@@ -5,8 +5,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestBase;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseMigrationEntity;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionEntity;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.RecordType;
+import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseMigrationRepository;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionRepository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -16,6 +18,8 @@ class DatabaseServiceTest extends ApplicationTestBase {
 
     @Autowired
     private CaseSubmissionRepository caseSubmissionRepository;
+    @Autowired
+    private CaseMigrationRepository caseMigrationRepository;
 
     @BeforeEach
     public void setUp() {
@@ -34,6 +38,20 @@ class DatabaseServiceTest extends ApplicationTestBase {
         assertEquals(200, caseSubmissionRepository.findAll().get(0).getHttpStatus());
     }
 
+    @Test
+    void testCaseMigrationCreation(){
+        CaseMigrationEntity entity = CaseMigrationEntity.builder()
+                .batchId(-111L)
+                .recordType(RecordType.CONTRIBUTION.getName())
+                .concorContributionId(-555L)
+                .fdcId(-222L)
+                .maatId(-9999L)
+                .payload("TestPayload")
+                .build();
+        caseMigrationRepository.save(entity);
+        assertEquals(1,caseMigrationRepository.findAll().size());
+    }
+
     private CaseSubmissionEntity createExpectedCaseSubmissionEntity(RecordType recordType, Integer eventTypeId, Integer httpStatusCode) {
         return CaseSubmissionEntity.builder()
                 .fdcId(RecordType.FDC.equals(recordType) ? -444L : null)
@@ -43,4 +61,5 @@ class DatabaseServiceTest extends ApplicationTestBase {
                 .httpStatus(httpStatusCode)
                 .build();
     }
+
 }
