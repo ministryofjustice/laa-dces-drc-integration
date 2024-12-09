@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.crime.dces.integration.utils;
 
+import io.micrometer.observation.annotation.Observed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.core.LockAssert;
@@ -24,6 +25,7 @@ public class ServiceScheduler {
     private final FdcService fdcService;
     private final ContributionService contributionService;
 
+    @Observed(name = "ServiceScheduler.fdc", contextualName = "Cron job to process FDC files", lowCardinalityKeyValues = {"priority", "medium"})
     @Scheduled(cron =  "${scheduling.cron.process-fdc-files:-}")
     @SchedulerLock(name = "processFdcFiles")
     public void processFdcFiles() {
@@ -32,6 +34,7 @@ public class ServiceScheduler {
         fdcService.processDailyFiles();
     }
 
+    @Observed(name = "ServiceScheduler.contribution", contextualName = "Cron job to process Contribution files", lowCardinalityKeyValues = {"priority", "medium"})
     @Scheduled(cron = "${scheduling.cron.process-contributions-files:-}")
     @SchedulerLock(name = "processContributionsFiles")
     public void processContributionsFiles() {
