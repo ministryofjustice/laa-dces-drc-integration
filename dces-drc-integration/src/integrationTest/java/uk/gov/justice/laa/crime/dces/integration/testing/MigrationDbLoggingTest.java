@@ -103,7 +103,6 @@ class MigrationDbLoggingTest {
     clearDownData(1L, expectedMaxBatch);
   }
 
-
   private CaseMigrationEntity createTestMigrationEntry(long maatId, RecordType recordType){
     return CaseMigrationEntity.builder()
             .batchId(TEST_BATCH_ID)
