@@ -173,7 +173,7 @@ public class ContributionService implements FileService {
     // External Call Executions Methods
 
     @Retry(name = SERVICE_NAME)
-    private long executeContributionProcessedAckCall(ContributionProcessedRequest contributionProcessedRequest) {
+    public long executeContributionProcessedAckCall(ContributionProcessedRequest contributionProcessedRequest) {
         long result = 0L;
         if (!feature.incomingIsolated()) {
             result = contributionClient.sendLogContributionProcessed(contributionProcessedRequest);
@@ -185,14 +185,14 @@ public class ContributionService implements FileService {
     }
 
     @Retry(name = SERVICE_NAME)
-    private List<ConcorContribEntry> executeGetContributionsCall(Long startingId) {
+    public List<ConcorContribEntry> executeGetContributionsCall(Long startingId) {
         List<ConcorContribEntry> contributionsList = contributionClient.getContributions(ContributionRecordStatus.ACTIVE.name(), startingId, getContributionBatchSize);
         eventService.logConcor(null, FETCHED_FROM_MAAT, batchId, null, OK, String.format("Fetched:%s",contributionsList.size()));
         return contributionsList;
     }
 
     @Retry(name = SERVICE_NAME)
-    private void executeSendConcorToDrcCall(Long concorContributionId, CONTRIBUTIONS currentContribution, Map<Long, String> failedContributions) {
+    public void executeSendConcorToDrcCall(Long concorContributionId, CONTRIBUTIONS currentContribution, Map<Long, String> failedContributions) {
         final var request = ConcorContributionReqForDrc.of(concorContributionId, currentContribution);
         if (!feature.outgoingIsolated()) {
             drcClient.sendConcorContributionReqToDrc(request);
@@ -209,7 +209,7 @@ public class ContributionService implements FileService {
     }
 
     @Retry(name = SERVICE_NAME)
-    private Long executeConcorFileCreateCall(String xmlContent, List<Long> concorContributionIdList, int numberOfRecords, String fileName, String fileAckXML) {
+    public Long executeConcorFileCreateCall(String xmlContent, List<Long> concorContributionIdList, int numberOfRecords, String fileName, String fileAckXML) {
         log.info("Sending contribution update request to MAAT API for {}", concorContributionIdList);
 
         ContributionUpdateRequest request = ContributionUpdateRequest.builder()
