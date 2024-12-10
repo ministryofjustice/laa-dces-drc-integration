@@ -2,6 +2,7 @@ package uk.gov.justice.laa.crime.dces.integration.client;
 
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.service.annotation.GetExchange;
@@ -39,4 +40,8 @@ public interface ContributionClient extends MaatApiClientBase {
     @Valid
     List<String> findContributionFiles(@RequestParam(name = "fromDate") @DateTimeFormat(pattern = "dd.MM.yyyy") final LocalDate fromDate,
                                        @RequestParam(name = "toDate") @DateTimeFormat(pattern = "dd.MM.yyyy") final LocalDate toDate);
+
+    @GetExchange("/concor-contribution/{id}")
+    ConcorContribEntry getConcorById(@PathVariable(name = "id") long concorId);
+
 }
