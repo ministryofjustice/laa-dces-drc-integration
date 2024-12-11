@@ -117,9 +117,6 @@ public class MigrationService {
         return numProcessed;
     }
 
-
-
-
     public Long getMaxBatch(){
         Optional<Long> maxBatchOptional = caseMigrationRepository.getHighestBatchNumber();
         return maxBatchOptional.orElse(0L);
