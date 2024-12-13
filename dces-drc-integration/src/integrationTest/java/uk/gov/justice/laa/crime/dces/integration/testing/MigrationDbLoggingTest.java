@@ -1,6 +1,7 @@
 package uk.gov.justice.laa.crime.dces.integration.testing;
 
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Assert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
@@ -79,7 +80,7 @@ class MigrationDbLoggingTest {
     clearDownData(4L);
   }
 
-  // TODO Remove the below test. For ease of access to the code.
+  // TODO Remove the below tests. For ease of access to the code.
   @Disabled("Disabled due to consuming data.")
   @Test
   void given_dbEntries_will_send(){
@@ -89,6 +90,20 @@ class MigrationDbLoggingTest {
       throw new RuntimeException(e);
     }
   }
+
+  @Disabled("Used for testing specific batch ids, consumes data, so disabled.")
+  @Test
+  void given_batchId_willProcess(){
+    try{
+//      migrationService.migrateConcorEntries(1L, migrationService.contributionUnmarshallerList.get(0));
+      migrationService.migrateFdcEntries(1L);
+    } catch (Exception e){
+      Assert.fail();
+    }
+
+
+  }
+
   @Test
   void given_maxBatch_willReturn(){
     Long initialMaxBatch = migrationService.getMaxBatch();
