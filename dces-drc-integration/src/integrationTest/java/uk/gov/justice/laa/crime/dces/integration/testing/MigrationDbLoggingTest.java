@@ -70,7 +70,7 @@ class MigrationDbLoggingTest {
     assertNotNull(byBatchResponse);
     assertEquals(4,byBatchResponse.size());
 
-    var byBatchAndTypeResponse = caseMigrationRepository.getCaseMigrationEntitiesByBatchIdAndRecordTypeAndIsProcessed(TEST_BATCH_ID, CONTRIBUTION.getName(), false);
+    var byBatchAndTypeResponse = caseMigrationRepository.getCaseMigrationEntitiesByBatchIdAndRecordTypeAndIsProcessed(TEST_BATCH_ID, CONTRIBUTION.getName(), true);
 
     assertNotNull(byBatchAndTypeResponse);
     assertEquals(3, byBatchAndTypeResponse.size());
@@ -81,7 +81,7 @@ class MigrationDbLoggingTest {
   @Test
   void given_maxBatch_willReturn(){
     Long initialMaxBatch = migrationService.getMaxBatch();
-    Long expectedMaxBatch = 10000000000L;
+    Long expectedMaxBatch = 1000000L;
     clearDownData(0L, expectedMaxBatch);
     CaseMigrationEntity migrationEntity = createTestMigrationEntry(-1000, CONTRIBUTION);
     migrationEntity.setBatchId(expectedMaxBatch);
