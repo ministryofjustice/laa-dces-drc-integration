@@ -192,6 +192,9 @@ public class MigrationService {
             }
             caseMigrationRepository.save(currentMigrationEntity);
             numProcessed++;
+            if(feature.limitedMigrationRun()){
+                break;
+            }
         }
         log.info("Fdc Batch {} processed: {}",batchNumber, numProcessed);
         return numProcessed;
@@ -241,6 +244,9 @@ public class MigrationService {
             }
             caseMigrationRepository.save(currentMigrationEntity);
             numProcessed++;
+            if(feature.limitedMigrationRun()){
+                break;
+            }
         }
         log.info("Contribution Batch {} processed: {}",batchNumber, numProcessed);
         return numProcessed;
