@@ -21,7 +21,6 @@ import uk.gov.justice.laa.crime.dces.integration.model.FdcReqForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.ObjectFactory;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
-import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 
 import javax.xml.transform.stream.StreamSource;
@@ -51,7 +50,7 @@ import static uk.gov.justice.laa.crime.dces.integration.datasource.model.RecordT
 public class MigrationService {
     private static final String DIVIDER = "------------------------------------------------------------";
     private static final Integer NUM_CONTRIBUTION_THREADS = 2;
-    public static final int CONTRIBUTION_GET_MAX_NUMBER = 5; //350
+    public static final int CONTRIBUTION_GET_MAX_NUMBER = 350;
     public static final int FDC_GET_MAX_NUMBER = 1000;
     private final DrcClient drcClient;
     private final FdcClient fdcClient;
@@ -63,7 +62,7 @@ public class MigrationService {
     private final FdcMapperUtils fdcMapperUtils;
 
     @Autowired
-    public MigrationService(DrcClient drcClient, FdcClient fdcClient, ContributionClient contributionClient, CaseMigrationRepository caseMigrationRepository, ContributionsMapperUtils contributionsMapperUtils2, FeatureProperties feature, AnonymisingDataService anonymisingDataService, FdcMapperUtils fdcMapperUtils){
+    public MigrationService(DrcClient drcClient, FdcClient fdcClient, ContributionClient contributionClient, CaseMigrationRepository caseMigrationRepository, FeatureProperties feature, AnonymisingDataService anonymisingDataService, FdcMapperUtils fdcMapperUtils){
         this.drcClient = drcClient;
         this.fdcClient = fdcClient;
         this.contributionClient = contributionClient;
@@ -71,11 +70,8 @@ public class MigrationService {
         this.feature = feature;
         this.anonymisingDataService = anonymisingDataService;
         this.fdcMapperUtils = fdcMapperUtils;
-
         this.contributionUnmarshallerList = new ArrayList<>();
         createUnmarshallerList();
-
-
     }
 
     private void createUnmarshallerList(){
@@ -181,7 +177,8 @@ public class MigrationService {
     public Integer migrateConcorEntries(long batchNumber, Unmarshaller unmarshaller){
         log.info("Contribution Batch:{} entered",batchNumber);
         List<CaseMigrationEntity> batchResults = caseMigrationRepository.getCaseMigrationEntitiesByBatchIdAndRecordTypeAndIsProcessed(batchNumber, CONTRIBUTION.getName(), false);
-        Map<Long, String> concorMap = new HashMap<>();
+        log.info("Contribution Batch:{} to process: {}",batchNumber,batchResults.size());
+        Map<Long, String> concorMap;
         try {
              concorMap = getContributionsForMigration(batchResults);
         } catch (Exception e){
@@ -201,7 +198,6 @@ public class MigrationService {
                     var request = ConcorContributionReqForDrc.of(currentMigrationEntity.getConcorContributionId(), contribution, Map.of("migrated", "true"));
                     drcClient.sendConcorContributionReqToDrc(request);
                 }
-                log.info("Contribution Sent:"+currentMigrationEntity.getConcorContributionId());
                 currentMigrationEntity.setProcessed(true);
                 currentMigrationEntity.setProcessedDate(LocalDateTime.now());
             } catch (WebClientResponseException e) {
@@ -243,7 +239,8 @@ public class MigrationService {
         log.info("Fdc Batch:{} entered",batchNumber);
         int numProcessed = 0;
         List<CaseMigrationEntity> batchResults = caseMigrationRepository.getCaseMigrationEntitiesByBatchIdAndRecordTypeAndIsProcessed(batchNumber, FDC.getName(), false);
-        Map<Long, Fdc> fdcMap = new HashMap<>();
+        log.info("Fdc Batch:{} to process: {}",batchNumber,batchResults.size());
+        Map<Long, Fdc> fdcMap;
         try {
             fdcMap = getFdcsForMigration(batchResults);
         } catch (Exception e){
@@ -259,7 +256,6 @@ public class MigrationService {
                     var request = FdcReqForDrc.of(currentFdc.getId().intValue(), currentFdc, Map.of("migrated", "true"));
                     drcClient.sendFdcReqToDrc(request);
                 }
-                log.info("Fdc Sent:"+currentFdc.getId());
                 currentMigrationEntity.setProcessed(true);
                 currentMigrationEntity.setProcessedDate(LocalDateTime.now());
             } catch (WebClientResponseException e) {
