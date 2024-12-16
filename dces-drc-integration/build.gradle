@@ -92,6 +92,7 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
+	implementation "io.micrometer:micrometer-core:1.14.1"
 	implementation "io.micrometer:micrometer-tracing-bridge-brave"
 	implementation "io.micrometer:micrometer-registry-prometheus"
 	implementation "net.javacrumbs.shedlock:shedlock-spring:$versions.shedlockVersion"
