@@ -11,6 +11,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
+import uk.gov.justice.laa.crime.dces.integration.service.MigrationService;
 
 import static org.mockito.Mockito.*;
 
@@ -22,25 +23,26 @@ import static org.mockito.Mockito.*;
         "scheduling.contributionsDailyFiles.cron=-"
 })
 @ActiveProfiles(profiles = "default")
-public class DisabledServiceSchedulerTest {
+class DisabledServiceSchedulerTest {
 
     @MockBean
     private FdcService fdcService;
-
+    @MockBean
+    private MigrationService migrationService;
     @MockBean
     private ContributionService contributionService;
     @InjectMocks
     private ServiceScheduler serviceScheduler;
 
     @Test
-    public void testProcessFdcDailyFilesIsNotCalled() throws InterruptedException {
+    void testProcessFdcDailyFilesIsNotCalled() throws InterruptedException {
         // Wait for the scheduled method to be called
         Thread.sleep(1000);
         verify(fdcService, never()).processDailyFiles();
     }
 
     @Test
-    public void testProcessContributionsDailyFilesIsNotCalled() throws InterruptedException {
+    void testProcessContributionsDailyFilesIsNotCalled() throws InterruptedException {
         // Wait for the scheduled method to be called
         Thread.sleep(1000);
         verify(contributionService, never()).processDailyFiles();
