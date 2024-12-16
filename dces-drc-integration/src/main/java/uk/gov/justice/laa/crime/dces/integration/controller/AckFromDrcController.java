@@ -1,6 +1,6 @@
 package uk.gov.justice.laa.crime.dces.integration.controller;
 
-import io.micrometer.core.annotation.Timed;
+import io.micrometer.observation.annotation.Observed;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -34,8 +34,7 @@ public class AckFromDrcController {
     @Autowired
     private ContributionService contributionService;
 
-    @Timed(value = "laa_dces_drc_service_process_drc_update_fdc",
-            description = "Time taken to process the updates for FDC from DRC and passing this for downstream processing.")
+    @Observed(name = "UpdateFromDrcAPI.fdc", contextualName = "Process Updates for FDC", lowCardinalityKeyValues = {"priority", "high"})
     @PostMapping(value = "/fdc")
     @Operation(description = "Processing the updates for FDC from DRC and passing this for downstream processing.")
     @ApiResponse(responseCode = "200",
@@ -54,8 +53,7 @@ public class AckFromDrcController {
         fdcService.handleFdcProcessedAck(fdcProcessedRequest);
     }
 
-    @Timed(value = "laa_dces_drc_service_process_drc_update_contributions",
-            description = "Time taken to process the updates for concorContribution from DRC and passing this for downstream processing.")
+    @Observed(name = "UpdateFromDrcAPI.contribution", contextualName = "Process Updates for Contribution", lowCardinalityKeyValues = {"priority", "high"})
     @PostMapping(value = "/contribution")
     @Operation(description = "Processing the updates for concorContribution from DRC and passing this for downstream processing.")
     @ApiResponse(responseCode = "200",
