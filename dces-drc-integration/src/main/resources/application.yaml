@@ -59,6 +59,7 @@ scheduling:
   cron:
     process-fdc-files: ${DCES_CRON_FDC:-}
     process-contributions-files: ${DCES_CRON_CONTRIBUTIONS:-}
+    data-migration: ${DCES_CRON_DATA_MIGRATION:-}
   lock:
     at-least: 30s
     at-most: 15m

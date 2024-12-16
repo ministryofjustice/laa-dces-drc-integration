@@ -203,8 +203,8 @@ public class FdcService implements FileService {
     }
 
     // External Call Executions Methods
-
-    private long executeFdcProcessedAckCall(FdcProcessedRequest fdcProcessedRequest) {
+    @Retry(name = SERVICE_NAME)
+    public long executeFdcProcessedAckCall(FdcProcessedRequest fdcProcessedRequest) {
         long result = 0L;
         if (!feature.incomingIsolated()) {
             result = fdcClient.sendLogFdcProcessed(fdcProcessedRequest);
@@ -215,7 +215,7 @@ public class FdcService implements FileService {
     }
 
     @Retry(name = SERVICE_NAME)
-    private FdcGlobalUpdateResponse executeFdcGlobalUpdateCall() {
+    public FdcGlobalUpdateResponse executeFdcGlobalUpdateCall(){
         if (!feature.outgoingIsolated()) {
             return fdcClient.executeFdcGlobalUpdate();
         } else {
@@ -225,7 +225,7 @@ public class FdcService implements FileService {
     }
 
     @Retry(name = SERVICE_NAME)
-    private FdcContributionsResponse executeGetFdcContributionsCall() {
+    public FdcContributionsResponse executeGetFdcContributionsCall() {
         FdcContributionsResponse response;
         try {
             response = fdcClient.getFdcContributions(REQUESTED_STATUS);
@@ -239,7 +239,7 @@ public class FdcService implements FileService {
     }
 
     @Retry(name = SERVICE_NAME)
-    private void executeSendFdcToDrcCall(Fdc currentFdc, int fdcId, Map<Long, String> failedFdcs) {
+    public void executeSendFdcToDrcCall(Fdc currentFdc, int fdcId, Map<Long,String> failedFdcs) {
         final var request = FdcReqForDrc.of(fdcId, currentFdc);
         if (!feature.outgoingIsolated()) {
             drcClient.sendFdcReqToDrc(request);
@@ -256,7 +256,7 @@ public class FdcService implements FileService {
     }
 
     @Retry(name = SERVICE_NAME)
-    private Long executeFdcFileCreateCall(String xmlContent, List<String> fdcIdList, int numberOfRecords, String fileName, String fileAckXML) {
+    public Long executeFdcFileCreateCall(String xmlContent, List<String> fdcIdList, int numberOfRecords, String fileName, String fileAckXML) {
         FdcUpdateRequest request = FdcUpdateRequest.builder()
                 .recordsSent(numberOfRecords)
                 .xmlContent(xmlContent)
