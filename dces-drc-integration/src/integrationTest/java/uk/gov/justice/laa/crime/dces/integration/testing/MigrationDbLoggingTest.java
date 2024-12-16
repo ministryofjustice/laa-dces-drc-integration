@@ -1,10 +1,8 @@
 package uk.gov.justice.laa.crime.dces.integration.testing;
 
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Assert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,30 +76,6 @@ class MigrationDbLoggingTest {
     assertEquals(3, byBatchAndTypeResponse.size());
 
     clearDownData(4L);
-  }
-
-  // TODO Remove the below tests. For ease of access to the code.
-  @Disabled("Disabled due to consuming data.")
-  @Test
-  void given_dbEntries_will_send(){
-    try {
-      migrationService.migration();
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  @Disabled("Used for testing specific batch ids, consumes data, so disabled.")
-  @Test
-  void given_batchId_willProcess(){
-    try{
-//      migrationService.migrateConcorEntries(1L, migrationService.contributionUnmarshallerList.get(0));
-      migrationService.migrateFdcEntries(1L);
-    } catch (Exception e){
-      Assert.fail();
-    }
-
-
   }
 
   @Test
