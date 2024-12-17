@@ -2,15 +2,22 @@ package uk.gov.justice.laa.crime.dces.integration.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,13 +27,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.server.ResponseStatusException;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
+import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcorContribEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionReqForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcReqForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
+import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
+import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
 
 /**
  * This is a simple temporary controller to handle some test endpoints.
@@ -42,6 +54,14 @@ public class TempTestController {
     private final StubValidation stubValidation;
     private final ObjectMapper objectMapper;
     private final DrcClient drcClient;
+    private static final int REQUEST_ID_LIST_SIZE_LIMIT_CONCOR = 350;
+    private static final int REQUEST_ID_LIST_SIZE_LIMIT_FDC = 1000;
+
+    @Autowired
+    ContributionService concorContributionsService;
+
+    @Autowired
+    FdcService fdcService;
 
     /**
      * Check we have connectivity with almost no side effects (just a log line).
@@ -109,6 +129,59 @@ public class TempTestController {
         }
         drcClient.sendConcorContributionReqToDrc(request);
         return "OK";
+    }
+
+    @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+    @PostMapping(value = "/send-contributions")
+    @Operation(description = "<h3> ** Use with caution, only if you are certain !!! ** </h3>"
+        + "*This operation is not part of normal processing*<br>"
+        + "*It bypasses normal processing and can send production data to a third party*<br>"
+        + "<ul>"
+        + "<li>Obtains XML for each concor contribution ID in the list.</li>"
+        + "<li>Sends it to the DRC</li>"
+        + "<li>Does NOT create a Contributions File for the sent concor contributions.</li>"
+        + "<li>Does NOT update each successfully processed concor contribution to SENT in MAAT.</li>"
+        + "</ul>"
+        + "*Only to be used during testing or fault-finding*<br><br>"
+        + "When given a list of Concor Contribution IDs, get the XML for each and send them to the DRC"
+        + "Returns the list of Concor Contribution Entries (ID + XML) that were sent to DRC")
+
+    public ResponseEntity<List<ConcorContribEntry>> sendConcorContributionXmlsToDRC(@RequestBody List<Long> idList) {
+
+        log.info("Request received to get and send the XML for {} IDs", idList.size());
+        if (idList.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ID List Empty");
+        } else if (idList.size() > REQUEST_ID_LIST_SIZE_LIMIT_CONCOR) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Too many IDs provided, max is " + REQUEST_ID_LIST_SIZE_LIMIT_CONCOR);
+        } else {
+            return ResponseEntity.ok(concorContributionsService.sendContributionsToDrc(idList));
+        }
+    }
+
+    @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+    @PostMapping(value = "/send-fdcs")
+    @Operation(description = "<h3> ** Use with caution, only if you are certain !!! ** </h3>"
+        + "*This operation is not part of normal processing*<br>"
+        + "*It bypasses normal processing and can send production data to a third party*<br>"
+        + "<ul>"
+        + "<li>Obtains XML for each FDC contribution ID in the list.</li>"
+        + "<li>Sends it to the DRC</li>"
+        + "<li>Does NOT create a Contributions File for the sent FDC contributions.</li>"
+        + "<li>Does NOT update each successfully processed FDC contribution to SENT in MAAT.</li>"
+        + "</ul>"
+        + "*Only to be used during testing or fault-finding*<br><br>"
+        + "When given a list of FDC Contribution IDs, get the XML for each and send them to the DRC"
+        + "Returns the list of FDC XMLs that were sent to DRC")
+    public ResponseEntity<List<Fdc>> sendFdcContributionXmlsToDRC(@RequestBody List<Long> idList) {
+
+        log.info("Request received to get and send the XML for {} FDC IDs", idList.size());
+        if (idList.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ID List Empty");
+        } else if (idList.size() > REQUEST_ID_LIST_SIZE_LIMIT_FDC) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Too many IDs provided, max is " + REQUEST_ID_LIST_SIZE_LIMIT_FDC);
+        } else {
+            return ResponseEntity.ok(fdcService.sendFdcsToDrc(idList));
+        }
     }
 
     /**

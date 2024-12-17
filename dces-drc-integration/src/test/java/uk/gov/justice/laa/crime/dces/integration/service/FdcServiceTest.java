@@ -3,6 +3,7 @@ package uk.gov.justice.laa.crime.dces.integration.service;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
+import jakarta.xml.bind.JAXBException;
 import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
@@ -19,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.ErrorResponseException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.reactive.function.client.WebClientResponseException.BadRequest;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestBase;
 import uk.gov.justice.laa.crime.dces.integration.config.FeatureProperties;
@@ -51,6 +53,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.intThat;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -460,6 +463,37 @@ class FdcServiceTest extends ApplicationTestBase {
 		var exception = catchThrowableOfType(() -> fdcService.handleFdcProcessedAck(dataRequest), ErrorResponseException.class);
 		softly.assertThat(exception).isNotNull();
 		softly.assertThat(exception.getStatusCode().is5xxServerError()).isTrue();
+	}
+
+	@Test
+	void givenIdList_whenSendFdcsToDrcIsCalled_thenXmlIsFetchedAndSent() {
+		when(feature.outgoingIsolated()).thenReturn(false);
+		Fdc testFdc = createExpectedFdc(1000L, 10000000L, "2050-07-12", "2011-12-03", "3805.69","3805.69", "0");
+
+		when(fdcMapperUtils.mapFdcEntry(any())).thenReturn(testFdc);
+		doNothing().when(drcClient).sendFdcReqToDrc(any());
+
+		List<Fdc> result = fdcService.sendFdcsToDrc(List.of(1L, 2L));
+		verify(fdcMapperUtils, times(2)).mapFdcEntry(any());
+		verify(drcClient, times(2)).sendFdcReqToDrc(any());
+		verify(fdcMapperUtils, never()).generateFileXML(any()); // verify that no file is generated
+		softly.assertThat(result).hasSize(2);
+		softly.assertThat(result.get(0).getId()).isEqualTo(1000L);
+		softly.assertThat(result.get(0).getMaatId()).isEqualTo(10000000L);
+		softly.assertThat(result.get(1).getFinalCost()).isEqualByComparingTo("3805.69");
+	}
+
+	@Test
+	void givenEmptyIdList_whenSendContributionsToDrcIsCalled_thenErrorIsReturned() {
+		when(feature.outgoingIsolated()).thenReturn(false);
+		Fdc testFdc = createExpectedFdc(1000L, 10000000L, "2050-07-12", "2011-12-03", "3805.69","3805.69", "0");
+		when(fdcMapperUtils.mapFdcEntry(any())).thenReturn(testFdc);
+		doNothing().when(drcClient).sendFdcReqToDrc(any());
+		softly.assertThatThrownBy(() -> fdcService.sendFdcsToDrc(List.of()))
+				.isInstanceOf(BadRequest.class)
+				.hasMessageContaining("400 Bad Request");
+		verify(fdcMapperUtils, never()).mapFdcEntry(any());
+		verify(drcClient, never()).sendFdcReqToDrc(any());
 	}
 
 	Fdc createExpectedFdc(Long id, Long maatId, String sentenceDate, String calculationDate, String finalCost, String lgfsTotal, String agfsTotal){

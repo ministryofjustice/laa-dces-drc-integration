@@ -23,6 +23,9 @@ public interface FdcClient extends MaatApiClientBase {
   @GetExchange("/fdc-contribution-files")
   FdcContributionsResponse getFdcContributions(@RequestParam String status);
 
+  @PostExchange("/fdc-contributions")
+  FdcContributionsResponse getFdcListById(@RequestBody final List<Long> fdcContributionIdList);
+
   /**
    *
    * @param contributionPutRequest list of fdc ids that are part of the update package.

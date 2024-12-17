@@ -21,6 +21,10 @@ public interface ContributionClient extends MaatApiClientBase {
         @RequestParam(name = "concorContributionId") Long startingId,
         @RequestParam Integer numberOfRecords);
 
+    @PostExchange("/concor-contribution-xml")
+    @Valid
+    List<ConcorContribEntry> getConcorListById(@RequestBody List<Long> concorIdList);
+
     @PostExchange("/create-contribution-file")
     @Valid
     Long updateContributions(@RequestBody ContributionUpdateRequest contributionUpdateRequest);

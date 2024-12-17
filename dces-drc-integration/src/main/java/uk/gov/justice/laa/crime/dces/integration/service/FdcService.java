@@ -102,6 +102,33 @@ public class FdcService implements FileService {
         return updateFdcAndCreateFile(successfulFdcs, failedFdcs) != null;
     }
 
+    /**
+     * Method to be used during testing which will get the data for the FDC IDs provided and send them to the
+     * Debt Recovery Company.
+     * <ul>
+     * <li>Obtains data for all FDC IDs in the list.</li>
+     * <li>Sends each to the DRC</li>
+     * <li>Does NOT create a Contributions File for the sent FDC contributions.</li>
+     * <li>Does NOT update each successfully processed FDC contribution to SENT in MAAT.</li>
+     * </ul>
+     * @return @return List of FDC Entries (containing the ID and XML) that were sent to DRC
+     */
+    @Timed(value = "laa_dces_drc_service_process_contributions_daily_files",
+        description = "Time taken to process the daily contributions files from DRC and passing this for downstream processing.")
+    public List<Fdc> sendFdcsToDrc(List<Long> idList) {
+        List<Fdc> fdcList;
+        List<Fdc> successfulFdcs = new ArrayList<>();
+        Map<Long,String> failedFdcs = new LinkedHashMap<>();
+        FdcContributionsResponse response = executeGetFdcContributionsCall(idList);
+        fdcList = response.getFdcContributions().stream().map(fdcMapperUtils::mapFdcEntry).toList();
+        if (!fdcList.isEmpty()) {
+            sendFdcListToDrc(fdcList, successfulFdcs, failedFdcs);
+            log.info("Sent {} concor contributions to the DRC, {} successful, {} failed", fdcList.size(), successfulFdcs.size(), failedFdcs.size());
+        }
+        return fdcList;
+    }
+
+
     // Component Methods
 
     private void fdcGlobalUpdate() {
@@ -120,7 +147,6 @@ public class FdcService implements FileService {
         eventService.logFdc(FDC_GLOBAL_UPDATE, batchId, null, OK, logMessage);
         log.info(logMessage);
     }
-
 
     private List<Fdc> getFdcList() throws HttpServerErrorException{
         FdcContributionsResponse response;
@@ -220,6 +246,13 @@ public class FdcService implements FileService {
     }
 
     @Retry(name = SERVICE_NAME)
+    private FdcContributionsResponse executeGetFdcContributionsCall(List<Long> idList) {
+        FdcContributionsResponse response = fdcClient.getFdcListById(idList);
+        eventService.logFdc(FETCHED_FROM_MAAT, batchId, null, OK, String.format("Fetched:%s",response.getFdcContributions().size()));
+        return response;
+    }
+
+    @Retry(name = SERVICE_NAME)
     private void executeSendFdcToDrcCall(Fdc currentFdc, int fdcId, Map<Long,String> failedFdcs) {
         final var request = FdcReqForDrc.of(fdcId, currentFdc);
         if (!feature.outgoingIsolated()) {
@@ -283,7 +316,7 @@ public class FdcService implements FileService {
     private void logMaatUpdateEvent(List<Fdc> successfulFdcs, Map<Long, String> failedFdcs) {
         // log success and failure numbers.
         eventService.logFdc(UPDATED_IN_MAAT, batchId, null, OK, "Successfully Sent:"+ successfulFdcs.size());
-        eventService.logFdc(UPDATED_IN_MAAT, batchId, null, (failedFdcs.size()>0?INTERNAL_SERVER_ERROR:OK), "Failed To Send:"+ failedFdcs.size());
+        eventService.logFdc(UPDATED_IN_MAAT, batchId, null, (!failedFdcs.isEmpty() ?INTERNAL_SERVER_ERROR:OK), "Failed To Send:"+ failedFdcs.size());
         // insert row for each successfully updated fdc.
         for(Fdc currentFdc: successfulFdcs){
             eventService.logFdc(UPDATED_IN_MAAT, batchId, currentFdc, OK, null);

@@ -109,6 +109,32 @@ public class ContributionService implements FileService {
         return !receivedContributionFileIds.isEmpty() && !receivedContributionFileIds.contains(null);
     }
 
+    /**
+     * Method to be used during testing which will get the XMLs for the concor Contribution IDs provided and send them to the
+     * Debt Recovery Company.
+     * <ul>
+     * <li>Obtains XML for all concor contribution IDs in the list.</li>
+     * <li>Sends each to the DRC</li>
+     * <li>Does NOT create a Contributions File for the sent concor contributions.</li>
+     * <li>Does NOT update each successfully processed concor contribution to SENT in MAAT.</li>
+     * </ul>
+     * @return List of Concor Contribution Entries (containing the ID and XML) that were sent to DRC.
+     */
+    @Timed(value = "laa_dces_drc_service_send_contributions_to_DRC",
+        description = "Time taken to get contributions XML from MAAT API and passing this to DRC.")
+    public List<ConcorContribEntry> sendContributionsToDrc(List<Long> idList) {
+        List<ConcorContribEntry> contributionsList;
+        Map<Long, CONTRIBUTIONS> successfulContributions = new LinkedHashMap<>();
+        Map<Long, String> failedContributions = new LinkedHashMap<>();
+        contributionsList = executeGetContributionsCall(idList);
+        if (!contributionsList.isEmpty()) {
+            sendContributionListToDrc(contributionsList, successfulContributions, failedContributions);
+            log.info("Sent {} concor contributions to the DRC, {} successful, {} failed", contributionsList.size(), successfulContributions.size(), failedContributions.size());
+        }
+
+        return contributionsList;
+    }
+
     // Component Methods
 
     private void sendContributionListToDrc(List<ConcorContribEntry> contributionsList, Map<Long, CONTRIBUTIONS> successfulContributions, Map<Long, String> failedContributions) {
@@ -192,6 +218,13 @@ public class ContributionService implements FileService {
     }
 
     @Retry(name = SERVICE_NAME)
+    private List<ConcorContribEntry> executeGetContributionsCall(List<Long> idList) {
+        List<ConcorContribEntry> contributionsList = contributionClient.getConcorListById(idList);
+        eventService.logConcor(null, FETCHED_FROM_MAAT, batchId, null, OK, String.format("Fetched:%s",contributionsList.size()));
+        return contributionsList;
+    }
+
+    @Retry(name = SERVICE_NAME)
     private void executeSendConcorToDrcCall(Long concorContributionId, CONTRIBUTIONS currentContribution, Map<Long, String> failedContributions) {
         final var request = ConcorContributionReqForDrc.of(concorContributionId, currentContribution);
         if (!feature.outgoingIsolated()) {
@@ -247,7 +280,8 @@ public class ContributionService implements FileService {
     private void logMaatUpdateEvents(Map<Long, CONTRIBUTIONS> successfulContributions, Map<Long, String> failedContributions) {
         // log success and failure numbers.
         eventService.logConcor(null, UPDATED_IN_MAAT, batchId, null, OK, "Successfully Sent:"+ successfulContributions.size());
-        eventService.logConcor(null, UPDATED_IN_MAAT, batchId, null, (failedContributions.size()>0?INTERNAL_SERVER_ERROR:OK), "Failed To Send:"+ failedContributions.size());
+        eventService.logConcor(null, UPDATED_IN_MAAT, batchId, null, (!failedContributions.isEmpty()
+            ?INTERNAL_SERVER_ERROR:OK), "Failed To Send:"+ failedContributions.size());
         // Explicitly log the Concor contribution IDs that were updated:
         for(Map.Entry<Long, CONTRIBUTIONS> currentContribution: successfulContributions.entrySet()){
             eventService.logConcor(currentContribution.getKey(),UPDATED_IN_MAAT, batchId, currentContribution.getValue(), OK, null);

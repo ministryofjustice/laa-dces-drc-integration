@@ -150,6 +150,70 @@
         "jsonBody": {
           "files": []
         }
+      }    },
+    {
+      "scenarioName": "successBasicRequest",
+      "request": {
+        "urlPath": "/debt-collection-enforcement/fdc-contributions",
+        "method": "POST",
+        "bodyPatterns": [
+          {
+            "contains": "[1,2]"
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "fdcContributions": [
+            {
+              "id": 1000,
+              "maatId": 10000000,
+              "sentenceOrderDate": "2050-07-12",
+              "dateCalculated": "2011-12-03",
+              "finalCost": 3805.69,
+              "lgfsCost": 3805.69,
+              "agfsCost": 0
+            },
+            {
+              "id": 2000,
+              "maatId": 20000000,
+              "sentenceOrderDate": "2000-07-12",
+              "dateCalculated": "2017-01-11",
+              "finalCost": 38081,
+              "lgfsCost": 36987.3,
+              "agfsCost": 1093.7
+            }
+          ]
+        }
+      }
+    },
+    {
+      "scenarioName": "failureEmptyRequest",
+      "request": {
+        "urlPath": "/debt-collection-enforcement/fdc-contributions",
+        "method": "POST",
+        "bodyPatterns": [
+          {
+            "contains": "[]"
+          }
+        ]
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "type":"about:blank",
+          "title":"Bad Request",
+          "status":400,
+          "detail":"ID List Empty",
+          "instance":"/api/internal/v1/debt-collection-enforcement/fdc-contributions"
+        }
       }
     }
   ]
