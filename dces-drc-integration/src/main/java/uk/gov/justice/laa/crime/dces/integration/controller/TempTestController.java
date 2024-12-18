@@ -13,7 +13,6 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -56,12 +55,8 @@ public class TempTestController {
     private final DrcClient drcClient;
     private static final int REQUEST_ID_LIST_SIZE_LIMIT_CONCOR = 350;
     private static final int REQUEST_ID_LIST_SIZE_LIMIT_FDC = 1000;
-
-    @Autowired
-    ContributionService concorContributionsService;
-
-    @Autowired
-    FdcService fdcService;
+    private final ContributionService concorContributionsService;
+    private final FdcService fdcService;
 
     /**
      * Check we have connectivity with almost no side effects (just a log line).
@@ -103,6 +98,11 @@ public class TempTestController {
     /**
      * Forward a provided FDC record to the fdc endpoint at Advantis.
      */
+    @Operation(description = "<h3> ** Use with caution, only if you are certain !!! ** </h3>"
+        + "*This operation is not part of normal processing*<br>"
+        + "*It bypasses normal processing and can send incorrect/sensitive/test data to a third party*<br>"
+        + "*Only to be used during testing or fault-finding*<br><br>"
+        + "When given a FDC object as JSON request body, send it to the DRC")
     @PostMapping(value = "/fdc")
     public String forwardFdc(@RequestBody FdcReqForDrc request) {
         log.info("Received POST {}/fdc", PREFIX);
@@ -119,6 +119,11 @@ public class TempTestController {
     /**
      * Forward a provided Concor Contribution record to the contribution endpoint at Advantis.
      */
+    @Operation(description = "<h3> ** Use with caution, only if you are certain !!! ** </h3>"
+        + "*This operation is not part of normal processing*<br>"
+        + "*It bypasses normal processing and can send incorrect/sensitive/test data to a third party*<br>"
+        + "*Only to be used during testing or fault-finding*<br><br>"
+        + "When given a Concor Contribution object as JSON request body, send it to the DRC")
     @PostMapping(value = "/contribution")
     public String forwardConcorContribution(@RequestBody ConcorContributionReqForDrc request) {
         log.info("Received POST {}/contribution", PREFIX);
@@ -164,17 +169,17 @@ public class TempTestController {
         + "*This operation is not part of normal processing*<br>"
         + "*It bypasses normal processing and can send production data to a third party*<br>"
         + "<ul>"
-        + "<li>Obtains XML for each FDC contribution ID in the list.</li>"
+        + "<li>Obtains details for each FDC contribution ID in the list.</li>"
         + "<li>Sends it to the DRC</li>"
         + "<li>Does NOT create a Contributions File for the sent FDC contributions.</li>"
         + "<li>Does NOT update each successfully processed FDC contribution to SENT in MAAT.</li>"
         + "</ul>"
         + "*Only to be used during testing or fault-finding*<br><br>"
-        + "When given a list of FDC Contribution IDs, get the XML for each and send them to the DRC"
-        + "Returns the list of FDC XMLs that were sent to DRC")
-    public ResponseEntity<List<Fdc>> sendFdcContributionXmlsToDRC(@RequestBody List<Long> idList) {
+        + "When given a list of FDC Contribution IDs, get the details for each and send them to the DRC"
+        + "Returns the list of FDC records that were sent to DRC")
+    public ResponseEntity<List<Fdc>> sendFdcContributionsToDRC(@RequestBody List<Long> idList) {
 
-        log.info("Request received to get and send the XML for {} FDC IDs", idList.size());
+        log.info("Request received to get and send the details for {} FDC IDs", idList.size());
         if (idList.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ID List Empty");
         } else if (idList.size() > REQUEST_ID_LIST_SIZE_LIMIT_FDC) {

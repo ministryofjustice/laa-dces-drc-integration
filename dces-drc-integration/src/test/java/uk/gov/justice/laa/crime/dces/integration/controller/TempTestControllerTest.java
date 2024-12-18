@@ -101,7 +101,7 @@ class TempTestControllerTest {
   }
 
   @Test
-  void givenEmptyList_whenSendFdcContributionXmlsToDRCisCalled_thenExceptionIsReturned() throws Exception {
+  void givenEmptyList_whenSendFdcContributionsToDRCisCalled_thenExceptionIsReturned() throws Exception {
 
     List<Long> idList = List.of();
     final String requestBody = mapper.writeValueAsString(idList);
@@ -116,7 +116,7 @@ class TempTestControllerTest {
   }
 
   @Test
-  void givenLongIdList_whenSendFdcContributionXmlsToDRCisCalled_thenExceptionIsReturned() throws Exception {
+  void givenLongIdList_whenSendFdcContributionsToDRCisCalled_thenExceptionIsReturned() throws Exception {
 
     List<Long> idList = LongStream.rangeClosed(1, 1001).boxed().collect(Collectors.toList());
     final String requestBody = mapper.writeValueAsString(idList);
@@ -130,7 +130,7 @@ class TempTestControllerTest {
   }
 
   @Test
-  void givenSetOfIds_whenSendFdcContributionXmlsToDRCisCalled_thenValidResponseIsReturned() throws Exception {
+  void givenSetOfIds_whenSendFdcContributionsToDRCisCalled_thenValidResponseIsReturned() throws Exception {
 
     List<Long> idList = List.of(1L, 2L);
     final String requestBody = mapper.writeValueAsString(idList);
