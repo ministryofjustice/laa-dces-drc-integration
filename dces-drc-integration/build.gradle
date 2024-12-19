@@ -4,8 +4,8 @@ plugins {
 	id 'java'
 	id 'jacoco'
 	id 'org.springframework.boot' version '3.3.7'
-	id 'io.spring.dependency-management' version '1.1.6'
-	id "org.sonarqube" version "5.1.0.4882"
+	id 'io.spring.dependency-management' version '1.1.7'
+	id "org.sonarqube" version "6.0.1.5171"
 }
 
 def versions = [
@@ -13,10 +13,9 @@ def versions = [
 		springdocVersion       : '2.2.0',
 		resilience4jVersion    : '2.2.0',
 		wiremockVersion        : '3.9.1',
-		notifyVersion          : '4.1.0-RELEASE',
 		logbackEncoderVersion  : '7.2',
-		serenityVersion        : "4.1.10",
-		shedlockVersion        : "5.16.0"
+		shedlockVersion        : "5.16.0"/*,
+		okhttpVersion          : '4.12.0' -- when Spring Boot 3.4.0 consumed */
 ]
 
 group = 'uk.gov.justice.laa.crime'
@@ -92,7 +91,7 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
-	implementation "io.micrometer:micrometer-core:1.14.1"
+	implementation "io.micrometer:micrometer-core"
 	implementation "io.micrometer:micrometer-tracing-bridge-brave"
 	implementation "io.micrometer:micrometer-registry-prometheus"
 	implementation "net.javacrumbs.shedlock:shedlock-spring:$versions.shedlockVersion"
@@ -106,14 +105,14 @@ dependencies {
 	testImplementation "org.springframework.security:spring-security-test"
 	testImplementation 'io.projectreactor:reactor-test'
 	testImplementation "org.wiremock:wiremock-standalone:$versions.wiremockVersion"
-	testImplementation "com.squareup.okhttp3:mockwebserver"
+	testImplementation "com.squareup.okhttp3:mockwebserver" /* ":$versions.okhttpVersion" -- when Spring Boot 3.4.0 consumed */
 	testImplementation "net.javacrumbs.shedlock:shedlock-provider-inmemory:$versions.shedlockVersion"
-	testImplementation "net.serenity-bdd:serenity-rest-assured:$versions.serenityVersion"
+	testImplementation "io.rest-assured:rest-assured"
 
 	testImplementation 'org.testcontainers:junit-jupiter'
 	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
-	testImplementation 'org.testcontainers:testcontainers:1.19.7'
-	testImplementation 'org.testcontainers:postgresql:1.19.3'
+	testImplementation 'org.testcontainers:testcontainers'
+	testImplementation 'org.testcontainers:postgresql'
 	testImplementation 'org.testcontainers:localstack'
 }
 
