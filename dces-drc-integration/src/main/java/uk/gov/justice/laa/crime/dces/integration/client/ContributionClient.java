@@ -44,7 +44,4 @@ public interface ContributionClient extends MaatApiClientBase {
     List<String> findContributionFiles(@RequestParam(name = "fromDate") @DateTimeFormat(pattern = "dd.MM.yyyy") final LocalDate fromDate,
                                        @RequestParam(name = "toDate") @DateTimeFormat(pattern = "dd.MM.yyyy") final LocalDate toDate);
 
-    @PostExchange("/concor-contribution-xml")
-    List<ConcorContribEntry> getConcorListById(@RequestBody List<Long> concorIdList);
-
 }
