@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -31,6 +32,13 @@ import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 @RequiredArgsConstructor
 public class GlobalExceptionHandler {
     private final TraceService traceService;
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseStatus(BAD_REQUEST)
+    public ProblemDetail handleMissingRequestBodyException(final HttpMessageNotReadableException ex) {
+        log.info("Request Body Missing exception occurred.", ex);
+        return addTraceId(ProblemDetail.forStatusAndDetail(BAD_REQUEST, ex.getMessage()));
+    }
 
     @ExceptionHandler(DcesDrcValidationException.class)
     @ResponseStatus(BAD_REQUEST)

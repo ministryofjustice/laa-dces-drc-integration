@@ -195,6 +195,59 @@
           "files": []
         }
       }
+    },
+    {
+      "scenarioName": "successBasicRequest",
+      "request": {
+        "urlPath": "/debt-collection-enforcement/concor-contribution-xml",
+        "method": "POST",
+        "bodyPatterns": [
+          {
+            "contains": "[1,2]"
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": [
+          {
+            "concorContributionId": 1,
+            "xmlContent": "<TestXML>Test1</TestXML>"
+          },
+          {
+            "concorContributionId": 2,
+            "xmlContent": "<TestXML>Test2</TestXML>"
+          }
+        ]
+      }
+    },
+    {
+      "scenarioName": "failureEmptyRequest",
+      "request": {
+        "urlPath": "/debt-collection-enforcement/concor-contribution-xml",
+        "method": "POST",
+        "bodyPatterns": [
+          {
+            "contains": "[]"
+          }
+        ]
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "type":"about:blank",
+          "title":"Bad Request",
+          "status":400,
+          "detail":"ID List Empty",
+          "instance":"/api/internal/v1/debt-collection-enforcement/concor-contribution-xml"
+        }
+      }
     }
   ]
 }

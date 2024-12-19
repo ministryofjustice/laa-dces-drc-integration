@@ -19,11 +19,13 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.ErrorResponseException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.reactive.function.client.WebClientResponseException.BadRequest;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestBase;
 import uk.gov.justice.laa.crime.dces.integration.config.FeatureProperties;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
+import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcorContribEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionProcessedRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.ObjectFactory;
@@ -210,7 +212,6 @@ class ContributionServiceTest extends ApplicationTestBase {
 		verify(anonymisingDataService, times(2)).anonymise(any());
 	}
 
-
 	@Test
 	void testXMLValidWhenOutgoingIsolated() throws JAXBException {
 		when(feature.outgoingIsolated()).thenReturn(true);
@@ -355,6 +356,35 @@ class ContributionServiceTest extends ApplicationTestBase {
 		softly.assertThat(exception).isNotNull();
 		softly.assertThat(FAILED_DEPENDENCY.isSameCodeAs(exception.getStatusCode())).isTrue();
 		verify(eventService).logConcor(9L,EventType.DRC_ASYNC_RESPONSE,null,null, BAD_REQUEST, errorText);
+	}
+
+	@Test
+	void givenIdList_whenSendContributionsToDrcIsCalled_thenXmlIsFetchedAndSent() throws JAXBException {
+		when(feature.outgoingIsolated()).thenReturn(false);
+		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());
+		doNothing().when(drcClient).sendConcorContributionReqToDrc(any());
+
+		List<ConcorContribEntry> result = contributionService.sendContributionsToDrc(List.of(1L, 2L));
+		verify(contributionsMapperUtils, times(2)).mapLineXMLToObject(any());
+		verify(drcClient, times(2)).sendConcorContributionReqToDrc(any());
+		verify(contributionsMapperUtils, never()).generateFileXML(any(), any());  // verify that no file is generated
+		softly.assertThat(result).hasSize(2);
+		softly.assertThat(result.get(0).getConcorContributionId()).isEqualTo(1L);
+		softly.assertThat(result.get(0).getXmlContent()).isEqualTo("<TestXML>Test1</TestXML>");
+		softly.assertThat(result.get(1).getConcorContributionId()).isEqualTo(2L);
+		softly.assertThat(result.get(1).getXmlContent()).isEqualTo("<TestXML>Test2</TestXML>");
+	}
+
+	@Test
+	void givenEmptyIdList_whenSendContributionsToDrcIsCalled_thenErrorIsReturned() throws JAXBException {
+		when(feature.outgoingIsolated()).thenReturn(false);
+		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());
+		doNothing().when(drcClient).sendConcorContributionReqToDrc(any());
+		softly.assertThatThrownBy(() -> contributionService.sendContributionsToDrc(List.of()))
+				.isInstanceOf(BadRequest.class)
+				.hasMessageContaining("400 Bad Request");
+		verify(contributionsMapperUtils, never()).mapLineXMLToObject(any());
+		verify(drcClient, never()).sendConcorContributionReqToDrc(any());
 	}
 
 	CONTRIBUTIONS createTestContribution(){

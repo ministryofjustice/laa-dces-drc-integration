@@ -21,6 +21,10 @@ public interface ContributionClient extends MaatApiClientBase {
         @RequestParam(name = "concorContributionId") Long startingId,
         @RequestParam Integer numberOfRecords);
 
+    @PostExchange("/concor-contribution-xml")
+    @Valid
+    List<ConcorContribEntry> getConcorListById(@RequestBody List<Long> concorIdList);
+
     @PostExchange("/create-contribution-file")
     @Valid
     Long updateContributions(@RequestBody ContributionUpdateRequest contributionUpdateRequest);
@@ -39,8 +43,5 @@ public interface ContributionClient extends MaatApiClientBase {
     @Valid
     List<String> findContributionFiles(@RequestParam(name = "fromDate") @DateTimeFormat(pattern = "dd.MM.yyyy") final LocalDate fromDate,
                                        @RequestParam(name = "toDate") @DateTimeFormat(pattern = "dd.MM.yyyy") final LocalDate toDate);
-
-    @PostExchange("/concor-contribution-xml")
-    List<ConcorContribEntry> getConcorListById(@RequestBody List<Long> concorIdList);
 
 }
