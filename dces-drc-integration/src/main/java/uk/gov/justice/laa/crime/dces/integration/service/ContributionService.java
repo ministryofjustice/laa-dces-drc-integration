@@ -3,7 +3,8 @@ package uk.gov.justice.laa.crime.dces.integration.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.resilience4j.retry.annotation.Retry;
-import io.micrometer.core.annotation.Timed;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import jakarta.xml.bind.JAXBException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,6 +55,7 @@ public class ContributionService implements FileService {
     private Long batchId;
     @Value("${services.maat-api.getContributionBatchSize:350}")
     private int getContributionBatchSize;
+    private final MeterRegistry meterRegistry;
 
     /**
      * Method which logs that a specific contribution has been processed by the Debt Recovery Company.
@@ -66,11 +68,17 @@ public class ContributionService implements FileService {
      * @return FileID of the file associated with the fdcId
      */
     public Long handleContributionProcessedAck(ContributionProcessedRequest contributionProcessedRequest) {
+
+        Timer.Sample timerSample = Timer.start(meterRegistry);
         try {
             return executeContributionProcessedAckCall(contributionProcessedRequest);
         } catch (WebClientResponseException e) {
             logContributionAsyncEvent(contributionProcessedRequest, e.getStatusCode());
             throw FileServiceUtils.translateMAATCDAPIException(e);
+        } finally {
+            timerSample.stop(getTimer(SERVICE_NAME,
+                    "method", "handleContributionProcessedAck",
+                    "description", "Processing Updates From External for Contribution"));
         }
     }
 
@@ -85,9 +93,10 @@ public class ContributionService implements FileService {
      * </ul>
      * @return If the process was executed successfully, and the contribution file has been created.
      */
-    @Timed(value = "laa_dces_drc_service_process_contributions_daily_files",
-            description = "Time taken to process the daily contributions files from DRC and passing this for downstream processing.")
     public boolean processDailyFiles() {
+
+        Timer.Sample timerSample = Timer.start(meterRegistry);
+
         batchId = eventService.generateBatchId();
         List<ConcorContribEntry> contributionsList;
         List<Long> receivedContributionFileIds = new ArrayList<>();
@@ -105,6 +114,11 @@ public class ContributionService implements FileService {
                 startingId = contributionsList.get(contributionsList.size() - 1).getConcorContributionId();
             }
         } while (contributionsList.size() == getContributionBatchSize);
+
+        timerSample.stop(getTimer(SERVICE_NAME,
+                "method", "processDailyFiles",
+                "description", "Time taken to process the daily contributions files from DRC and passing this for downstream processing."
+        ));
 
         return !receivedContributionFileIds.isEmpty() && !receivedContributionFileIds.contains(null);
     }
@@ -199,7 +213,7 @@ public class ContributionService implements FileService {
     // External Call Executions Methods
 
     @Retry(name = SERVICE_NAME)
-    private long executeContributionProcessedAckCall(ContributionProcessedRequest contributionProcessedRequest) {
+    public long executeContributionProcessedAckCall(ContributionProcessedRequest contributionProcessedRequest) {
         long result = 0L;
         if (!feature.incomingIsolated()) {
             result = contributionClient.sendLogContributionProcessed(contributionProcessedRequest);
@@ -211,7 +225,7 @@ public class ContributionService implements FileService {
     }
 
     @Retry(name = SERVICE_NAME)
-    private List<ConcorContribEntry> executeGetContributionsCall(Long startingId) {
+    public List<ConcorContribEntry> executeGetContributionsCall(Long startingId) {
         List<ConcorContribEntry> contributionsList = contributionClient.getContributions(ContributionRecordStatus.ACTIVE.name(), startingId, getContributionBatchSize);
         eventService.logConcor(null, FETCHED_FROM_MAAT, batchId, null, OK, String.format("Fetched:%s",contributionsList.size()));
         return contributionsList;
@@ -242,7 +256,7 @@ public class ContributionService implements FileService {
     }
 
     @Retry(name = SERVICE_NAME)
-    private Long executeConcorFileCreateCall(String xmlContent, List<Long> concorContributionIdList, int numberOfRecords, String fileName, String fileAckXML) {
+    public Long executeConcorFileCreateCall(String xmlContent, List<Long> concorContributionIdList, int numberOfRecords, String fileName, String fileAckXML) {
         log.info("Sending contribution update request to MAAT API for {}", concorContributionIdList);
 
         ContributionUpdateRequest request = ContributionUpdateRequest.builder()
@@ -293,4 +307,9 @@ public class ContributionService implements FileService {
         eventService.logConcor(null, UPDATED_IN_MAAT, batchId, null, httpStatusCode, String.format("Failed to create contribution-file: [%s]",e.getMessage()));
     }
 
+    private Timer getTimer(String name, String... tagsMap) {
+        return Timer.builder(name)
+                .tags(tagsMap)
+                .register(meterRegistry);
+    }
 }

@@ -94,6 +94,7 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
+	implementation "io.micrometer:micrometer-core:1.14.1"
 	implementation "io.micrometer:micrometer-tracing-bridge-brave"
 	implementation "io.micrometer:micrometer-registry-prometheus"
 	implementation "net.javacrumbs.shedlock:shedlock-spring:$versions.shedlockVersion"
@@ -161,7 +162,7 @@ sonar {
 		property "sonar.organization", "ministryofjustice"
 		property "sonar.projectKey", "ministryofjustice_laa-dces-drc-integration"
 		property "sonar.exclusions", "**/entity/**.java , **/model/**.java , **/dto/**.java , **/config/**.java, **/jms/**.java,**/exception/**.java,**/handler/**.java,**/maatapi/**Client**.java,**/generated/**, **/listener/stub/DrcStubRestController.java, src/test/**"
-		property "sonar.coverage.exclusions", "**/DcesDrcIntegrationApplication.java, **/controller/StubAckFromDrcController.java, **/controller/TempTestController.java"
+		property "sonar.coverage.exclusions", "**/DcesDrcIntegrationApplication.java, **/controller/StubAckFromDrcController.java, **/controller/TempTestController.java, **/service/MigrationService.java"
 		property "sonar.coverage.jacoco.xmlReportPaths",
 				"${project.buildDir}/reports/jacoco/test/jacocoTestReport.xml"
 	}

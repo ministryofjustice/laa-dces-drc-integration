@@ -41,11 +41,15 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *                           This prevents daily processing from modifying MAAT DB or from sending records to the DRC.
  * @param outgoingAnonymized initialize the `feature.outgoing-anonymized` (`FEATURE_OUTGOINGANONYMIZED`) feature flag.
  *                           This causes daily processing data to be anonymized before being sent to the DRC.
+ * @param limitedMigrationRun initialize the `feature.limited-migration-run` (`FEATURE_LIMITEDMIGRATIONRUN`) feature flag.
+ *  *                           This causes migration process to only send the first entry of each batch.
  */
 @ConfigurationProperties(prefix = "feature")
 public record FeatureProperties(boolean stubAckEndpoints   /* feature.stub-ack-endpoints */,
                                 boolean tempTestEndpoints  /* feature.temp-test-endpoints */,
                                 boolean incomingIsolated   /* feature.incoming-isolated */,
                                 boolean outgoingIsolated   /* feature.outgoing-isolated */,
-                                boolean outgoingAnonymized /* feature.outgoing-anonymized */) {
+                                boolean outgoingAnonymized /* feature.outgoing-anonymized */,
+                                boolean limitedMigrationRun /* feature.limited-migration-run */
+                                ) {
 }

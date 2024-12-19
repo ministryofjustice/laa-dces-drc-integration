@@ -44,4 +44,9 @@ public interface FdcClient extends MaatApiClientBase {
   @Valid
   List<String> getFdcFiles(@RequestParam(name = "fromDate") @DateTimeFormat(pattern = "dd.MM.yyyy") final LocalDate fromDate,
       @RequestParam(name = "toDate") @DateTimeFormat(pattern = "dd.MM.yyyy") final LocalDate toDate);
+
+
+  @PostExchange("/fdc-contributions")
+  FdcContributionsResponse getFdcListById(@RequestBody final List<Long> fdcContributionIdList);
+
 }

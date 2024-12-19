@@ -35,6 +35,7 @@ public class WebClientMetricsFilter implements ExchangeFilterFunction {
                                 .tag("uri", request.url().toString())
                                 .tag("status", status.toString())
                                 .tag("responseStatus", status.getReasonPhrase())
+                                .publishPercentiles(0.5, 0.95, 0.99)
                                 .register(meterRegistry)
                                 .record(duration);
                     }
