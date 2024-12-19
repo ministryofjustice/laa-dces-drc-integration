@@ -10,10 +10,11 @@ plugins {
 
 def versions = [
 		sentryVersion          : '7.13.0',
-		springdocVersion       : '2.2.0',
+		springdocVersion       : '2.6.0',
 		resilience4jVersion    : '2.2.0',
-		wiremockVersion        : '3.9.1',
+		wiremockVersion        : '3.10.0',
 		logbackEncoderVersion  : '7.2',
+		serenityVersion        : "4.2.9",
 		shedlockVersion        : "5.16.0"/*,
 		okhttpVersion          : '4.12.0' -- when Spring Boot 3.4.0 consumed */
 ]
@@ -107,8 +108,7 @@ dependencies {
 	testImplementation "org.wiremock:wiremock-standalone:$versions.wiremockVersion"
 	testImplementation "com.squareup.okhttp3:mockwebserver" /* ":$versions.okhttpVersion" -- when Spring Boot 3.4.0 consumed */
 	testImplementation "net.javacrumbs.shedlock:shedlock-provider-inmemory:$versions.shedlockVersion"
-	testImplementation "io.rest-assured:rest-assured"
-
+	testImplementation "net.serenity-bdd:serenity-rest-assured:$versions.serenityVersion"
 	testImplementation 'org.testcontainers:junit-jupiter'
 	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
 	testImplementation 'org.testcontainers:testcontainers'
