@@ -2,6 +2,7 @@ package uk.gov.justice.laa.crime.dces.integration.client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.MeterRegistry;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
@@ -34,6 +35,8 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 class DrcApiClientTest extends ApplicationTestBase {
     public DrcApiWebClientConfiguration drcApiWebClientConfiguration;
     private MockWebServer mockWebServer;
+    @Autowired
+    private MeterRegistry meterRegistry;
 
     @Autowired
     private WebClient.Builder webClientBuilder;
@@ -49,7 +52,7 @@ class DrcApiClientTest extends ApplicationTestBase {
         mockWebServer = new MockWebServer();
         mockWebServer.start(0);
         services.getDrcClientApi().setBaseUrl(String.format("http://localhost:%s", mockWebServer.getPort()));
-        drcApiWebClientConfiguration = new DrcApiWebClientConfiguration();
+        drcApiWebClientConfiguration = new DrcApiWebClientConfiguration(meterRegistry);
     }
 
     @AfterEach
