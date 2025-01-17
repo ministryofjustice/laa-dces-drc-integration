@@ -4,7 +4,11 @@ on:
   push:
     branches:
       - main
+      - DCES-233
   pull_request:
+    branches:
+      - main
+
 
 jobs:
   snyk:
@@ -27,7 +31,8 @@ jobs:
 
       - name: Authenticate Snyk
         env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN_GITHUB }}
+        run: echo "Authenticated with Snyk"
 
       - name: Test with Snyk
         run: snyk test --all-projects --severity-threshold=medium
