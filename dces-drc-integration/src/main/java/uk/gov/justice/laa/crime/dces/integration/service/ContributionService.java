@@ -169,7 +169,9 @@ public class ContributionService implements FileService {
                         successfulContributions.put(concorContributionId, currentContribution);
                         continue;
                     }
-                    logDrcSendError(e, e.getStatusCode(), concorContributionId, currentContribution, failedContributions);
+                    // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
+                    failedContributions.put(concorContributionId, e.getClass().getSimpleName() + ": " + e.getResponseBodyAsString());
+                    eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, e.getStatusCode(), e.getResponseBodyAsString());
                 }
             }
         }
@@ -251,7 +253,9 @@ public class ContributionService implements FileService {
                 final var json = objectMapper.writeValueAsString(request);
                 log.debug("Skipping contribution data to DRC, JSON = [{}]", json);
             } catch (JsonProcessingException e) {
-                logDrcSendError(e, INTERNAL_SERVER_ERROR, concorContributionId, currentContribution, failedContributions);
+                // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
+                failedContributions.put(concorContributionId, e.getClass().getSimpleName() + ": " + e.getMessage());
+                eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, INTERNAL_SERVER_ERROR, e.getMessage());
             }
         }
     }
@@ -286,12 +290,6 @@ public class ContributionService implements FileService {
         eventService.logConcor(contributionProcessedRequest.getConcorId(), DRC_ASYNC_RESPONSE, null, null, httpStatusCode, contributionProcessedRequest.getErrorText());
     }
 
-    private void logDrcSendError(Exception e, HttpStatusCode httpStatusCode, Long concorContributionId, CONTRIBUTIONS currentContribution, Map<Long,String> failedContributions) {
-        // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
-        failedContributions.put(concorContributionId, e.getClass().getSimpleName() + ": " + e.getMessage());
-        eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, httpStatusCode, e.getMessage());
-    }
-
     private void logMaatUpdateEvents(Map<Long, CONTRIBUTIONS> successfulContributions, Map<Long, String> failedContributions) {
         // log success and failure numbers.
         eventService.logConcor(null, UPDATED_IN_MAAT, batchId, null, OK, "Successfully Sent:"+ successfulContributions.size());
@@ -304,8 +302,8 @@ public class ContributionService implements FileService {
     }
 
     private void logFileCreationError(WebClientResponseException e, HttpStatusCode httpStatusCode) {
-        log.error("Failed to create Concor contribution-file. Investigation needed. State of files will be out of sync! [{}({})]", e.getClass().getSimpleName(), e.getMessage());
-        eventService.logConcor(null, UPDATED_IN_MAAT, batchId, null, httpStatusCode, String.format("Failed to create contribution-file: [%s]",e.getMessage()));
+        log.error("Failed to create Concor contribution-file. Investigation needed. State of files will be out of sync! [{}({})]", e.getClass().getSimpleName(), e.getResponseBodyAsString());
+        eventService.logConcor(null, UPDATED_IN_MAAT, batchId, null, httpStatusCode, String.format("Failed to create contribution-file: [%s]",e.getResponseBodyAsString()));
     }
 
     private Timer getTimer(String name, String... tagsMap) {
