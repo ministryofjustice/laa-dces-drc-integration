@@ -345,7 +345,7 @@ public class FdcService implements FileService {
     private void logFileCreationError(WebClientResponseException e) {
         // We're rethrowing the exception, therefore avoid logging the stack trace to prevent logging the same trace multiple times.
         log.error("Failed to create FDC contribution-file. Investigation needed. State of files will be out of sync! [{}({})]", e.getClass().getSimpleName(), e.getResponseBodyAsString());
-        eventService.logFdc(UPDATED_IN_MAAT, batchId, null, e.getStatusCode(), String.format("Failed to create contribution-file: [%s]", e.getResponseBodyAsString()));
+        eventService.logFdc(UPDATED_IN_MAAT, batchId, null, e.getStatusCode(), String.format("Failed to create contribution-file: Message: [%s] | Response: [%s]", e.getMessage(), e.getResponseBodyAsString()));
     }
 
     private Timer getTimer(String name, String... tagsMap) {
