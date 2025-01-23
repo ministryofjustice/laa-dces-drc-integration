@@ -301,7 +301,7 @@ public class FdcService implements FileService {
             try {
                 return fdcClient.updateFdcs(request);
             } catch (WebClientResponseException e) {
-                logFileCreationError(e, e.getStatusCode());
+                logFileCreationError(e);
                 throw e;
             }
         } else {
@@ -319,12 +319,11 @@ public class FdcService implements FileService {
     }
 
     private void logGlobalUpdatePayload(HttpStatusCode httpStatus, String message) {
-        // TODO: Should/How to Flag here for sentry if this is a failure?
         boolean isFailureState = !HttpStatus.ACCEPTED.is2xxSuccessful();
         String payload = (isFailureState ? "Failed to complete FDC global update [%s]" : "%s");
         payload = String.format(payload, message);
         eventService.logFdc(FDC_GLOBAL_UPDATE, batchId, null, httpStatus, payload);
-        log.atLevel(isFailureState ? Level.ERROR : Level.INFO).log("payload");
+        log.atLevel(isFailureState ? Level.ERROR : Level.INFO).log(payload);
     }
 
     private void logDrcSentError(Exception e, HttpStatusCode httpStatusCode, Fdc currentFdc, Map<Long, String> failedFdcs) {
@@ -343,11 +342,10 @@ public class FdcService implements FileService {
         }
     }
 
-    private void logFileCreationError(Exception e, HttpStatusCode httpStatusCode) {
+    private void logFileCreationError(WebClientResponseException e) {
         // We're rethrowing the exception, therefore avoid logging the stack trace to prevent logging the same trace multiple times.
-        log.error("Failed to create FDC contribution-file. Investigation needed. State of files will be out of sync! [{}({})]", e.getClass().getSimpleName(), e.getMessage());
-        // If failed, we want to handle this. As it will mean the whole process failed for current day.
-        eventService.logFdc(UPDATED_IN_MAAT, batchId, null, httpStatusCode, String.format("Failed to create contribution-file: [%s]", e.getMessage()));
+        log.error("Failed to create FDC contribution-file. Investigation needed. State of files will be out of sync! [{}({})]", e.getClass().getSimpleName(), e.getResponseBodyAsString());
+        eventService.logFdc(UPDATED_IN_MAAT, batchId, null, e.getStatusCode(), String.format("Failed to create contribution-file: Message: [%s] | Response: [%s]", e.getMessage(), e.getResponseBodyAsString()));
     }
 
     private Timer getTimer(String name, String... tagsMap) {
