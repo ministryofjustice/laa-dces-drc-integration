@@ -10,8 +10,8 @@ import uk.gov.justice.laa.crime.dces.integration.model.FdcReqForDrc;
 @HttpExchange
 public interface DrcClient {
     @PostExchange("/laa/v1/contribution")
-    void sendConcorContributionReqToDrc(@NotNull @RequestBody ConcorContributionReqForDrc request);
+    String sendConcorContributionReqToDrc(@NotNull @RequestBody ConcorContributionReqForDrc request);
 
     @PostExchange("/laa/v1/fdc")
-    void sendFdcReqToDrc(@NotNull @RequestBody FdcReqForDrc request);
+    String sendFdcReqToDrc(@NotNull @RequestBody FdcReqForDrc request);
 }

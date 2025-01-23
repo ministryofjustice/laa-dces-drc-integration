@@ -189,13 +189,13 @@ public class FdcService implements FileService {
             eventService.logFdc(FETCHED_FROM_MAAT, batchId, currentFdc, OK, null);
             int fdcId = currentFdc.getId().intValue();
             try {
-                executeSendFdcToDrcCall(currentFdc, fdcId, failedFdcs);
-                eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, OK, null);
+                String responsePayload = executeSendFdcToDrcCall(currentFdc, fdcId, failedFdcs);
+                eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, OK, responsePayload);
                 successfulFdcs.add(currentFdc);
             } catch (WebClientResponseException e){
                 if (FileServiceUtils.isDrcConflict(e)) {
                         log.info("Ignoring duplicate FDC error response from DRC, fdcId = {}, maatId = {}", currentFdc.getId(), currentFdc.getMaatId());
-                        eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, CONFLICT, null);
+                        eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, CONFLICT, e.getResponseBodyAsString());
                         successfulFdcs.add(currentFdc);
                         continue;
                     }
@@ -273,20 +273,23 @@ public class FdcService implements FileService {
     }
 
     @Retry(name = SERVICE_NAME)
-    private void executeSendFdcToDrcCall(Fdc currentFdc, int fdcId, Map<Long,String> failedFdcs) {
+    private String executeSendFdcToDrcCall(Fdc currentFdc, int fdcId, Map<Long,String> failedFdcs) {
         final var request = FdcReqForDrc.of(fdcId, currentFdc);
+        String response =null;
         if (!feature.outgoingIsolated()) {
-            drcClient.sendFdcReqToDrc(request);
+            response = drcClient.sendFdcReqToDrc(request);
             log.info("Sent FDC data to DRC, fdcId = {}, maatId = {}", fdcId, currentFdc.getMaatId());
         } else {
             try {
                 log.info("Feature:OutgoingIsolated: Skipping FDC data to DRC, fdcId = {}, maatId = {}", fdcId, currentFdc.getMaatId());
                 final var json = objectMapper.writeValueAsString(request);
                 log.debug("Skipping FDC data to DRC, JSON = [{}]", json);
+                response = "Skipped due to Feature:OutgoingIsolated.";
             } catch (JsonProcessingException e) {
                 logDrcSentError(e, INTERNAL_SERVER_ERROR, currentFdc, failedFdcs);
             }
         }
+        return response;
     }
 
     @Retry(name = SERVICE_NAME)
