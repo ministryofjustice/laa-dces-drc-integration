@@ -274,7 +274,7 @@ public class ContributionService implements FileService {
             try {
                 return contributionClient.updateContributions(request);
             } catch (WebClientResponseException e){
-                logFileCreationError(e, e.getStatusCode());
+                logFileCreationError(e);
                 throw e;
             }
         } else {
@@ -301,9 +301,9 @@ public class ContributionService implements FileService {
         }
     }
 
-    private void logFileCreationError(WebClientResponseException e, HttpStatusCode httpStatusCode) {
+    private void logFileCreationError(WebClientResponseException e) {
         log.error("Failed to create Concor contribution-file. Investigation needed. State of files will be out of sync! [{}:({})]", e.getClass().getSimpleName(), e.getResponseBodyAsString());
-        eventService.logConcor(null, UPDATED_IN_MAAT, batchId, null, httpStatusCode, String.format("Failed to create contribution-file: Message:[%s] | Response:[%s]",e.getMessage(), e.getResponseBodyAsString()));
+        eventService.logConcor(null, UPDATED_IN_MAAT, batchId, null, e.getStatusCode(), String.format("Failed to create contribution-file: Message:[%s] | Response:[%s]",e.getMessage(), e.getResponseBodyAsString()));
     }
 
     private Timer getTimer(String name, String... tagsMap) {
