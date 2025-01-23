@@ -344,7 +344,7 @@ public class MigrationService {
         migrationEntity.setProcessed(true);
         migrationEntity.setProcessedDate(LocalDateTime.now());
         migrationEntity.setHttpStatus(e.getStatusCode().value());
-        migrationEntity.setPayload(e.getMessage());
+        migrationEntity.setPayload(e.getResponseBodyAsString());
     }
     private void handleException(CaseMigrationEntity migrationEntity, Exception e){
         migrationEntity.setProcessed(true);

@@ -279,7 +279,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 		verify(eventService).logConcor(1234L, EventType.SENT_TO_DRC, testBatchId, testContribution, OK, null);
 		verify(eventService).logConcor(9876L, EventType.SENT_TO_DRC, testBatchId, testContribution, OK, null);
 
-		verify(eventService).logConcor(null, EventType.UPDATED_IN_MAAT, testBatchId, null, INTERNAL_SERVER_ERROR, "Failed to create contribution-file: [500 Internal Server Error from POST http://localhost:1111/debt-collection-enforcement/create-contribution-file]");
+		verify(eventService).logConcor(null, EventType.UPDATED_IN_MAAT, testBatchId, null, INTERNAL_SERVER_ERROR, "Failed to create contribution-file: Message:[500 Internal Server Error from POST http://localhost:1111/debt-collection-enforcement/create-contribution-file] | Response:[{\"files\":[]}]");
 
 	}
 
