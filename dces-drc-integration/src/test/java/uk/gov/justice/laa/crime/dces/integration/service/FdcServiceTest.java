@@ -3,7 +3,6 @@ package uk.gov.justice.laa.crime.dces.integration.service;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
-import jakarta.xml.bind.JAXBException;
 import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
@@ -52,7 +51,6 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.intThat;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -89,6 +87,7 @@ class FdcServiceTest extends ApplicationTestBase {
 	private EventService eventService;
 
 	private final Long testBatchId = -666L;
+	private final String testDrcResponsePayload = "TestPayload";
 
 	@Captor
 	ArgumentCaptor<Fdc> fdcArgumentCaptor;
@@ -108,7 +107,7 @@ class FdcServiceTest extends ApplicationTestBase {
 		when(fdcMapperUtils.generateFileXML(any())).thenReturn("<xml>ValidXML</xml>");
 		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
 		when(fdcMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("<xml>ValidAckXML</xml>");
-		doNothing().when(drcClient).sendFdcReqToDrc(any());
+		when(drcClient.sendFdcReqToDrc(any())).thenReturn(testDrcResponsePayload);
 		when(eventService.generateBatchId()).thenReturn(testBatchId);
 
 		Fdc expectedFdc1 = createExpectedFdc(1000L, 10000000L, "2050-07-12", "2011-12-03", "3805.69","3805.69", "0");
@@ -141,9 +140,9 @@ class FdcServiceTest extends ApplicationTestBase {
 		verify(eventService).logFdc(EventType.FETCHED_FROM_MAAT, testBatchId, actualFdc2, HttpStatus.OK, null);
 		verify(eventService).logFdc(EventType.FETCHED_FROM_MAAT, testBatchId, null, HttpStatus.OK, "Fetched:12");
 
-		verify(eventService).logFdc(EventType.SENT_TO_DRC, testBatchId, actualFdc1, HttpStatus.OK, null);
-		verify(eventService).logFdc(EventType.SENT_TO_DRC, testBatchId, actualFdc2, HttpStatus.OK, null);
-		verify(eventService, times(12)).logFdc(eq(EventType.SENT_TO_DRC), eq(testBatchId), any(), eq(HttpStatus.OK), eq(null));
+		verify(eventService).logFdc(EventType.SENT_TO_DRC, testBatchId, actualFdc1, HttpStatus.OK, testDrcResponsePayload);
+		verify(eventService).logFdc(EventType.SENT_TO_DRC, testBatchId, actualFdc2, HttpStatus.OK, testDrcResponsePayload);
+		verify(eventService, times(12)).logFdc(eq(EventType.SENT_TO_DRC), eq(testBatchId), any(), eq(HttpStatus.OK), eq(testDrcResponsePayload));
 
 		verify(eventService).logFdc(EventType.FDC_GLOBAL_UPDATE, testBatchId, null, HttpStatus.OK, "Updated:3");
 
@@ -162,7 +161,7 @@ class FdcServiceTest extends ApplicationTestBase {
 		when(fdcMapperUtils.generateFileXML(any())).thenReturn("<xml>ValidXML</xml>");
 		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
 		when(fdcMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("<xml>ValidAckXML</xml>");
-		doNothing().when(drcClient).sendFdcReqToDrc(any());
+		when(drcClient.sendFdcReqToDrc(any())).thenReturn(testDrcResponsePayload);
 		// run
 		boolean successful = fdcService.processDailyFiles();
 		// test
@@ -184,7 +183,7 @@ class FdcServiceTest extends ApplicationTestBase {
 		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
 		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
 		when(fdcMapperUtils.generateAckXML(any(),any(),any(),any())).thenReturn("<xml>ValidAckXML</xml>");
-		doNothing().when(drcClient).sendFdcReqToDrc(any());
+		when(drcClient.sendFdcReqToDrc(any())).thenReturn(testDrcResponsePayload);
 		when(eventService.generateBatchId()).thenReturn(testBatchId);
 		customStubs.add(stubFor(post(PREPARE_URL).atPriority(1)
 				.willReturn(serverError())));
@@ -223,9 +222,9 @@ class FdcServiceTest extends ApplicationTestBase {
 
 		verify(eventService).logFdc(EventType.FDC_GLOBAL_UPDATE, testBatchId, null, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to complete FDC global update [500 Internal Server Error from POST http://localhost:1111/debt-collection-enforcement/prepare-fdc-contributions-files]");
 
-		verify(eventService).logFdc(EventType.SENT_TO_DRC, testBatchId, actualFdc1, HttpStatus.OK, null);
-		verify(eventService).logFdc(EventType.SENT_TO_DRC, testBatchId, actualFdc2, HttpStatus.OK, null);
-		verify(eventService, times(12)).logFdc(eq(EventType.SENT_TO_DRC), eq(testBatchId), any(), eq(HttpStatus.OK), eq(null));
+		verify(eventService).logFdc(EventType.SENT_TO_DRC, testBatchId, actualFdc1, HttpStatus.OK, testDrcResponsePayload);
+		verify(eventService).logFdc(EventType.SENT_TO_DRC, testBatchId, actualFdc2, HttpStatus.OK, testDrcResponsePayload);
+		verify(eventService, times(12)).logFdc(eq(EventType.SENT_TO_DRC), eq(testBatchId), any(), eq(HttpStatus.OK), eq(testDrcResponsePayload));
 
 		verify(eventService).logFdc(EventType.UPDATED_IN_MAAT, testBatchId, actualFdc1, HttpStatus.OK, null);
 		verify(eventService).logFdc(EventType.UPDATED_IN_MAAT, testBatchId, actualFdc2, HttpStatus.OK, null);
@@ -240,7 +239,7 @@ class FdcServiceTest extends ApplicationTestBase {
 		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
 		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
 		when(fdcMapperUtils.generateAckXML(any(),any(),any(),any())).thenReturn("<xml>ValidAckXML</xml>");
-		doNothing().when(drcClient).sendFdcReqToDrc(any());
+		when(drcClient.sendFdcReqToDrc(any())).thenReturn(testDrcResponsePayload);
 		customStubs.add(stubFor(post(PREPARE_URL).atPriority(1)
 				.willReturn(serverError())));
 		// run
@@ -265,7 +264,7 @@ class FdcServiceTest extends ApplicationTestBase {
 		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
 		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
 		when(fdcMapperUtils.generateAckXML(any(),any(),any(),any())).thenReturn("<xml>ValidAckXML</xml>");
-		doNothing().when(drcClient).sendFdcReqToDrc(any());
+		when(drcClient.sendFdcReqToDrc(any())).thenReturn(testDrcResponsePayload);
 		customStubs.add(stubFor(post(PREPARE_URL).atPriority(1)
 				.willReturn(unauthorized())));
 		// run
@@ -399,7 +398,7 @@ class FdcServiceTest extends ApplicationTestBase {
 		when(fdcMapperUtils.generateFileXML(any())).thenReturn("<xml>ValidXML</xml>");
 		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
 		when(fdcMapperUtils.generateAckXML(any(),any(),any(),any())).thenReturn("<xml>ValidAckXML</xml>");
-		doNothing().when(drcClient).sendFdcReqToDrc(any());
+		when(drcClient.sendFdcReqToDrc(any())).thenReturn(testDrcResponsePayload);
 
 		// do
 		softly.assertThatThrownBy(() -> fdcService.processDailyFiles())
@@ -471,7 +470,7 @@ class FdcServiceTest extends ApplicationTestBase {
 		Fdc testFdc = createExpectedFdc(1000L, 10000000L, "2050-07-12", "2011-12-03", "3805.69","3805.69", "0");
 
 		when(fdcMapperUtils.mapFdcEntry(any())).thenReturn(testFdc);
-		doNothing().when(drcClient).sendFdcReqToDrc(any());
+		when(drcClient.sendFdcReqToDrc(any())).thenReturn(testDrcResponsePayload);
 
 		List<Fdc> result = fdcService.sendFdcsToDrc(List.of(1L, 2L));
 		verify(fdcMapperUtils, times(2)).mapFdcEntry(any());
@@ -488,7 +487,7 @@ class FdcServiceTest extends ApplicationTestBase {
 		when(feature.outgoingIsolated()).thenReturn(false);
 		Fdc testFdc = createExpectedFdc(1000L, 10000000L, "2050-07-12", "2011-12-03", "3805.69","3805.69", "0");
 		when(fdcMapperUtils.mapFdcEntry(any())).thenReturn(testFdc);
-		doNothing().when(drcClient).sendFdcReqToDrc(any());
+		when(drcClient.sendFdcReqToDrc(any())).thenReturn(testDrcResponsePayload);
 		softly.assertThatThrownBy(() -> fdcService.sendFdcsToDrc(List.of()))
 				.isInstanceOf(BadRequest.class)
 				.hasMessageContaining("400 Bad Request");

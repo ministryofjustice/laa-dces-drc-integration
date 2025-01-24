@@ -159,13 +159,13 @@ public class ContributionService implements FileService {
             CONTRIBUTIONS currentContribution = mapContributionXmlToObject(concorContributionId, contribEntry.getXmlContent(), failedContributions);
             if (Objects.nonNull(currentContribution)) {
                 try {
-                    executeSendConcorToDrcCall(concorContributionId, currentContribution, failedContributions);
-                    eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, OK, null);
+                    String response = executeSendConcorToDrcCall(concorContributionId, currentContribution, failedContributions);
+                    eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, OK, response);
                     successfulContributions.put(concorContributionId, currentContribution);
                 } catch (WebClientResponseException e) {
                     if (FileServiceUtils.isDrcConflict(e)) {
                         log.info("Ignoring duplicate contribution error response from DRC, concorContributionId = {}, maatId = {}", concorContributionId, currentContribution.getMaatId());
-                        eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, CONFLICT, null);
+                        eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, CONFLICT, e.getResponseBodyAsString());
                         successfulContributions.put(concorContributionId, currentContribution);
                         continue;
                     }
@@ -242,22 +242,25 @@ public class ContributionService implements FileService {
     }
 
     @Retry(name = SERVICE_NAME)
-    private void executeSendConcorToDrcCall(Long concorContributionId, CONTRIBUTIONS currentContribution, Map<Long, String> failedContributions) {
+    private String executeSendConcorToDrcCall(Long concorContributionId, CONTRIBUTIONS currentContribution, Map<Long, String> failedContributions) {
         final var request = ConcorContributionReqForDrc.of(concorContributionId, currentContribution);
+        String responsePayload = null;
         if (!feature.outgoingIsolated()) {
-            drcClient.sendConcorContributionReqToDrc(request);
+            responsePayload = drcClient.sendConcorContributionReqToDrc(request);
             log.info("Sent contribution data to DRC, concorContributionId = {}, maatId = {}", concorContributionId, currentContribution.getMaatId());
         } else {
             log.info("Feature:OutgoingIsolated: Skipping contribution data to DRC, concorContributionId = {}, maatId = {}", concorContributionId, currentContribution.getMaatId());
             try {
                 final var json = objectMapper.writeValueAsString(request);
                 log.debug("Skipping contribution data to DRC, JSON = [{}]", json);
+                responsePayload = "Skipped due to Feature:OutgoingIsolated.";
             } catch (JsonProcessingException e) {
                 // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
                 failedContributions.put(concorContributionId, e.getClass().getSimpleName() + ": " + e.getMessage());
                 eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, INTERNAL_SERVER_ERROR, e.getMessage());
             }
         }
+        return responsePayload;
     }
 
     @Retry(name = SERVICE_NAME)

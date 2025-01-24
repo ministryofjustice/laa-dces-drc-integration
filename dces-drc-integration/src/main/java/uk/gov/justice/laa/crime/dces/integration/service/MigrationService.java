@@ -181,10 +181,12 @@ public class MigrationService {
             Fdc currentFdc;
             try {
                 currentFdc = fdcMap.get(currentMigrationEntity.getFdcId());
+                String responsePayload = null;
                 if( !feature.outgoingIsolated() ) {
                     var request = FdcReqForDrc.of(currentFdc.getId().intValue(), currentFdc, Map.of("migrated", "true"));
-                    drcClient.sendFdcReqToDrc(request);
+                    responsePayload = drcClient.sendFdcReqToDrc(request);
                 }
+                currentMigrationEntity.setPayload(responsePayload);
                 currentMigrationEntity.setProcessed(true);
                 currentMigrationEntity.setProcessedDate(LocalDateTime.now());
             } catch (WebClientResponseException e) {
@@ -231,10 +233,12 @@ public class MigrationService {
             }
             try {
                 CONTRIBUTIONS contribution = mapToContribution(currentConcorXML, unmarshaller);
+                String response = null;
                 if( !feature.outgoingIsolated() ) {
                     var request = ConcorContributionReqForDrc.of(currentMigrationEntity.getConcorContributionId(), contribution, Map.of("migrated", "true"));
-                    drcClient.sendConcorContributionReqToDrc(request);
+                    response = drcClient.sendConcorContributionReqToDrc(request);
                 }
+                currentMigrationEntity.setPayload(response);
                 currentMigrationEntity.setProcessed(true);
                 currentMigrationEntity.setProcessedDate(LocalDateTime.now());
             } catch (WebClientResponseException e) {
