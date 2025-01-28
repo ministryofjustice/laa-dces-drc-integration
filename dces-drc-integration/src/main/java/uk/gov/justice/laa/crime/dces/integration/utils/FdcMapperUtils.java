@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.crime.dces.integration.utils;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
@@ -13,6 +14,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.Fdc
 import java.io.StringWriter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -86,8 +88,23 @@ public class FdcMapperUtils extends MapperUtils{
         return fdc;
     }
 
+    public List<String> validateDrcJsonResponse(String jsonString){
+        JsonNode jsonNode = super.mapDRCJsonResponseToNode(jsonString);
+        List<String> validationErrors = new ArrayList<>();
+        validationErrors.add(super.validateDrcJsonResponse(jsonNode));
+        validationErrors.add(validateFdcIdPresent(jsonNode));
+        return validationErrors;
+    }
+
+    private String validateFdcIdPresent(JsonNode jsonNode){
+        // validate that the fdcId is present
+        JsonNode advantisId = jsonNode.at("/meta/fdcId");
+        return (Objects.isNull(advantisId) || advantisId.isNull()) ? "FdcId was not returned" : null;
+    }
+
     public String generateFileName(LocalDateTime dateTime){
         return "FDC_"+dateTime.format(filenameFormat);
     }
+
 
 }

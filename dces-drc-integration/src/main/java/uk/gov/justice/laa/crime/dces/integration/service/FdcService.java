@@ -275,10 +275,11 @@ public class FdcService implements FileService {
     @Retry(name = SERVICE_NAME)
     private String executeSendFdcToDrcCall(Fdc currentFdc, int fdcId, Map<Long,String> failedFdcs) {
         final var request = FdcReqForDrc.of(fdcId, currentFdc);
-        String response =null;
+        String response = null;
         if (!feature.outgoingIsolated()) {
             response = drcClient.sendFdcReqToDrc(request);
             log.info("Sent FDC data to DRC, fdcId = {}, maatId = {}", fdcId, currentFdc.getMaatId());
+            fdcMapperUtils.validateDrcJsonResponse(response);
         } else {
             try {
                 log.info("Feature:OutgoingIsolated: Skipping FDC data to DRC, fdcId = {}, maatId = {}", fdcId, currentFdc.getMaatId());

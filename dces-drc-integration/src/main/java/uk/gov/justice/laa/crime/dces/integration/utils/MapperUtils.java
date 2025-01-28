@@ -1,5 +1,8 @@
 package uk.gov.justice.laa.crime.dces.integration.utils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
@@ -47,4 +50,20 @@ public class MapperUtils {
         }
         return sw.getBuffer().toString();
     }
+
+    protected String validateDrcJsonResponse(JsonNode jsonNode){
+        // validate that the advantisId is present
+        JsonNode advantisId = jsonNode.at("/meta/advantisId");
+        return (Objects.isNull(advantisId) || advantisId.isNull()) ? "AdvantisId was not returned" : null;
+    }
+
+    protected JsonNode mapDRCJsonResponseToNode(String jsonString){
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            return objectMapper.readTree(jsonString);
+        } catch (JsonProcessingException e) {
+            return null;
+        }
+    }
+
 }
