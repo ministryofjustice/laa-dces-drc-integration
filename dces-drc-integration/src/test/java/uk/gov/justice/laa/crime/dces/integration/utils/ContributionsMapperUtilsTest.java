@@ -131,6 +131,34 @@ class ContributionsMapperUtilsTest extends ApplicationTestBase {
 	}
 
 	@Test
+	void testValidateDrcJsonResponse() {
+		var validationErrors = contributionsMapperUtils.validateDrcJsonResponse((String) null);
+		softly.assertThat(validationErrors).isNotEmpty();
+		validationErrors = contributionsMapperUtils.validateDrcJsonResponse("");
+		softly.assertThat(validationErrors).isNotEmpty();
+		validationErrors = contributionsMapperUtils.validateDrcJsonResponse("99");
+		softly.assertThat(validationErrors).isNotEmpty();
+		validationErrors = contributionsMapperUtils.validateDrcJsonResponse("{}");
+		softly.assertThat(validationErrors).isNotEmpty();
+		validationErrors = contributionsMapperUtils.validateDrcJsonResponse(":I: am }not{ JSON");
+		softly.assertThat(validationErrors).isNotEmpty();
+		validationErrors = contributionsMapperUtils.validateDrcJsonResponse("{\"meta\":{\"drcId\":\"nonsense\",\"concorContributionId\":\"nonsense\"}}");
+		softly.assertThat(validationErrors).isNotEmpty();
+		validationErrors = contributionsMapperUtils.validateDrcJsonResponse("{\"meta\":{\"drcId\":12345,\"fdcId\":1234567}}");
+		softly.assertThat(validationErrors).isNotEmpty();
+		validationErrors = contributionsMapperUtils.validateDrcJsonResponse("{\"meta\":{\"drcId\":null,\"concorContributionId\":1234567}}");
+		softly.assertThat(validationErrors).isNotEmpty();
+		validationErrors = contributionsMapperUtils.validateDrcJsonResponse("{\"meta\":{\"drcId\":0,\"concorContributionId\":1234567}}");
+		softly.assertThat(validationErrors).isNotEmpty();
+		validationErrors = contributionsMapperUtils.validateDrcJsonResponse("{\"meta\":{\"drcId\":12345,\"concorContributionId\":null}}");
+		softly.assertThat(validationErrors).isNotEmpty();
+		validationErrors = contributionsMapperUtils.validateDrcJsonResponse("{\"meta\":{\"drcId\":12345,\"concorContributionId\":0}}");
+		softly.assertThat(validationErrors).isNotEmpty();
+		validationErrors = contributionsMapperUtils.validateDrcJsonResponse("{\"meta\":{\"drcId\":12345,\"concorContributionId\":1234567}}");
+		softly.assertThat(validationErrors).isEmpty();
+	}
+
+	@Test
 	void TestFileNameGeneration(){
 		LocalDateTime ldNow = LocalDateTime.now();
 		String fileName = contributionsMapperUtils.generateFileName(ldNow);

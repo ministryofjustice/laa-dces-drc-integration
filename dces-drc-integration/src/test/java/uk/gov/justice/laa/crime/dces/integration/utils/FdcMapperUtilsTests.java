@@ -69,6 +69,34 @@ class FdcMapperUtilsTests extends ApplicationTestBase {
 		softly.assertThat(generatedXML).contains("<calculationDate>"+DEFAULT_CALCULATION_DATE+"</calculationDate>");
 	}
 
+	@Test
+	void testValidateDrcJsonResponse() {
+		var validationErrors = fdcMapperUtils.validateDrcJsonResponse((String) null);
+		softly.assertThat(validationErrors).isNotEmpty();
+		validationErrors = fdcMapperUtils.validateDrcJsonResponse("");
+		softly.assertThat(validationErrors).isNotEmpty();
+		validationErrors = fdcMapperUtils.validateDrcJsonResponse("99");
+		softly.assertThat(validationErrors).isNotEmpty();
+		validationErrors = fdcMapperUtils.validateDrcJsonResponse("{}");
+		softly.assertThat(validationErrors).isNotEmpty();
+		validationErrors = fdcMapperUtils.validateDrcJsonResponse(":I: am }not{ JSON");
+		softly.assertThat(validationErrors).isNotEmpty();
+		validationErrors = fdcMapperUtils.validateDrcJsonResponse("{\"meta\":{\"drcId\":\"nonsense\",\"fdcId\":\"nonsense\"}}");
+		softly.assertThat(validationErrors).isNotEmpty();
+		validationErrors = fdcMapperUtils.validateDrcJsonResponse("{\"meta\":{\"drcId\":12345,\"concorContributionId\":1234567}}");
+		softly.assertThat(validationErrors).isNotEmpty();
+		validationErrors = fdcMapperUtils.validateDrcJsonResponse("{\"meta\":{\"drcId\":null,\"fdcId\":1234567}}");
+		softly.assertThat(validationErrors).isNotEmpty();
+		validationErrors = fdcMapperUtils.validateDrcJsonResponse("{\"meta\":{\"drcId\":0,\"fdcId\":1234567}}");
+		softly.assertThat(validationErrors).isNotEmpty();
+		validationErrors = fdcMapperUtils.validateDrcJsonResponse("{\"meta\":{\"drcId\":12345,\"fdcId\":null}}");
+		softly.assertThat(validationErrors).isNotEmpty();
+		validationErrors = fdcMapperUtils.validateDrcJsonResponse("{\"meta\":{\"drcId\":12345,\"fdcId\":0}}");
+		softly.assertThat(validationErrors).isNotEmpty();
+		validationErrors = fdcMapperUtils.validateDrcJsonResponse("{\"meta\":{\"drcId\":12345,\"fdcId\":1234567}}");
+		softly.assertThat(validationErrors).isEmpty();
+	}
+
 	private Fdc generateDefaultFdc() {
 		LocalDate calculationDate = LocalDate.parse(DEFAULT_CALCULATION_DATE);
 		LocalDate sentenceDate = LocalDate.parse(DEFAULT_SENTENCE_DATE);

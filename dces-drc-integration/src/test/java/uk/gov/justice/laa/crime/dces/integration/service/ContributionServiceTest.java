@@ -89,8 +89,9 @@ class ContributionServiceTest extends ApplicationTestBase {
 	@MockBean
 	private EventService eventService;
 
-	private final Long testBatchId = -666L;
-	private final String testDrcResponsePayload = "TestPayload";
+	private static final Long testBatchId = -666L;
+	private static final String testDrcResponsePayload = "{\"meta\":{\"drcId\":12345,\"concorContributionId\":1234567}}";
+	private static final String skippedDrcResponsePayload = "Skipped due to Feature:OutgoingIsolated.";
 
 	@AfterEach
 	void afterTestAssertAll(){
@@ -113,6 +114,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 		ReflectionTestUtils.setField(contributionService, "getContributionBatchSize", 5);
 		CONTRIBUTIONS testContribution = createTestContribution();
 		when(eventService.generateBatchId()).thenReturn(testBatchId);
+		when(contributionsMapperUtils.validateDrcJsonResponse(anyString())).thenReturn(List.of()); // default anyway
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(testContribution);
 		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
@@ -167,6 +169,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 	void testWhenContributionHasFewerRecords() throws JAXBException {
 		// set wanted number to trigger the correct stub response.
 		ReflectionTestUtils.setField(contributionService, "getContributionBatchSize", 4);
+		when(contributionsMapperUtils.validateDrcJsonResponse(anyString())).thenReturn(List.of()); // default anyway
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());
 		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
@@ -185,6 +188,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 	@Test
 	void testXMLValidWhenOutgoingAnonymizedFlagIsFalse() throws JAXBException {
 		ReflectionTestUtils.setField(contributionService, "getContributionBatchSize", 5);
+		when(contributionsMapperUtils.validateDrcJsonResponse(anyString())).thenReturn(List.of()); // default anyway
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());
 		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
@@ -200,6 +204,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 	@Test
 	void testXMLValidWhenOutgoingAnonymizedFlagIsTrue() throws JAXBException {
 		CONTRIBUTIONS contributions = createTestContribution();
+		when(contributionsMapperUtils.validateDrcJsonResponse(anyString())).thenReturn(List.of()); // default anyway
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(contributions);
 		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
@@ -215,23 +220,26 @@ class ContributionServiceTest extends ApplicationTestBase {
 	@Test
 	void testXMLValidWhenOutgoingIsolated() throws JAXBException {
 		when(feature.outgoingIsolated()).thenReturn(true);
+		when(contributionsMapperUtils.validateDrcJsonResponse(anyString())).thenReturn(List.of("no drcId", "no concorContributionId")); // i.e. validation errors
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());
 		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
 		when(contributionsMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
-		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(testDrcResponsePayload);
+		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(skippedDrcResponsePayload);
 
 		boolean result = contributionService.processDailyFiles();
 		verify(contributionsMapperUtils, times(2)).mapLineXMLToObject(any());
-		verify(contributionsMapperUtils).generateFileXML(any(), any());
+		verify(contributionsMapperUtils, times(0)).generateFileXML(any(), any());
 		verify(drcClient, times(0)).sendConcorContributionReqToDrc(any()); // not called when feature.outgoing-isolated=true.
-		softly.assertThat(result).isTrue();
+		verify(contributionsMapperUtils, times(2)).validateDrcJsonResponse(anyString());
+		softly.assertThat(result).isFalse();
 	}
 
 	@Test
 	void testDrcUpdateWebClientConflictException() throws JAXBException {
 		// setup
 		ReflectionTestUtils.setField(contributionService, "getContributionBatchSize", 5);
+		when(contributionsMapperUtils.validateDrcJsonResponse(anyString())).thenReturn(List.of()); // default anyway
 		when(contributionsMapperUtils.mapLineXMLToObject(anyString())).thenReturn(createTestContribution());
 		when(contributionsMapperUtils.generateFileXML(any(), anyString())).thenReturn("ValidXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
@@ -248,6 +256,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 		boolean successful = contributionService.processDailyFiles();
 		// test (asking for batch size of 5 makes WireMock return 8 records)
 		softly.assertThat(successful).isTrue();
+		verify(contributionsMapperUtils, times(0)).validateDrcJsonResponse(anyString());
 		verify(contributionsMapperUtils, times(8)).mapLineXMLToObject(any());
 		verify(drcClient, times(8)).sendConcorContributionReqToDrc(any());
 	}
@@ -255,6 +264,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 	@Test
 	void testFileXMLInvalid() throws JAXBException {
 		CONTRIBUTIONS testContribution = createTestContribution();
+		when(contributionsMapperUtils.validateDrcJsonResponse(anyString())).thenReturn(List.of()); // default anyway
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(testContribution); // mock returns null otherwise
 		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("InvalidXML");
 		when(contributionsMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("AckXML");
@@ -298,6 +308,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 		customStubs.add(stubFor(post(UPDATE_URL).atPriority(1)
 				.willReturn(serverError())));
 		ReflectionTestUtils.setField(contributionService, "getContributionBatchSize", 5);
+		when(contributionsMapperUtils.validateDrcJsonResponse(anyString())).thenReturn(List.of()); // default anyway
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());
 		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
@@ -361,6 +372,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 	@Test
 	void givenIdList_whenSendContributionsToDrcIsCalled_thenXmlIsFetchedAndSent() throws JAXBException {
 		when(feature.outgoingIsolated()).thenReturn(false);
+		when(contributionsMapperUtils.validateDrcJsonResponse(anyString())).thenReturn(List.of()); // default anyway
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());
 		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(testDrcResponsePayload);
 
@@ -378,6 +390,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 	@Test
 	void givenEmptyIdList_whenSendContributionsToDrcIsCalled_thenErrorIsReturned() throws JAXBException {
 		when(feature.outgoingIsolated()).thenReturn(false);
+		when(contributionsMapperUtils.validateDrcJsonResponse(anyString())).thenReturn(List.of()); // default anyway
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());
 		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(testDrcResponsePayload);
 		softly.assertThatThrownBy(() -> contributionService.sendContributionsToDrc(List.of()))

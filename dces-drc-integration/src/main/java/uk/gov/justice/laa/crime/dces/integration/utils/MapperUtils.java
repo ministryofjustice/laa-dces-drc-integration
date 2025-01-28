@@ -66,12 +66,14 @@ public class MapperUtils {
      * @return Parsed JsonNode, or MissingNode if not JSON.
      */
     protected JsonNode mapDRCJsonResponseToNode(String jsonString){
-        try {
-            final JsonNode node = new ObjectMapper().readTree(jsonString);
-            if (node != null) {
-                return node;
+        if (jsonString != null) {
+            try {
+                final JsonNode node = new ObjectMapper().readTree(jsonString);
+                if (node != null) {
+                    return node;
+                }
+            } catch (JsonProcessingException ignored) {
             }
-        } catch (JsonProcessingException ignored) {
         }
         return JsonNodeFactory.instance.missingNode();
     }

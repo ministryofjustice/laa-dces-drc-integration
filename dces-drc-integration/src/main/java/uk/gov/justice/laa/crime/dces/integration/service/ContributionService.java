@@ -169,7 +169,6 @@ public class ContributionService implements FileService {
                     // if we didn't get a valid response, we record an error with status code 600 (so will try again).
                     failedContributions.put(concorContributionId, String.join("; ", validationErrors));
                     eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, HttpStatusCode.valueOf(600), response);
-                    successfulContributions.put(concorContributionId, currentContribution);
                 } catch (WebClientResponseException e) {
                     if (FileServiceUtils.isDrcConflict(e)) {
                         log.info("Ignoring duplicate contribution error response from DRC, concorContributionId = {}, maatId = {}", concorContributionId, currentContribution.getMaatId());
