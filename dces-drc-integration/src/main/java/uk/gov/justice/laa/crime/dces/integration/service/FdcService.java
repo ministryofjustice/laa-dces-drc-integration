@@ -190,15 +190,22 @@ public class FdcService implements FileService {
             int fdcId = currentFdc.getId().intValue();
             try {
                 String responsePayload = executeSendFdcToDrcCall(currentFdc, fdcId, failedFdcs);
-                eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, OK, responsePayload);
-                successfulFdcs.add(currentFdc);
+                var validationErrors = fdcMapperUtils.validateDrcJsonResponse(responsePayload);
+                if (validationErrors.isEmpty()) {
+                    eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, OK, responsePayload);
+                    successfulFdcs.add(currentFdc);
+                    continue;
+                }
+                // if we didn't get a valid response, we record an error with status code 600 (so will try again).
+                failedFdcs.put(currentFdc.getId(), String.join("; ", validationErrors));
+                eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, HttpStatusCode.valueOf(600), responsePayload);
             } catch (WebClientResponseException e){
                 if (FileServiceUtils.isDrcConflict(e)) {
-                        log.info("Ignoring duplicate FDC error response from DRC, fdcId = {}, maatId = {}", currentFdc.getId(), currentFdc.getMaatId());
-                        eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, CONFLICT, e.getResponseBodyAsString());
-                        successfulFdcs.add(currentFdc);
-                        continue;
-                    }
+                    log.info("Ignoring duplicate FDC error response from DRC, fdcId = {}, maatId = {}", currentFdc.getId(), currentFdc.getMaatId());
+                    eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, CONFLICT, e.getResponseBodyAsString());
+                    successfulFdcs.add(currentFdc);
+                    continue;
+                }
                 // if not CONFLICT, or not duplicate, then just log it.
                 logDrcSentError(e, e.getStatusCode(), currentFdc, failedFdcs);
             }
@@ -275,11 +282,10 @@ public class FdcService implements FileService {
     @Retry(name = SERVICE_NAME)
     private String executeSendFdcToDrcCall(Fdc currentFdc, int fdcId, Map<Long,String> failedFdcs) {
         final var request = FdcReqForDrc.of(fdcId, currentFdc);
-        String response = null;
+        String response =null;
         if (!feature.outgoingIsolated()) {
             response = drcClient.sendFdcReqToDrc(request);
             log.info("Sent FDC data to DRC, fdcId = {}, maatId = {}", fdcId, currentFdc.getMaatId());
-            fdcMapperUtils.validateDrcJsonResponse(response);
         } else {
             try {
                 log.info("Feature:OutgoingIsolated: Skipping FDC data to DRC, fdcId = {}, maatId = {}", fdcId, currentFdc.getMaatId());

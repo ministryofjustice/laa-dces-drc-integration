@@ -8,8 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile;
-import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.ObjectFactory;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
+import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.ObjectFactory;
 
 import java.io.StringWriter;
 import java.time.LocalDate;
@@ -89,22 +89,21 @@ public class FdcMapperUtils extends MapperUtils{
     }
 
     public List<String> validateDrcJsonResponse(String jsonString){
-        JsonNode jsonNode = super.mapDRCJsonResponseToNode(jsonString);
-        List<String> validationErrors = new ArrayList<>();
-        validationErrors.add(super.validateDrcJsonResponse(jsonNode));
-        validationErrors.add(validateFdcIdPresent(jsonNode));
+        JsonNode jsonNode = mapDRCJsonResponseToNode(jsonString);
+        var validationErrors = new ArrayList<String>();
+        validationErrors.addAll(validateDrcJsonResponse(jsonNode));
+        validationErrors.addAll(validateFdcIdPresent(jsonNode));
         return validationErrors;
     }
 
-    private String validateFdcIdPresent(JsonNode jsonNode){
+    private List<String> validateFdcIdPresent(JsonNode jsonNode){
         // validate that the fdcId is present
-        JsonNode advantisId = jsonNode.at("/meta/fdcId");
-        return (Objects.isNull(advantisId) || advantisId.isNull()) ? "FdcId was not returned" : null;
+        JsonNode fdcId = jsonNode.at("/meta/fdcId");
+        return (fdcId.isValueNode() && fdcId.asLong() > 0) ? List.of() : List.of("fdcId is not a positive integer");
     }
 
     public String generateFileName(LocalDateTime dateTime){
         return "FDC_"+dateTime.format(filenameFormat);
     }
-
 
 }

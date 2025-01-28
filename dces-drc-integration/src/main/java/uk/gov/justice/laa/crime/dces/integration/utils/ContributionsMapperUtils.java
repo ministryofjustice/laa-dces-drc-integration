@@ -1,6 +1,11 @@
 package uk.gov.justice.laa.crime.dces.integration.utils;
 
-import jakarta.xml.bind.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBElement;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Marshaller;
+import jakarta.xml.bind.Unmarshaller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
@@ -12,6 +17,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -83,6 +89,20 @@ public class ContributionsMapperUtils extends MapperUtils{
         ContributionFile.CONTRIBUTIONSLIST cl = of.createContributionFileCONTRIBUTIONSLIST();
         cl.getCONTRIBUTIONS().addAll(contributionsList);
         return cl;
+    }
+
+    public List<String> validateDrcJsonResponse(String jsonString){
+        JsonNode jsonNode = mapDRCJsonResponseToNode(jsonString);
+        var validationErrors = new ArrayList<String>();
+        validationErrors.addAll(validateDrcJsonResponse(jsonNode));
+        validationErrors.addAll(validateConcorContributionIdPresent(jsonNode));
+        return validationErrors;
+    }
+
+    private List<String> validateConcorContributionIdPresent(JsonNode jsonNode){
+        // validate that the concorContributionId is present
+        JsonNode concorContributionId = jsonNode.at("/meta/concorContributionId");
+        return (concorContributionId.isValueNode() && concorContributionId.asLong() > 0) ? List.of() : List.of("concorContributionId is not a positive integer");
     }
 
     public String generateFileName(LocalDateTime dateTime){
