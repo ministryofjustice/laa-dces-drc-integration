@@ -67,10 +67,8 @@ public class ContributionsMapperUtils extends MapperUtils{
     private ContributionFile.Header generateHeader (ObjectFactory of, List<CONTRIBUTIONS> contributionsList, String fileName){
         ContributionFile.Header header = of.createContributionFileHeader();
         header.setDateGenerated(LocalDate.now());
-        // TODO: Get generation method for the headers resolved.
         header.setFilename(fileName);
-        header.setId(123L);
-        header.setFormatVersion("5");
+        header.setFormatVersion("format version 1.7 - xsd=contribution_file.xsd version 1.16");
         header.setRecordCount(getRecordCount(contributionsList));
         return header;
     }
