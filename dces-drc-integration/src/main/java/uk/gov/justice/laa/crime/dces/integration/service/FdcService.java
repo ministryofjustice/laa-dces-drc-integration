@@ -291,7 +291,8 @@ public class FdcService implements FileService {
                 log.info("Feature:OutgoingIsolated: Skipping FDC data to DRC, fdcId = {}, maatId = {}", fdcId, currentFdc.getMaatId());
                 final var json = objectMapper.writeValueAsString(request);
                 log.debug("Skipping FDC data to DRC, JSON = [{}]", json);
-                response = "Skipped due to Feature:OutgoingIsolated.";
+                response = "{\"meta\":{\"drcId\":632,\"fdcId\":"
+                        + fdcId + ",\"skippedDueToFeatureOutgoingIsolated\":true}}";
             } catch (JsonProcessingException e) {
                 logDrcSentError(e, INTERNAL_SERVER_ERROR, currentFdc, failedFdcs);
             }

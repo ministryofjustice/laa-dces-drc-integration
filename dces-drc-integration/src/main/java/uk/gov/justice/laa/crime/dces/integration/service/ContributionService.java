@@ -260,7 +260,8 @@ public class ContributionService implements FileService {
             try {
                 final var json = objectMapper.writeValueAsString(request);
                 log.debug("Skipping contribution data to DRC, JSON = [{}]", json);
-                responsePayload = "Skipped due to Feature:OutgoingIsolated.";
+                responsePayload = "{\"meta\":{\"drcId\":632,\"concorContributionId\":"
+                        + concorContributionId + ",\"skippedDueToFeatureOutgoingIsolated\":true}}";
             } catch (JsonProcessingException e) {
                 // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
                 failedContributions.put(concorContributionId, e.getClass().getSimpleName() + ": " + e.getMessage());
