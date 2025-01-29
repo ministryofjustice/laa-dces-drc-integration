@@ -220,7 +220,7 @@ public class FdcService implements FileService {
             LocalDateTime dateGenerated = LocalDateTime.now();
             String fileName = fdcMapperUtils.generateFileName(dateGenerated);
             String ackXml = fdcMapperUtils.generateAckXML(fileName, dateGenerated.toLocalDate(), failedFdcs.size(), successfulFdcs.size());
-            String xmlFile = fdcMapperUtils.generateFileXML(successfulFdcs);
+            String xmlFile = fdcMapperUtils.generateFileXML(successfulFdcs, fileName);
             List<String> successfulIdList = successfulFdcs.stream()
                     .map(Fdc::getId)
                     .filter(Objects::nonNull)
