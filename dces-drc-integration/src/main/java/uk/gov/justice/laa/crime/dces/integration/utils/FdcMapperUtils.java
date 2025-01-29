@@ -29,13 +29,11 @@ public class FdcMapperUtils extends MapperUtils{
         marshaller = jaxbContext.createMarshaller();
     }
 
-    public String generateFileXML(List<Fdc> fdcList) {
+    public String generateFileXML(List<Fdc> fdcList, String fileName) {
         ObjectFactory objectFactory = new ObjectFactory();
-
         FdcFile cf = objectFactory.createFdcFile();
-        cf.setHeader(generateHeader(objectFactory, fdcList));
+        cf.setHeader(generateHeader(objectFactory, fdcList, fileName));
         cf.setFdcList(generateFdcList(objectFactory, fdcList));
-
         return mapFileObjectToXML(cf);
     }
 
@@ -53,12 +51,10 @@ public class FdcMapperUtils extends MapperUtils{
         return sw.getBuffer().toString();
     }
 
-    private FdcFile.Header generateHeader (ObjectFactory of, List<Fdc> fdcList){
+    private FdcFile.Header generateHeader (ObjectFactory of, List<Fdc> fdcList, String fileName){
         FdcFile.Header header = of.createFdcFileHeader();
         header.setDateGenerated(LocalDate.now());
-        // TODO: Get generation method for the headers resolved.
-        header.setFilename("file.name");
-        header.setFileId(123L);
+        header.setFilename(fileName);
         header.setRecordCount(getRecordCount(fdcList));
         return header;
     }

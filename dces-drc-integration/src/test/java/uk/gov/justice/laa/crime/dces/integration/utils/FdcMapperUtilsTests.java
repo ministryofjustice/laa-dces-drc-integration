@@ -57,9 +57,9 @@ class FdcMapperUtilsTests extends ApplicationTestBase {
 	void testFileGenerationValid() {
 		List<Fdc> fdcList = new ArrayList<>();
 		fdcList.add(generateDefaultFdc());
-		String generatedXML = fdcMapperUtils.generateFileXML(fdcList);
+		String generatedXML = fdcMapperUtils.generateFileXML(fdcList, "TestFile.xml");
 		softly.assertThat(generatedXML).isNotNull();
-		softly.assertThat(generatedXML.length()>0).isTrue();
+		softly.assertThat(generatedXML.isEmpty()).isTrue();
 		softly.assertThat(generatedXML).contains("<fdc id=\""+DEFAULT_ID+"\">");
 		softly.assertThat(generatedXML).contains("<maat_id>"+DEFAULT_MAAT_ID+"</maat_id>");
 		softly.assertThat(generatedXML).contains("<agfs_total>"+DEFAULT_AGFS_TOTAL+"</agfs_total>");
