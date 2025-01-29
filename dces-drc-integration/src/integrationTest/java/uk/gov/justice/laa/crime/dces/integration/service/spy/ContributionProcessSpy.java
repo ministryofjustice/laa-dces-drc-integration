@@ -88,7 +88,7 @@ public class ContributionProcessSpy {
                 if (!stubResults.test(concorContributionId)) {
                     throw new WebClientResponseException(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), null, null, null);
                 }
-                return null;
+                return "{\"meta\":{\"drcId\":12345,\"concorContributionId\":1234567}}"; // valid 200 response body
             }).when(drcClientSpy).sendConcorContributionReqToDrc(any());
             return this;
         }
