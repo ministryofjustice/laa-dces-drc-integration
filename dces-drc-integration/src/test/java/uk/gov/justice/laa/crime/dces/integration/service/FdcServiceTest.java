@@ -185,16 +185,16 @@ class FdcServiceTest extends ApplicationTestBase {
 		when(feature.outgoingIsolated()).thenReturn(false);
 		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
 		when(fdcMapperUtils.mapDRCJsonResponseToHttpStatus(anyString())).thenReturn(635);
-		when(fdcMapperUtils.generateFileXML(any())).thenReturn("<xml>ValidXML</xml>");
+		when(fdcMapperUtils.generateFileXML(any(), anyString())).thenReturn("<xml>ValidXML</xml>");
 		when(fdcMapperUtils.generateFileName(any())).thenReturn("Test.xml");
-		when(fdcMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("<xml>ValidAckXML</xml>");
+		when(fdcMapperUtils.generateAckXML(anyString(), any(), any(), any())).thenReturn("<xml>ValidAckXML</xml>");
 		when(drcClient.sendFdcReqToDrc(any())).thenReturn("");
 		// run
 		boolean successful = fdcService.processDailyFiles();
 		// test
-		verify(fdcMapperUtils, times(0)).generateFileXML(any());
+		verify(fdcMapperUtils, times(0)).generateFileXML(any(), anyString());
 		verify(fdcMapperUtils, times(0)).generateFileName(any());
-		verify(fdcMapperUtils, times(0)).generateAckXML(any(), any(), any(), any());
+		verify(fdcMapperUtils, times(0)).generateAckXML(anyString(), any(), any(), any());
 		verify(fdcMapperUtils, times(12)).mapFdcEntry(any());
 		verify(drcClient, times(12)).sendFdcReqToDrc(any());
 		softly.assertThat(successful).isFalse();
