@@ -14,7 +14,6 @@ import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.ObjectFacto
 import java.io.StringWriter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -88,18 +87,22 @@ public class FdcMapperUtils extends MapperUtils{
         return fdc;
     }
 
-    public List<String> validateDrcJsonResponse(String jsonString){
-        JsonNode jsonNode = mapDRCJsonResponseToNode(jsonString);
-        var validationErrors = new ArrayList<String>();
-        validationErrors.addAll(validateDrcJsonResponse(jsonNode));
-        validationErrors.addAll(validateFdcIdPresent(jsonNode));
-        return validationErrors;
+    /**
+     * Map the DRC response with an HTTP status 200 into a pseudo-status code.
+     * @param jsonString the response body.
+     * @return 200 if it's a valid response body, 632 if the response body is faked because
+     *         feature.outgoing-isolated is enabled, 635 if the response body is invalid.
+     */
+    public int mapDRCJsonResponseToHttpStatus(String jsonString){
+        JsonNode jsonNode = mapDRCJsonResponseToJsonNode(jsonString);
+        return (checkDrcId(jsonNode) && checkFdcId(jsonNode)) ?
+                (checkFeatureOutgoingIsolated(jsonNode) ? 632 : 200) : 635;
     }
 
-    private List<String> validateFdcIdPresent(JsonNode jsonNode){
-        // validate that the fdcId is present
+    private boolean checkFdcId(JsonNode jsonNode){
+        // validate that the fdcId is present and a positive integer
         JsonNode fdcId = jsonNode.at("/meta/fdcId");
-        return (fdcId.isValueNode() && fdcId.asLong() > 0) ? List.of() : List.of("fdcId is not a positive integer");
+        return fdcId.isValueNode() && fdcId.asLong() > 0;
     }
 
     public String generateFileName(LocalDateTime dateTime){

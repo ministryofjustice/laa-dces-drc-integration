@@ -124,38 +124,39 @@ class ContributionsMapperUtilsTest extends ApplicationTestBase {
 		softly.assertThat(contribution).isNotNull();
 		softly.assertThat(contribution.getId()).isEqualTo(222769650L);
 		softly.assertThat(contribution.getFlag()).isEqualTo(UPDATE);
-		softly.assertThat(generatedXML).isNotNull();
-		softly.assertThat(generatedXML.length()>0).isTrue();
+		softly.assertThat(generatedXML).isNotNull().isNotEmpty();
 		softly.assertThat(generatedXML).contains("222769650");
 		softly.assertThat(generatedXML).contains(UPDATE);
 	}
 
 	@Test
 	void testValidateDrcJsonResponse() {
-		var validationErrors = contributionsMapperUtils.validateDrcJsonResponse((String) null);
-		softly.assertThat(validationErrors).isNotEmpty();
-		validationErrors = contributionsMapperUtils.validateDrcJsonResponse("");
-		softly.assertThat(validationErrors).isNotEmpty();
-		validationErrors = contributionsMapperUtils.validateDrcJsonResponse("99");
-		softly.assertThat(validationErrors).isNotEmpty();
-		validationErrors = contributionsMapperUtils.validateDrcJsonResponse("{}");
-		softly.assertThat(validationErrors).isNotEmpty();
-		validationErrors = contributionsMapperUtils.validateDrcJsonResponse(":I: am }not{ JSON");
-		softly.assertThat(validationErrors).isNotEmpty();
-		validationErrors = contributionsMapperUtils.validateDrcJsonResponse("{\"meta\":{\"drcId\":\"nonsense\",\"concorContributionId\":\"nonsense\"}}");
-		softly.assertThat(validationErrors).isNotEmpty();
-		validationErrors = contributionsMapperUtils.validateDrcJsonResponse("{\"meta\":{\"drcId\":12345,\"fdcId\":1234567}}");
-		softly.assertThat(validationErrors).isNotEmpty();
-		validationErrors = contributionsMapperUtils.validateDrcJsonResponse("{\"meta\":{\"drcId\":null,\"concorContributionId\":1234567}}");
-		softly.assertThat(validationErrors).isNotEmpty();
-		validationErrors = contributionsMapperUtils.validateDrcJsonResponse("{\"meta\":{\"drcId\":0,\"concorContributionId\":1234567}}");
-		softly.assertThat(validationErrors).isNotEmpty();
-		validationErrors = contributionsMapperUtils.validateDrcJsonResponse("{\"meta\":{\"drcId\":12345,\"concorContributionId\":null}}");
-		softly.assertThat(validationErrors).isNotEmpty();
-		validationErrors = contributionsMapperUtils.validateDrcJsonResponse("{\"meta\":{\"drcId\":12345,\"concorContributionId\":0}}");
-		softly.assertThat(validationErrors).isNotEmpty();
-		validationErrors = contributionsMapperUtils.validateDrcJsonResponse("{\"meta\":{\"drcId\":12345,\"concorContributionId\":1234567}}");
-		softly.assertThat(validationErrors).isEmpty();
+		int pseudoStatusCode = contributionsMapperUtils.mapDRCJsonResponseToHttpStatus((String) null);
+		softly.assertThat(pseudoStatusCode).isEqualTo(635);
+		pseudoStatusCode = contributionsMapperUtils.mapDRCJsonResponseToHttpStatus("");
+		softly.assertThat(pseudoStatusCode).isEqualTo(635);
+		pseudoStatusCode = contributionsMapperUtils.mapDRCJsonResponseToHttpStatus("99");
+		softly.assertThat(pseudoStatusCode).isEqualTo(635);
+		pseudoStatusCode = contributionsMapperUtils.mapDRCJsonResponseToHttpStatus("{}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(635);
+		pseudoStatusCode = contributionsMapperUtils.mapDRCJsonResponseToHttpStatus(":I: am }not{ JSON");
+		softly.assertThat(pseudoStatusCode).isEqualTo(635);
+		pseudoStatusCode = contributionsMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":\"nonsense\",\"concorContributionId\":\"nonsense\"}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(635);
+		pseudoStatusCode = contributionsMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"fdcId\":1234567}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(635);
+		pseudoStatusCode = contributionsMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":null,\"concorContributionId\":1234567}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(635);
+		pseudoStatusCode = contributionsMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":0,\"concorContributionId\":1234567}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(635);
+		pseudoStatusCode = contributionsMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"concorContributionId\":null}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(635);
+		pseudoStatusCode = contributionsMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"concorContributionId\":0}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(635);
+		pseudoStatusCode = contributionsMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"concorContributionId\":1234567}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(200);
+		pseudoStatusCode = contributionsMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"concorContributionId\":1234567,\"skippedDueToFeatureOutgoingIsolated\":true}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(632);
 	}
 
 	@Test

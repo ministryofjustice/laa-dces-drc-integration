@@ -14,7 +14,6 @@ import uk.gov.justice.laa.crime.dces.integration.model.generated.ack.ObjectFacto
 import java.io.StringWriter;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.Objects;
 
 @Slf4j
@@ -53,10 +52,16 @@ public class MapperUtils {
         return sw.getBuffer().toString();
     }
 
-    protected List<String> validateDrcJsonResponse(JsonNode jsonNode){
-        // validate that the drcId is present
+    protected boolean checkDrcId(JsonNode jsonNode){
+        // validate that the drcId is present and a positive integer.
         final JsonNode drcId = jsonNode.at("/meta/drcId");
-        return (drcId.isValueNode() && drcId.asLong() > 0) ? List.of() : List.of("drcId is not a positive integer");
+        return drcId.isValueNode() && drcId.asLong() > 0;
+    }
+
+    protected boolean checkFeatureOutgoingIsolated(JsonNode jsonNode){
+        // validate that the skippedDueToFeatureOutgoingIsolated is present and true.
+        final JsonNode drcId = jsonNode.at("/meta/skippedDueToFeatureOutgoingIsolated");
+        return drcId.isValueNode() && drcId.asBoolean();
     }
 
     /**
@@ -65,7 +70,7 @@ public class MapperUtils {
      * @param jsonString text representation
      * @return Parsed JsonNode, or MissingNode if not JSON.
      */
-    protected JsonNode mapDRCJsonResponseToNode(String jsonString){
+    protected JsonNode mapDRCJsonResponseToJsonNode(String jsonString){
         if (jsonString != null) {
             try {
                 final JsonNode node = new ObjectMapper().readTree(jsonString);

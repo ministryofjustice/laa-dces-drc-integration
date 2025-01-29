@@ -160,15 +160,15 @@ public class ContributionService implements FileService {
             if (Objects.nonNull(currentContribution)) {
                 try {
                     String response = executeSendConcorToDrcCall(concorContributionId, currentContribution, failedContributions);
-                    var validationErrors = contributionsMapperUtils.validateDrcJsonResponse(response);
-                    if (validationErrors.isEmpty()) {
-                        eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, OK, response);
+                    int pseudoStatusCode = contributionsMapperUtils.mapDRCJsonResponseToHttpStatus(response);
+                    if (pseudoStatusCode == 200 || pseudoStatusCode == 632 /* fake response due to feature.outgoing-isolated */) {
+                        eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, HttpStatusCode.valueOf(pseudoStatusCode), response);
                         successfulContributions.put(concorContributionId, currentContribution);
                         continue;
                     }
-                    // if we didn't get a valid response, we record an error with status code 600 (so will try again).
-                    failedContributions.put(concorContributionId, String.join("; ", validationErrors));
-                    eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, HttpStatusCode.valueOf(600), response);
+                    // if we didn't get a valid response, record an error status code 635, and try again next time.
+                    failedContributions.put(concorContributionId, "Invalid JSON response body from DRC");
+                    eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, HttpStatusCode.valueOf(pseudoStatusCode), response);
                 } catch (WebClientResponseException e) {
                     if (FileServiceUtils.isDrcConflict(e)) {
                         log.info("Ignoring duplicate contribution error response from DRC, concorContributionId = {}, maatId = {}", concorContributionId, currentContribution.getMaatId());

@@ -190,15 +190,15 @@ public class FdcService implements FileService {
             int fdcId = currentFdc.getId().intValue();
             try {
                 String responsePayload = executeSendFdcToDrcCall(currentFdc, fdcId, failedFdcs);
-                var validationErrors = fdcMapperUtils.validateDrcJsonResponse(responsePayload);
-                if (validationErrors.isEmpty()) {
-                    eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, OK, responsePayload);
+                int pseudoStatusCode = fdcMapperUtils.mapDRCJsonResponseToHttpStatus(responsePayload);
+                if (pseudoStatusCode == 200 || pseudoStatusCode == 632 /* fake response due to feature.outgoing-isolated */) {
+                    eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, HttpStatusCode.valueOf(pseudoStatusCode), responsePayload);
                     successfulFdcs.add(currentFdc);
                     continue;
                 }
-                // if we didn't get a valid response, we record an error with status code 600 (so will try again).
-                failedFdcs.put(currentFdc.getId(), String.join("; ", validationErrors));
-                eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, HttpStatusCode.valueOf(600), responsePayload);
+                // if we didn't get a valid response, record an error status code 635, and try again next time.
+                failedFdcs.put(currentFdc.getId(), "Invalid JSON response body from DRC");
+                eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, HttpStatusCode.valueOf(pseudoStatusCode), responsePayload);
             } catch (WebClientResponseException e){
                 if (FileServiceUtils.isDrcConflict(e)) {
                     log.info("Ignoring duplicate FDC error response from DRC, fdcId = {}, maatId = {}", currentFdc.getId(), currentFdc.getMaatId());
