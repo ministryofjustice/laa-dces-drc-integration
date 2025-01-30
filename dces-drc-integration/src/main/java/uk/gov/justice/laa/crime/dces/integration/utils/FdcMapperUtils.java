@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.crime.dces.integration.utils;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
@@ -7,8 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile;
-import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.ObjectFactory;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
+import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.ObjectFactory;
 
 import java.io.StringWriter;
 import java.time.LocalDate;
@@ -80,6 +81,32 @@ public class FdcMapperUtils extends MapperUtils{
         fdc.setSentenceDate(entry.getSentenceOrderDate());
         fdc.setCalculationDate(entry.getDateCalculated());
         return fdc;
+    }
+
+    /**
+     * Map the DRC response with an HTTP status 200 into a pseudo-status code.
+     * @param jsonString the response body.
+     * @return 200 if it's a valid response body,
+     *         632 if the response body is faked because feature.outgoing-isolated is enabled,
+     *         635 if the response body is invalid.
+     */
+    public static int mapDRCJsonResponseToHttpStatus(String jsonString){
+        JsonNode jsonNode = mapDRCJsonResponseToJsonNode(jsonString);
+        if (checkDrcId(jsonNode) && checkFdcId(jsonNode)) {
+            if (checkSkipped(jsonNode)) {
+                return STATUS_OK_SKIPPED;
+            } else {
+                return STATUS_OK_VALID;
+            }
+        } else {
+            return STATUS_OK_INVALID;
+        }
+    }
+
+    private static boolean checkFdcId(JsonNode jsonNode){
+        // validate that the fdcId is present and a positive integer
+        JsonNode fdcId = jsonNode.at("/meta/fdcId");
+        return fdcId.isValueNode() && fdcId.asLong() > 0;
     }
 
     public String generateFileName(LocalDateTime dateTime){

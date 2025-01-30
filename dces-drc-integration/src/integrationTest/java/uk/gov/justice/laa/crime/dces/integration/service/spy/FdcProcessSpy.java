@@ -85,7 +85,7 @@ public class FdcProcessSpy {
         if (!stubResults.test(fdcId)) {
           throw new WebClientResponseException(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(),null,null,null);
         }
-        return null;
+        return "{\"meta\":{\"drcId\":12345,\"fdcId\":1234567}}"; // valid 200 response body
       }).when(drcClientSpy).sendFdcReqToDrc(any());
       return this;
     }

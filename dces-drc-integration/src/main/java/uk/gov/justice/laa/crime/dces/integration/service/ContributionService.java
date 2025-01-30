@@ -25,6 +25,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionProc
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
 import uk.gov.justice.laa.crime.dces.integration.utils.FileServiceUtils;
+import uk.gov.justice.laa.crime.dces.integration.utils.MapperUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -160,18 +161,25 @@ public class ContributionService implements FileService {
             if (Objects.nonNull(currentContribution)) {
                 try {
                     String response = executeSendConcorToDrcCall(concorContributionId, currentContribution, failedContributions);
-                    eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, OK, response);
-                    successfulContributions.put(concorContributionId, currentContribution);
+                    int pseudoStatusCode = ContributionsMapperUtils.mapDRCJsonResponseToHttpStatus(response);
+                    if (MapperUtils.successfulStatus(pseudoStatusCode)) {
+                        eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, HttpStatusCode.valueOf(pseudoStatusCode), response);
+                        successfulContributions.put(concorContributionId, currentContribution);
+                    } else {
+                        // if we didn't get a valid response, record an error status code 635, and try again next time.
+                        failedContributions.put(concorContributionId, "Invalid JSON response body from DRC");
+                        eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, HttpStatusCode.valueOf(pseudoStatusCode), response);
+                    }
                 } catch (WebClientResponseException e) {
                     if (FileServiceUtils.isDrcConflict(e)) {
                         log.info("Ignoring duplicate contribution error response from DRC, concorContributionId = {}, maatId = {}", concorContributionId, currentContribution.getMaatId());
                         eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, CONFLICT, e.getResponseBodyAsString());
                         successfulContributions.put(concorContributionId, currentContribution);
-                        continue;
+                    } else {
+                        // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
+                        failedContributions.put(concorContributionId, e.getClass().getSimpleName() + ": " + e.getResponseBodyAsString());
+                        eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, e.getStatusCode(), e.getResponseBodyAsString());
                     }
-                    // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
-                    failedContributions.put(concorContributionId, e.getClass().getSimpleName() + ": " + e.getResponseBodyAsString());
-                    eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, e.getStatusCode(), e.getResponseBodyAsString());
                 }
             }
         }
@@ -253,7 +261,8 @@ public class ContributionService implements FileService {
             try {
                 final var json = objectMapper.writeValueAsString(request);
                 log.debug("Skipping contribution data to DRC, JSON = [{}]", json);
-                responsePayload = "Skipped due to Feature:OutgoingIsolated.";
+                responsePayload = "{\"meta\":{\"drcId\":1,\"concorContributionId\":"
+                        + concorContributionId + ",\"skippedDueToFeatureOutgoingIsolated\":true}}";
             } catch (JsonProcessingException e) {
                 // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
                 failedContributions.put(concorContributionId, e.getClass().getSimpleName() + ": " + e.getMessage());
