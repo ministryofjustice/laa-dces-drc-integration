@@ -25,6 +25,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionProc
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
 import uk.gov.justice.laa.crime.dces.integration.utils.FileServiceUtils;
+import uk.gov.justice.laa.crime.dces.integration.utils.MapperUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -161,7 +162,7 @@ public class ContributionService implements FileService {
                 try {
                     String response = executeSendConcorToDrcCall(concorContributionId, currentContribution, failedContributions);
                     int pseudoStatusCode = ContributionsMapperUtils.mapDRCJsonResponseToHttpStatus(response);
-                    if (ContributionsMapperUtils.successfulStatus(pseudoStatusCode)) {
+                    if (MapperUtils.successfulStatus(pseudoStatusCode)) {
                         eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, HttpStatusCode.valueOf(pseudoStatusCode), response);
                         successfulContributions.put(concorContributionId, currentContribution);
                     } else {

@@ -27,6 +27,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.external.FdcProcessedRequ
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 import uk.gov.justice.laa.crime.dces.integration.utils.FileServiceUtils;
+import uk.gov.justice.laa.crime.dces.integration.utils.MapperUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -191,7 +192,7 @@ public class FdcService implements FileService {
             try {
                 String responsePayload = executeSendFdcToDrcCall(currentFdc, fdcId, failedFdcs);
                 int pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus(responsePayload);
-                if (FdcMapperUtils.successfulStatus(pseudoStatusCode)) {
+                if (MapperUtils.successfulStatus(pseudoStatusCode)) {
                     eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, HttpStatusCode.valueOf(pseudoStatusCode), responsePayload);
                     successfulFdcs.add(currentFdc);
                 } else {
