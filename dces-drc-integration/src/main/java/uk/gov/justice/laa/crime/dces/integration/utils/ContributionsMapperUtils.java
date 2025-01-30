@@ -91,16 +91,24 @@ public class ContributionsMapperUtils extends MapperUtils{
     /**
      * Map the DRC response with an HTTP status 200 into a pseudo-status code.
      * @param jsonString the response body.
-     * @return 200 if it's a valid response body, 632 if the response body is faked because
-     *         feature.outgoing-isolated is enabled, 635 if the response body is invalid.
+     * @return 200 if it's a valid response body,
+     *         632 if the response body is faked because feature.outgoing-isolated is enabled,
+     *         635 if the response body is invalid.
      */
-    public int mapDRCJsonResponseToHttpStatus(String jsonString){
+    public static int mapDRCJsonResponseToHttpStatus(String jsonString){
         JsonNode jsonNode = mapDRCJsonResponseToJsonNode(jsonString);
-        return (checkDrcId(jsonNode) && checkConcorContributionId(jsonNode)) ?
-                (checkFeatureOutgoingIsolated(jsonNode) ? 632 : 200) : 635;
+        if (checkDrcId(jsonNode) && checkConcorContributionId(jsonNode)) {
+            if (checkSkipped(jsonNode)) {
+                return STATUS_OK_SKIPPED;
+            } else {
+                return STATUS_OK_VALID;
+            }
+        } else {
+            return STATUS_OK_INVALID;
+        }
     }
 
-    private boolean checkConcorContributionId(JsonNode jsonNode){
+    private static boolean checkConcorContributionId(JsonNode jsonNode){
         // validate that the concorContributionId is present and a positive integer
         JsonNode concorContributionId = jsonNode.at("/meta/concorContributionId");
         return concorContributionId.isValueNode() && concorContributionId.asLong() > 0;

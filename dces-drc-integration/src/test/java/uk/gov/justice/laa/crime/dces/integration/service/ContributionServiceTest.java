@@ -89,9 +89,9 @@ class ContributionServiceTest extends ApplicationTestBase {
 	@MockBean
 	private EventService eventService;
 
-	private static final Long testBatchId = -666L;
-	private static final String testDrcResponsePayload = "{\"meta\":{\"drcId\":12345,\"concorContributionId\":1234567}}";
-	private static final String skipDrcResponsePayload = "{\"meta\":{\"drcId\":12345,\"concorContributionId\":1234567,\"skippedDueToFeatureOutgoingIsolated\":true}}";
+	private static final Long TEST_BATCH_ID = -666L;
+	private static final String TEST_DRC_RESPONSE_PAYLOAD = "{\"meta\":{\"drcId\":12345,\"concorContributionId\":1234567}}";
+	private static final String SKIP_DRC_RESPONSE_PAYLOAD = "{\"meta\":{\"drcId\":12345,\"concorContributionId\":1234567,\"skippedDueToFeatureOutgoingIsolated\":true}}";
 
 	@AfterEach
 	void afterTestAssertAll(){
@@ -113,13 +113,12 @@ class ContributionServiceTest extends ApplicationTestBase {
 	void testXMLValid() throws JAXBException {
 		ReflectionTestUtils.setField(contributionService, "getContributionBatchSize", 5);
 		CONTRIBUTIONS testContribution = createTestContribution();
-		when(eventService.generateBatchId()).thenReturn(testBatchId);
-		when(contributionsMapperUtils.mapDRCJsonResponseToHttpStatus(anyString())).thenReturn(200);
+		when(eventService.generateBatchId()).thenReturn(TEST_BATCH_ID);
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(testContribution);
 		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
 		when(contributionsMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
-		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(testDrcResponsePayload);
+		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(TEST_DRC_RESPONSE_PAYLOAD);
 
 		boolean result = contributionService.processDailyFiles();
 		//testing the number of times the methods are called to ensure the correct number of records are processed.
@@ -131,37 +130,37 @@ class ContributionServiceTest extends ApplicationTestBase {
 
 		verify(eventService, times(30)).logConcor(any(), any(), any(), any(), any(), any());
 		// verify each event is logged.
-		verify(eventService).logConcor(null, EventType.FETCHED_FROM_MAAT, testBatchId, null, OK, "Fetched:5");
-		verify(eventService).logConcor(1111L, EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
-		verify(eventService).logConcor(2222L, EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
-		verify(eventService).logConcor(3333L, EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
-		verify(eventService).logConcor(4444L, EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
-		verify(eventService).logConcor(5555L, EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
-		verify(eventService).logConcor(null, EventType.FETCHED_FROM_MAAT, testBatchId, null, OK, "Fetched:3");
-		verify(eventService).logConcor(1000L, EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
-		verify(eventService).logConcor(6666L, EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
-		verify(eventService).logConcor(7777L, EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(null, EventType.FETCHED_FROM_MAAT, TEST_BATCH_ID, null, OK, "Fetched:5");
+		verify(eventService).logConcor(1111L, EventType.FETCHED_FROM_MAAT, TEST_BATCH_ID, testContribution, OK, null);
+		verify(eventService).logConcor(2222L, EventType.FETCHED_FROM_MAAT, TEST_BATCH_ID, testContribution, OK, null);
+		verify(eventService).logConcor(3333L, EventType.FETCHED_FROM_MAAT, TEST_BATCH_ID, testContribution, OK, null);
+		verify(eventService).logConcor(4444L, EventType.FETCHED_FROM_MAAT, TEST_BATCH_ID, testContribution, OK, null);
+		verify(eventService).logConcor(5555L, EventType.FETCHED_FROM_MAAT, TEST_BATCH_ID, testContribution, OK, null);
+		verify(eventService).logConcor(null, EventType.FETCHED_FROM_MAAT, TEST_BATCH_ID, null, OK, "Fetched:3");
+		verify(eventService).logConcor(1000L, EventType.FETCHED_FROM_MAAT, TEST_BATCH_ID, testContribution, OK, null);
+		verify(eventService).logConcor(6666L, EventType.FETCHED_FROM_MAAT, TEST_BATCH_ID, testContribution, OK, null);
+		verify(eventService).logConcor(7777L, EventType.FETCHED_FROM_MAAT, TEST_BATCH_ID, testContribution, OK, null);
 
-		verify(eventService).logConcor(1111L, EventType.SENT_TO_DRC, testBatchId, testContribution, OK, testDrcResponsePayload);
-		verify(eventService).logConcor(2222L, EventType.SENT_TO_DRC, testBatchId, testContribution, OK, testDrcResponsePayload);
-		verify(eventService).logConcor(3333L, EventType.SENT_TO_DRC, testBatchId, testContribution, OK, testDrcResponsePayload);
-		verify(eventService).logConcor(4444L, EventType.SENT_TO_DRC, testBatchId, testContribution, OK, testDrcResponsePayload);
-		verify(eventService).logConcor(5555L, EventType.SENT_TO_DRC, testBatchId, testContribution, OK, testDrcResponsePayload);
-		verify(eventService).logConcor(1000L, EventType.SENT_TO_DRC, testBatchId, testContribution, OK, testDrcResponsePayload);
-		verify(eventService).logConcor(6666L, EventType.SENT_TO_DRC, testBatchId, testContribution, OK, testDrcResponsePayload);
-		verify(eventService).logConcor(7777L, EventType.SENT_TO_DRC, testBatchId, testContribution, OK, testDrcResponsePayload);
+		verify(eventService).logConcor(1111L, EventType.SENT_TO_DRC, TEST_BATCH_ID, testContribution, OK, TEST_DRC_RESPONSE_PAYLOAD);
+		verify(eventService).logConcor(2222L, EventType.SENT_TO_DRC, TEST_BATCH_ID, testContribution, OK, TEST_DRC_RESPONSE_PAYLOAD);
+		verify(eventService).logConcor(3333L, EventType.SENT_TO_DRC, TEST_BATCH_ID, testContribution, OK, TEST_DRC_RESPONSE_PAYLOAD);
+		verify(eventService).logConcor(4444L, EventType.SENT_TO_DRC, TEST_BATCH_ID, testContribution, OK, TEST_DRC_RESPONSE_PAYLOAD);
+		verify(eventService).logConcor(5555L, EventType.SENT_TO_DRC, TEST_BATCH_ID, testContribution, OK, TEST_DRC_RESPONSE_PAYLOAD);
+		verify(eventService).logConcor(1000L, EventType.SENT_TO_DRC, TEST_BATCH_ID, testContribution, OK, TEST_DRC_RESPONSE_PAYLOAD);
+		verify(eventService).logConcor(6666L, EventType.SENT_TO_DRC, TEST_BATCH_ID, testContribution, OK, TEST_DRC_RESPONSE_PAYLOAD);
+		verify(eventService).logConcor(7777L, EventType.SENT_TO_DRC, TEST_BATCH_ID, testContribution, OK, TEST_DRC_RESPONSE_PAYLOAD);
 
-		verify(eventService).logConcor(1111L, EventType.UPDATED_IN_MAAT, testBatchId, testContribution, OK, null);
-		verify(eventService).logConcor(2222L, EventType.UPDATED_IN_MAAT, testBatchId, testContribution, OK, null);
-		verify(eventService).logConcor(3333L, EventType.UPDATED_IN_MAAT, testBatchId, testContribution, OK, null);
-		verify(eventService).logConcor(4444L, EventType.UPDATED_IN_MAAT, testBatchId, testContribution, OK, null);
-		verify(eventService).logConcor(5555L, EventType.UPDATED_IN_MAAT, testBatchId, testContribution, OK, null);
-		verify(eventService).logConcor(1000L, EventType.UPDATED_IN_MAAT, testBatchId, testContribution, OK, null);
-		verify(eventService).logConcor(6666L, EventType.UPDATED_IN_MAAT, testBatchId, testContribution, OK, null);
-		verify(eventService).logConcor(7777L, EventType.UPDATED_IN_MAAT, testBatchId, testContribution, OK, null);
-		verify(eventService).logConcor(null, EventType.UPDATED_IN_MAAT, testBatchId, null, OK, "Successfully Sent:5");
-		verify(eventService).logConcor(null, EventType.UPDATED_IN_MAAT, testBatchId, null, OK, "Successfully Sent:3");
-		verify(eventService, times(2)).logConcor(null, EventType.UPDATED_IN_MAAT, testBatchId, null, OK, "Failed To Send:0");
+		verify(eventService).logConcor(1111L, EventType.UPDATED_IN_MAAT, TEST_BATCH_ID, testContribution, OK, null);
+		verify(eventService).logConcor(2222L, EventType.UPDATED_IN_MAAT, TEST_BATCH_ID, testContribution, OK, null);
+		verify(eventService).logConcor(3333L, EventType.UPDATED_IN_MAAT, TEST_BATCH_ID, testContribution, OK, null);
+		verify(eventService).logConcor(4444L, EventType.UPDATED_IN_MAAT, TEST_BATCH_ID, testContribution, OK, null);
+		verify(eventService).logConcor(5555L, EventType.UPDATED_IN_MAAT, TEST_BATCH_ID, testContribution, OK, null);
+		verify(eventService).logConcor(1000L, EventType.UPDATED_IN_MAAT, TEST_BATCH_ID, testContribution, OK, null);
+		verify(eventService).logConcor(6666L, EventType.UPDATED_IN_MAAT, TEST_BATCH_ID, testContribution, OK, null);
+		verify(eventService).logConcor(7777L, EventType.UPDATED_IN_MAAT, TEST_BATCH_ID, testContribution, OK, null);
+		verify(eventService).logConcor(null, EventType.UPDATED_IN_MAAT, TEST_BATCH_ID, null, OK, "Successfully Sent:5");
+		verify(eventService).logConcor(null, EventType.UPDATED_IN_MAAT, TEST_BATCH_ID, null, OK, "Successfully Sent:3");
+		verify(eventService, times(2)).logConcor(null, EventType.UPDATED_IN_MAAT, TEST_BATCH_ID, null, OK, "Failed To Send:0");
 
 	}
 
@@ -169,12 +168,11 @@ class ContributionServiceTest extends ApplicationTestBase {
 	void testWhenContributionHasFewerRecords() throws JAXBException {
 		// set wanted number to trigger the correct stub response.
 		ReflectionTestUtils.setField(contributionService, "getContributionBatchSize", 4);
-		when(contributionsMapperUtils.mapDRCJsonResponseToHttpStatus(anyString())).thenReturn(200);
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());
 		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
 		when(contributionsMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
-		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(testDrcResponsePayload);
+		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(TEST_DRC_RESPONSE_PAYLOAD);
 
 		boolean result = contributionService.processDailyFiles();
 		//testing the number of times the methods are called to ensure the correct number of records are processed.
@@ -188,12 +186,11 @@ class ContributionServiceTest extends ApplicationTestBase {
 	@Test
 	void testXMLValidWhenOutgoingAnonymizedFlagIsFalse() throws JAXBException {
 		ReflectionTestUtils.setField(contributionService, "getContributionBatchSize", 5);
-		when(contributionsMapperUtils.mapDRCJsonResponseToHttpStatus(anyString())).thenReturn(200);
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());
 		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
 		when(contributionsMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
-		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(testDrcResponsePayload);
+		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(TEST_DRC_RESPONSE_PAYLOAD);
 		when(feature.outgoingAnonymized()).thenReturn(false);
 
 		contributionService.processDailyFiles();
@@ -204,12 +201,11 @@ class ContributionServiceTest extends ApplicationTestBase {
 	@Test
 	void testXMLValidWhenOutgoingAnonymizedFlagIsTrue() throws JAXBException {
 		CONTRIBUTIONS contributions = createTestContribution();
-		when(contributionsMapperUtils.mapDRCJsonResponseToHttpStatus(anyString())).thenReturn(200);
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(contributions);
 		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
 		when(contributionsMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
-		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(testDrcResponsePayload);
+		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(TEST_DRC_RESPONSE_PAYLOAD);
 		when(feature.outgoingAnonymized()).thenReturn(true);
 
 		contributionService.processDailyFiles();
@@ -220,25 +216,22 @@ class ContributionServiceTest extends ApplicationTestBase {
 	@Test
 	void testXMLValidWhenOutgoingIsolated() throws JAXBException {
 		when(feature.outgoingIsolated()).thenReturn(true);
-		when(contributionsMapperUtils.mapDRCJsonResponseToHttpStatus(anyString())).thenReturn(632);
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());
 		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
 		when(contributionsMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
-		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(skipDrcResponsePayload);
+		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(SKIP_DRC_RESPONSE_PAYLOAD);
 
 		boolean result = contributionService.processDailyFiles();
 		verify(contributionsMapperUtils, times(2)).mapLineXMLToObject(any());
 		verify(contributionsMapperUtils).generateFileXML(any(), any());
 		verify(drcClient, times(0)).sendConcorContributionReqToDrc(any()); // not called when feature.outgoing-isolated=true.
-		verify(contributionsMapperUtils, times(2)).mapDRCJsonResponseToHttpStatus(anyString());
 		softly.assertThat(result).isTrue();
 	}
 
 	@Test
 	void testXMLValidWhenEmptyResponsePayload() throws JAXBException {
 		when(feature.outgoingIsolated()).thenReturn(false);
-		when(contributionsMapperUtils.mapDRCJsonResponseToHttpStatus(anyString())).thenReturn(635);
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());
 		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
@@ -249,7 +242,6 @@ class ContributionServiceTest extends ApplicationTestBase {
 		verify(contributionsMapperUtils, times(2)).mapLineXMLToObject(any());
 		verify(contributionsMapperUtils, times(0)).generateFileXML(any(), any());
 		verify(drcClient, times(2)).sendConcorContributionReqToDrc(any()); // not called when feature.outgoing-isolated=true.
-		verify(contributionsMapperUtils, times(2)).mapDRCJsonResponseToHttpStatus(anyString());
 		softly.assertThat(result).isFalse();
 	}
 
@@ -257,7 +249,6 @@ class ContributionServiceTest extends ApplicationTestBase {
 	void testDrcUpdateWebClientConflictException() throws JAXBException {
 		// setup
 		ReflectionTestUtils.setField(contributionService, "getContributionBatchSize", 5);
-		when(contributionsMapperUtils.mapDRCJsonResponseToHttpStatus(anyString())).thenReturn(200);
 		when(contributionsMapperUtils.mapLineXMLToObject(anyString())).thenReturn(createTestContribution());
 		when(contributionsMapperUtils.generateFileXML(any(), anyString())).thenReturn("ValidXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
@@ -274,7 +265,6 @@ class ContributionServiceTest extends ApplicationTestBase {
 		boolean successful = contributionService.processDailyFiles();
 		// test (asking for batch size of 5 makes WireMock return 8 records)
 		softly.assertThat(successful).isTrue();
-		verify(contributionsMapperUtils, times(0)).mapDRCJsonResponseToHttpStatus(anyString());
 		verify(contributionsMapperUtils, times(8)).mapLineXMLToObject(any());
 		verify(drcClient, times(8)).sendConcorContributionReqToDrc(any());
 	}
@@ -282,13 +272,12 @@ class ContributionServiceTest extends ApplicationTestBase {
 	@Test
 	void testFileXMLInvalid() throws JAXBException {
 		CONTRIBUTIONS testContribution = createTestContribution();
-		when(contributionsMapperUtils.mapDRCJsonResponseToHttpStatus(anyString())).thenReturn(200);
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(testContribution); // mock returns null otherwise
 		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("InvalidXML");
 		when(contributionsMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("AckXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("FileName");
-		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(testDrcResponsePayload);
-		when(eventService.generateBatchId()).thenReturn(testBatchId);
+		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(TEST_DRC_RESPONSE_PAYLOAD);
+		when(eventService.generateBatchId()).thenReturn(TEST_BATCH_ID);
 
 		softly.assertThatThrownBy(() -> contributionService.processDailyFiles())
 				.isInstanceOf(WebClientResponseException.class)
@@ -300,14 +289,14 @@ class ContributionServiceTest extends ApplicationTestBase {
 
 		verify(eventService, times(6)).logConcor(any(), any(), any(), any(), any(), any());
 		// verify each event is logged.
-		verify(eventService).logConcor(null, EventType.FETCHED_FROM_MAAT, testBatchId, null, OK, "Fetched:2");
-		verify(eventService).logConcor(1234L, EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
-		verify(eventService).logConcor(9876L, EventType.FETCHED_FROM_MAAT, testBatchId, testContribution, OK, null);
+		verify(eventService).logConcor(null, EventType.FETCHED_FROM_MAAT, TEST_BATCH_ID, null, OK, "Fetched:2");
+		verify(eventService).logConcor(1234L, EventType.FETCHED_FROM_MAAT, TEST_BATCH_ID, testContribution, OK, null);
+		verify(eventService).logConcor(9876L, EventType.FETCHED_FROM_MAAT, TEST_BATCH_ID, testContribution, OK, null);
 
-		verify(eventService).logConcor(1234L, EventType.SENT_TO_DRC, testBatchId, testContribution, OK, testDrcResponsePayload);
-		verify(eventService).logConcor(9876L, EventType.SENT_TO_DRC, testBatchId, testContribution, OK, testDrcResponsePayload);
+		verify(eventService).logConcor(1234L, EventType.SENT_TO_DRC, TEST_BATCH_ID, testContribution, OK, TEST_DRC_RESPONSE_PAYLOAD);
+		verify(eventService).logConcor(9876L, EventType.SENT_TO_DRC, TEST_BATCH_ID, testContribution, OK, TEST_DRC_RESPONSE_PAYLOAD);
 
-		verify(eventService).logConcor(null, EventType.UPDATED_IN_MAAT, testBatchId, null, INTERNAL_SERVER_ERROR, "Failed to create contribution-file: Message:[500 Internal Server Error from POST http://localhost:1111/debt-collection-enforcement/create-contribution-file] | Response:[{\"files\":[]}]");
+		verify(eventService).logConcor(null, EventType.UPDATED_IN_MAAT, TEST_BATCH_ID, null, INTERNAL_SERVER_ERROR, "Failed to create contribution-file: Message:[500 Internal Server Error from POST http://localhost:1111/debt-collection-enforcement/create-contribution-file] | Response:[{\"files\":[]}]");
 
 	}
 
@@ -326,12 +315,11 @@ class ContributionServiceTest extends ApplicationTestBase {
 		customStubs.add(stubFor(post(UPDATE_URL).atPriority(1)
 				.willReturn(serverError())));
 		ReflectionTestUtils.setField(contributionService, "getContributionBatchSize", 5);
-		when(contributionsMapperUtils.mapDRCJsonResponseToHttpStatus(anyString())).thenReturn(200);
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());
 		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
 		when(contributionsMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
-		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(testDrcResponsePayload);
+		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(TEST_DRC_RESPONSE_PAYLOAD);
 		// do
 		softly.assertThatThrownBy(() -> contributionService.processDailyFiles())
 				.isInstanceOf(WebClientResponseException.class);
@@ -390,9 +378,8 @@ class ContributionServiceTest extends ApplicationTestBase {
 	@Test
 	void givenIdList_whenSendContributionsToDrcIsCalled_thenXmlIsFetchedAndSent() throws JAXBException {
 		when(feature.outgoingIsolated()).thenReturn(false);
-		when(contributionsMapperUtils.mapDRCJsonResponseToHttpStatus(anyString())).thenReturn(200);
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());
-		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(testDrcResponsePayload);
+		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(TEST_DRC_RESPONSE_PAYLOAD);
 
 		List<ConcorContribEntry> result = contributionService.sendContributionsToDrc(List.of(1L, 2L));
 		verify(contributionsMapperUtils, times(2)).mapLineXMLToObject(any());
@@ -408,9 +395,8 @@ class ContributionServiceTest extends ApplicationTestBase {
 	@Test
 	void givenEmptyIdList_whenSendContributionsToDrcIsCalled_thenErrorIsReturned() throws JAXBException {
 		when(feature.outgoingIsolated()).thenReturn(false);
-		when(contributionsMapperUtils.mapDRCJsonResponseToHttpStatus(anyString())).thenReturn(200);
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());
-		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(testDrcResponsePayload);
+		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(TEST_DRC_RESPONSE_PAYLOAD);
 		softly.assertThatThrownBy(() -> contributionService.sendContributionsToDrc(List.of()))
 				.isInstanceOf(BadRequest.class)
 				.hasMessageContaining("400 Bad Request");

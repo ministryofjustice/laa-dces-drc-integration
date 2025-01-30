@@ -190,24 +190,24 @@ public class FdcService implements FileService {
             int fdcId = currentFdc.getId().intValue();
             try {
                 String responsePayload = executeSendFdcToDrcCall(currentFdc, fdcId, failedFdcs);
-                int pseudoStatusCode = fdcMapperUtils.mapDRCJsonResponseToHttpStatus(responsePayload);
-                if (pseudoStatusCode == 200 || pseudoStatusCode == 632 /* fake response due to feature.outgoing-isolated */) {
+                int pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus(responsePayload);
+                if (FdcMapperUtils.successfulStatus(pseudoStatusCode)) {
                     eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, HttpStatusCode.valueOf(pseudoStatusCode), responsePayload);
                     successfulFdcs.add(currentFdc);
-                    continue;
+                } else {
+                    // if we didn't get a valid response, record an error status code 635, and try again next time.
+                    failedFdcs.put(currentFdc.getId(), "Invalid JSON response body from DRC");
+                    eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, HttpStatusCode.valueOf(pseudoStatusCode), responsePayload);
                 }
-                // if we didn't get a valid response, record an error status code 635, and try again next time.
-                failedFdcs.put(currentFdc.getId(), "Invalid JSON response body from DRC");
-                eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, HttpStatusCode.valueOf(pseudoStatusCode), responsePayload);
             } catch (WebClientResponseException e){
                 if (FileServiceUtils.isDrcConflict(e)) {
                     log.info("Ignoring duplicate FDC error response from DRC, fdcId = {}, maatId = {}", currentFdc.getId(), currentFdc.getMaatId());
                     eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, CONFLICT, e.getResponseBodyAsString());
                     successfulFdcs.add(currentFdc);
-                    continue;
+                } else {
+                    // if not CONFLICT, or not duplicate, then just log it.
+                    logDrcSentError(e, e.getStatusCode(), currentFdc, failedFdcs);
                 }
-                // if not CONFLICT, or not duplicate, then just log it.
-                logDrcSentError(e, e.getStatusCode(), currentFdc, failedFdcs);
             }
         }
     }
@@ -291,7 +291,7 @@ public class FdcService implements FileService {
                 log.info("Feature:OutgoingIsolated: Skipping FDC data to DRC, fdcId = {}, maatId = {}", fdcId, currentFdc.getMaatId());
                 final var json = objectMapper.writeValueAsString(request);
                 log.debug("Skipping FDC data to DRC, JSON = [{}]", json);
-                response = "{\"meta\":{\"drcId\":632,\"fdcId\":"
+                response = "{\"meta\":{\"drcId\":1,\"fdcId\":"
                         + fdcId + ",\"skippedDueToFeatureOutgoingIsolated\":true}}";
             } catch (JsonProcessingException e) {
                 logDrcSentError(e, INTERNAL_SERVER_ERROR, currentFdc, failedFdcs);

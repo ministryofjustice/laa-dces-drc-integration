@@ -18,6 +18,12 @@ import java.util.Objects;
 
 @Slf4j
 public class MapperUtils {
+    /** Response body is valid JSON "meta" element that includes a positive "drcId" and "concorContributionId" or "fdcId" attribute. */
+    public static final int STATUS_OK_VALID = 200;
+    /** Response body is valid JSON "meta" element but has been faked because feature.outgoing-isolated is enabled. */
+    public static final int STATUS_OK_SKIPPED = 632;
+    /** Response body is either not valid JSON, or is missing required elements. */
+    public static final int STATUS_OK_INVALID = 635;
 
     private final Marshaller ackMarshaller;
     protected final DateTimeFormatter filenameFormat = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
@@ -52,16 +58,20 @@ public class MapperUtils {
         return sw.getBuffer().toString();
     }
 
-    protected boolean checkDrcId(JsonNode jsonNode){
+    protected static boolean checkDrcId(JsonNode jsonNode){
         // validate that the drcId is present and a positive integer.
         final JsonNode drcId = jsonNode.at("/meta/drcId");
         return drcId.isValueNode() && drcId.asLong() > 0;
     }
 
-    protected boolean checkFeatureOutgoingIsolated(JsonNode jsonNode){
+    protected static boolean checkSkipped(JsonNode jsonNode){
         // validate that the skippedDueToFeatureOutgoingIsolated is present and true.
-        final JsonNode drcId = jsonNode.at("/meta/skippedDueToFeatureOutgoingIsolated");
-        return drcId.isValueNode() && drcId.asBoolean();
+        final JsonNode skipped = jsonNode.at("/meta/skippedDueToFeatureOutgoingIsolated");
+        return skipped.isValueNode() && skipped.asBoolean();
+    }
+
+    public static boolean successfulStatus(int pseudoStatusCode) {
+        return pseudoStatusCode == STATUS_OK_VALID || pseudoStatusCode == STATUS_OK_SKIPPED;
     }
 
     /**
@@ -70,7 +80,7 @@ public class MapperUtils {
      * @param jsonString text representation
      * @return Parsed JsonNode, or MissingNode if not JSON.
      */
-    protected JsonNode mapDRCJsonResponseToJsonNode(String jsonString){
+    protected static JsonNode mapDRCJsonResponseToJsonNode(String jsonString){
         if (jsonString != null) {
             try {
                 final JsonNode node = new ObjectMapper().readTree(jsonString);
@@ -78,6 +88,7 @@ public class MapperUtils {
                     return node;
                 }
             } catch (JsonProcessingException ignored) {
+                // fall through to return MissingNode.
             }
         }
         return JsonNodeFactory.instance.missingNode();

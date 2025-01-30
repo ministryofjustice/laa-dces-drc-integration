@@ -160,25 +160,25 @@ public class ContributionService implements FileService {
             if (Objects.nonNull(currentContribution)) {
                 try {
                     String response = executeSendConcorToDrcCall(concorContributionId, currentContribution, failedContributions);
-                    int pseudoStatusCode = contributionsMapperUtils.mapDRCJsonResponseToHttpStatus(response);
-                    if (pseudoStatusCode == 200 || pseudoStatusCode == 632 /* fake response due to feature.outgoing-isolated */) {
+                    int pseudoStatusCode = ContributionsMapperUtils.mapDRCJsonResponseToHttpStatus(response);
+                    if (ContributionsMapperUtils.successfulStatus(pseudoStatusCode)) {
                         eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, HttpStatusCode.valueOf(pseudoStatusCode), response);
                         successfulContributions.put(concorContributionId, currentContribution);
-                        continue;
+                    } else {
+                        // if we didn't get a valid response, record an error status code 635, and try again next time.
+                        failedContributions.put(concorContributionId, "Invalid JSON response body from DRC");
+                        eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, HttpStatusCode.valueOf(pseudoStatusCode), response);
                     }
-                    // if we didn't get a valid response, record an error status code 635, and try again next time.
-                    failedContributions.put(concorContributionId, "Invalid JSON response body from DRC");
-                    eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, HttpStatusCode.valueOf(pseudoStatusCode), response);
                 } catch (WebClientResponseException e) {
                     if (FileServiceUtils.isDrcConflict(e)) {
                         log.info("Ignoring duplicate contribution error response from DRC, concorContributionId = {}, maatId = {}", concorContributionId, currentContribution.getMaatId());
                         eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, CONFLICT, e.getResponseBodyAsString());
                         successfulContributions.put(concorContributionId, currentContribution);
-                        continue;
+                    } else {
+                        // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
+                        failedContributions.put(concorContributionId, e.getClass().getSimpleName() + ": " + e.getResponseBodyAsString());
+                        eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, e.getStatusCode(), e.getResponseBodyAsString());
                     }
-                    // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.
-                    failedContributions.put(concorContributionId, e.getClass().getSimpleName() + ": " + e.getResponseBodyAsString());
-                    eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, e.getStatusCode(), e.getResponseBodyAsString());
                 }
             }
         }
@@ -260,7 +260,7 @@ public class ContributionService implements FileService {
             try {
                 final var json = objectMapper.writeValueAsString(request);
                 log.debug("Skipping contribution data to DRC, JSON = [{}]", json);
-                responsePayload = "{\"meta\":{\"drcId\":632,\"concorContributionId\":"
+                responsePayload = "{\"meta\":{\"drcId\":1,\"concorContributionId\":"
                         + concorContributionId + ",\"skippedDueToFeatureOutgoingIsolated\":true}}";
             } catch (JsonProcessingException e) {
                 // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.

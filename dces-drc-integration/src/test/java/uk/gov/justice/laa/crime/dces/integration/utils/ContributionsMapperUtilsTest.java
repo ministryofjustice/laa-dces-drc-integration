@@ -23,6 +23,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.fail;
+import static uk.gov.justice.laa.crime.dces.integration.utils.MapperUtils.STATUS_OK_INVALID;
+import static uk.gov.justice.laa.crime.dces.integration.utils.MapperUtils.STATUS_OK_SKIPPED;
+import static uk.gov.justice.laa.crime.dces.integration.utils.MapperUtils.STATUS_OK_VALID;
 
 @SpringBootTest
 @ExtendWith(SoftAssertionsExtension.class)
@@ -131,32 +134,32 @@ class ContributionsMapperUtilsTest extends ApplicationTestBase {
 
 	@Test
 	void testValidateDrcJsonResponse() {
-		int pseudoStatusCode = contributionsMapperUtils.mapDRCJsonResponseToHttpStatus((String) null);
-		softly.assertThat(pseudoStatusCode).isEqualTo(635);
-		pseudoStatusCode = contributionsMapperUtils.mapDRCJsonResponseToHttpStatus("");
-		softly.assertThat(pseudoStatusCode).isEqualTo(635);
-		pseudoStatusCode = contributionsMapperUtils.mapDRCJsonResponseToHttpStatus("99");
-		softly.assertThat(pseudoStatusCode).isEqualTo(635);
-		pseudoStatusCode = contributionsMapperUtils.mapDRCJsonResponseToHttpStatus("{}");
-		softly.assertThat(pseudoStatusCode).isEqualTo(635);
-		pseudoStatusCode = contributionsMapperUtils.mapDRCJsonResponseToHttpStatus(":I: am }not{ JSON");
-		softly.assertThat(pseudoStatusCode).isEqualTo(635);
-		pseudoStatusCode = contributionsMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":\"nonsense\",\"concorContributionId\":\"nonsense\"}}");
-		softly.assertThat(pseudoStatusCode).isEqualTo(635);
-		pseudoStatusCode = contributionsMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"fdcId\":1234567}}");
-		softly.assertThat(pseudoStatusCode).isEqualTo(635);
-		pseudoStatusCode = contributionsMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":null,\"concorContributionId\":1234567}}");
-		softly.assertThat(pseudoStatusCode).isEqualTo(635);
-		pseudoStatusCode = contributionsMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":0,\"concorContributionId\":1234567}}");
-		softly.assertThat(pseudoStatusCode).isEqualTo(635);
-		pseudoStatusCode = contributionsMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"concorContributionId\":null}}");
-		softly.assertThat(pseudoStatusCode).isEqualTo(635);
-		pseudoStatusCode = contributionsMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"concorContributionId\":0}}");
-		softly.assertThat(pseudoStatusCode).isEqualTo(635);
-		pseudoStatusCode = contributionsMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"concorContributionId\":1234567}}");
-		softly.assertThat(pseudoStatusCode).isEqualTo(200);
-		pseudoStatusCode = contributionsMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"concorContributionId\":1234567,\"skippedDueToFeatureOutgoingIsolated\":true}}");
-		softly.assertThat(pseudoStatusCode).isEqualTo(632);
+		int pseudoStatusCode = ContributionsMapperUtils.mapDRCJsonResponseToHttpStatus(null);
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = ContributionsMapperUtils.mapDRCJsonResponseToHttpStatus("");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = ContributionsMapperUtils.mapDRCJsonResponseToHttpStatus("99");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = ContributionsMapperUtils.mapDRCJsonResponseToHttpStatus("{}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = ContributionsMapperUtils.mapDRCJsonResponseToHttpStatus(":I: am }not{ JSON");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = ContributionsMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":\"nonsense\",\"concorContributionId\":\"nonsense\"}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = ContributionsMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"fdcId\":1234567}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = ContributionsMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":null,\"concorContributionId\":1234567}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = ContributionsMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":0,\"concorContributionId\":1234567}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = ContributionsMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"concorContributionId\":null}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = ContributionsMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"concorContributionId\":0}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = ContributionsMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"concorContributionId\":1234567}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_VALID);
+		pseudoStatusCode = ContributionsMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"concorContributionId\":1234567,\"skippedDueToFeatureOutgoingIsolated\":true}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_SKIPPED);
 	}
 
 	@Test

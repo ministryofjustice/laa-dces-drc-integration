@@ -17,6 +17,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import static uk.gov.justice.laa.crime.dces.integration.utils.MapperUtils.STATUS_OK_INVALID;
+import static uk.gov.justice.laa.crime.dces.integration.utils.MapperUtils.STATUS_OK_SKIPPED;
+import static uk.gov.justice.laa.crime.dces.integration.utils.MapperUtils.STATUS_OK_VALID;
+
 @ExtendWith(SoftAssertionsExtension.class)
 class FdcMapperUtilsTests extends ApplicationTestBase {
 
@@ -71,32 +75,32 @@ class FdcMapperUtilsTests extends ApplicationTestBase {
 
 	@Test
 	void testValidateDrcJsonResponse() {
-		int pseudoStatusCode = fdcMapperUtils.mapDRCJsonResponseToHttpStatus((String) null);
-		softly.assertThat(pseudoStatusCode).isEqualTo(635);
-		pseudoStatusCode = fdcMapperUtils.mapDRCJsonResponseToHttpStatus("");
-		softly.assertThat(pseudoStatusCode).isEqualTo(635);
-		pseudoStatusCode = fdcMapperUtils.mapDRCJsonResponseToHttpStatus("99");
-		softly.assertThat(pseudoStatusCode).isEqualTo(635);
-		pseudoStatusCode = fdcMapperUtils.mapDRCJsonResponseToHttpStatus("{}");
-		softly.assertThat(pseudoStatusCode).isEqualTo(635);
-		pseudoStatusCode = fdcMapperUtils.mapDRCJsonResponseToHttpStatus(":I: am }not{ JSON");
-		softly.assertThat(pseudoStatusCode).isEqualTo(635);
-		pseudoStatusCode = fdcMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":\"nonsense\",\"fdcId\":\"nonsense\"}}");
-		softly.assertThat(pseudoStatusCode).isEqualTo(635);
-		pseudoStatusCode = fdcMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"concorContributionId\":1234567}}");
-		softly.assertThat(pseudoStatusCode).isEqualTo(635);
-		pseudoStatusCode = fdcMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":null,\"fdcId\":1234567}}");
-		softly.assertThat(pseudoStatusCode).isEqualTo(635);
-		pseudoStatusCode = fdcMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":0,\"fdcId\":1234567}}");
-		softly.assertThat(pseudoStatusCode).isEqualTo(635);
-		pseudoStatusCode = fdcMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"fdcId\":null}}");
-		softly.assertThat(pseudoStatusCode).isEqualTo(635);
-		pseudoStatusCode = fdcMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"fdcId\":0}}");
-		softly.assertThat(pseudoStatusCode).isEqualTo(635);
-		pseudoStatusCode = fdcMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"fdcId\":1234567}}");
-		softly.assertThat(pseudoStatusCode).isEqualTo(200);
-		pseudoStatusCode = fdcMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"fdcId\":1234567,\"skippedDueToFeatureOutgoingIsolated\":true}}");
-		softly.assertThat(pseudoStatusCode).isEqualTo(632);
+		int pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus(null);
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus("");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus("99");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus("{}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus(":I: am }not{ JSON");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":\"nonsense\",\"fdcId\":\"nonsense\"}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"concorContributionId\":1234567}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":null,\"fdcId\":1234567}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":0,\"fdcId\":1234567}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"fdcId\":null}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"fdcId\":0}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"fdcId\":1234567}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_VALID);
+		pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"fdcId\":1234567,\"skippedDueToFeatureOutgoingIsolated\":true}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_SKIPPED);
 	}
 
 	private Fdc generateDefaultFdc() {

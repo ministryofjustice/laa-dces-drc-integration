@@ -86,16 +86,24 @@ public class FdcMapperUtils extends MapperUtils{
     /**
      * Map the DRC response with an HTTP status 200 into a pseudo-status code.
      * @param jsonString the response body.
-     * @return 200 if it's a valid response body, 632 if the response body is faked because
-     *         feature.outgoing-isolated is enabled, 635 if the response body is invalid.
+     * @return 200 if it's a valid response body,
+     *         632 if the response body is faked because feature.outgoing-isolated is enabled,
+     *         635 if the response body is invalid.
      */
-    public int mapDRCJsonResponseToHttpStatus(String jsonString){
+    public static int mapDRCJsonResponseToHttpStatus(String jsonString){
         JsonNode jsonNode = mapDRCJsonResponseToJsonNode(jsonString);
-        return (checkDrcId(jsonNode) && checkFdcId(jsonNode)) ?
-                (checkFeatureOutgoingIsolated(jsonNode) ? 632 : 200) : 635;
+        if (checkDrcId(jsonNode) && checkFdcId(jsonNode)) {
+            if (checkSkipped(jsonNode)) {
+                return STATUS_OK_SKIPPED;
+            } else {
+                return STATUS_OK_VALID;
+            }
+        } else {
+            return STATUS_OK_INVALID;
+        }
     }
 
-    private boolean checkFdcId(JsonNode jsonNode){
+    private static boolean checkFdcId(JsonNode jsonNode){
         // validate that the fdcId is present and a positive integer
         JsonNode fdcId = jsonNode.at("/meta/fdcId");
         return fdcId.isValueNode() && fdcId.asLong() > 0;
