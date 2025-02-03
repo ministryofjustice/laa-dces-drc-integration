@@ -1,6 +1,9 @@
 package uk.gov.justice.laa.crime.dces.integration.utils;
 
 import io.micrometer.observation.annotation.Observed;
+import io.sentry.Sentry;
+import io.sentry.spring.jakarta.checkin.SentryCheckIn;
+import io.sentry.spring.jakarta.tracing.SentryTransaction;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.core.LockAssert;
@@ -27,9 +30,25 @@ public class ServiceScheduler {
     private final ContributionService contributionService;
     private final MigrationService migrationService;
 
+    @Scheduled(cron = "0 */5 * * * *") // Runs every 5 minutes
+    @SentryCheckIn("fdc")
+    @SentryTransaction(operation = "fdc_operation_job", name = "scheduled_task_automated_every5")
+    public void runScheduledTask() {
+
+
+        try {
+            System.out.println("Starting scheduled task...");
+            Thread.sleep(3000); // Simulating job execution time
+
+        } catch (Exception e) {
+            Sentry.captureException(e);
+        }
+    }
+
     @Observed(name = "ServiceScheduler.fdc", contextualName = "Cron job to process FDC files", lowCardinalityKeyValues = {"priority", "medium"})
     @Scheduled(cron =  "${scheduling.cron.process-fdc-files:-}")
     @SchedulerLock(name = "processFdcFiles")
+    @SentryCheckIn("fdc")
     public void processFdcFiles() {
         LockAssert.assertLocked();
         log.info("Processing FDC files at {}", LocalDateTime.now());
