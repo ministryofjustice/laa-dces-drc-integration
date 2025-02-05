@@ -34,8 +34,7 @@ public class ServiceScheduler {
     @SentryCheckIn("fdc")
     @SentryTransaction(operation = "fdc_operation_job", name = "scheduled_task_automated_every5")
     public void runScheduledTask() {
-
-
+        log.info("Running scheduled task at {}", LocalDateTime.now());
         try {
             System.out.println("Starting scheduled task...");
             Thread.sleep(3000); // Simulating job execution time
