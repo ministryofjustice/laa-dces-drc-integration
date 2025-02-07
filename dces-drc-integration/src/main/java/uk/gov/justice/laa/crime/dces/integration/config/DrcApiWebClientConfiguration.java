@@ -1,7 +1,9 @@
 package uk.gov.justice.laa.crime.dces.integration.config;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.resolver.DefaultAddressResolverGroup;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.ssl.NoSuchSslBundleException;
@@ -31,8 +33,12 @@ import java.util.Optional;
 
 @Configuration
 @Slf4j
+@RequiredArgsConstructor
 public class DrcApiWebClientConfiguration {
     private static final String SSL_BUNDLE_NAME = "drc-client";
+    public static final String DRC_API_WEBCLIENT_REQUESTS = "webclient_requests";
+
+    private final MeterRegistry meterRegistry;
 
     @Bean
     DrcClient drcClient(@Qualifier("drcApiWebClient") final WebClient drcApiWebClient) {
@@ -66,6 +72,7 @@ public class DrcApiWebClientConfiguration {
         // Clone Boot's auto-config WebClient.Builder, then add our customizations before build().
         WebClient.Builder builder = webClientBuilder.clone()
                 .baseUrl(services.getDrcClientApi().getBaseUrl())
+                .filter(new WebClientMetricsFilter(meterRegistry, DRC_API_WEBCLIENT_REQUESTS))
                 .clientConnector(new ReactorClientHttpConnector(createHttpClient(provider, sslBundles)));
 
         if (services.getDrcClientApi().isOAuthEnabled()) {
