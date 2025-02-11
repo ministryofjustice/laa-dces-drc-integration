@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.OK;
 import static uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType.DRC_ASYNC_RESPONSE;
@@ -173,7 +172,7 @@ public class ContributionService implements FileService {
                 } catch (WebClientResponseException e) {
                     if (FileServiceUtils.isDrcConflict(e)) {
                         log.info("Ignoring duplicate contribution error response from DRC, concorContributionId = {}, maatId = {}", concorContributionId, currentContribution.getMaatId());
-                        eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, CONFLICT, e.getResponseBodyAsString());
+                        eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, MapperUtils.STATUS_CONFLICT_DUPLICATE_ID, e.getResponseBodyAsString());
                         successfulContributions.put(concorContributionId, currentContribution);
                     } else {
                         // If unsuccessful, then keep track in order to populate the ack details in the MAAT API Call.

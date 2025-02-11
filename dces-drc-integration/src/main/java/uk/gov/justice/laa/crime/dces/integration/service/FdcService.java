@@ -36,7 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.OK;
 import static uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType.DRC_ASYNC_RESPONSE;
@@ -203,7 +202,7 @@ public class FdcService implements FileService {
             } catch (WebClientResponseException e){
                 if (FileServiceUtils.isDrcConflict(e)) {
                     log.info("Ignoring duplicate FDC error response from DRC, fdcId = {}, maatId = {}", currentFdc.getId(), currentFdc.getMaatId());
-                    eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, CONFLICT, e.getResponseBodyAsString());
+                    eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, MapperUtils.STATUS_CONFLICT_DUPLICATE_ID, e.getResponseBodyAsString());
                     successfulFdcs.add(currentFdc);
                 } else {
                     // if not CONFLICT, or not duplicate, then just log it.
