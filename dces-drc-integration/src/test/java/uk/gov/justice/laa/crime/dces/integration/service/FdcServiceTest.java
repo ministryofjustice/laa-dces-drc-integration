@@ -433,14 +433,14 @@ class FdcServiceTest extends ApplicationTestBase {
 		// do
 		boolean successful = fdcService.processDailyFiles();
 		// test
-		softly.assertThat(successful).isTrue();
+		softly.assertThat(successful).isFalse();
 		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
 		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
 		verify(drcClient, times(12)).sendFdcReqToDrc(any());
 
-		verify(eventService, times(12)).logFdc(eq(EventType.SENT_TO_DRC), any(), any(), eq(MapperUtils.STATUS_CONFLICT_DUPLICATE_ID), any());
-		WireMock.verify(1, postRequestedFor(urlEqualTo(UPDATE_URL)));
-		verify(fdcMapperUtils,times(1)).generateFileXML(any(),any());
+		verify(eventService, times(12)).logFdc(eq(EventType.SENT_TO_DRC), any(), any(), eq(HttpStatus.CONFLICT), any());
+		WireMock.verify(0, postRequestedFor(urlEqualTo(UPDATE_URL)));
+		verify(fdcMapperUtils,times(0)).generateFileXML(any(),any());
 	}
 
 	@Test
