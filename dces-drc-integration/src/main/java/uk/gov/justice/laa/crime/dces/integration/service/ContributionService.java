@@ -160,14 +160,14 @@ public class ContributionService implements FileService {
             if (Objects.nonNull(currentContribution)) {
                 try {
                     String response = executeSendConcorToDrcCall(concorContributionId, currentContribution, failedContributions);
-                    int pseudoStatusCode = ContributionsMapperUtils.mapDRCJsonResponseToHttpStatus(response);
+                    HttpStatusCode pseudoStatusCode = ContributionsMapperUtils.mapDRCJsonResponseToHttpStatus(response);
                     if (MapperUtils.successfulStatus(pseudoStatusCode)) {
-                        eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, HttpStatusCode.valueOf(pseudoStatusCode), response);
+                        eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, pseudoStatusCode, response);
                         successfulContributions.put(concorContributionId, currentContribution);
                     } else {
                         // if we didn't get a valid response, record an error status code 635, and try again next time.
                         failedContributions.put(concorContributionId, "Invalid JSON response body from DRC");
-                        eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, HttpStatusCode.valueOf(pseudoStatusCode), response);
+                        eventService.logConcor(concorContributionId, SENT_TO_DRC, batchId, currentContribution, pseudoStatusCode, response);
                     }
                 } catch (WebClientResponseException e) {
                     if (FileServiceUtils.isDrcConflict(e)) {

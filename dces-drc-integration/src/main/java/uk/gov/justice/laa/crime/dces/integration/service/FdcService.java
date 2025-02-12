@@ -190,14 +190,14 @@ public class FdcService implements FileService {
             int fdcId = currentFdc.getId().intValue();
             try {
                 String responsePayload = executeSendFdcToDrcCall(currentFdc, fdcId, failedFdcs);
-                int pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus(responsePayload);
+                HttpStatusCode pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus(responsePayload);
                 if (MapperUtils.successfulStatus(pseudoStatusCode)) {
-                    eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, HttpStatusCode.valueOf(pseudoStatusCode), responsePayload);
+                    eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, pseudoStatusCode, responsePayload);
                     successfulFdcs.add(currentFdc);
                 } else {
                     // if we didn't get a valid response, record an error status code 635, and try again next time.
                     failedFdcs.put(currentFdc.getId(), "Invalid JSON response body from DRC");
-                    eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, HttpStatusCode.valueOf(pseudoStatusCode), responsePayload);
+                    eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, pseudoStatusCode, responsePayload);
                 }
             } catch (WebClientResponseException e){
                 if (FileServiceUtils.isDrcConflict(e)) {

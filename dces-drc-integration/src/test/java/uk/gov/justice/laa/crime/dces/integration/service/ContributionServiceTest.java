@@ -15,6 +15,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.ErrorResponseException;
@@ -30,6 +31,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionProc
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.ObjectFactory;
 import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
+import uk.gov.justice.laa.crime.dces.integration.utils.MapperUtils;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -266,6 +268,32 @@ class ContributionServiceTest extends ApplicationTestBase {
 		// test (asking for batch size of 5 makes WireMock return 8 records)
 		softly.assertThat(successful).isTrue();
 		verify(contributionsMapperUtils, times(8)).mapLineXMLToObject(any());
+		verify(eventService, times(8)).logConcor(any(), eq(EventType.SENT_TO_DRC), any(), any(), eq(MapperUtils.STATUS_CONFLICT_DUPLICATE_ID), any());
+		verify(drcClient, times(8)).sendConcorContributionReqToDrc(any());
+	}
+
+	@Test
+	void testDrcUpdateWebClientNonDRCConflictException() throws JAXBException {
+		// setup
+		ReflectionTestUtils.setField(contributionService, "getContributionBatchSize", 5);
+		when(contributionsMapperUtils.mapLineXMLToObject(anyString())).thenReturn(createTestContribution());
+		when(contributionsMapperUtils.generateFileXML(any(), anyString())).thenReturn("ValidXML");
+		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
+		when(contributionsMapperUtils.generateAckXML(anyString(), any(), intThat(n -> n != 0), anyInt())).thenThrow(new IllegalStateException("failed != 0"));
+		when(contributionsMapperUtils.generateAckXML(anyString(), any(), eq(0), anyInt())).thenReturn("ValidAckXML");
+		// Setting WebClientResponseException body & MIME type is not enough for `#getResponseAs(Class)` to work.
+		// There's also a non-blocking `bodyDecodeFunction` set by `ClientResponse.createException()`/`createError()`.
+		var problemDetail = ProblemDetail.forStatus(409);
+		problemDetail.setType(URI.create("https://generic.conflict/problem-types#duplicate-id"));
+		var exception = new WebClientResponseException(409, "Conflict", null, null, null);
+		exception.setBodyDecodeFunction(clazz -> clazz.isAssignableFrom(ProblemDetail.class) ? problemDetail : null);
+		Mockito.doThrow(exception).when(drcClient).sendConcorContributionReqToDrc(any());
+		// do
+		boolean successful = contributionService.processDailyFiles();
+		// test (asking for batch size of 5 makes WireMock return 8 records)
+		softly.assertThat(successful).isFalse(); // all being non-DRC conflicts will cause a failure, as they are non-successful.
+		verify(contributionsMapperUtils, times(8)).mapLineXMLToObject(any());
+		verify(eventService, times(8)).logConcor(any(), eq(EventType.SENT_TO_DRC), any(), any(), eq(HttpStatus.CONFLICT), any());
 		verify(drcClient, times(8)).sendConcorContributionReqToDrc(any());
 	}
 

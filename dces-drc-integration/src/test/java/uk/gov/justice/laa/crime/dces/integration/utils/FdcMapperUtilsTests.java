@@ -7,6 +7,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatusCode;
 import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestBase;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
@@ -75,7 +76,7 @@ class FdcMapperUtilsTests extends ApplicationTestBase {
 
 	@Test
 	void testValidateDrcJsonResponse() {
-		int pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus(null);
+		HttpStatusCode pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus(null);
 		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
 		pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus("");
 		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
