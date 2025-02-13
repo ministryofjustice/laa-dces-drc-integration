@@ -7,6 +7,7 @@ import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
 import jakarta.xml.bind.Unmarshaller;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.ContributionFile;
@@ -95,7 +96,7 @@ public class ContributionsMapperUtils extends MapperUtils{
      *         632 if the response body is faked because feature.outgoing-isolated is enabled,
      *         635 if the response body is invalid.
      */
-    public static int mapDRCJsonResponseToHttpStatus(String jsonString){
+    public static HttpStatusCode mapDRCJsonResponseToHttpStatus(String jsonString){
         JsonNode jsonNode = mapDRCJsonResponseToJsonNode(jsonString);
         if (checkDrcId(jsonNode) && checkConcorContributionId(jsonNode)) {
             if (checkSkipped(jsonNode)) {

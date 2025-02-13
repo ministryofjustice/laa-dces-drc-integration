@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatusCode;
 import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestBase;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.ContributionFile;
@@ -134,7 +135,7 @@ class ContributionsMapperUtilsTest extends ApplicationTestBase {
 
 	@Test
 	void testValidateDrcJsonResponse() {
-		int pseudoStatusCode = ContributionsMapperUtils.mapDRCJsonResponseToHttpStatus(null);
+		HttpStatusCode pseudoStatusCode = ContributionsMapperUtils.mapDRCJsonResponseToHttpStatus(null);
 		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
 		pseudoStatusCode = ContributionsMapperUtils.mapDRCJsonResponseToHttpStatus("");
 		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);

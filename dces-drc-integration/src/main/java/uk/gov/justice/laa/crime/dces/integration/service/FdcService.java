@@ -36,7 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.OK;
 import static uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType.DRC_ASYNC_RESPONSE;
@@ -191,19 +190,19 @@ public class FdcService implements FileService {
             int fdcId = currentFdc.getId().intValue();
             try {
                 String responsePayload = executeSendFdcToDrcCall(currentFdc, fdcId, failedFdcs);
-                int pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus(responsePayload);
+                HttpStatusCode pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus(responsePayload);
                 if (MapperUtils.successfulStatus(pseudoStatusCode)) {
-                    eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, HttpStatusCode.valueOf(pseudoStatusCode), responsePayload);
+                    eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, pseudoStatusCode, responsePayload);
                     successfulFdcs.add(currentFdc);
                 } else {
                     // if we didn't get a valid response, record an error status code 635, and try again next time.
                     failedFdcs.put(currentFdc.getId(), "Invalid JSON response body from DRC");
-                    eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, HttpStatusCode.valueOf(pseudoStatusCode), responsePayload);
+                    eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, pseudoStatusCode, responsePayload);
                 }
             } catch (WebClientResponseException e){
                 if (FileServiceUtils.isDrcConflict(e)) {
                     log.info("Ignoring duplicate FDC error response from DRC, fdcId = {}, maatId = {}", currentFdc.getId(), currentFdc.getMaatId());
-                    eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, CONFLICT, e.getResponseBodyAsString());
+                    eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, MapperUtils.STATUS_CONFLICT_DUPLICATE_ID, e.getResponseBodyAsString());
                     successfulFdcs.add(currentFdc);
                 } else {
                     // if not CONFLICT, or not duplicate, then just log it.
