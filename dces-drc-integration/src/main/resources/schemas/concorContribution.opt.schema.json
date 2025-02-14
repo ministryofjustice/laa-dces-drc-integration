@@ -594,7 +594,6 @@
     },
     "CONTRIBUTIONS.Correspondence.Letter": {
       "type": "object",
-      "required": ["id"],
       "properties": {
         "ref": { "type": "string" },
         "id": { "type": "integer" },

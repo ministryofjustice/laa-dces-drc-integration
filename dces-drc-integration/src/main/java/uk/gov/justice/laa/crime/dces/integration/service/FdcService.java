@@ -27,6 +27,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.external.FdcProcessedRequ
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 import uk.gov.justice.laa.crime.dces.integration.utils.FileServiceUtils;
+import uk.gov.justice.laa.crime.dces.integration.utils.MapperUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -35,7 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.OK;
 import static uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType.DRC_ASYNC_RESPONSE;
@@ -189,18 +189,25 @@ public class FdcService implements FileService {
             eventService.logFdc(FETCHED_FROM_MAAT, batchId, currentFdc, OK, null);
             int fdcId = currentFdc.getId().intValue();
             try {
-                executeSendFdcToDrcCall(currentFdc, fdcId, failedFdcs);
-                eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, OK, null);
-                successfulFdcs.add(currentFdc);
+                String responsePayload = executeSendFdcToDrcCall(currentFdc, fdcId, failedFdcs);
+                HttpStatusCode pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus(responsePayload);
+                if (MapperUtils.successfulStatus(pseudoStatusCode)) {
+                    eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, pseudoStatusCode, responsePayload);
+                    successfulFdcs.add(currentFdc);
+                } else {
+                    // if we didn't get a valid response, record an error status code 635, and try again next time.
+                    failedFdcs.put(currentFdc.getId(), "Invalid JSON response body from DRC");
+                    eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, pseudoStatusCode, responsePayload);
+                }
             } catch (WebClientResponseException e){
                 if (FileServiceUtils.isDrcConflict(e)) {
-                        log.info("Ignoring duplicate FDC error response from DRC, fdcId = {}, maatId = {}", currentFdc.getId(), currentFdc.getMaatId());
-                        eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, CONFLICT, null);
-                        successfulFdcs.add(currentFdc);
-                        continue;
-                    }
-                // if not CONFLICT, or not duplicate, then just log it.
-                logDrcSentError(e, e.getStatusCode(), currentFdc, failedFdcs);
+                    log.info("Ignoring duplicate FDC error response from DRC, fdcId = {}, maatId = {}", currentFdc.getId(), currentFdc.getMaatId());
+                    eventService.logFdc(SENT_TO_DRC, batchId, currentFdc, MapperUtils.STATUS_CONFLICT_DUPLICATE_ID, e.getResponseBodyAsString());
+                    successfulFdcs.add(currentFdc);
+                } else {
+                    // if not CONFLICT, or not duplicate, then just log it.
+                    logDrcSentError(e, e.getStatusCode(), currentFdc, failedFdcs);
+                }
             }
         }
     }
@@ -213,7 +220,7 @@ public class FdcService implements FileService {
             LocalDateTime dateGenerated = LocalDateTime.now();
             String fileName = fdcMapperUtils.generateFileName(dateGenerated);
             String ackXml = fdcMapperUtils.generateAckXML(fileName, dateGenerated.toLocalDate(), failedFdcs.size(), successfulFdcs.size());
-            String xmlFile = fdcMapperUtils.generateFileXML(successfulFdcs);
+            String xmlFile = fdcMapperUtils.generateFileXML(successfulFdcs, fileName);
             List<String> successfulIdList = successfulFdcs.stream()
                     .map(Fdc::getId)
                     .filter(Objects::nonNull)
@@ -273,20 +280,24 @@ public class FdcService implements FileService {
     }
 
     @Retry(name = SERVICE_NAME)
-    private void executeSendFdcToDrcCall(Fdc currentFdc, int fdcId, Map<Long,String> failedFdcs) {
+    private String executeSendFdcToDrcCall(Fdc currentFdc, int fdcId, Map<Long,String> failedFdcs) {
         final var request = FdcReqForDrc.of(fdcId, currentFdc);
+        String response =null;
         if (!feature.outgoingIsolated()) {
-            drcClient.sendFdcReqToDrc(request);
+            response = drcClient.sendFdcReqToDrc(request);
             log.info("Sent FDC data to DRC, fdcId = {}, maatId = {}", fdcId, currentFdc.getMaatId());
         } else {
             try {
                 log.info("Feature:OutgoingIsolated: Skipping FDC data to DRC, fdcId = {}, maatId = {}", fdcId, currentFdc.getMaatId());
                 final var json = objectMapper.writeValueAsString(request);
                 log.debug("Skipping FDC data to DRC, JSON = [{}]", json);
+                response = "{\"meta\":{\"drcId\":1,\"fdcId\":"
+                        + fdcId + ",\"skippedDueToFeatureOutgoingIsolated\":true}}";
             } catch (JsonProcessingException e) {
                 logDrcSentError(e, INTERNAL_SERVER_ERROR, currentFdc, failedFdcs);
             }
         }
+        return response;
     }
 
     @Retry(name = SERVICE_NAME)
@@ -301,7 +312,7 @@ public class FdcService implements FileService {
             try {
                 return fdcClient.updateFdcs(request);
             } catch (WebClientResponseException e) {
-                logFileCreationError(e, e.getStatusCode());
+                logFileCreationError(e);
                 throw e;
             }
         } else {
@@ -319,12 +330,11 @@ public class FdcService implements FileService {
     }
 
     private void logGlobalUpdatePayload(HttpStatusCode httpStatus, String message) {
-        // TODO: Should/How to Flag here for sentry if this is a failure?
         boolean isFailureState = !HttpStatus.ACCEPTED.is2xxSuccessful();
         String payload = (isFailureState ? "Failed to complete FDC global update [%s]" : "%s");
         payload = String.format(payload, message);
         eventService.logFdc(FDC_GLOBAL_UPDATE, batchId, null, httpStatus, payload);
-        log.atLevel(isFailureState ? Level.ERROR : Level.INFO).log("payload");
+        log.atLevel(isFailureState ? Level.ERROR : Level.INFO).log(payload);
     }
 
     private void logDrcSentError(Exception e, HttpStatusCode httpStatusCode, Fdc currentFdc, Map<Long, String> failedFdcs) {
@@ -343,11 +353,10 @@ public class FdcService implements FileService {
         }
     }
 
-    private void logFileCreationError(Exception e, HttpStatusCode httpStatusCode) {
+    private void logFileCreationError(WebClientResponseException e) {
         // We're rethrowing the exception, therefore avoid logging the stack trace to prevent logging the same trace multiple times.
-        log.error("Failed to create FDC contribution-file. Investigation needed. State of files will be out of sync! [{}({})]", e.getClass().getSimpleName(), e.getMessage());
-        // If failed, we want to handle this. As it will mean the whole process failed for current day.
-        eventService.logFdc(UPDATED_IN_MAAT, batchId, null, httpStatusCode, String.format("Failed to create contribution-file: [%s]", e.getMessage()));
+        log.error("Failed to create FDC contribution-file. Investigation needed. State of files will be out of sync! [{}({})]", e.getClass().getSimpleName(), e.getResponseBodyAsString());
+        eventService.logFdc(UPDATED_IN_MAAT, batchId, null, e.getStatusCode(), String.format("Failed to create contribution-file: Message: [%s] | Response: [%s]", e.getMessage(), e.getResponseBodyAsString()));
     }
 
     private Timer getTimer(String name, String... tagsMap) {

@@ -7,6 +7,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatusCode;
 import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestBase;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
@@ -16,6 +17,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+
+import static uk.gov.justice.laa.crime.dces.integration.utils.MapperUtils.STATUS_OK_INVALID;
+import static uk.gov.justice.laa.crime.dces.integration.utils.MapperUtils.STATUS_OK_SKIPPED;
+import static uk.gov.justice.laa.crime.dces.integration.utils.MapperUtils.STATUS_OK_VALID;
 
 @ExtendWith(SoftAssertionsExtension.class)
 class FdcMapperUtilsTests extends ApplicationTestBase {
@@ -57,9 +62,9 @@ class FdcMapperUtilsTests extends ApplicationTestBase {
 	void testFileGenerationValid() {
 		List<Fdc> fdcList = new ArrayList<>();
 		fdcList.add(generateDefaultFdc());
-		String generatedXML = fdcMapperUtils.generateFileXML(fdcList);
+		String generatedXML = fdcMapperUtils.generateFileXML(fdcList, "TestFile.xml");
 		softly.assertThat(generatedXML).isNotNull();
-		softly.assertThat(generatedXML.length()>0).isTrue();
+		softly.assertThat(generatedXML.isEmpty()).isFalse();
 		softly.assertThat(generatedXML).contains("<fdc id=\""+DEFAULT_ID+"\">");
 		softly.assertThat(generatedXML).contains("<maat_id>"+DEFAULT_MAAT_ID+"</maat_id>");
 		softly.assertThat(generatedXML).contains("<agfs_total>"+DEFAULT_AGFS_TOTAL+"</agfs_total>");
@@ -67,6 +72,36 @@ class FdcMapperUtilsTests extends ApplicationTestBase {
 		softly.assertThat(generatedXML).contains("<lgfs_total>"+DEFAULT_LGFS_TOTAL+"</lgfs_total>");
 		softly.assertThat(generatedXML).contains("<sentenceDate>"+DEFAULT_SENTENCE_DATE+"</sentenceDate>");
 		softly.assertThat(generatedXML).contains("<calculationDate>"+DEFAULT_CALCULATION_DATE+"</calculationDate>");
+	}
+
+	@Test
+	void testValidateDrcJsonResponse() {
+		HttpStatusCode pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus(null);
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus("");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus("99");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus("{}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus(":I: am }not{ JSON");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":\"nonsense\",\"fdcId\":\"nonsense\"}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"concorContributionId\":1234567}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":null,\"fdcId\":1234567}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":0,\"fdcId\":1234567}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"fdcId\":null}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"fdcId\":0}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_INVALID);
+		pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"fdcId\":1234567}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_VALID);
+		pseudoStatusCode = FdcMapperUtils.mapDRCJsonResponseToHttpStatus("{\"meta\":{\"drcId\":12345,\"fdcId\":1234567,\"skippedDueToFeatureOutgoingIsolated\":true}}");
+		softly.assertThat(pseudoStatusCode).isEqualTo(STATUS_OK_SKIPPED);
 	}
 
 	private Fdc generateDefaultFdc() {
