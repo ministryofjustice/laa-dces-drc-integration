@@ -1,6 +1,7 @@
 package uk.gov.justice.laa.crime.dces.integration.utils;
 
 import io.micrometer.observation.annotation.Observed;
+import io.sentry.spring.jakarta.checkin.SentryCheckIn;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.core.LockAssert;
@@ -30,6 +31,7 @@ public class ServiceScheduler {
     @Observed(name = "ServiceScheduler.fdc", contextualName = "Cron job to process FDC files", lowCardinalityKeyValues = {"priority", "medium"})
     @Scheduled(cron =  "${scheduling.cron.process-fdc-files:-}")
     @SchedulerLock(name = "processFdcFiles")
+    @SentryCheckIn("fdc")
     public void processFdcFiles() {
         LockAssert.assertLocked();
         log.info("Processing FDC files at {}", LocalDateTime.now());
