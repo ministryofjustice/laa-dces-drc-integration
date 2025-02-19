@@ -28,16 +28,18 @@ public class ServiceScheduler {
     private final MigrationService migrationService;
 
     @Observed(name = "ServiceScheduler.fdc", contextualName = "Cron job to process FDC files", lowCardinalityKeyValues = {"priority", "medium"})
-    @Scheduled(cron =  "${scheduling.cron.process-fdc-files:-}")
+    @Scheduled(cron = "0 * * * * *")
     @SchedulerLock(name = "processFdcFiles")
-    public void processFdcFiles() {
+    public void processFdcFiles() throws InterruptedException {
         LockAssert.assertLocked();
         log.info("Processing FDC files at {}", LocalDateTime.now());
-        fdcService.processDailyFiles();
+        //fdcService.processDailyFiles();
+        Thread.sleep(2000);
+        log.info("done sucess");
     }
 
     @Observed(name = "ServiceScheduler.contribution", contextualName = "Cron job to process Contribution files", lowCardinalityKeyValues = {"priority", "medium"})
-    @Scheduled(cron = "${scheduling.cron.process-contributions-files:-}")
+    @Scheduled(cron = "0 * * * * *")
     @SchedulerLock(name = "processContributionsFiles")
     public void processContributionsFiles() {
         LockAssert.assertLocked();
@@ -51,5 +53,12 @@ public class ServiceScheduler {
         LockAssert.assertLocked();
         log.info("Starting Data Migration Process at {}", LocalDateTime.now());
         migrationService.migration();
+    }
+
+    @Observed(name = "ServiceScheduler.test", contextualName = "Cron job to process Contribution files", lowCardinalityKeyValues = {"priority", "high"})
+    @Scheduled(fixedRate = 60000L)
+    void quick() throws InterruptedException {
+        log.info("quick scheduled task");
+        throw new NullPointerException("This is a null pointer exception - dddd");
     }
 }
