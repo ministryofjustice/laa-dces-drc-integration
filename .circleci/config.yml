@@ -153,6 +153,7 @@ commands:
           release-name: laa-dces-drc-integration
           values: ./helm_deploy/laa-dces-drc-integration/values-<< parameters.environment >>.yaml
           values-to-override: image.tag=${CIRCLE_SHA1},ingress.allowlist.monx=${CIDR_MONX},ingress.allowlist.laai=${CIDR_LAAI}
+          force: true
 
 # ------------------
 # JOBS
