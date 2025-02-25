@@ -13,7 +13,7 @@ _snyk_options: &snyk_options
   fail-on-issues: true
   monitor-on-build: false
   token-variable: SNYK_TOKEN
-  additional-arguments: --policy-path=.snyk
+  additional-arguments: --policy-path=.snyk --all-sub-projects
 
 # ------------------
 # EXECUTORS
