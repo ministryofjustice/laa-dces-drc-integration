@@ -1,4 +1,4 @@
-# laa-dces-drc-integration service - Snky
+# laa-dces-drc-integration
 
 This is a Java based Spring Boot application hosted on [MOJ Cloud Platform](https://user-guide.cloud-platform.service.justice.gov.uk/documentation/concepts/what-is-the-cloud-platform.html).
 
