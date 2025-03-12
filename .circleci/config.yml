@@ -79,12 +79,17 @@ commands:
       - setup-kubectl:
           environment: << parameters.environment >>
           token: << parameters.token >>
+      - run:
+          name: Combine values.yaml file with secret values
+          command: |
+            kubectl -n "laa-dces-drc-integration-<< parameters.environment >>" get secret helm-values -o json | jq -r '.data["values-int-tests-private.yaml"] | @base64d' > ./helm_deploy/laa-dces-drc-integration-int-tests/values-int-tests-private.yaml
+            (cat "./helm_deploy/laa-dces-drc-integration-int-tests/values-<< parameters.environment >>.yaml"; echo ""; cat ./helm_deploy/laa-dces-drc-integration-int-tests/values-int-tests-private.yaml) > ./helm_deploy/laa-dces-drc-integration-int-tests/values-merged.yaml
       - helm/upgrade-helm-chart:
           namespace: laa-dces-drc-integration-<< parameters.environment >>
           update-repositories: false
           chart: ./helm_deploy/laa-dces-drc-integration-int-tests/
           release-name: laa-dces-drc-integration-int-tests
-          values: ./helm_deploy/laa-dces-drc-integration-int-tests/values-<< parameters.environment >>.yaml
+          values: ./helm_deploy/laa-dces-drc-integration-int-tests/values-merged.yaml
           values-to-override: image.tag=int-test-${CIRCLE_SHA1}
       - run:
           name: Setup environment variables
@@ -140,6 +145,11 @@ commands:
           environment: << parameters.environment >>
           token: << parameters.token >>
       - run:
+          name: Combine values.yaml file with secret values
+          command: |
+            kubectl -n "laa-dces-drc-integration-<< parameters.environment >>" get secret helm-values -o json | jq -r '.data["values-private.yaml"] | @base64d' > ./helm_deploy/laa-dces-drc-integration/values-private.yaml
+            (cat "./helm_deploy/laa-dces-drc-integration/values-<< parameters.environment >>.yaml"; echo ""; cat ./helm_deploy/laa-dces-drc-integration/values-private.yaml) > ./helm_deploy/laa-dces-drc-integration/values-merged.yaml
+      - run:
           name: Dynamic IP ranges for allowlist, updated during deployment
           command: |
             export CIDR_LAAI="$(curl -s https://raw.githubusercontent.com/ministryofjustice/laa-ip-allowlist/main/cidrs.txt | tr -d ' ' | tr '\n' ',' | sed 's/,/\\,/g' | sed 's/\\,$//')"
@@ -151,8 +161,8 @@ commands:
           update-repositories: false
           chart: ./helm_deploy/laa-dces-drc-integration/
           release-name: laa-dces-drc-integration
-          values: ./helm_deploy/laa-dces-drc-integration/values-<< parameters.environment >>.yaml
-          values-to-override: image.tag=${CIRCLE_SHA1},ingress.allowlist.monx=${CIDR_MONX},ingress.allowlist.laai=${CIDR_LAAI}
+          values: ./helm_deploy/laa-dces-drc-integration/values-merged.yaml
+          values-to-override: image.tag=${CIRCLE_SHA1},generatedIngress.allowlist.monx=${CIDR_MONX},generatedIngress.allowlist.laai=${CIDR_LAAI}
           force: true
 
 # ------------------
