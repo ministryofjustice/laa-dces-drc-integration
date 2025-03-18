@@ -41,16 +41,20 @@ https://github.com/awslabs/git-secrets
 git secrets --install
 git secrets --register-aws
 ```
+
 This will configure git-secrets to scan this Git repository on each commit
 by registering the AWS rule set (Git hooks).
 
 Run the following command to start scanning your repository
+
 ```
 git secrets -–scan
 ```
+
 The tool will generate an output file if it finds any vulnerability in the repository.
 
 You can add custom patterns to scan for.
+
 ```
 git secrets --add 'custom-pattern-here'
 ```
