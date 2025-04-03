@@ -28,12 +28,6 @@ executors:
 # COMMANDS
 # ------------------
 commands:
-  checkout_and_decrypt:
-    steps:
-      - checkout
-      - run: echo "${GIT_CRYPT_KEY}" | base64 -d > git-crypt.key
-      - run: git-crypt unlock git-crypt.key
-
   setup-kubectl:
     description: >
       Authenticate with kubernetes cluster
@@ -140,7 +134,7 @@ commands:
         description: CircleCI Service account token
         type: string
     steps:
-      - checkout_and_decrypt
+      - checkout
       - setup-kubectl:
           environment: << parameters.environment >>
           token: << parameters.token >>
