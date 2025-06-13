@@ -15,7 +15,7 @@ def versions = [
 		wiremockVersion        : '3.10.0',
 		logbackEncoderVersion  : '7.2',
 		serenityVersion        : "4.2.10",
-		shedlockVersion        : "5.16.0"/*,
+		shedlockVersion        : "6.9.0"/*,
 		okhttpVersion          : '4.12.0' -- when Spring Boot 3.4.0 consumed */
 ]
 
