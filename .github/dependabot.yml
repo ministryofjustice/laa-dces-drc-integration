@@ -9,27 +9,10 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-  - package-ecosystem: "terraform"
-    directory: "/terraform"
+  - package-ecosystem: "gradle"
+    directory: "/maat-court-data-api"
     schedule:
-      interval: "daily"
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "daily"
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "daily"
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "daily"
-  - package-ecosystem: "gomod"
-    directory: "/"
-    schedule:
-      interval: "daily"
-  - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "daily"
+      interval: "weekly"
+    commit-message:
+      prefix: "Gradle"
+      include: "scope"
