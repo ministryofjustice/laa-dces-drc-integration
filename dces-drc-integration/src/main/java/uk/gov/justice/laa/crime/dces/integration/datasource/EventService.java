@@ -14,6 +14,7 @@ import uk.gov.justice.laa.crime.dces.integration.exception.DcesDrcServiceExcepti
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -25,12 +26,44 @@ public class EventService {
     private final CaseSubmissionRepository caseSubmissionRepository;
     private final EventTypeRepository eventTypeRepository;
 
+    // get History Duration for use in clearing down history.
+    private final static String historyCutoffDays = System.getenv("SPRING_DATASOURCE_KEEPHISTORYDAYS");
+
     public List<CaseSubmissionEntity> getAllCaseSubmissions(){
         return caseSubmissionRepository.findAll();
     }
 
     public CaseSubmissionEntity saveEntity(CaseSubmissionEntity entity){
         return caseSubmissionRepository.save(entity);
+    }
+
+    public Long generateBatchId(){
+        return caseSubmissionRepository.getNextBatchId();
+    }
+    public Long generateTraceId(){
+        return caseSubmissionRepository.getNextTraceId();
+    }
+
+    public Long countHistoricalCaseSubmissionEntries() {
+        Integer cutoffDays = getCutoffDays();
+        // delete all entries that are older than the cutoff days ago, from first thing today.
+        if (Objects.nonNull(cutoffDays)) {
+            return caseSubmissionRepository.countByProcessedDateBefore(LocalDateTime.now()
+                    .withHour(0).withMinute(0).withSecond(1)
+                    .minusDays(cutoffDays));
+        }
+        return 0L;
+    }
+
+    public Integer deleteHistoricalCaseSubmissionEntries() {
+        Integer cutoffDays = getCutoffDays();
+        // delete all entries that are older than the cutoff days ago, from first thing today.
+        if (Objects.nonNull(cutoffDays)) {
+            return caseSubmissionRepository.deleteByProcessedDateBefore(LocalDateTime.now()
+                    .withHour(0).withMinute(0).withSecond(1)
+                    .minusDays(cutoffDays));
+        }
+        return 0;
     }
 
     public boolean logFdc(EventType eventType, Long batchId, Long traceId, Fdc fdcObject, HttpStatusCode httpStatusCode, String payload){
@@ -76,13 +109,6 @@ public class EventService {
         return caseSubmissionEntity;
     }
 
-    public Long generateBatchId(){
-        return caseSubmissionRepository.getNextBatchId();
-    }
-    public Long generateTraceId(){
-        return caseSubmissionRepository.getNextTraceId();
-    }
-
     private void setEventType(EventType type, CaseSubmissionEntity entity) {
         if (Objects.nonNull(type)) {
             EventTypeEntity typeEntity = eventTypeRepository.getEventTypeEntityByDescriptionEquals(type.getName());
@@ -92,4 +118,17 @@ public class EventService {
             throw new DcesDrcServiceException("EventType cannot be null");
         }
     }
+
+    private Integer getCutoffDays(){
+        if(Objects.isNull(historyCutoffDays)){
+            log.error("No History Cutoff Days set in environment.");
+        }
+        try{
+            return Integer.valueOf(historyCutoffDays);
+        } catch (NumberFormatException e){
+            log.error("History Cutoff Days incorrectly formatted.");
+        }
+        return null;
+    }
+
 }

@@ -60,6 +60,7 @@ scheduling:
     process-fdc-files: ${DCES_CRON_FDC:-}
     process-contributions-files: ${DCES_CRON_CONTRIBUTIONS:-}
     data-migration: ${DCES_CRON_DATA_MIGRATION:-}
+    data-cleardown: ${DCES_CRON_DATA_CLEARDOWN:-}
   lock:
     at-least: 30s
     at-most: 15m

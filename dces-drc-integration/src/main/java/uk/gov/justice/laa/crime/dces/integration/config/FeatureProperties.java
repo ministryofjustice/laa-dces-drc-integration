@@ -42,7 +42,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param outgoingAnonymized initialize the `feature.outgoing-anonymized` (`FEATURE_OUTGOINGANONYMIZED`) feature flag.
  *                           This causes daily processing data to be anonymized before being sent to the DRC.
  * @param limitedMigrationRun initialize the `feature.limited-migration-run` (`FEATURE_LIMITEDMIGRATIONRUN`) feature flag.
- *  *                           This causes migration process to only send the first entry of each batch.
+ *                           This causes migration process to only send the first entry of each batch.
+ * @param datasourceHistoryCleardown initialize the `datasource-history-cleardown` (`FEATURE_DATASOURCEHISTORYCLEARDOWN`) feature flag.
+ *                           Enabled the cleardown of historical data in the     scheduler
  */
 @ConfigurationProperties(prefix = "feature")
 public record FeatureProperties(boolean stubAckEndpoints   /* feature.stub-ack-endpoints */,
@@ -50,6 +52,7 @@ public record FeatureProperties(boolean stubAckEndpoints   /* feature.stub-ack-e
                                 boolean incomingIsolated   /* feature.incoming-isolated */,
                                 boolean outgoingIsolated   /* feature.outgoing-isolated */,
                                 boolean outgoingAnonymized /* feature.outgoing-anonymized */,
-                                boolean limitedMigrationRun /* feature.limited-migration-run */
+                                boolean limitedMigrationRun /* feature.limited-migration-run */,
+                                boolean datasourceHistoryCleardown /* feature.datasource-history-cleardown */
                                 ) {
 }
