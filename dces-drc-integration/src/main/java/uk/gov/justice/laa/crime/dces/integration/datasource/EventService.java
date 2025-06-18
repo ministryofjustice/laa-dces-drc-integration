@@ -27,7 +27,7 @@ public class EventService {
     private final EventTypeRepository eventTypeRepository;
 
     // get History Duration for use in clearing down history.
-    private final static String historyCutoffDays = System.getenv("SPRING_DATASOURCE_KEEPHISTORYDAYS");
+    private final String HISTORY_CUTOFF_DAYS = System.getenv("SPRING_DATASOURCE_KEEPHISTORYDAYS");
 
     public List<CaseSubmissionEntity> getAllCaseSubmissions(){
         return caseSubmissionRepository.findAll();
@@ -49,7 +49,7 @@ public class EventService {
         // delete all entries that are older than the cutoff days ago, from first thing today.
         if (Objects.nonNull(cutoffDays)) {
             return caseSubmissionRepository.countByProcessedDateBefore(LocalDateTime.now()
-                    .withHour(0).withMinute(0).withSecond(1)
+                    .withHour(0).withMinute(0).withSecond(0).withNano(1)
                     .minusDays(cutoffDays));
         }
         return 0L;
@@ -60,7 +60,7 @@ public class EventService {
         // delete all entries that are older than the cutoff days ago, from first thing today.
         if (Objects.nonNull(cutoffDays)) {
             return caseSubmissionRepository.deleteByProcessedDateBefore(LocalDateTime.now()
-                    .withHour(0).withMinute(0).withSecond(1)
+                    .withHour(0).withMinute(0).withSecond(0).withNano(1)
                     .minusDays(cutoffDays));
         }
         return 0;
@@ -119,12 +119,12 @@ public class EventService {
         }
     }
 
-    private Integer getCutoffDays(){
-        if(Objects.isNull(historyCutoffDays)){
+    protected Integer getCutoffDays(){
+        if(Objects.isNull(HISTORY_CUTOFF_DAYS)){
             log.error("No History Cutoff Days set in environment.");
         }
         try{
-            return Integer.valueOf(historyCutoffDays);
+            return Integer.valueOf(HISTORY_CUTOFF_DAYS);
         } catch (NumberFormatException e){
             log.error("History Cutoff Days incorrectly formatted.");
         }
