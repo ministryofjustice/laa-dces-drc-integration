@@ -78,6 +78,7 @@ class DbLoggingTest {
     // verify
     assertEquals(addedTestDataCount, deletedCount);
     assertEquals(0L, eventService.countHistoricalCaseSubmissionEntries());
+    clearDownData((long) numTestEntries);
   }
 
   @Test
