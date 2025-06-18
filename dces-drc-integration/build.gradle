@@ -12,7 +12,7 @@ def versions = [
 		sentryVersion          : '7.13.0',
 		springdocVersion       : '2.6.0',
 		resilience4jVersion    : '2.2.0',
-		wiremockVersion        : '3.10.0',
+		wiremockVersion        : '3.13.1',
 		logbackEncoderVersion  : '7.2',
 		serenityVersion        : "4.2.10",
 		shedlockVersion        : "6.9.0"/*,
