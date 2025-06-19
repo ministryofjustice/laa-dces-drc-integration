@@ -152,8 +152,38 @@ class EventServiceTest {
         softly.assertAll();
     }
 
+    @Test
+    void whenCutoffDaysProvided_thenDateIsAsExpected() throws NoSuchFieldException, IllegalAccessException{
+        setCutoff("5");
+        LocalDateTime expectedCutoffDate = LocalDateTime.now()
+                .withHour(0).withMinute(0).withSecond(0).withNano(1)
+                .minusDays(5);
+        LocalDateTime actualCutoffDate = eventService.getCutoffDate(5);
+        softly.assertThat(actualCutoffDate).isEqualTo(expectedCutoffDate);
+        softly.assertAll();
+    }
 
+    @Test
+    void whenCutoffDaysNegative_thenDateIsAsFuture() throws NoSuchFieldException, IllegalAccessException{
+        setCutoff("-5");
+        LocalDateTime expectedCutoffDate = LocalDateTime.now()
+                .withHour(0).withMinute(0).withSecond(0).withNano(1)
+                .minusDays(-5);
+        LocalDateTime actualCutoffDate = eventService.getCutoffDate(-5);
+        softly.assertThat(actualCutoffDate).isEqualTo(expectedCutoffDate);
+        softly.assertAll();
+    }
 
+    @Test
+    void whenCutoffDaysZero_thenDateIsAsCurrent() throws NoSuchFieldException, IllegalAccessException{
+        setCutoff("0");
+        LocalDateTime expectedCutoffDate = LocalDateTime.now()
+                .withHour(0).withMinute(0).withSecond(0).withNano(1)
+                .minusDays(0);
+        LocalDateTime actualCutoffDate = eventService.getCutoffDate(0);
+        softly.assertThat(actualCutoffDate).isEqualTo(expectedCutoffDate);
+        softly.assertAll();
+    }
 
     @Test
     void whenHistoryCutoffIsSet_thenReturnsIntOnDeletion() throws NoSuchFieldException, IllegalAccessException {

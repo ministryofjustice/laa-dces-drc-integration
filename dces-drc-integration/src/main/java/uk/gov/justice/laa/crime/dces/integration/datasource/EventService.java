@@ -48,9 +48,7 @@ public class EventService {
         Integer cutoffDays = getCutoffDays();
         // delete all entries that are older than the cutoff days ago, from first thing today.
         if (Objects.nonNull(cutoffDays)) {
-            return caseSubmissionRepository.countByProcessedDateBefore(LocalDateTime.now()
-                    .withHour(0).withMinute(0).withSecond(0).withNano(1)
-                    .minusDays(cutoffDays));
+            return caseSubmissionRepository.countByProcessedDateBefore(getCutoffDate(cutoffDays));
         }
         return 0L;
     }
@@ -59,9 +57,7 @@ public class EventService {
         Integer cutoffDays = getCutoffDays();
         // delete all entries that are older than the cutoff days ago, from first thing today.
         if (Objects.nonNull(cutoffDays)) {
-            return caseSubmissionRepository.deleteByProcessedDateBefore(LocalDateTime.now()
-                    .withHour(0).withMinute(0).withSecond(0).withNano(1)
-                    .minusDays(cutoffDays));
+            return caseSubmissionRepository.deleteByProcessedDateBefore(getCutoffDate(cutoffDays));
         }
         return 0;
     }
@@ -129,6 +125,12 @@ public class EventService {
             log.error("History Cutoff Days incorrectly formatted.");
         }
         return null;
+    }
+
+    protected LocalDateTime getCutoffDate(Integer cutoff){
+        return LocalDateTime.now()
+                .withHour(0).withMinute(0).withSecond(0).withNano(1)
+                .minusDays(cutoff);
     }
 
 }
