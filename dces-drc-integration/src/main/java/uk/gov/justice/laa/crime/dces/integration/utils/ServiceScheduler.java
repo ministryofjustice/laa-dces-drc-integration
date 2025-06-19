@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.core.LockAssert;
 import net.javacrumbs.shedlock.spring.annotation.EnableSchedulerLock;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -56,7 +55,6 @@ public class ServiceScheduler {
         migrationService.migration();
     }
 
-    @ConditionalOnProperty(prefix = "feature", name = "datasource-history-cleardown")
     @Scheduled(cron = "${scheduling.cron.data-cleardown:-}")
     @SchedulerLock(name = "dataCleardown")
     public void dataCleardown(){
