@@ -25,7 +25,7 @@ import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
 @Slf4j
 @RestController
 @AllArgsConstructor
-@RequestMapping("/api/dces/v1")
+//@RequestMapping("/api/dces/v1")
 public class AckFromDrcController {
 
     @Autowired
@@ -35,7 +35,7 @@ public class AckFromDrcController {
     private ContributionService contributionService;
 
     @Observed(name = "UpdateFromDrcAPI.fdc", contextualName = "Process Updates for FDC", lowCardinalityKeyValues = {"priority", "high"})
-    @PostMapping(value = "/fdc")
+//    @PostMapping(value = "/fdc")
     @Operation(description = "Processing the updates for FDC from DRC and passing this for downstream processing.")
     @ApiResponse(responseCode = "200",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -54,7 +54,7 @@ public class AckFromDrcController {
     }
 
     @Observed(name = "UpdateFromDrcAPI.contribution", contextualName = "Process Updates for Contribution", lowCardinalityKeyValues = {"priority", "high"})
-    @PostMapping(value = "/contribution")
+//    @PostMapping(value = "/contribution")
     @Operation(description = "Processing the updates for concorContribution from DRC and passing this for downstream processing.")
     @ApiResponse(responseCode = "200",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
