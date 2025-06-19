@@ -3,7 +3,7 @@ import org.springframework.boot.gradle.plugin.SpringBootPlugin
 plugins {
 	id 'java'
 	id 'jacoco'
-	id 'org.springframework.boot' version '3.3.10'
+	id 'org.springframework.boot' version '3.3.11'
 	id 'io.spring.dependency-management' version '1.1.7'
 	id "org.sonarqube" version "6.0.1.5171"
 }
@@ -12,10 +12,10 @@ def versions = [
 		sentryVersion          : '7.13.0',
 		springdocVersion       : '2.6.0',
 		resilience4jVersion    : '2.2.0',
-		wiremockVersion        : '3.10.0',
+		wiremockVersion        : '3.13.1',
 		logbackEncoderVersion  : '7.2',
-		serenityVersion        : "4.2.9",
-		shedlockVersion        : "5.16.0"/*,
+		serenityVersion        : "4.2.10",
+		shedlockVersion        : "6.9.0"/*,
 		okhttpVersion          : '4.12.0' -- when Spring Boot 3.4.0 consumed */
 ]
 
