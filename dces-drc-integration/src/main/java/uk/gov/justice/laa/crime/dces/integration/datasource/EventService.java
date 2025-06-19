@@ -27,7 +27,7 @@ public class EventService {
     private final EventTypeRepository eventTypeRepository;
 
     // get History Duration for use in clearing down history.
-    private final String HISTORY_CUTOFF_DAYS = System.getenv("SPRING_DATASOURCE_KEEPHISTORYDAYS");
+    private final String historyCutoffDays = System.getenv("SPRING_DATASOURCE_KEEPHISTORYDAYS");
 
     public List<CaseSubmissionEntity> getAllCaseSubmissions(){
         return caseSubmissionRepository.findAll();
@@ -120,11 +120,11 @@ public class EventService {
     }
 
     protected Integer getCutoffDays(){
-        if(Objects.isNull(HISTORY_CUTOFF_DAYS)){
+        if(Objects.isNull(historyCutoffDays)){
             log.error("No History Cutoff Days set in environment.");
         }
         try{
-            return Integer.valueOf(HISTORY_CUTOFF_DAYS);
+            return Integer.valueOf(historyCutoffDays);
         } catch (NumberFormatException e){
             log.error("History Cutoff Days incorrectly formatted.");
         }

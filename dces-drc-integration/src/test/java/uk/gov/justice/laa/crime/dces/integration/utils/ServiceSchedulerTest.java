@@ -57,7 +57,7 @@ public class ServiceSchedulerTest {
     private ServiceScheduler serviceScheduler;
 
     @Test
-    public void testProcessFdcDailyFilesIsCalled(CapturedOutput output) throws InterruptedException {
+    void testProcessFdcDailyFilesIsCalled(CapturedOutput output) throws InterruptedException {
         when(fdcService.processDailyFiles()).thenReturn(true); // Arrange
 
         Thread.sleep(1000); // Act - could be called once (or maybe twice) depending on timing
@@ -68,7 +68,7 @@ public class ServiceSchedulerTest {
     }
 
     @Test
-    public void testProcessContributionsDailyFilesIsCalled(CapturedOutput output) throws InterruptedException {
+    void testProcessContributionsDailyFilesIsCalled(CapturedOutput output) throws InterruptedException {
         when(contributionService.processDailyFiles()).thenReturn(true); // Arrange
 
         Thread.sleep(1000); // Act - could be called once (or maybe twice) depending on timing
@@ -79,7 +79,7 @@ public class ServiceSchedulerTest {
     }
 
     @Test
-    public void testMigrationIsCalled(CapturedOutput output) throws InterruptedException {
+    void testMigrationIsCalled(CapturedOutput output) throws InterruptedException {
         doNothing().when(migrationService).migration(); // Arrange
 
         Thread.sleep(1000); // Act - could be called once (or maybe twice) depending on timing
@@ -90,7 +90,7 @@ public class ServiceSchedulerTest {
     }
 
     @Test
-    public void testDatasourceCleardownIsCalled(CapturedOutput output) throws InterruptedException {
+    void testDatasourceCleardownIsCalled(CapturedOutput output) throws InterruptedException {
         when(eventService.deleteHistoricalCaseSubmissionEntries()).thenReturn(5); // Arrange
 
         Thread.sleep(1000); // Act - could be called once (or maybe twice) depending on timing
