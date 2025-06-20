@@ -13,7 +13,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
@@ -48,10 +48,10 @@ class ContributionIntegrationTest {
     @InjectSoftAssertions
     private SoftAssertions softly;
 
-    @SpyBean
+    @MockitoSpyBean
     private EventService eventService;
 
-    @SpyBean
+    @MockitoSpyBean
     private CaseSubmissionRepository caseSubmissionRepository;
 
     @Autowired

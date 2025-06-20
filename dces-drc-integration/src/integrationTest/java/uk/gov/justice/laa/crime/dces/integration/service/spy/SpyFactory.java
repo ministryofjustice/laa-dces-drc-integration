@@ -1,6 +1,6 @@
 package uk.gov.justice.laa.crime.dces.integration.service.spy;
 
-import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
@@ -28,16 +28,16 @@ import java.util.Set;
  */
 @Component
 public class SpyFactory {
-    @SpyBean
+    @MockitoSpyBean
     private ContributionClient contributionClientSpy;
 
-    @SpyBean
+    @MockitoSpyBean
     private DrcClient drcClientSpy;
 
-    @SpyBean
+    @MockitoSpyBean
     private FdcClient fdcClientSpy;
 
-    @SpyBean
+    @MockitoSpyBean
     private TestDataService testDataService;
 
     public ContributionProcessSpy.ContributionProcessSpyBuilder newContributionProcessSpyBuilder() {

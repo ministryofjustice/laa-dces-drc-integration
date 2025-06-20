@@ -10,12 +10,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
@@ -44,13 +44,13 @@ import static org.mockito.Mockito.when;
 @ActiveProfiles(profiles = "default") // the ServiceScheduler is disabled during tests otherwise
 public class ServiceSchedulerTest {
 
-    @MockBean
+    @MockitoBean
     private FdcService fdcService;
-    @MockBean
+    @MockitoBean
     private ContributionService contributionService;
-    @MockBean
+    @MockitoBean
     private MigrationService migrationService;
-    @MockBean
+    @MockitoBean
     private EventService eventService;
 
     @InjectMocks

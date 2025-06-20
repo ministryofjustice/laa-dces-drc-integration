@@ -14,9 +14,9 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.ErrorResponseException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.reactive.function.client.WebClientResponseException.BadRequest;
@@ -75,16 +75,16 @@ class FdcServiceTest extends ApplicationTestBase {
 	@InjectMocks
 	private FdcService fdcService;
 
-	@MockBean
+	@MockitoBean
 	FdcMapperUtils fdcMapperUtils;
 
-	@MockBean
+	@MockitoBean
 	private DrcClient drcClient;
 
-	@MockBean
+	@MockitoBean
 	private FeatureProperties feature;
 
-	@MockBean
+	@MockitoBean
 	private EventService eventService;
 
 	private static final Long TEST_BATCH_ID = -666L;

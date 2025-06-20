@@ -1,7 +1,7 @@
 package uk.gov.justice.laa.crime.dces.integration.config;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.reactive.function.client.WebClient;
 import uk.gov.justice.laa.crime.dces.integration.client.MaatApiClientBase;
 
@@ -9,7 +9,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 class MaatApiClientFactoryTest extends ApplicationTestBase {
 
-    @MockBean(name = "maatApiWebClient")
+    @MockitoBean(name = "maatApiWebClient")
     WebClient maatApiWebClient;
 
     @Test
