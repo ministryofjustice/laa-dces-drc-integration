@@ -40,6 +40,13 @@ public class SpyFactory {
     @MockitoSpyBean
     private TestDataService testDataService;
 
+    public SpyFactory(ContributionClient contributionClientSpy, DrcClient drcClientSpy, FdcClient fdcClientSpy, TestDataService testDataService) {
+        this.contributionClientSpy = contributionClientSpy;
+        this.drcClientSpy = drcClientSpy;
+        this.fdcClientSpy = fdcClientSpy;
+        this.testDataService = testDataService;
+    }
+
     public ContributionProcessSpy.ContributionProcessSpyBuilder newContributionProcessSpyBuilder() {
         return new ContributionProcessSpy.ContributionProcessSpyBuilder(contributionClientSpy, drcClientSpy);
     }
