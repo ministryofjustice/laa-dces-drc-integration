@@ -4,9 +4,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
@@ -22,19 +22,19 @@ import static org.mockito.Mockito.*;
 @TestPropertySource(properties = {
         "scheduling.fdcDailyFiles.cron=-",
         "scheduling.contributionsDailyFiles.cron=-",
-        "scheduling.cron.data-migration=* * * * * *",
-        "scheduling.cron.data-cleardown=* * * * * *"
+        "scheduling.cron.data-migration=-",
+        "scheduling.cron.data-cleardown=-"
 })
 @ActiveProfiles(profiles = "default")
 class DisabledServiceSchedulerTest {
 
-    @MockBean
+    @MockitoBean
     private FdcService fdcService;
-    @MockBean
+    @MockitoBean
     private MigrationService migrationService;
-    @MockBean
+    @MockitoBean
     private ContributionService contributionService;
-    @MockBean
+    @MockitoBean
     private EventService eventService;
     @InjectMocks
     private ServiceScheduler serviceScheduler;

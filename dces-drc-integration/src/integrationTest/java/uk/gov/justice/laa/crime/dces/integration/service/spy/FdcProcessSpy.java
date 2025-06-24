@@ -46,15 +46,15 @@ public class FdcProcessSpy {
   }
 
   public static class FdcProcessSpyBuilder {
-    private final FdcClient fdcClientSpy;
-    private final DrcClient drcClientSpy;
+    public FdcClient fdcClientSpy;
+    public DrcClient drcClientSpy;
 
     private FdcProcessSpyBuilder() {
       throw new UnsupportedOperationException("Call SpyFactory.newFdcProcessSpyBuilder instead");
     }
 
-    FdcProcessSpyBuilder(final FdcClient FdcClientSpy, final DrcClient drcClientSpy) {
-      this.fdcClientSpy = FdcClientSpy;
+    FdcProcessSpyBuilder(final FdcClient fdcClientSpy, final DrcClient drcClientSpy) {
+      this.fdcClientSpy = fdcClientSpy;
       this.drcClientSpy = drcClientSpy;
     }
 

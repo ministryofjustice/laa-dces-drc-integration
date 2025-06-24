@@ -18,7 +18,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
 import uk.gov.justice.laa.crime.dces.integration.client.MaatApiClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsStatus;
@@ -45,7 +45,7 @@ class TestDataServiceTest {
 
   TestDataService testDataService;
 
-  @MockBean
+  @MockitoBean
   MaatApiClient maatApiClient;
 
   @BeforeAll
@@ -82,13 +82,13 @@ class TestDataServiceTest {
     assertEquals("No candidate rep orders found for fast-track pickup test type POSITIVE", exception.getMessage());
   }
 
-  private void baseFdcFastTrackVerification(FdcAccelerationType accelerationType, Set<Long> idList, FdcTestType testType, int recordsToUpdate){
+  private void baseFdcFastTrackVerification(FdcAccelerationType accelerationType, Set<Long> idList, FdcTestType testType){
     when(maatApiClient.getFdcFastTrackRepOrderIdList(anyInt(),any(),anyInt())).thenReturn(idList);
     when(maatApiClient.updateRepOrder(any())).thenReturn(null);
     mockCreateFdcContribution();
     mockCreateFdcItem();
 
-    Set<Long> returnedIds = testDataService.createFastTrackTestData(accelerationType, testType, recordsToUpdate);
+    Set<Long> returnedIds = testDataService.createFastTrackTestData(accelerationType, testType, 3);
 
     assertEquals(idList.size(), returnedIds.size());
     assertEquals(idList, returnedIds);
@@ -107,13 +107,13 @@ class TestDataServiceTest {
 
   @Test
   void whenPositiveCreateFastTrackPickupTestDataCalled_ThenShouldCallEndpoints(){
-    baseFdcFastTrackVerification(FdcAccelerationType.POSITIVE, Set.of(1L,2L,3L,4L), POSITIVE, 3);
+    baseFdcFastTrackVerification(FdcAccelerationType.POSITIVE, Set.of(1L,2L,3L,4L), POSITIVE);
   }
 
   @Test
   void whenPreviousCreateFastTrackPickupTestDataCalled_ThenShouldCallEndpoints(){
     Set<Long> idList = Set.of(1L,2L,3L,4L);
-    baseFdcFastTrackVerification(FdcAccelerationType.PREVIOUS_FDC, idList, POSITIVE, 3);
+    baseFdcFastTrackVerification(FdcAccelerationType.PREVIOUS_FDC, idList, POSITIVE);
     for(Long id: idList){
       verify(maatApiClient).createFdcContribution(new CreateFdcContributionRequest(id, "Y", "Y", null, SENT));
     }
@@ -122,7 +122,7 @@ class TestDataServiceTest {
   @Test
   void whenNegativeCreateFastTrackPickupTestDataCalled_ThenShouldCallEndpoints(){
     Set<Long> idList = Set.of(1L,2L,3L,4L);
-    baseFdcFastTrackVerification(FdcAccelerationType.NEGATIVE, idList, POSITIVE, 3);
+    baseFdcFastTrackVerification(FdcAccelerationType.NEGATIVE, idList, POSITIVE);
     for(Long id: idList){
       FdcItem baseItem =     FdcItem.builder().fdcId(id).userCreated("DCES").dateCreated(LocalDate.now())
               .itemType(FdcItemType.LGFS).paidAsClaimed("Y").latestCostInd("Current").build();

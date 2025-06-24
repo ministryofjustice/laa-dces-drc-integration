@@ -10,9 +10,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.reactive.function.client.WebClient;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcorContribEntry;
 
@@ -39,7 +39,7 @@ class MaatApiWebClientConfigurationTest extends ApplicationTestBase {
     private ServicesProperties services;
 
     @Qualifier("maatApiAuthorizedClientManager")
-    @MockBean
+    @MockitoBean
     OAuth2AuthorizedClientManager authorizedClientManager;
 
     @BeforeEach

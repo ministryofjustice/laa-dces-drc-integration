@@ -14,8 +14,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
@@ -38,19 +38,19 @@ class TempTestControllerTest {
   @Autowired
   private ObjectMapper mapper;
 
-  @MockBean
+  @MockitoBean
   private ContributionService contributionService;
 
-  @MockBean
+  @MockitoBean
   private FdcService fdcService;
 
-  @MockBean
+  @MockitoBean
   private DrcClient drcClient;
 
-  @MockBean
+  @MockitoBean
   private TraceService traceService;
 
-  @MockBean
+  @MockitoBean
   private FeatureProperties feature;
 
   private static final String CONTRIBUTION_URL = "/api/dces/test/send-contributions";

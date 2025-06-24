@@ -14,9 +14,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.ErrorResponseException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -70,16 +70,16 @@ class ContributionServiceTest extends ApplicationTestBase {
 	@InjectSoftAssertions
 	private SoftAssertions softly;
 
-	@MockBean
+	@MockitoBean
 	private ContributionsMapperUtils contributionsMapperUtils;
 
-	@MockBean
+	@MockitoBean
 	private AnonymisingDataService anonymisingDataService;
 
-	@MockBean
+	@MockitoBean
 	private DrcClient drcClient;
 
-	@MockBean
+	@MockitoBean
 	private FeatureProperties feature;
 
 	@Autowired
@@ -88,7 +88,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 	@Value("${services.maat-api.getContributionBatchSize:0}")
 	private int defaultGetContributionBatchSize;
 
-	@MockBean
+	@MockitoBean
 	private EventService eventService;
 
 	private static final Long TEST_BATCH_ID = -666L;
