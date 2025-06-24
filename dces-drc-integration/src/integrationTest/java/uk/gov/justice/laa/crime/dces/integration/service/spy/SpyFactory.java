@@ -1,5 +1,7 @@
 package uk.gov.justice.laa.crime.dces.integration.service.spy;
 
+import lombok.AllArgsConstructor;
+import org.mockito.Mockito;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
@@ -26,26 +28,18 @@ import java.util.Set;
  * method that creates a builder, then call methods on the builder before, or while, the class or method under test
  * executes. Then call the builder's `build()` method to create a data class which can be used to validate assertions.
  */
+@AllArgsConstructor
 @Component
 public class SpyFactory {
     @MockitoSpyBean
     private ContributionClient contributionClientSpy;
 
-    @MockitoSpyBean
-    private DrcClient drcClientSpy;
+    public DrcClient drcClientSpy;
+
+    public FdcClient fdcClientSpy;
 
     @MockitoSpyBean
-    private FdcClient fdcClientSpy;
-
-    @MockitoSpyBean
-    private TestDataService testDataService;
-
-    public SpyFactory(ContributionClient contributionClientSpy, DrcClient drcClientSpy, FdcClient fdcClientSpy, TestDataService testDataService) {
-        this.contributionClientSpy = contributionClientSpy;
-        this.drcClientSpy = drcClientSpy;
-        this.fdcClientSpy = fdcClientSpy;
-        this.testDataService = testDataService;
-    }
+    public TestDataService testDataService;
 
     public ContributionProcessSpy.ContributionProcessSpyBuilder newContributionProcessSpyBuilder() {
         return new ContributionProcessSpy.ContributionProcessSpyBuilder(contributionClientSpy, drcClientSpy);
@@ -56,11 +50,12 @@ public class SpyFactory {
     }
 
     public FdcProcessSpy.FdcProcessSpyBuilder newFdcProcessSpyBuilder() {
+        Mockito.mockingDetails(fdcClientSpy);
         return new FdcProcessSpy.FdcProcessSpyBuilder(fdcClientSpy, drcClientSpy);
     }
 
     public FdcLoggingProcessSpy.FdcLoggingProcessSpyBuilder newFdcLoggingProcessSpyBuilder() {
-        return new FdcLoggingProcessSpy.FdcLoggingProcessSpyBuilder(fdcClientSpy);
+        return new FdcLoggingProcessSpy.FdcLoggingProcessSpyBuilder(Mockito.spy(fdcClientSpy));
     }
 
     public List<Long> updateConcorContributionStatus(final ConcorContributionStatus status, final int recordCount) {

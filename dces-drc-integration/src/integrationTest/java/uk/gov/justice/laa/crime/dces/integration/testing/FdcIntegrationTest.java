@@ -12,13 +12,17 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
 import org.springframework.web.ErrorResponseException;
+import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
+import uk.gov.justice.laa.crime.dces.integration.client.FdcClient;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionEntity;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
@@ -43,7 +47,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @EnabledIf(expression = "#{environment['sentry.environment'] == 'development'}", loadContext = true)
-@SpringBootTest
+@SpringBootTest()
 @ExtendWith(SoftAssertionsExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FdcIntegrationTest {
@@ -54,7 +58,13 @@ class FdcIntegrationTest {
 	private SpyFactory spyFactory;
 
 	@Autowired
-	private FdcService fdcService;
+	public FdcService fdcService;
+
+	@MockitoBean
+	public DrcClient drcClient;
+
+	@MockitoSpyBean
+	public FdcClient fdcClient;
 
 	@MockitoSpyBean
 	private EventService eventService;
@@ -359,7 +369,6 @@ class FdcIntegrationTest {
 	@Test
 	void givenSomeSentFdcContributions_whenProcessDailyFilesRuns_thenTheyAreNotQueriedNotSentNorInCreatedFile() {
         final var updatedIds = spyFactory.createFdcDelayedPickupTestData(FdcTestType.NEGATIVE_FDC_STATUS, 3);
-
         final var checkOptions = CheckOptions.builder()
                 .drcStubShouldSucceed(true)
                 .updatedIdsShouldBeRequested(false)
@@ -715,6 +724,7 @@ class FdcIntegrationTest {
      */
     private void runProcessDailyFilesAndCheckResults(final Set<Long> updatedIds, final CheckOptions checkOptions,
                                                      final FdcContributionsStatus fdcContributionsStatusExpected) {
+		Mockito.mockingDetails(fdcService);
         final FdcProcessSpy.FdcProcessSpyBuilder watching = spyFactory.newFdcProcessSpyBuilder()
                 .traceExecuteFdcGlobalUpdate()
                 .traceAndFilterGetFdcContributions(updatedIds)
@@ -723,7 +733,6 @@ class FdcIntegrationTest {
 
         // Call the processDailyFiles() method under test:
         fdcService.processDailyFiles();
-
         final FdcProcessSpy watched = watching.build();
 
         // Fetch some items of information from the maat-api to use during validation:
