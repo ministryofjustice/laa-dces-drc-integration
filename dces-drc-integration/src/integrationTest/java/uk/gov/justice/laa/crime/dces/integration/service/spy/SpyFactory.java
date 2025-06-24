@@ -31,7 +31,6 @@ import java.util.Set;
 @AllArgsConstructor
 @Component
 public class SpyFactory {
-    @MockitoSpyBean
     private ContributionClient contributionClientSpy;
 
     public DrcClient drcClientSpy;
