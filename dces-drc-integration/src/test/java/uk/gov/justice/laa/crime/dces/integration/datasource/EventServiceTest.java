@@ -22,9 +22,14 @@ import uk.gov.justice.laa.crime.dces.integration.exception.DcesDrcServiceExcepti
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 
+import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -147,6 +152,101 @@ class EventServiceTest {
         softly.assertAll();
     }
 
+    @Test
+    void whenCutoffDaysProvided_thenDateIsAsExpected() throws NoSuchFieldException, IllegalAccessException{
+        setCutoff("5");
+        LocalDateTime expectedCutoffDate = LocalDateTime.now()
+                .withHour(0).withMinute(0).withSecond(0).withNano(1)
+                .minusDays(5);
+        LocalDateTime actualCutoffDate = eventService.getCutoffDate(5);
+        softly.assertThat(actualCutoffDate).isEqualTo(expectedCutoffDate);
+        softly.assertAll();
+    }
+
+    @Test
+    void whenCutoffDaysNegative_thenDateIsAsFuture() throws NoSuchFieldException, IllegalAccessException{
+        setCutoff("-5");
+        LocalDateTime expectedCutoffDate = LocalDateTime.now()
+                .withHour(0).withMinute(0).withSecond(0).withNano(1)
+                .minusDays(-5);
+        LocalDateTime actualCutoffDate = eventService.getCutoffDate(-5);
+        softly.assertThat(actualCutoffDate).isEqualTo(expectedCutoffDate);
+        softly.assertAll();
+    }
+
+    @Test
+    void whenCutoffDaysZero_thenDateIsAsCurrent() throws NoSuchFieldException, IllegalAccessException{
+        setCutoff("0");
+        LocalDateTime expectedCutoffDate = LocalDateTime.now()
+                .withHour(0).withMinute(0).withSecond(0).withNano(1)
+                .minusDays(0);
+        LocalDateTime actualCutoffDate = eventService.getCutoffDate(0);
+        softly.assertThat(actualCutoffDate).isEqualTo(expectedCutoffDate);
+        softly.assertAll();
+    }
+
+    @Test
+    void whenHistoryCutoffIsSet_thenReturnsIntOnDeletion() throws NoSuchFieldException, IllegalAccessException {
+        setCutoff("5");
+        LocalDateTime cutoffDate = LocalDateTime.now()
+                .withHour(0).withMinute(0).withSecond(0).withNano(1)
+                .minusDays(5);
+        when(caseSubmissionRepository.deleteByProcessedDateBefore(cutoffDate)).thenReturn(300);
+        softly.assertThat(eventService.getCutoffDays()).isEqualTo(5);
+        softly.assertThat(eventService.deleteHistoricalCaseSubmissionEntries()).isEqualTo(300);
+        verify(caseSubmissionRepository, times(1)).deleteByProcessedDateBefore(cutoffDate);
+        softly.assertAll();
+    }
+
+    @Test
+    void whenHistoryCutoffIsSet_thenReturnsIntOnCount() throws NoSuchFieldException, IllegalAccessException {
+        setCutoff("5");
+        LocalDateTime cutoffDate = LocalDateTime.now()
+                .withHour(0).withMinute(0).withSecond(0).withNano(1)
+                .minusDays(5);
+        when(caseSubmissionRepository.countByProcessedDateBefore(cutoffDate)).thenReturn(300L);
+        softly.assertThat(eventService.getCutoffDays()).isEqualTo(5);
+        softly.assertThat(eventService.countHistoricalCaseSubmissionEntries()).isEqualTo(300L);
+        verify(caseSubmissionRepository, times(1)).countByProcessedDateBefore(cutoffDate);
+        softly.assertAll();
+    }
+
+    @Test
+    void whenNoHistoryCutoffIsSet_thenZeroReturnedOnDeletion() throws NoSuchFieldException, IllegalAccessException {
+        setCutoff(null);
+        softly.assertThat(eventService.getCutoffDays()).isNull();
+        softly.assertThat(eventService.deleteHistoricalCaseSubmissionEntries()).isEqualTo(0);
+        verify(caseSubmissionRepository, never()).deleteByProcessedDateBefore(any());
+        softly.assertAll();
+    }
+
+    @Test
+    void whenNoHistoryCutoffIsSet_thenZeroReturnedOnCount() throws NoSuchFieldException, IllegalAccessException {
+        setCutoff(null);
+        softly.assertThat(eventService.getCutoffDays()).isNull();
+        softly.assertThat(eventService.countHistoricalCaseSubmissionEntries()).isEqualTo(0);
+        verify(caseSubmissionRepository, never()).countByProcessedDateBefore(any());
+        softly.assertAll();
+    }
+
+    @Test
+    void whenHistoryCutoffInvalid_thenZeroReturnedOnDeletion() throws NoSuchFieldException, IllegalAccessException {
+        setCutoff("Not Numbers");
+        softly.assertThat(eventService.getCutoffDays()).isNull();
+        softly.assertThat(eventService.deleteHistoricalCaseSubmissionEntries()).isEqualTo(0);
+        verify(caseSubmissionRepository, never()).deleteByProcessedDateBefore(any());
+        softly.assertAll();
+    }
+
+    @Test
+    void whenHistoryCutoffInvalid_thenZeroReturnedOnCount() throws NoSuchFieldException, IllegalAccessException {
+        setCutoff("Not Numbers");
+        softly.assertThat(eventService.getCutoffDays()).isNull();
+        softly.assertThat(eventService.countHistoricalCaseSubmissionEntries()).isEqualTo(0);
+        verify(caseSubmissionRepository, never()).countByProcessedDateBefore(any());
+        softly.assertAll();
+    }
+
     private CaseSubmissionEntity createExpectedCaseSubmissionEntity(RecordType recordType, Integer eventTypeId, Long traceId,HttpStatusCode httpStatusCode){
         return CaseSubmissionEntity.builder()
                 .id(null) // this will not be assigned till post-save.
@@ -174,6 +274,12 @@ class EventServiceTest {
         contributionObject.setMaatId(testMaatId);
         contributionObject.setId(testConcorId);
         return contributionObject;
+    }
+
+    private void setCutoff(String cutoff) throws NoSuchFieldException, IllegalAccessException {
+        Field privateStringField = EventService.class.getDeclaredField("historyCutoffDays");
+        privateStringField.setAccessible(true);
+        privateStringField.set(eventService, cutoff);
     }
 
 }

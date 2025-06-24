@@ -10,6 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionEntity;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionRepository;
 import uk.gov.justice.laa.crime.dces.integration.exception.DcesDrcServiceException;
@@ -17,6 +18,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.C
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,6 +28,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DbLoggingTest {
+
+  private static final String cutoffEnv = System.getenv("SPRING_DATASOURCE_KEEPHISTORYDAYS");
 
   @Autowired
   private EventService eventService;
@@ -56,6 +60,25 @@ class DbLoggingTest {
     boolean response = eventService.logFdc(EventType.SENT_TO_DRC, TEST_BATCH_ID, TEST_TRACE_ID, null, null, testPayloadString );
     assertTrue(response);
     clearDownData(1L);
+  }
+
+  @Test
+  void given_HistoricalValues_thenNoneOlderThanHistoricalCutoff(){
+    // get initial number of entries that will be cleaned up by test.
+    int initialCount = eventService.countHistoricalCaseSubmissionEntries().intValue();
+    int numTestEntries = 7;
+    int numDeletionTestEntries = 4;
+    createHistoricalTestData(numDeletionTestEntries, numTestEntries);
+
+    Integer addedTestDataCount = eventService.countHistoricalCaseSubmissionEntries().intValue();
+    // verify we're not getting unexpected values due to timing with other tests or anything unexpected.
+    assertEquals(initialCount+numDeletionTestEntries, addedTestDataCount);
+    // do
+    Integer deletedCount = eventService.deleteHistoricalCaseSubmissionEntries();
+    // verify
+    assertEquals(addedTestDataCount, deletedCount);
+    assertEquals(0L, eventService.countHistoricalCaseSubmissionEntries());
+    clearDownData((long) numTestEntries);
   }
 
   @Test
@@ -99,5 +122,21 @@ class DbLoggingTest {
     return fdc;
   }
 
+  private void createHistoricalTestData(Integer numberOfDeletionEntries, Integer numTestEntries){
+    int offset = getCutoff();
+    for(int i=0; i<numTestEntries+numberOfDeletionEntries; i++) {
+      eventService.logFdc(EventType.SENT_TO_DRC, TEST_BATCH_ID, TEST_TRACE_ID, null, null, testPayloadString);
+    }
+    List<CaseSubmissionEntity> testEntries = caseSubmissionRepository.findAllByBatchId(TEST_BATCH_ID);
+    testEntries.subList(0,numTestEntries).forEach(x -> x.setProcessedDate(LocalDateTime.now().minusDays(offset)));
+    testEntries.subList(numTestEntries,testEntries.size()).forEach(x -> x.setProcessedDate(LocalDateTime.now().minusDays(offset+1)));
+    // cutoff +1 since we want these to be deleted. I.e. 5 days of history, we want it 6 days old.
+    caseSubmissionRepository.saveAllAndFlush(testEntries);
+  }
+
+  private int getCutoff(){
+    assertNotNull(cutoffEnv, "Historical Data Cutoff has not been set.");
+    return Integer.parseInt(cutoffEnv);
+  }
 
 }

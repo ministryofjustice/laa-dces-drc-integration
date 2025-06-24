@@ -1,6 +1,8 @@
 package uk.gov.justice.laa.crime.dces.integration.service.spy;
 
-import org.springframework.boot.test.mock.mockito.SpyBean;
+import lombok.AllArgsConstructor;
+import org.mockito.Mockito;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
@@ -26,19 +28,17 @@ import java.util.Set;
  * method that creates a builder, then call methods on the builder before, or while, the class or method under test
  * executes. Then call the builder's `build()` method to create a data class which can be used to validate assertions.
  */
+@AllArgsConstructor
 @Component
 public class SpyFactory {
-    @SpyBean
     private ContributionClient contributionClientSpy;
 
-    @SpyBean
-    private DrcClient drcClientSpy;
+    public DrcClient drcClientSpy;
 
-    @SpyBean
-    private FdcClient fdcClientSpy;
+    public FdcClient fdcClientSpy;
 
-    @SpyBean
-    private TestDataService testDataService;
+    @MockitoSpyBean
+    public TestDataService testDataService;
 
     public ContributionProcessSpy.ContributionProcessSpyBuilder newContributionProcessSpyBuilder() {
         return new ContributionProcessSpy.ContributionProcessSpyBuilder(contributionClientSpy, drcClientSpy);
@@ -49,11 +49,12 @@ public class SpyFactory {
     }
 
     public FdcProcessSpy.FdcProcessSpyBuilder newFdcProcessSpyBuilder() {
+        Mockito.mockingDetails(fdcClientSpy);
         return new FdcProcessSpy.FdcProcessSpyBuilder(fdcClientSpy, drcClientSpy);
     }
 
     public FdcLoggingProcessSpy.FdcLoggingProcessSpyBuilder newFdcLoggingProcessSpyBuilder() {
-        return new FdcLoggingProcessSpy.FdcLoggingProcessSpyBuilder(fdcClientSpy);
+        return new FdcLoggingProcessSpy.FdcLoggingProcessSpyBuilder(Mockito.spy(fdcClientSpy));
     }
 
     public List<Long> updateConcorContributionStatus(final ConcorContributionStatus status, final int recordCount) {

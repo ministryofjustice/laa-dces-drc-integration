@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
 import uk.gov.justice.laa.crime.dces.integration.service.MigrationService;
@@ -26,6 +27,7 @@ public class ServiceScheduler {
     private final FdcService fdcService;
     private final ContributionService contributionService;
     private final MigrationService migrationService;
+    private final EventService eventService;
 
     @Observed(name = "ServiceScheduler.fdc", contextualName = "Cron job to process FDC files", lowCardinalityKeyValues = {"priority", "medium"})
     @Scheduled(cron =  "${scheduling.cron.process-fdc-files:-}")
@@ -51,5 +53,14 @@ public class ServiceScheduler {
         LockAssert.assertLocked();
         log.info("Starting Data Migration Process at {}", LocalDateTime.now());
         migrationService.migration();
+    }
+
+    @Scheduled(cron = "${scheduling.cron.data-cleardown:-}")
+    @SchedulerLock(name = "dataCleardown")
+    public void dataCleardown(){
+        LockAssert.assertLocked();
+        log.info("Starting Event Data Cleardown at {}", LocalDateTime.now());
+        Integer deletedCount = eventService.deleteHistoricalCaseSubmissionEntries();
+        log.info("Deleted {} historical entries", deletedCount);
     }
 }
