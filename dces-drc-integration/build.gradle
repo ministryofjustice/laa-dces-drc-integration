@@ -11,7 +11,7 @@ plugins {
 def versions = [
 		sentryVersion          : '7.13.0',
 		springdocVersion       : '2.6.0',
-		resilience4jVersion    : '2.2.0',
+		resilience4jVersion    : '2.3.0',
 		wiremockVersion        : '3.13.1',
 		logbackEncoderVersion  : '7.2',
 		serenityVersion        : "4.2.34",
@@ -97,7 +97,7 @@ dependencies {
 	implementation "io.micrometer:micrometer-registry-prometheus"
 	implementation "net.javacrumbs.shedlock:shedlock-spring:$versions.shedlockVersion"
 	implementation "net.javacrumbs.shedlock:shedlock-provider-jdbc-template:$versions.shedlockVersion"
-	implementation 'net.datafaker:datafaker:2.4.0'
+	implementation 'net.datafaker:datafaker:2.4.3'
 
 	testCompileOnly 'org.projectlombok:lombok'
 	testAnnotationProcessor 'org.projectlombok:lombok'
