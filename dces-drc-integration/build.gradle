@@ -13,7 +13,7 @@ def versions = [
 		springdocVersion       : '2.8.9',
 		resilience4jVersion    : '2.3.0',
 		wiremockVersion        : '3.13.1',
-		logbackEncoderVersion  : '7.2',
+		logbackEncoderVersion  : '8.1',
 		serenityVersion        : "4.2.34",
 		shedlockVersion        : "6.9.0",
 		okhttpVersion          : '4.12.0'
