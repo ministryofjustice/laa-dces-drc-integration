@@ -13,11 +13,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
 import org.springframework.web.ErrorResponseException;
+import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
+import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionEntity;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
@@ -48,10 +51,16 @@ class ContributionIntegrationTest {
     @InjectSoftAssertions
     private SoftAssertions softly;
 
-    @SpyBean
+    @MockitoSpyBean
+    private ContributionClient contributionClientSpy;
+
+    @MockitoBean
+    public DrcClient drcClientSpy;
+
+    @MockitoSpyBean
     private EventService eventService;
 
-    @SpyBean
+    @MockitoSpyBean
     private CaseSubmissionRepository caseSubmissionRepository;
 
     @Autowired

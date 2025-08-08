@@ -58,6 +58,9 @@ You will need to build the artifacts for the source code, using `gradle`.
 ./gradlew clean build
 ```
 
+You will need to add spring datasource configuration in order to run the application. It requires a Postgresql database, which each environment has their own.
+Once you have added the datasource settings, you will be able to build and launch the application locally using docker.
+
 ```sh
 docker-compose build
 docker-compose up
