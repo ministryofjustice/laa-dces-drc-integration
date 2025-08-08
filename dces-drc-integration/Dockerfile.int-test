@@ -1,4 +1,4 @@
-FROM amazoncorretto:17-alpine
+FROM amazoncorretto:21-alpine
 RUN mkdir -p /home/laa-dces-drc-integration/
 WORKDIR /home/laa-dces-drc-integration/
 
