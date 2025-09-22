@@ -97,7 +97,7 @@ dependencies {
 	implementation "io.micrometer:micrometer-registry-prometheus"
 	implementation "net.javacrumbs.shedlock:shedlock-spring:$versions.shedlockVersion"
 	implementation "net.javacrumbs.shedlock:shedlock-provider-jdbc-template:$versions.shedlockVersion"
-	implementation 'net.datafaker:datafaker:2.4.4'
+	implementation 'net.datafaker:datafaker:2.5.0'
 
 	testCompileOnly 'org.projectlombok:lombok'
 	testAnnotationProcessor 'org.projectlombok:lombok'
