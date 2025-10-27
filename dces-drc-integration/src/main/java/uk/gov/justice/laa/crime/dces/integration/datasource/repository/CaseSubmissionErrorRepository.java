@@ -5,5 +5,5 @@ import org.springframework.stereotype.Repository;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionErrorEntity;
 
 @Repository
-public interface CaseSubmissionErrorRepository extends JpaRepository<CaseSubmissionErrorEntity, Integer> {
+public interface CaseSubmissionErrorRepository extends JpaRepository<CaseSubmissionErrorEntity, Long> {
 }
