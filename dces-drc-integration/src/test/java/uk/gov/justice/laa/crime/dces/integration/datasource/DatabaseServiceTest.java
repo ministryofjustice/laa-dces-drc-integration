@@ -7,8 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestBase;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseMigrationEntity;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionEntity;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionErrorEntity;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.RecordType;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseMigrationRepository;
+import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionErrorRepository;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionRepository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -19,11 +21,14 @@ class DatabaseServiceTest extends ApplicationTestBase {
     @Autowired
     private CaseSubmissionRepository caseSubmissionRepository;
     @Autowired
+    private CaseSubmissionErrorRepository caseSubmissionErrorRepository;
+    @Autowired
     private CaseMigrationRepository caseMigrationRepository;
 
     @BeforeEach
     public void setUp() {
         caseSubmissionRepository.deleteAll();
+        caseSubmissionErrorRepository.deleteAll();
     }
 
     @Test
@@ -36,6 +41,30 @@ class DatabaseServiceTest extends ApplicationTestBase {
         assertEquals(1, count);
         assertEquals("Contribution", caseSubmissionRepository.findAll().stream().findFirst().get().getRecordType());
         assertEquals(200, caseSubmissionRepository.findAll().get(0).getHttpStatus());
+    }
+
+    @Test
+    void testDatabaseConnectionAndContributionDataCaseSubmissionError() {
+
+        caseSubmissionErrorRepository.save(createExpectedCaseSubmissionErrorEntity(RecordType.CONTRIBUTION, 200));
+
+        long count = caseSubmissionErrorRepository.count();
+
+        assertEquals(1, count);
+        assertEquals(-333L, caseSubmissionErrorRepository.findAll().stream().findFirst().get().getConcorContributionId());
+        assertEquals(200, caseSubmissionErrorRepository.findAll().get(0).getStatus());
+    }
+
+    @Test
+    void testDatabaseConnectionAndFdcDataCaseSubmissionError() {
+
+        caseSubmissionErrorRepository.save(createExpectedCaseSubmissionErrorEntity(RecordType.FDC, 200));
+
+        long count = caseSubmissionErrorRepository.count();
+
+        assertEquals(1, count);
+        assertEquals(-333L, caseSubmissionErrorRepository.findAll().stream().findFirst().get().getFdcId());
+        assertEquals(200, caseSubmissionErrorRepository.findAll().get(0).getStatus());
     }
 
     @Test
@@ -62,4 +91,13 @@ class DatabaseServiceTest extends ApplicationTestBase {
                 .build();
     }
 
+    private CaseSubmissionErrorEntity createExpectedCaseSubmissionErrorEntity(RecordType recordType, Integer httpStatusCode) {
+        return CaseSubmissionErrorEntity.builder()
+                .fdcId(RecordType.FDC.equals(recordType) ? -333L : null)
+                .concorContributionId(RecordType.CONTRIBUTION.equals(recordType) ? -333L : null)
+                .status(httpStatusCode)
+                .title("MAAT ID Missing")
+                .detail("MAAT ID is required for processing")
+                .build();
+    }
 }
