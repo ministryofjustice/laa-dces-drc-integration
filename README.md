@@ -57,22 +57,27 @@ You will need to build the artifacts for the source code, using `gradle`.
 ```sh
 ./gradlew clean build
 ```
+
 #### Running Application or Integration Tests Locally
 
-You will need to have a spring datasource configuration in order to run the application or it's Integration Test Module. 
+You will need to have a spring datasource configuration in order to run the application or it's Integration Test Module.
 It requires a Postgresql database, of which each environment has their own.
 For running locally, you will need at least the following:
+
 ```
 spring.datasource.url
 spring.datasource.username
 spring.datasource.password
 ```
-These can either be added in your application settings, or via Environment properties. 
+
+These can either be added in your application settings, or via Environment properties.
+
 ```
 SPRING_DATASOURCE_URL
 SPRING_DATASOURCE_USERNAME
 SPRING_DATASOURCE_PASSWORD
 ```
+
 If you are connecting to a specific environment's database, you can get these details from the datasource secret of that environment.
 
 #### Maat Court Data API
