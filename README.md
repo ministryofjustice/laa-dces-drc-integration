@@ -58,8 +58,36 @@ You will need to build the artifacts for the source code, using `gradle`.
 ./gradlew clean build
 ```
 
-You will need to add spring datasource configuration in order to run the application. It requires a Postgresql database, which each environment has their own.
-Once you have added the datasource settings, you will be able to build and launch the application locally using docker.
+#### Running Application or Integration Tests Locally
+
+You will need to have a spring datasource configuration in order to run the application or it's Integration Test Module.
+It requires a Postgresql database, of which each environment has their own.
+For running locally, you will need at least the following:
+
+```
+spring.datasource.url
+spring.datasource.username
+spring.datasource.password
+```
+
+These can either be added in your application settings, or via Environment properties.
+
+```
+SPRING_DATASOURCE_URL
+SPRING_DATASOURCE_USERNAME
+SPRING_DATASOURCE_PASSWORD
+```
+
+If you are connecting to a specific environment's database, you can get these details from the datasource secret of that environment.
+
+#### Maat Court Data API
+
+You will also need to configure the application to use an instance of the Maat CD API. This can either be ran locally via docker, or by using one of the Maat API's environments.
+If using an environment's Maat API ( such as Development ) you can get the url and details via the usual channels, or taking them from an environment's secrets.
+
+#### Docker
+
+Once these are setup you will be able to build and launch the application locally using docker.
 
 ```sh
 docker-compose build
