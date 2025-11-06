@@ -61,6 +61,9 @@ scheduling:
     process-contributions-files: ${DCES_CRON_CONTRIBUTIONS:-}
     data-migration: ${DCES_CRON_DATA_MIGRATION:-}
     data-cleardown: ${DCES_CRON_DATA_CLEARDOWN:-}
+    purge:
+      case-submission-error: ${DCES_CRON_CASE_SUBMISSION-ERROR:-}
+      month: ${SPRING_DATASOURCE_KEEPHISTORYMONTH:12}
   lock:
     at-least: 30s
     at-most: 15m

@@ -23,7 +23,8 @@ import static org.mockito.Mockito.*;
         "scheduling.fdcDailyFiles.cron=-",
         "scheduling.contributionsDailyFiles.cron=-",
         "scheduling.cron.data-migration=-",
-        "scheduling.cron.data-cleardown=-"
+        "scheduling.cron.data-cleardown=-",
+        "scheduling.cron.purge.case-submission-error=-"
 })
 @ActiveProfiles(profiles = "default")
 class DisabledServiceSchedulerTest {
@@ -65,5 +66,12 @@ class DisabledServiceSchedulerTest {
         // Wait for the scheduled method to be called
         Thread.sleep(1000);
         verify(eventService, never()).deleteHistoricalCaseSubmissionEntries();
+    }
+
+    @Test
+    void givenAInvalidCronJob_shouldNotInvoked_PurgePeriodicCaseSubmissionErrorEntries() throws InterruptedException {
+        // Wait for the scheduled method to be called
+        Thread.sleep(1000);
+        verify(eventService, never()).purgePeriodicCaseSubmissionErrorEntries();
     }
 }

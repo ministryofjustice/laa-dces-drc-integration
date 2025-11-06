@@ -2,12 +2,11 @@ package uk.gov.justice.laa.crime.dces.integration.datasource;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
-import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionEntity;
-import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
-import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventTypeEntity;
-import uk.gov.justice.laa.crime.dces.integration.datasource.model.RecordType;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.*;
+import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionErrorRepository;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionRepository;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.EventTypeRepository;
 import uk.gov.justice.laa.crime.dces.integration.exception.DcesDrcServiceException;
@@ -26,8 +25,13 @@ public class EventService {
     private final CaseSubmissionRepository caseSubmissionRepository;
     private final EventTypeRepository eventTypeRepository;
 
+    private final CaseSubmissionErrorRepository caseSubmissionErrorRepository;
+
     // get History Duration for use in clearing down history.
     private final String historyCutoffDays = System.getenv("SPRING_DATASOURCE_KEEPHISTORYDAYS");
+
+    @Value("${scheduling.cron.purge.month:12}")
+    private int monthToPurge;
 
     public List<CaseSubmissionEntity> getAllCaseSubmissions(){
         return caseSubmissionRepository.findAll();
@@ -131,6 +135,11 @@ public class EventService {
         return LocalDateTime.now()
                 .withHour(0).withMinute(0).withSecond(0).withNano(1)
                 .minusDays(cutoff);
+    }
+
+    public Long purgePeriodicCaseSubmissionErrorEntries() {
+        LocalDateTime purgeBeforeDate = LocalDateTime.now().minusMonths(monthToPurge);
+        return caseSubmissionErrorRepository.deleteByCreationDateBefore(purgeBeforeDate);
     }
 
 }

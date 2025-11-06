@@ -16,6 +16,7 @@ import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmission
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventTypeEntity;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.RecordType;
+import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionErrorRepository;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionRepository;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.EventTypeRepository;
 import uk.gov.justice.laa.crime.dces.integration.exception.DcesDrcServiceException;
@@ -43,6 +44,9 @@ class EventServiceTest {
     private CaseSubmissionRepository caseSubmissionRepository;
     @Mock
     private EventTypeRepository eventTypeRepository;
+
+    @Mock
+    private CaseSubmissionErrorRepository caseSubmissionErrorRepository;
 
     @InjectMocks
     private EventService eventService;
@@ -247,6 +251,14 @@ class EventServiceTest {
         softly.assertAll();
     }
 
+    @Test
+    void givenAValidCronExpression_whenPurgeCaseSubmissionErrorEntriesIsInvoked_shouldPurgeMessages() {
+        when(caseSubmissionErrorRepository.deleteByCreationDateBefore(any(LocalDateTime.class))).thenReturn(5l);
+        softly.assertThat(eventService.purgePeriodicCaseSubmissionErrorEntries()).isEqualTo(5l);
+        verify(caseSubmissionErrorRepository).deleteByCreationDateBefore(any(LocalDateTime.class));
+        softly.assertAll();
+    }
+
     private CaseSubmissionEntity createExpectedCaseSubmissionEntity(RecordType recordType, Integer eventTypeId, Long traceId,HttpStatusCode httpStatusCode){
         return CaseSubmissionEntity.builder()
                 .id(null) // this will not be assigned till post-save.
@@ -281,5 +293,4 @@ class EventServiceTest {
         privateStringField.setAccessible(true);
         privateStringField.set(eventService, cutoff);
     }
-
 }

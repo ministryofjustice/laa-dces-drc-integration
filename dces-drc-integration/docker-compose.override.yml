@@ -3,10 +3,9 @@ version: "3.9"
 services:
   app:
     environment:
-      - LAA_DCES_DRC_INTEGRATION_RESOURCE_SERVER_ISSUER_URI=
       - DCES_CRON_CONTRIBUTIONS=-
       - DCES_CRON_FDC=-
-
+    env_file: app.env
     networks:
       local-container-network:
         aliases:
