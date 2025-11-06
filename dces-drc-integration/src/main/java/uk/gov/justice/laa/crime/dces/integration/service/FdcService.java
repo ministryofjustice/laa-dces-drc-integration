@@ -337,9 +337,6 @@ public class FdcService implements FileService {
         eventService.logFdc(DRC_ASYNC_RESPONSE, null, idHolder, httpStatusCode, fdcProcessedRequest.getErrorText());
     }
 
-    private void logFdcErrorEvent(FdcAckFromDrc fdcAckFromDrc) {
-
-    }
 
     private void logGlobalUpdatePayload(HttpStatusCode httpStatus, String message) {
         boolean isFailureState = !HttpStatus.ACCEPTED.is2xxSuccessful();

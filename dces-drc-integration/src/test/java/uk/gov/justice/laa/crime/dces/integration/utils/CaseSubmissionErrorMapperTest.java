@@ -1,24 +1,29 @@
 package uk.gov.justice.laa.crime.dces.integration.utils;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.http.ProblemDetail;
+import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
+import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Answers.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class CaseSubmissionErrorMapperTest {
 
     @Test
     void fdcAck_populatesFieldsFromProblemDetail() {
-        var ack = org.mockito.Mockito.mock(uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc.class,
-                org.mockito.Mockito.RETURNS_DEEP_STUBS);
-        var pd = org.mockito.Mockito.mock(org.springframework.http.ProblemDetail.class);
-        org.mockito.Mockito.when(pd.getTitle()).thenReturn("PD Title");
-        org.mockito.Mockito.when(pd.getDetail()).thenReturn("PD Detail");
-        org.mockito.Mockito.when(pd.getStatus()).thenReturn(422);
-        org.mockito.Mockito.when(ack.data().report()).thenReturn(pd);
-        org.mockito.Mockito.when(ack.data().fdcId()).thenReturn(123L);
-        org.mockito.Mockito.when(ack.data().maatId()).thenReturn(999L);
-        org.mockito.Mockito.when(ack.data().errorText()).thenReturn("ignored");
+        var ack = mock(FdcAckFromDrc.class, RETURNS_DEEP_STUBS);
+        var pd = mock(ProblemDetail.class);
+        when(pd.getTitle()).thenReturn("PD Title");
+        when(pd.getDetail()).thenReturn("PD Detail");
+        when(pd.getStatus()).thenReturn(422);
+        when(ack.data().report()).thenReturn(pd);
+        when(ack.data().fdcId()).thenReturn(123L);
+        when(ack.data().maatId()).thenReturn(999L);
+        when(ack.data().errorText()).thenReturn("ignored");
 
         var entity = CaseSubmissionErrorMapper.createCaseSubmissionErrorEntity(ack);
 
@@ -31,12 +36,11 @@ class CaseSubmissionErrorMapperTest {
 
     @Test
     void fdcAck_usesErrorTextWhenProblemDetailIsNull() {
-        var ack = org.mockito.Mockito.mock(uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc.class,
-                org.mockito.Mockito.RETURNS_DEEP_STUBS);
-        org.mockito.Mockito.when(ack.data().report()).thenReturn(null);
-        org.mockito.Mockito.when(ack.data().errorText()).thenReturn("error text");
-        org.mockito.Mockito.when(ack.data().fdcId()).thenReturn(321L);
-        org.mockito.Mockito.when(ack.data().maatId()).thenReturn(111L);
+        var ack = mock(FdcAckFromDrc.class, RETURNS_DEEP_STUBS);
+        when(ack.data().report()).thenReturn(null);
+        when(ack.data().errorText()).thenReturn("error text");
+        when(ack.data().fdcId()).thenReturn(321L);
+        when(ack.data().maatId()).thenReturn(111L);
 
         var entity = CaseSubmissionErrorMapper.createCaseSubmissionErrorEntity(ack);
 
@@ -49,7 +53,7 @@ class CaseSubmissionErrorMapperTest {
 
     @Test
     void fdcAck_nullAckReturnsEntityWithAllNullFields() {
-        var entity = CaseSubmissionErrorMapper.createCaseSubmissionErrorEntity((uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc) null);
+        var entity = CaseSubmissionErrorMapper.createCaseSubmissionErrorEntity((FdcAckFromDrc) null);
 
         assertNull(entity.getMaatId());
         assertNull(entity.getFdcId());
@@ -60,16 +64,15 @@ class CaseSubmissionErrorMapperTest {
 
     @Test
     void concorAck_populatesFieldsFromProblemDetail() {
-        var ack = org.mockito.Mockito.mock(uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc.class,
-                org.mockito.Mockito.RETURNS_DEEP_STUBS);
-        var pd = org.mockito.Mockito.mock(org.springframework.http.ProblemDetail.class);
-        org.mockito.Mockito.when(pd.getTitle()).thenReturn("C Title");
-        org.mockito.Mockito.when(pd.getDetail()).thenReturn("C Detail");
-        org.mockito.Mockito.when(pd.getStatus()).thenReturn(500);
-        org.mockito.Mockito.when(ack.data().report()).thenReturn(pd);
-        org.mockito.Mockito.when(ack.data().concorContributionId()).thenReturn(555L);
-        org.mockito.Mockito.when(ack.data().maatId()).thenReturn(222L);
-        org.mockito.Mockito.when(ack.data().errorText()).thenReturn("ignored");
+        var ack = mock(ConcorContributionAckFromDrc.class, RETURNS_DEEP_STUBS);
+        var pd = mock(org.springframework.http.ProblemDetail.class);
+        when(pd.getTitle()).thenReturn("C Title");
+        when(pd.getDetail()).thenReturn("C Detail");
+        when(pd.getStatus()).thenReturn(500);
+        when(ack.data().report()).thenReturn(pd);
+        when(ack.data().concorContributionId()).thenReturn(555L);
+        when(ack.data().maatId()).thenReturn(222L);
+        when(ack.data().errorText()).thenReturn("ignored");
 
         var entity = CaseSubmissionErrorMapper.createCaseSubmissionErrorEntity(ack);
 
@@ -82,12 +85,11 @@ class CaseSubmissionErrorMapperTest {
 
     @Test
     void concorAck_usesErrorTextWhenProblemDetailIsNull() {
-        var ack = org.mockito.Mockito.mock(uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc.class,
-                org.mockito.Mockito.RETURNS_DEEP_STUBS);
-        org.mockito.Mockito.when(ack.data().report()).thenReturn(null);
-        org.mockito.Mockito.when(ack.data().errorText()).thenReturn("concor error");
-        org.mockito.Mockito.when(ack.data().concorContributionId()).thenReturn(777L);
-        org.mockito.Mockito.when(ack.data().maatId()).thenReturn(333L);
+        var ack = mock(ConcorContributionAckFromDrc.class, RETURNS_DEEP_STUBS);
+        when(ack.data().report()).thenReturn(null);
+        when(ack.data().errorText()).thenReturn("concor error");
+        when(ack.data().concorContributionId()).thenReturn(777L);
+        when(ack.data().maatId()).thenReturn(333L);
 
         var entity = CaseSubmissionErrorMapper.createCaseSubmissionErrorEntity(ack);
 
@@ -100,7 +102,7 @@ class CaseSubmissionErrorMapperTest {
 
     @Test
     void concorAck_nullAckReturnsEntityWithAllNullFields() {
-        var entity = CaseSubmissionErrorMapper.createCaseSubmissionErrorEntity((uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc) null);
+        var entity = CaseSubmissionErrorMapper.createCaseSubmissionErrorEntity((ConcorContributionAckFromDrc) null);
 
         assertNull(entity.getMaatId());
         assertNull(entity.getConcorContributionId());
