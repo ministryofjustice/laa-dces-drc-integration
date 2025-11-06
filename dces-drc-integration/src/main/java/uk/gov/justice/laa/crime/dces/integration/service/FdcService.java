@@ -21,6 +21,7 @@ import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionEntry;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsResponse;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcGlobalUpdateResponse;
+import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcReqForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcUpdateRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.FdcProcessedRequest;
@@ -67,19 +68,26 @@ public class FdcService implements FileService {
      * <li>Logs details received in the DCES Event Database.</li>
      * </ul>
      *
-     * @param fdcProcessedRequest Contains the details of the FDC which has been processed by the DRC.
+     * @param fdcAckFromDrc Contains the details of the FDC which has been processed by the DRC.
      * @return FileID of the file associated with the fdcId
      */
-    public long handleFdcProcessedAck(FdcProcessedRequest fdcProcessedRequest) {
+    public long handleFdcProcessedAck(FdcAckFromDrc fdcAckFromDrc) {
         Timer.Sample timerSample = Timer.start(meterRegistry);
+        FdcProcessedRequest fdcProcessedRequest = FdcProcessedRequest.builder()
+                .fdcId(fdcAckFromDrc.data().fdcId())
+                .errorText(fdcAckFromDrc.data().errorText())
+                .build();
         try {
             long result = executeFdcProcessedAckCall(fdcProcessedRequest);
             logFdcAsyncEvent(fdcProcessedRequest, OK);
             return result;
         } catch (WebClientResponseException e) {
             logFdcAsyncEvent(fdcProcessedRequest, e.getStatusCode());
+            log.error("Failed to process FDC acknowledgement from DRC for fdcId {}: {}",
+                    fdcAckFromDrc.data().fdcId(), e.getMessage());
             throw FileServiceUtils.translateMAATCDAPIException(e);
         } finally {
+            eventService.logFdcError(fdcAckFromDrc);
             timerSample.stop(getTimer(SERVICE_NAME,
                     "method", "handleFdcProcessedAck",
                     "description", "Time taken to process the acknowledgement for the FDC updates."));
@@ -327,6 +335,10 @@ public class FdcService implements FileService {
         Fdc idHolder = new Fdc();
         idHolder.setId(fdcProcessedRequest.getFdcId());
         eventService.logFdc(DRC_ASYNC_RESPONSE, null, idHolder, httpStatusCode, fdcProcessedRequest.getErrorText());
+    }
+
+    private void logFdcErrorEvent(FdcAckFromDrc fdcAckFromDrc) {
+
     }
 
     private void logGlobalUpdatePayload(HttpStatusCode httpStatus, String message) {

@@ -13,9 +13,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionEntity;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionErrorEntity;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventTypeEntity;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.RecordType;
+import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionErrorRepository;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionRepository;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.EventTypeRepository;
 import uk.gov.justice.laa.crime.dces.integration.exception.DcesDrcServiceException;
@@ -42,6 +44,8 @@ class EventServiceTest {
     @Mock
     private CaseSubmissionRepository caseSubmissionRepository;
     @Mock
+    private CaseSubmissionErrorRepository caseSubmissionErrorRepository;
+    @Mock
     private EventTypeRepository eventTypeRepository;
 
     @InjectMocks
@@ -49,12 +53,35 @@ class EventServiceTest {
     @Captor
     private ArgumentCaptor<CaseSubmissionEntity> caseSubmissionEntityArgumentCaptor;
 
+    @Captor
+    private ArgumentCaptor<CaseSubmissionErrorEntity> caseSubmissionErrorEntityArgumentCaptor;
+
     private final Long testTraceId = -777L;
     private final Long testBatchId = -666L;
     private final Long testMaatId = -555L;
     private final Long testFdcId = -444L;
     private final Long testConcorId = -333L;
     private final String testPayload = "TestPayload"+ LocalDateTime.now();
+
+
+    @Test
+    void whenSaveCaseSubmissionErrorEntityWithValidEntity_thenDelegatesToRepositoryAndReturnsSavedEntity() {
+
+        var input = CaseSubmissionErrorEntity.builder()
+                .maatId(testMaatId)
+                .fdcId(testFdcId)
+                .title(testPayload)
+                .build();
+
+        when(caseSubmissionErrorRepository.save(any(CaseSubmissionErrorEntity.class))).thenReturn(input);
+
+        var result = eventService.saveCaseSubmissionErrorEntity(input);
+
+        verify(caseSubmissionErrorRepository).save(caseSubmissionErrorEntityArgumentCaptor.capture());
+        softly.assertThat(caseSubmissionErrorEntityArgumentCaptor.getValue()).isEqualTo(input);
+        softly.assertThat(result).isEqualTo(input);
+        softly.assertAll();
+    }
 
     @Test
     void whenLogFdcIsCalledWithAllDetails_thenLogEntryIsAsExpected() {

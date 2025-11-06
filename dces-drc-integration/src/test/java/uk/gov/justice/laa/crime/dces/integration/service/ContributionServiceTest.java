@@ -27,7 +27,7 @@ import uk.gov.justice.laa.crime.dces.integration.config.FeatureProperties;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcorContribEntry;
-import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionProcessedRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.ObjectFactory;
 import uk.gov.justice.laa.crime.dces.integration.utils.ContributionsMapperUtils;
@@ -358,49 +358,43 @@ class ContributionServiceTest extends ApplicationTestBase {
 
 	@Test
 	void testProcessContributionUpdateWhenSuccessful() {
-		ContributionProcessedRequest dataRequest = ContributionProcessedRequest.builder()
-				.concorId(911L)
-				.build();
-		Long response = contributionService.handleContributionProcessedAck(dataRequest);
+		ConcorContributionAckFromDrc ackFromDrc = ConcorContributionAckFromDrc.of(911L, null);
+		Long response = contributionService.handleContributionProcessedAck(ackFromDrc);
 		softly.assertThat(response).isEqualTo(1111L);
 		verify(eventService).logConcor(911L,EventType.DRC_ASYNC_RESPONSE,null,null, OK, null);
+		verify(eventService).logConcorContributionError(ackFromDrc);
 	}
 
 	@Test
 	void testProcessContributionUpdateWhenIncomingIsolated() {
 		when(feature.incomingIsolated()).thenReturn(true);
-		ContributionProcessedRequest dataRequest = ContributionProcessedRequest.builder()
-				.concorId(911L)
-				.build();
-		Long response = contributionService.handleContributionProcessedAck(dataRequest);
+		ConcorContributionAckFromDrc ackFromDrc = ConcorContributionAckFromDrc.of(911L, "The request has failed to process");
+		Long response = contributionService.handleContributionProcessedAck(ackFromDrc);
 		softly.assertThat(response).isEqualTo(0L); // so MAAT DB not touched
+		verify(eventService).logConcorContributionError(ackFromDrc);
 	}
 
 
 	@Test
 	void testProcessContributionUpdateWhenNotFound() {
 		String errorText = "The request has failed to process";
-		ContributionProcessedRequest dataRequest = ContributionProcessedRequest.builder()
-				.concorId(404L)
-				.errorText(errorText)
-				.build();
-		var exception = catchThrowableOfType(() -> contributionService.handleContributionProcessedAck(dataRequest), ErrorResponseException.class);
+		ConcorContributionAckFromDrc ackFromDrc = ConcorContributionAckFromDrc.of(404L, errorText);
+		var exception = catchThrowableOfType(() -> contributionService.handleContributionProcessedAck(ackFromDrc), ErrorResponseException.class);
 		softly.assertThat(exception).isNotNull();
 		softly.assertThat(NOT_FOUND.isSameCodeAs(exception.getStatusCode())).isTrue();
 		verify(eventService).logConcor(404L,EventType.DRC_ASYNC_RESPONSE,null,null, NOT_FOUND, errorText);
+		verify(eventService).logConcorContributionError(ackFromDrc);
 	}
 
 	@Test
 	void testProcessContributionUpdateWhenNoContFile() {
 		String errorText = "The request has failed to process";
-		ContributionProcessedRequest dataRequest = ContributionProcessedRequest.builder()
-				.concorId(9L)
-				.errorText(errorText)
-				.build();
-		var exception = catchThrowableOfType(() -> contributionService.handleContributionProcessedAck(dataRequest), ErrorResponseException.class);
+		ConcorContributionAckFromDrc ackFromDrc = ConcorContributionAckFromDrc.of(9L, errorText);
+		var exception = catchThrowableOfType(() -> contributionService.handleContributionProcessedAck(ackFromDrc), ErrorResponseException.class);
 		softly.assertThat(exception).isNotNull();
 		softly.assertThat(FAILED_DEPENDENCY.isSameCodeAs(exception.getStatusCode())).isTrue();
 		verify(eventService).logConcor(9L,EventType.DRC_ASYNC_RESPONSE,null,null, BAD_REQUEST, errorText);
+		verify(eventService).logConcorContributionError(ackFromDrc);
 	}
 
 	@Test

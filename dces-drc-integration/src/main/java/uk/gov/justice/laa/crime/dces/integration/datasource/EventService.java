@@ -5,12 +5,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionEntity;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionErrorEntity;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventTypeEntity;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.RecordType;
+import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionErrorRepository;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionRepository;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.EventTypeRepository;
 import uk.gov.justice.laa.crime.dces.integration.exception.DcesDrcServiceException;
+import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
+import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 
@@ -18,12 +22,15 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
+import static uk.gov.justice.laa.crime.dces.integration.utils.CaseSubmissionErrorMapper.createCaseSubmissionErrorEntity;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class EventService {
 
     private final CaseSubmissionRepository caseSubmissionRepository;
+    private final CaseSubmissionErrorRepository caseSubmissionErrorRepository;
     private final EventTypeRepository eventTypeRepository;
 
     // get History Duration for use in clearing down history.
@@ -90,6 +97,25 @@ public class EventService {
 
     public boolean logConcor(Long concorContributionId, EventType eventType, Long batchId, CONTRIBUTIONS contributionsObject, HttpStatusCode httpStatusCode, String payload){
         return logConcor(concorContributionId, eventType, batchId, null, contributionsObject, httpStatusCode, payload);
+    }
+
+    public boolean logFdcError( FdcAckFromDrc fdcAckFromDrc){
+        var entity = createCaseSubmissionErrorEntity(fdcAckFromDrc);
+        saveCaseSubmissionErrorEntity(entity);
+        log.info("saved fdc error entity: {}", entity);
+        return true;
+    }
+
+    public boolean logConcorContributionError(ConcorContributionAckFromDrc concorContributionAckFromDrc){
+
+        var entity = createCaseSubmissionErrorEntity(concorContributionAckFromDrc);
+        saveCaseSubmissionErrorEntity(entity);
+        log.info("saved concor contribution error entity: {}", entity);
+        return true;
+    }
+
+    public CaseSubmissionErrorEntity saveCaseSubmissionErrorEntity(CaseSubmissionErrorEntity entity){
+        return caseSubmissionErrorRepository.save(entity);
     }
 
     private CaseSubmissionEntity createCaseSubmissionEntity(EventType eventType, Long batchId, Long traceId, Long maatId, HttpStatusCode httpStatusCode, String payload){
