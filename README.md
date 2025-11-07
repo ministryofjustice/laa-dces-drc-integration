@@ -85,7 +85,7 @@ If you are connecting to a specific environment's database, you can get these de
 You will also need to configure the application to use an instance of the Maat CD API. This can either be ran locally via docker, or by using one of the Maat API's environments.
 If using an environment's Maat API ( such as Development ) you can get the url and details via the usual channels, or taking them from an environment's secrets.
 
-#### Running Application on Locally
+#### Running Application Locally
 
 Then pull down the environment file and run the Docker container with the script:
 

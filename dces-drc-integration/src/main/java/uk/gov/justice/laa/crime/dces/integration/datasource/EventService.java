@@ -5,7 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
-import uk.gov.justice.laa.crime.dces.integration.datasource.model.*;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionEntity;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventTypeEntity;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.RecordType;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionErrorRepository;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionRepository;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.EventTypeRepository;
@@ -31,7 +34,7 @@ public class EventService {
     private final String historyCutoffDays = System.getenv("SPRING_DATASOURCE_KEEPHISTORYDAYS");
 
     @Value("${scheduling.cron.purge.month:12}")
-    private int monthToPurge;
+    private int ageMonthsToPurge;
 
     public List<CaseSubmissionEntity> getAllCaseSubmissions(){
         return caseSubmissionRepository.findAll();
@@ -138,7 +141,7 @@ public class EventService {
     }
 
     public Long purgePeriodicCaseSubmissionErrorEntries() {
-        LocalDateTime purgeBeforeDate = LocalDateTime.now().minusMonths(monthToPurge);
+        LocalDateTime purgeBeforeDate = LocalDateTime.now().minusMonths(ageMonthsToPurge);
         return caseSubmissionErrorRepository.deleteByCreationDateBefore(purgeBeforeDate);
     }
 

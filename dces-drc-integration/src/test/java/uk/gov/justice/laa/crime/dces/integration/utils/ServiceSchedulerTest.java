@@ -105,8 +105,10 @@ public class ServiceSchedulerTest {
     @Test
     void givenAValidCronJob_shouldCalledPurgePeriodicCaseSubmissionErrorEntries(CapturedOutput output) throws InterruptedException {
         when(eventService.purgePeriodicCaseSubmissionErrorEntries()).thenReturn(5l); // Arrange
+
         Thread.sleep(1000); // Act - could be called once (or maybe twice) depending on timing
-        verify(eventService, atLeastOnce()).purgePeriodicCaseSubmissionErrorEntries(); // Assert
+
+        verify(eventService).purgePeriodicCaseSubmissionErrorEntries(); // Assert
         assertThat(output.getOut()).contains("Starting purging case submission error");
         assertThat(output.getOut()).contains("Deleted 5 historical case submission error entries");
     }
