@@ -40,7 +40,7 @@ public class EventService {
         return caseSubmissionRepository.findAll();
     }
 
-    public CaseSubmissionEntity saveEntity(CaseSubmissionEntity entity){
+    public CaseSubmissionEntity saveEntity(CaseSubmissionEntity entity) {
         return caseSubmissionRepository.save(entity);
     }
 
@@ -69,7 +69,7 @@ public class EventService {
         return 0;
     }
 
-    public boolean logFdc(EventType eventType, Long batchId, Long traceId, Fdc fdcObject, HttpStatusCode httpStatusCode, String payload){
+    public boolean logFdc(EventType eventType, Long batchId, Long traceId, Fdc fdcObject, HttpStatusCode httpStatusCode, String payload) {
         // default fdcObject if null is passed. No ids is a valid scenario.
         fdcObject = Objects.requireNonNullElse(fdcObject, new Fdc());
 
@@ -80,11 +80,11 @@ public class EventService {
         return true;
     }
 
-    public boolean logFdc(EventType eventType, Long batchId, Fdc fdcObject, HttpStatusCode httpStatusCode, String payload){
+    public boolean logFdc(EventType eventType, Long batchId, Fdc fdcObject, HttpStatusCode httpStatusCode, String payload) {
         return logFdc(eventType, batchId, null, fdcObject, httpStatusCode, payload);
     }
 
-    public boolean logConcor(Long concorContributionId, EventType eventType, Long batchId, Long traceId, CONTRIBUTIONS contributionsObject, HttpStatusCode httpStatusCode, String payload){
+    public boolean logConcor(Long concorContributionId, EventType eventType, Long batchId, Long traceId, CONTRIBUTIONS contributionsObject, HttpStatusCode httpStatusCode, String payload) {
         // default fdcObject if null is passed. No ids is a valid scenario.
         contributionsObject = Objects.requireNonNullElse(contributionsObject, new CONTRIBUTIONS());
 
@@ -95,30 +95,39 @@ public class EventService {
         return true;
     }
 
-    public boolean logConcor(Long concorContributionId, EventType eventType, Long batchId, CONTRIBUTIONS contributionsObject, HttpStatusCode httpStatusCode, String payload){
+    public boolean logConcor(Long concorContributionId, EventType eventType, Long batchId, CONTRIBUTIONS contributionsObject, HttpStatusCode httpStatusCode, String payload) {
         return logConcor(concorContributionId, eventType, batchId, null, contributionsObject, httpStatusCode, payload);
     }
 
-    public boolean logFdcError( FdcAckFromDrc fdcAckFromDrc){
+    public CaseSubmissionErrorEntity logFdcError(FdcAckFromDrc fdcAckFromDrc) {
         var entity = createCaseSubmissionErrorEntity(fdcAckFromDrc);
-        saveCaseSubmissionErrorEntity(entity);
-        log.info("saved fdc error entity: {}", entity);
-        return true;
+        try {
+            var saved = saveCaseSubmissionErrorEntity(entity);
+            log.info("saved fdc error entity: {}", saved);
+            return saved;
+        } catch (Exception e) {
+            log.error("failed to save fdc error entity: {}", entity, e);
+            return null;
+        }
     }
 
-    public boolean logConcorContributionError(ConcorContributionAckFromDrc concorContributionAckFromDrc){
-
+    public CaseSubmissionErrorEntity logConcorContributionError(ConcorContributionAckFromDrc concorContributionAckFromDrc) {
         var entity = createCaseSubmissionErrorEntity(concorContributionAckFromDrc);
-        saveCaseSubmissionErrorEntity(entity);
-        log.info("saved concor contribution error entity: {}", entity);
-        return true;
+        try {
+            var saved = saveCaseSubmissionErrorEntity(entity);
+            log.info("saved concor contribution error entity: {}", saved);
+            return saved;
+        } catch (Exception e) {
+            log.error("failed to save concor contribution error entity: {}", entity, e);
+            return null;
+        }
     }
 
-    public CaseSubmissionErrorEntity saveCaseSubmissionErrorEntity(CaseSubmissionErrorEntity entity){
+    public CaseSubmissionErrorEntity saveCaseSubmissionErrorEntity(CaseSubmissionErrorEntity entity) {
         return caseSubmissionErrorRepository.save(entity);
     }
 
-    private CaseSubmissionEntity createCaseSubmissionEntity(EventType eventType, Long batchId, Long traceId, Long maatId, HttpStatusCode httpStatusCode, String payload){
+    private CaseSubmissionEntity createCaseSubmissionEntity(EventType eventType, Long batchId, Long traceId, Long maatId, HttpStatusCode httpStatusCode, String payload) {
         Integer httpStatus = (Objects.nonNull(httpStatusCode)) ? httpStatusCode.value() : null;
         var caseSubmissionEntity = CaseSubmissionEntity.builder()
                 .batchId(batchId)
@@ -141,7 +150,7 @@ public class EventService {
         }
     }
 
-    protected Integer getCutoffDays(){
+    protected Integer getCutoffDays() {
         if(Objects.isNull(historyCutoffDays)){
             log.error("No History Cutoff Days set in environment.");
         }
@@ -153,7 +162,7 @@ public class EventService {
         return null;
     }
 
-    protected LocalDateTime getCutoffDate(Integer cutoff){
+    protected LocalDateTime getCutoffDate(Integer cutoff) {
         return LocalDateTime.now()
                 .withHour(0).withMinute(0).withSecond(0).withNano(1)
                 .minusDays(cutoff);

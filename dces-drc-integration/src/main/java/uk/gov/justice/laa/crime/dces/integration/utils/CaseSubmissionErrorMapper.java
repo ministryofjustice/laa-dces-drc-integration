@@ -6,6 +6,8 @@ import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmission
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
 
+import java.util.Optional;
+
 @UtilityClass
 public class CaseSubmissionErrorMapper {
 
@@ -42,19 +44,19 @@ public class CaseSubmissionErrorMapper {
             ProblemDetail problemDetail,
             String errorText) {
 
-        String title = null;
-        String detail = null;
-        Integer status = null;
+        String title = Optional.ofNullable(problemDetail)
+                .map(ProblemDetail::getTitle)
+                .orElse(null);
 
-        if (problemDetail != null) {
-            title = problemDetail.getTitle();
-            detail = problemDetail.getDetail();
-            status = problemDetail.getStatus();
-        }
+        String detail = Optional.ofNullable(problemDetail)
+                .map(ProblemDetail::getDetail)
+                .orElse(null);
 
-        if (detail == null) {
-            detail = errorText;
-        }
+        Integer status = Optional.ofNullable(problemDetail)
+                .map(ProblemDetail::getStatus)
+                .orElse(null);
+
+        detail = Optional.ofNullable(detail).orElse(errorText);
 
         return CaseSubmissionErrorEntity.builder()
                 .maatId(maatId)
