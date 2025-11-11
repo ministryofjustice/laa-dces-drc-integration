@@ -23,15 +23,11 @@ import uk.gov.justice.laa.crime.dces.integration.exception.DcesDrcServiceExcepti
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 
-import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @ExtendWith(SoftAssertionsExtension.class)
@@ -157,7 +153,7 @@ class EventServiceTest {
     }
 
     @Test
-    void givenAValidCronExpression_whenPurgePeriodicCaseSubmissionEntriesIsInvoked_shouldPurgePeriodicRecords() throws NoSuchFieldException, IllegalAccessException {
+    void givenAValidCronExpression_whenPurgePeriodicCaseSubmissionEntriesIsInvoked_shouldPurgePeriodicRecords() {
         when(caseSubmissionRepository.deleteByProcessedDateBefore(any(LocalDateTime.class))).thenReturn(300);
         softly.assertThat(eventService.purgePeriodicCaseSubmissionEntries()).isEqualTo(300);
         verify(caseSubmissionRepository, times(1)).deleteByProcessedDateBefore(any(LocalDateTime.class));
@@ -165,7 +161,7 @@ class EventServiceTest {
     }
 
     @Test
-    void givenAValidCronExpression_whenCountHistoricalCaseSubmissionEntriesIsInvoked_thenShouldReturnCount() throws NoSuchFieldException, IllegalAccessException {
+    void givenAValidCronExpression_whenCountHistoricalCaseSubmissionEntriesIsInvoked_thenShouldReturnCount() {
         when(caseSubmissionRepository.countByProcessedDateBefore(any(LocalDateTime.class))).thenReturn(300L);
         softly.assertThat(eventService.countHistoricalCaseSubmissionEntries()).isEqualTo(300L);
         verify(caseSubmissionRepository, times(1)).countByProcessedDateBefore(any(LocalDateTime.class));

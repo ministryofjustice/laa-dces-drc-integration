@@ -54,18 +54,12 @@ public class EventService {
 
     public Long countHistoricalCaseSubmissionEntries() {
 
-        if (Objects.nonNull(historyCutoffDays)) {
-            return caseSubmissionRepository.countByProcessedDateBefore(getCutoffDate(historyCutoffDays));
-        }
-        return 0L;
+        return caseSubmissionRepository.countByProcessedDateBefore(getCutoffDate(historyCutoffDays));
     }
 
     public Integer purgePeriodicCaseSubmissionEntries() {
-        // delete all entries that are older than the cutoff days ago, from first thing today.
-        if (Objects.nonNull(historyCutoffDays)) {
-            return caseSubmissionRepository.deleteByProcessedDateBefore(getCutoffDate(historyCutoffDays));
-        }
-        return 0;
+
+        return caseSubmissionRepository.deleteByProcessedDateBefore(getCutoffDate(historyCutoffDays));
     }
 
     public boolean logFdc(EventType eventType, Long batchId, Long traceId, Fdc fdcObject, HttpStatusCode httpStatusCode, String payload){
