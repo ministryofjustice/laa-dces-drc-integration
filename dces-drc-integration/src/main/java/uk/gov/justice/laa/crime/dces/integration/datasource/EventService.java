@@ -30,11 +30,12 @@ public class EventService {
 
     private final CaseSubmissionErrorRepository caseSubmissionErrorRepository;
 
-    // get History Duration for use in clearing down history.
-    private final String historyCutoffDays = System.getenv("SPRING_DATASOURCE_KEEPHISTORYDAYS");
 
     @Value("${scheduling.cron.purge.month:12}")
-    private int ageMonthsToPurge;
+    private int historyCutoffMonth;
+
+    @Value("${scheduling.cron.purge.days:30}")
+    private int historyCutoffDays;
 
     public List<CaseSubmissionEntity> getAllCaseSubmissions(){
         return caseSubmissionRepository.findAll();
@@ -52,19 +53,17 @@ public class EventService {
     }
 
     public Long countHistoricalCaseSubmissionEntries() {
-        Integer cutoffDays = getCutoffDays();
-        // delete all entries that are older than the cutoff days ago, from first thing today.
-        if (Objects.nonNull(cutoffDays)) {
-            return caseSubmissionRepository.countByProcessedDateBefore(getCutoffDate(cutoffDays));
+
+        if (Objects.nonNull(historyCutoffDays)) {
+            return caseSubmissionRepository.countByProcessedDateBefore(getCutoffDate(historyCutoffDays));
         }
         return 0L;
     }
 
-    public Integer deleteHistoricalCaseSubmissionEntries() {
-        Integer cutoffDays = getCutoffDays();
+    public Integer purgePeriodicCaseSubmissionEntries() {
         // delete all entries that are older than the cutoff days ago, from first thing today.
-        if (Objects.nonNull(cutoffDays)) {
-            return caseSubmissionRepository.deleteByProcessedDateBefore(getCutoffDate(cutoffDays));
+        if (Objects.nonNull(historyCutoffDays)) {
+            return caseSubmissionRepository.deleteByProcessedDateBefore(getCutoffDate(historyCutoffDays));
         }
         return 0;
     }
@@ -122,18 +121,6 @@ public class EventService {
         }
     }
 
-    protected Integer getCutoffDays(){
-        if(Objects.isNull(historyCutoffDays)){
-            log.error("No History Cutoff Days set in environment.");
-        }
-        try{
-            return Integer.valueOf(historyCutoffDays);
-        } catch (NumberFormatException e){
-            log.error("History Cutoff Days incorrectly formatted.");
-        }
-        return null;
-    }
-
     protected LocalDateTime getCutoffDate(Integer cutoff){
         return LocalDateTime.now()
                 .withHour(0).withMinute(0).withSecond(0).withNano(1)
@@ -141,7 +128,7 @@ public class EventService {
     }
 
     public Long purgePeriodicCaseSubmissionErrorEntries() {
-        LocalDateTime purgeBeforeDate = LocalDateTime.now().minusMonths(ageMonthsToPurge);
+        LocalDateTime purgeBeforeDate = LocalDateTime.now().minusMonths(historyCutoffMonth);
         return caseSubmissionErrorRepository.deleteByCreationDateBefore(purgeBeforeDate);
     }
 

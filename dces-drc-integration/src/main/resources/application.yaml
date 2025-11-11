@@ -60,10 +60,11 @@ scheduling:
     process-fdc-files: ${DCES_CRON_FDC:-}
     process-contributions-files: ${DCES_CRON_CONTRIBUTIONS:-}
     data-migration: ${DCES_CRON_DATA_MIGRATION:-}
-    data-cleardown: ${DCES_CRON_DATA_CLEARDOWN:-}
     purge:
+      data-cleardown: ${DCES_CRON_DATA_CLEARDOWN:-}
       case-submission-error: ${DCES_CRON_CASE_SUBMISSION-ERROR:-}
       month: ${SPRING_DATASOURCE_KEEPHISTORYMONTH:12}
+      days: ${SPRING_DATASOURCE_KEEPHISTORYDAYS:30}
   lock:
     at-least: 30s
     at-most: 15m
