@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
@@ -29,7 +30,9 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DbLoggingTest {
 
-  private static final String cutoffEnv = System.getenv("SPRING_DATASOURCE_KEEPHISTORYDAYS");
+
+  @Value("${scheduling.cron.purge.keepHistoryShortTerm:30}")
+  private int historyCutoffDays;
 
   @Autowired
   private EventService eventService;
@@ -74,7 +77,7 @@ class DbLoggingTest {
     // verify we're not getting unexpected values due to timing with other tests or anything unexpected.
     assertEquals(initialCount+numDeletionTestEntries, addedTestDataCount);
     // do
-    Integer deletedCount = eventService.deleteHistoricalCaseSubmissionEntries();
+    Integer deletedCount = eventService.purgePeriodicCaseSubmissionEntries();
     // verify
     assertEquals(addedTestDataCount, deletedCount);
     assertEquals(0L, eventService.countHistoricalCaseSubmissionEntries());
@@ -123,7 +126,7 @@ class DbLoggingTest {
   }
 
   private void createHistoricalTestData(Integer numberOfDeletionEntries, Integer numTestEntries){
-    int offset = getCutoff();
+    int offset = historyCutoffDays;
     for(int i=0; i<numTestEntries+numberOfDeletionEntries; i++) {
       eventService.logFdc(EventType.SENT_TO_DRC, TEST_BATCH_ID, TEST_TRACE_ID, null, null, testPayloadString);
     }
@@ -133,10 +136,4 @@ class DbLoggingTest {
     // cutoff +1 since we want these to be deleted. I.e. 5 days of history, we want it 6 days old.
     caseSubmissionRepository.saveAllAndFlush(testEntries);
   }
-
-  private int getCutoff(){
-    assertNotNull(cutoffEnv, "Historical Data Cutoff has not been set.");
-    return Integer.parseInt(cutoffEnv);
-  }
-
 }

@@ -31,10 +31,10 @@ public class EventService {
     private final CaseSubmissionErrorRepository caseSubmissionErrorRepository;
 
 
-    @Value("${scheduling.cron.purge.month:12}")
+    @Value("${scheduling.cron.purge.keepHistoryLongTerm:12}")
     private int historyCutoffMonth;
 
-    @Value("${scheduling.cron.purge.days:30}")
+    @Value("${scheduling.cron.purge.keepHistoryShortTerm:30}")
     private int historyCutoffDays;
 
     public List<CaseSubmissionEntity> getAllCaseSubmissions(){
