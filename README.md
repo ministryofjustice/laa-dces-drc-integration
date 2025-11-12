@@ -85,13 +85,12 @@ If you are connecting to a specific environment's database, you can get these de
 You will also need to configure the application to use an instance of the Maat CD API. This can either be ran locally via docker, or by using one of the Maat API's environments.
 If using an environment's Maat API ( such as Development ) you can get the url and details via the usual channels, or taking them from an environment's secrets.
 
-#### Docker
+#### Running Application Locally
 
-Once these are setup you will be able to build and launch the application locally using docker.
+Then pull down the environment file and run the Docker container with the script:
 
-```sh
-docker-compose build
-docker-compose up
+```shell
+./start-local.sh
 ```
 
 laa-dces-drc-integration application will be running on http://localhost:8089, with the actuator available at http://localhost:8188/actuator/

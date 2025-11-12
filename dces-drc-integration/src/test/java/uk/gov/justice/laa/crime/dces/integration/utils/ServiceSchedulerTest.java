@@ -38,8 +38,9 @@ import static org.mockito.Mockito.when;
         "scheduling.cron.process-fdc-files=* * * * * *",
         "scheduling.cron.process-contributions-files=* * * * * *",
         "scheduling.cron.data-migration=* * * * * *",
-        "scheduling.cron.data-cleardown=* * * * * *",
-        "scheduling.lock.at-least=PT0S"
+        "scheduling.cron.purge.data-cleardown=* * * * * *",
+        "scheduling.lock.at-least=PT0S",
+        "scheduling.cron.purge.case-submission-error=* * * * * *"
 })
 @ActiveProfiles(profiles = "default") // the ServiceScheduler is disabled during tests otherwise
 public class ServiceSchedulerTest {
@@ -91,14 +92,25 @@ public class ServiceSchedulerTest {
 
     @Test
     void testDatasourceCleardownIsCalled(CapturedOutput output) throws InterruptedException {
-        when(eventService.deleteHistoricalCaseSubmissionEntries()).thenReturn(5); // Arrange
+        when(eventService.purgePeriodicCaseSubmissionEntries()).thenReturn(5); // Arrange
 
         Thread.sleep(1000); // Act - could be called once (or maybe twice) depending on timing
 
-        verify(eventService, atLeastOnce()).deleteHistoricalCaseSubmissionEntries(); // Assert
-        verify(eventService, atMost(2)).deleteHistoricalCaseSubmissionEntries();
+        verify(eventService, atLeastOnce()).purgePeriodicCaseSubmissionEntries(); // Assert
+        verify(eventService, atMost(2)).purgePeriodicCaseSubmissionEntries();
         assertThat(output.getOut()).contains("Starting Event Data Cleardown");
         assertThat(output.getOut()).contains("Deleted 5 historical entries");
+    }
+
+    @Test
+    void givenAValidCronJob_shouldCalledPurgePeriodicCaseSubmissionErrorEntries(CapturedOutput output) throws InterruptedException {
+        when(eventService.purgePeriodicCaseSubmissionErrorEntries()).thenReturn(5l); // Arrange
+
+        Thread.sleep(1000); // Act - could be called once (or maybe twice) depending on timing
+
+        verify(eventService).purgePeriodicCaseSubmissionErrorEntries(); // Assert
+        assertThat(output.getOut()).contains("Starting purging case submission error");
+        assertThat(output.getOut()).contains("Deleted 5 historical case submission error entries");
     }
 
     static class DelayedTrue implements Answer<Boolean> {
