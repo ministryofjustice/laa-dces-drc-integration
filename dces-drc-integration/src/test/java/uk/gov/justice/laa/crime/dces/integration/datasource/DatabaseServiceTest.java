@@ -13,6 +13,8 @@ import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseMigra
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionErrorRepository;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionRepository;
 
+import java.time.LocalDateTime;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @RequiredArgsConstructor
@@ -65,6 +67,17 @@ class DatabaseServiceTest extends ApplicationTestBase {
         assertEquals(1, count);
         assertEquals(-333L, caseSubmissionErrorRepository.findAll().stream().findFirst().get().getFdcId());
         assertEquals(200, caseSubmissionErrorRepository.findAll().get(0).getStatus());
+    }
+
+    @Test
+    void givenAValidCaseSubmission_whenDeleteByCreationDateBeforeIsInvoked_shouldDeleteOldMessage() {
+
+        CaseSubmissionErrorEntity entity = createExpectedCaseSubmissionErrorEntity(RecordType.FDC, 200);
+        caseSubmissionErrorRepository.save(entity);
+        long count = caseSubmissionErrorRepository.count();
+        assertEquals(1, count);
+        long deleteCount =  caseSubmissionErrorRepository.deleteByCreationDateBefore(LocalDateTime.now());
+        assertEquals(1, deleteCount);
     }
 
     @Test

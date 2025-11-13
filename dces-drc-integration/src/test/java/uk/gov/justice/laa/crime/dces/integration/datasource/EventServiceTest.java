@@ -51,6 +51,9 @@ class EventServiceTest {
     @Mock
     private EventTypeRepository eventTypeRepository;
 
+    @Mock
+    private CaseSubmissionErrorRepository caseSubmissionErrorRepository;
+
     @InjectMocks
     private EventService eventService;
     @Captor
@@ -298,97 +301,26 @@ class EventServiceTest {
     }
 
     @Test
-    void whenCutoffDaysProvided_thenDateIsAsExpected() throws NoSuchFieldException, IllegalAccessException{
-        setCutoff("5");
-        LocalDateTime expectedCutoffDate = LocalDateTime.now()
-                .withHour(0).withMinute(0).withSecond(0).withNano(1)
-                .minusDays(5);
-        LocalDateTime actualCutoffDate = eventService.getCutoffDate(5);
-        softly.assertThat(actualCutoffDate).isEqualTo(expectedCutoffDate);
+    void givenAValidCronExpression_whenPurgePeriodicCaseSubmissionEntriesIsInvoked_shouldPurgePeriodicRecords() {
+        when(caseSubmissionRepository.deleteByProcessedDateBefore(any(LocalDateTime.class))).thenReturn(300);
+        softly.assertThat(eventService.purgePeriodicCaseSubmissionEntries()).isEqualTo(300);
+        verify(caseSubmissionRepository, times(1)).deleteByProcessedDateBefore(any(LocalDateTime.class));
         softly.assertAll();
     }
 
     @Test
-    void whenCutoffDaysNegative_thenDateIsAsFuture() throws NoSuchFieldException, IllegalAccessException{
-        setCutoff("-5");
-        LocalDateTime expectedCutoffDate = LocalDateTime.now()
-                .withHour(0).withMinute(0).withSecond(0).withNano(1)
-                .minusDays(-5);
-        LocalDateTime actualCutoffDate = eventService.getCutoffDate(-5);
-        softly.assertThat(actualCutoffDate).isEqualTo(expectedCutoffDate);
-        softly.assertAll();
-    }
-
-    @Test
-    void whenCutoffDaysZero_thenDateIsAsCurrent() throws NoSuchFieldException, IllegalAccessException{
-        setCutoff("0");
-        LocalDateTime expectedCutoffDate = LocalDateTime.now()
-                .withHour(0).withMinute(0).withSecond(0).withNano(1)
-                .minusDays(0);
-        LocalDateTime actualCutoffDate = eventService.getCutoffDate(0);
-        softly.assertThat(actualCutoffDate).isEqualTo(expectedCutoffDate);
-        softly.assertAll();
-    }
-
-    @Test
-    void whenHistoryCutoffIsSet_thenReturnsIntOnDeletion() throws NoSuchFieldException, IllegalAccessException {
-        setCutoff("5");
-        LocalDateTime cutoffDate = LocalDateTime.now()
-                .withHour(0).withMinute(0).withSecond(0).withNano(1)
-                .minusDays(5);
-        when(caseSubmissionRepository.deleteByProcessedDateBefore(cutoffDate)).thenReturn(300);
-        softly.assertThat(eventService.getCutoffDays()).isEqualTo(5);
-        softly.assertThat(eventService.deleteHistoricalCaseSubmissionEntries()).isEqualTo(300);
-        verify(caseSubmissionRepository, times(1)).deleteByProcessedDateBefore(cutoffDate);
-        softly.assertAll();
-    }
-
-    @Test
-    void whenHistoryCutoffIsSet_thenReturnsIntOnCount() throws NoSuchFieldException, IllegalAccessException {
-        setCutoff("5");
-        LocalDateTime cutoffDate = LocalDateTime.now()
-                .withHour(0).withMinute(0).withSecond(0).withNano(1)
-                .minusDays(5);
-        when(caseSubmissionRepository.countByProcessedDateBefore(cutoffDate)).thenReturn(300L);
-        softly.assertThat(eventService.getCutoffDays()).isEqualTo(5);
+    void givenAValidCronExpression_whenCountHistoricalCaseSubmissionEntriesIsInvoked_thenShouldReturnCount() {
+        when(caseSubmissionRepository.countByProcessedDateBefore(any(LocalDateTime.class))).thenReturn(300L);
         softly.assertThat(eventService.countHistoricalCaseSubmissionEntries()).isEqualTo(300L);
-        verify(caseSubmissionRepository, times(1)).countByProcessedDateBefore(cutoffDate);
+        verify(caseSubmissionRepository, times(1)).countByProcessedDateBefore(any(LocalDateTime.class));
         softly.assertAll();
     }
 
     @Test
-    void whenNoHistoryCutoffIsSet_thenZeroReturnedOnDeletion() throws NoSuchFieldException, IllegalAccessException {
-        setCutoff(null);
-        softly.assertThat(eventService.getCutoffDays()).isNull();
-        softly.assertThat(eventService.deleteHistoricalCaseSubmissionEntries()).isEqualTo(0);
-        verify(caseSubmissionRepository, never()).deleteByProcessedDateBefore(any());
-        softly.assertAll();
-    }
-
-    @Test
-    void whenNoHistoryCutoffIsSet_thenZeroReturnedOnCount() throws NoSuchFieldException, IllegalAccessException {
-        setCutoff(null);
-        softly.assertThat(eventService.getCutoffDays()).isNull();
-        softly.assertThat(eventService.countHistoricalCaseSubmissionEntries()).isEqualTo(0);
-        verify(caseSubmissionRepository, never()).countByProcessedDateBefore(any());
-        softly.assertAll();
-    }
-
-    @Test
-    void whenHistoryCutoffInvalid_thenZeroReturnedOnDeletion() throws NoSuchFieldException, IllegalAccessException {
-        setCutoff("Not Numbers");
-        softly.assertThat(eventService.getCutoffDays()).isNull();
-        softly.assertThat(eventService.deleteHistoricalCaseSubmissionEntries()).isEqualTo(0);
-        verify(caseSubmissionRepository, never()).deleteByProcessedDateBefore(any());
-        softly.assertAll();
-    }
-
-    @Test
-    void whenHistoryCutoffInvalid_thenZeroReturnedOnCount() throws NoSuchFieldException, IllegalAccessException {
-        setCutoff("Not Numbers");
-        softly.assertThat(eventService.getCutoffDays()).isNull();
-        softly.assertThat(eventService.countHistoricalCaseSubmissionEntries()).isEqualTo(0);
-        verify(caseSubmissionRepository, never()).countByProcessedDateBefore(any());
+    void givenAValidCronExpression_whenPurgeCaseSubmissionErrorEntriesIsInvoked_shouldPurgePeriodicRecords() {
+        when(caseSubmissionErrorRepository.deleteByCreationDateBefore(any(LocalDateTime.class))).thenReturn(5l);
+        softly.assertThat(eventService.purgePeriodicCaseSubmissionErrorEntries()).isEqualTo(5l);
+        verify(caseSubmissionErrorRepository).deleteByCreationDateBefore(any(LocalDateTime.class));
         softly.assertAll();
     }
 
@@ -420,11 +352,4 @@ class EventServiceTest {
         contributionObject.setId(testConcorId);
         return contributionObject;
     }
-
-    private void setCutoff(String cutoff) throws NoSuchFieldException, IllegalAccessException {
-        Field privateStringField = EventService.class.getDeclaredField("historyCutoffDays");
-        privateStringField.setAccessible(true);
-        privateStringField.set(eventService, cutoff);
-    }
-
 }

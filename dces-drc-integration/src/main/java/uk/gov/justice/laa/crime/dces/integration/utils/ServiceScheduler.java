@@ -55,12 +55,21 @@ public class ServiceScheduler {
         migrationService.migration();
     }
 
-    @Scheduled(cron = "${scheduling.cron.data-cleardown:-}")
+    @Scheduled(cron = "${scheduling.cron.purge.data-cleardown:-}")
     @SchedulerLock(name = "dataCleardown")
     public void dataCleardown(){
         LockAssert.assertLocked();
         log.info("Starting Event Data Cleardown at {}", LocalDateTime.now());
-        Integer deletedCount = eventService.deleteHistoricalCaseSubmissionEntries();
+        Integer deletedCount = eventService.purgePeriodicCaseSubmissionEntries();
         log.info("Deleted {} historical entries", deletedCount);
+    }
+
+    @Scheduled(cron = "${scheduling.cron.purge.case-submission-error}")
+    @SchedulerLock(name = "purgeCaseSubmission")
+    public void purgeCaseSubmissionError() {
+        LockAssert.assertLocked();
+        log.info("Starting purging case submission error");
+        long deletedCount = eventService.purgePeriodicCaseSubmissionErrorEntries();
+        log.info("Deleted {} historical case submission error entries", deletedCount);
     }
 }

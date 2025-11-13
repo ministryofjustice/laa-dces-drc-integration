@@ -2,6 +2,7 @@ package uk.gov.justice.laa.crime.dces.integration.datasource;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionEntity;
@@ -33,8 +34,13 @@ public class EventService {
     private final CaseSubmissionErrorRepository caseSubmissionErrorRepository;
     private final EventTypeRepository eventTypeRepository;
 
-    // get History Duration for use in clearing down history.
-    private final String historyCutoffDays = System.getenv("SPRING_DATASOURCE_KEEPHISTORYDAYS");
+
+
+    @Value("${scheduling.cron.purge.keepHistoryLongTerm:12}")
+    private int historyCutoffMonth;
+
+    @Value("${scheduling.cron.purge.keepHistoryShortTerm:30}")
+    private int historyCutoffDays;
 
     public List<CaseSubmissionEntity> getAllCaseSubmissions(){
         return caseSubmissionRepository.findAll();
@@ -52,21 +58,13 @@ public class EventService {
     }
 
     public Long countHistoricalCaseSubmissionEntries() {
-        Integer cutoffDays = getCutoffDays();
-        // delete all entries that are older than the cutoff days ago, from first thing today.
-        if (Objects.nonNull(cutoffDays)) {
-            return caseSubmissionRepository.countByProcessedDateBefore(getCutoffDate(cutoffDays));
-        }
-        return 0L;
+
+        return caseSubmissionRepository.countByProcessedDateBefore(getCutoffDate(historyCutoffDays));
     }
 
-    public Integer deleteHistoricalCaseSubmissionEntries() {
-        Integer cutoffDays = getCutoffDays();
-        // delete all entries that are older than the cutoff days ago, from first thing today.
-        if (Objects.nonNull(cutoffDays)) {
-            return caseSubmissionRepository.deleteByProcessedDateBefore(getCutoffDate(cutoffDays));
-        }
-        return 0;
+    public Integer purgePeriodicCaseSubmissionEntries() {
+
+        return caseSubmissionRepository.deleteByProcessedDateBefore(getCutoffDate(historyCutoffDays));
     }
 
     public boolean logFdc(EventType eventType, Long batchId, Long traceId, Fdc fdcObject, HttpStatusCode httpStatusCode, String payload) {
@@ -127,7 +125,8 @@ public class EventService {
         return caseSubmissionErrorRepository.save(entity);
     }
 
-    private CaseSubmissionEntity createCaseSubmissionEntity(EventType eventType, Long batchId, Long traceId, Long maatId, HttpStatusCode httpStatusCode, String payload) {
+
+    private CaseSubmissionEntity createCaseSubmissionEntity(EventType eventType, Long batchId, Long traceId, Long maatId, HttpStatusCode httpStatusCode, String payload){
         Integer httpStatus = (Objects.nonNull(httpStatusCode)) ? httpStatusCode.value() : null;
         var caseSubmissionEntity = CaseSubmissionEntity.builder()
                 .batchId(batchId)
@@ -150,22 +149,15 @@ public class EventService {
         }
     }
 
-    protected Integer getCutoffDays() {
-        if(Objects.isNull(historyCutoffDays)){
-            log.error("No History Cutoff Days set in environment.");
-        }
-        try{
-            return Integer.valueOf(historyCutoffDays);
-        } catch (NumberFormatException e){
-            log.error("History Cutoff Days incorrectly formatted.");
-        }
-        return null;
-    }
-
-    protected LocalDateTime getCutoffDate(Integer cutoff) {
+    protected LocalDateTime getCutoffDate(Integer cutoff){
         return LocalDateTime.now()
                 .withHour(0).withMinute(0).withSecond(0).withNano(1)
                 .minusDays(cutoff);
+    }
+
+    public Long purgePeriodicCaseSubmissionErrorEntries() {
+        LocalDateTime purgeBeforeDate = LocalDateTime.now().minusMonths(historyCutoffMonth);
+        return caseSubmissionErrorRepository.deleteByCreationDateBefore(purgeBeforeDate);
     }
 
 }
