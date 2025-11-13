@@ -26,13 +26,11 @@ import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 
-import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -50,9 +48,6 @@ class EventServiceTest {
     private CaseSubmissionErrorRepository caseSubmissionErrorRepository;
     @Mock
     private EventTypeRepository eventTypeRepository;
-
-    @Mock
-    private CaseSubmissionErrorRepository caseSubmissionErrorRepository;
 
     @InjectMocks
     private EventService eventService;
