@@ -25,7 +25,7 @@ import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestBase;
 import uk.gov.justice.laa.crime.dces.integration.config.FeatureProperties;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
-import uk.gov.justice.laa.crime.dces.integration.model.external.FdcProcessedRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.utils.FdcMapperUtils;
 import uk.gov.justice.laa.crime.dces.integration.utils.MapperUtils;
@@ -466,57 +466,52 @@ class FdcServiceTest extends ApplicationTestBase {
 
 	@Test
 	void testProcessFdcUpdateWhenSuccessful() {
-		FdcProcessedRequest dataRequest = FdcProcessedRequest.builder()
-				.fdcId(911L)
-				.build();
-		Long response = fdcService.handleFdcProcessedAck(dataRequest);
+
+        FdcAckFromDrc fdcAckFromDrc = FdcAckFromDrc.of(911L, null);
+		Long response = fdcService.handleFdcProcessedAck(fdcAckFromDrc);
 		softly.assertThat(response).isEqualTo(1111L);
+		verify(eventService).logFdcError(fdcAckFromDrc);
 	}
 
 	@Test
 	void testProcessFdcUpdateWhenIncomingIsolated() {
 		when(feature.incomingIsolated()).thenReturn(true);
-		FdcProcessedRequest dataRequest = FdcProcessedRequest.builder()
-				.fdcId(911L)
-				.build();
-		Long response = fdcService.handleFdcProcessedAck(dataRequest);
+		FdcAckFromDrc fdcAckFromDrc = FdcAckFromDrc.of(911L, null);
+		Long response = fdcService.handleFdcProcessedAck(fdcAckFromDrc);
 		softly.assertThat(response).isEqualTo(0L); // so MAAT DB not touched
+		verify(eventService).logFdcError(fdcAckFromDrc);
 	}
 
 	@Test
 	void testProcessFdcUpdateWhenNotFound() {
 		String errorText = "The request has failed to process";
-		FdcProcessedRequest dataRequest = FdcProcessedRequest.builder()
-				.fdcId(404L)
-				.errorText(errorText)
-				.build();
-		var exception = catchThrowableOfType(() -> fdcService.handleFdcProcessedAck(dataRequest), ErrorResponseException.class);
+
+		FdcAckFromDrc fdcAckFromDrc = FdcAckFromDrc.of(404L, errorText);
+		var exception = catchThrowableOfType(() -> fdcService.handleFdcProcessedAck(fdcAckFromDrc), ErrorResponseException.class);
 		softly.assertThat(exception).isNotNull();
 		softly.assertThat(NOT_FOUND.isSameCodeAs(exception.getStatusCode())).isTrue();
+		verify(eventService).logFdcError(fdcAckFromDrc);
 	}
 
 	@Test
 	void testProcessFdcUpdateWhenNoContFile() {
 		String errorText = "The request has failed to process";
-		FdcProcessedRequest dataRequest = FdcProcessedRequest.builder()
-				.fdcId(9L)
-				.errorText(errorText)
-				.build();
-		var exception = catchThrowableOfType(() -> fdcService.handleFdcProcessedAck(dataRequest), ErrorResponseException.class);
+
+		FdcAckFromDrc fdcAckFromDrc = FdcAckFromDrc.of(9L, errorText);
+		var exception = catchThrowableOfType(() -> fdcService.handleFdcProcessedAck(fdcAckFromDrc), ErrorResponseException.class);
 		softly.assertThat(exception).isNotNull();
 		softly.assertThat(FAILED_DEPENDENCY.isSameCodeAs(exception.getStatusCode())).isTrue();
+		verify(eventService).logFdcError(fdcAckFromDrc);
 	}
 
 	@Test
 	void testProcessFdcUpdateWhenServerFailure() {
 		String errorText = "The request has failed to process";
-		FdcProcessedRequest dataRequest = FdcProcessedRequest.builder()
-				.fdcId(500L)
-				.errorText(errorText)
-				.build();
-		var exception = catchThrowableOfType(() -> fdcService.handleFdcProcessedAck(dataRequest), ErrorResponseException.class);
+		FdcAckFromDrc fdcAckFromDrc = FdcAckFromDrc.of(500L, errorText);
+		var exception = catchThrowableOfType(() -> fdcService.handleFdcProcessedAck(fdcAckFromDrc), ErrorResponseException.class);
 		softly.assertThat(exception).isNotNull();
 		softly.assertThat(exception.getStatusCode().is5xxServerError()).isTrue();
+		verify(eventService).logFdcError(fdcAckFromDrc);
 	}
 
 	@Test

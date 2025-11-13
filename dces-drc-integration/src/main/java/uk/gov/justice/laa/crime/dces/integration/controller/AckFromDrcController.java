@@ -17,8 +17,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
-import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionProcessedRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.external.FdcProcessedRequest;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
 
@@ -46,11 +44,7 @@ public class AckFromDrcController {
             schema = @Schema(implementation = ProblemDetail.class)))
     public void fdc(@NotNull @RequestBody final FdcAckFromDrc fdcAckFromDrc) {
         log.info("Received FDC acknowledgement from DRC {}", fdcAckFromDrc);
-        FdcProcessedRequest fdcProcessedRequest = FdcProcessedRequest.builder()
-                .fdcId(fdcAckFromDrc.data().fdcId())
-                .errorText(fdcAckFromDrc.data().errorText())
-                .build();
-        fdcService.handleFdcProcessedAck(fdcProcessedRequest);
+        fdcService.handleFdcProcessedAck(fdcAckFromDrc);
     }
 
     @Observed(name = "UpdateFromDrcAPI.contribution", contextualName = "Process Updates for Contribution", lowCardinalityKeyValues = {"priority", "high"})
@@ -65,10 +59,6 @@ public class AckFromDrcController {
             schema = @Schema(implementation = ProblemDetail.class)))
     public void concorContribution(@NotNull @RequestBody final ConcorContributionAckFromDrc concorContributionAckFromDrc) {
         log.info("Received concorContribution acknowledgement from DRC {}", concorContributionAckFromDrc);
-        ContributionProcessedRequest contributionProcessedRequest = ContributionProcessedRequest.builder()
-                .concorId(concorContributionAckFromDrc.data().concorContributionId())
-                .errorText(concorContributionAckFromDrc.data().errorText())
-                .build();
-        contributionService.handleContributionProcessedAck(contributionProcessedRequest);
+        contributionService.handleContributionProcessedAck(concorContributionAckFromDrc);
     }
 }

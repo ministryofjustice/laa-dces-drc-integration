@@ -19,6 +19,7 @@ import uk.gov.justice.laa.crime.dces.integration.config.FeatureProperties;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.enums.ContributionRecordStatus;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcorContribEntry;
+import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionReqForDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.ContributionUpdateRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionProcessedRequest;
@@ -65,18 +66,23 @@ public class ContributionService implements FileService {
      * <li>If error text is present, will instead log it to the MAAT DB as an error for the associated contribution file.</li>
      * <li>Logs details received in the DCES Event Database.</li>
      * </ul>
-     * @param contributionProcessedRequest Contains the details of the concor contribution which has been processed by the DRC.
+     * @param concorContributionAckFromDrc Contains the details of the concor contribution which has been processed by the DRC.
      * @return FileID of the file associated with the fdcId
      */
-    public Long handleContributionProcessedAck(ContributionProcessedRequest contributionProcessedRequest) {
+    public Long handleContributionProcessedAck(ConcorContributionAckFromDrc concorContributionAckFromDrc) {
 
         Timer.Sample timerSample = Timer.start(meterRegistry);
+        ContributionProcessedRequest contributionProcessedRequest = ContributionProcessedRequest.builder()
+                .concorId(concorContributionAckFromDrc.data().concorContributionId())
+                .errorText(concorContributionAckFromDrc.data().errorText())
+                .build();
         try {
             return executeContributionProcessedAckCall(contributionProcessedRequest);
         } catch (WebClientResponseException e) {
             logContributionAsyncEvent(contributionProcessedRequest, e.getStatusCode());
             throw FileServiceUtils.translateMAATCDAPIException(e);
         } finally {
+            eventService.logConcorContributionError(concorContributionAckFromDrc);
             timerSample.stop(getTimer(SERVICE_NAME,
                     "method", "handleContributionProcessedAck",
                     "description", "Processing Updates From External for Contribution"));

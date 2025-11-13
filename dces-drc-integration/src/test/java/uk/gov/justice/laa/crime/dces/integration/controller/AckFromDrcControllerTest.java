@@ -13,8 +13,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
-import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionProcessedRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.external.FdcProcessedRequest;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
 import uk.gov.justice.laa.crime.dces.integration.service.TraceService;
@@ -51,14 +49,11 @@ class AckFromDrcControllerTest {
     @Test
     void testContributionWhenDownstreamResponseIsValid() throws Exception {
 
-        ContributionProcessedRequest contributionProcessedRequest = ContributionProcessedRequest.builder()
-                .concorId(99L)
-                .errorText("error 99")
-                .build();
         Long serviceResponse = 1111L;
-        when(contributionService.handleContributionProcessedAck(contributionProcessedRequest)).thenReturn(serviceResponse);
-
         ConcorContributionAckFromDrc concorContributionAckFromDrc = ConcorContributionAckFromDrc.of(99L, "error 99");
+
+        when(contributionService.handleContributionProcessedAck(concorContributionAckFromDrc)).thenReturn(serviceResponse);
+
         final String requestBody = mapper.writeValueAsString(concorContributionAckFromDrc);
 
         mockMvc.perform(MockMvcRequestBuilders.post(String.format(CONTRIBUTION_URL))
@@ -71,14 +66,11 @@ class AckFromDrcControllerTest {
     @Test
     void testContributionWhenDownstreamResponseIsNotValid() throws Exception {
 
-        ContributionProcessedRequest contributionProcessedRequest = ContributionProcessedRequest.builder()
-                .concorId(9L)
-                .errorText("Failed to process")
-                .build();
-        var serviceResponse = new WebClientResponseException(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), null, null, null);
-        when(contributionService.handleContributionProcessedAck(contributionProcessedRequest)).thenThrow(serviceResponse);
 
         ConcorContributionAckFromDrc concorContributionAckFromDrc = ConcorContributionAckFromDrc.of(9L, "Failed to process");
+        var serviceResponse = new WebClientResponseException(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), null, null, null);
+        when(contributionService.handleContributionProcessedAck(concorContributionAckFromDrc)).thenThrow(serviceResponse);
+
         final String requestBody = mapper.writeValueAsString(concorContributionAckFromDrc);
 
         mockMvc.perform(MockMvcRequestBuilders.post(String.format(CONTRIBUTION_URL))
@@ -91,13 +83,9 @@ class AckFromDrcControllerTest {
     @Test
     void testFdcWhenDownstreamResponseIsValid() throws Exception {
 
-        FdcProcessedRequest fdcProcessedRequest = FdcProcessedRequest.builder()
-                .fdcId(99L)
-                .build();
-        long serviceResponse = 1111L;
-        when(fdcService.handleFdcProcessedAck(fdcProcessedRequest)).thenReturn(serviceResponse);
-
         FdcAckFromDrc fdcAckFromDrc = FdcAckFromDrc.of(99L, null);
+        long serviceResponse = 1111L;
+        when(fdcService.handleFdcProcessedAck(fdcAckFromDrc)).thenReturn(serviceResponse);
 
         final String requestBody = mapper.writeValueAsString(fdcAckFromDrc);
 
@@ -111,14 +99,10 @@ class AckFromDrcControllerTest {
     @Test
     void testFdcWhenDownstreamResponseIsNotValid() throws Exception {
 
-        FdcProcessedRequest fdcProcessedRequest = FdcProcessedRequest.builder()
-                .fdcId(9L)
-                .errorText("Failed to process")
-                .build();
-        var serviceResponse = new WebClientResponseException(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), null,null,null);
-        when(fdcService.handleFdcProcessedAck(fdcProcessedRequest)).thenThrow(serviceResponse);
-
         FdcAckFromDrc fdcAckFromDrc = FdcAckFromDrc.of(9L, "Failed to process");
+        var serviceResponse = new WebClientResponseException(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), null,null,null);
+        when(fdcService.handleFdcProcessedAck(fdcAckFromDrc)).thenThrow(serviceResponse);
+
         final String requestBody = mapper.writeValueAsString(fdcAckFromDrc);
 
         mockMvc.perform(MockMvcRequestBuilders.post(String.format(CONTRIBUTION_FDC_URL))

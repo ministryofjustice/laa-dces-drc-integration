@@ -15,10 +15,10 @@ import org.mockito.Captor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
 import org.springframework.web.ErrorResponseException;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
@@ -29,13 +29,13 @@ import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.RecordType;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionRepository;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.fdc.FdcContributionsStatus;
-import uk.gov.justice.laa.crime.dces.integration.model.external.FdcProcessedRequest;
+import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcAccelerationType;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType;
+import uk.gov.justice.laa.crime.dces.integration.service.EventLogAssertService;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
 import uk.gov.justice.laa.crime.dces.integration.service.spy.FdcProcessSpy;
 import uk.gov.justice.laa.crime.dces.integration.service.spy.SpyFactory;
-import uk.gov.justice.laa.crime.dces.integration.service.EventLogAssertService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -109,9 +109,7 @@ class FdcIntegrationTest {
 
 	@Test
 	void testProcessFdcUpdateWhenFound() {
-		final var fdcProcessedRequest = FdcProcessedRequest.builder()
-				.fdcId(31774046L)
-				.build();
+		FdcAckFromDrc fdcProcessedRequest = FdcAckFromDrc.of(31774046L, null);
 		final Long response = fdcService.handleFdcProcessedAck(fdcProcessedRequest);
 		softly.assertThat(response).isPositive();
 		assertProcessFdcCaseSubmissionCreation(fdcProcessedRequest, HttpStatus.OK);
@@ -119,32 +117,26 @@ class FdcIntegrationTest {
 
 	@Test
 	void testProcessFdcUpdateWhenFoundWithText() {
-		final var fdcProcessedRequest = FdcProcessedRequest.builder()
-				.fdcId(31774046L)
-				.errorText("testProcessFdcUpdateWhenFoundWithText")
-				.build();
-		final Long response = fdcService.handleFdcProcessedAck(fdcProcessedRequest);
+		FdcAckFromDrc ackFromDrc = FdcAckFromDrc.of(31774046L, "testProcessFdcUpdateWhenFoundWithText");
+		final Long response = fdcService.handleFdcProcessedAck(ackFromDrc);
 		softly.assertThat(response).isPositive();
-		assertProcessFdcCaseSubmissionCreation(fdcProcessedRequest, HttpStatus.OK);
+		assertProcessFdcCaseSubmissionCreation(ackFromDrc, HttpStatus.OK);
 	}
 
 	@Test
 	void testProcessFdcUpdateWhenNotFound() {
 		final String errorText = "Error Text updated successfully.";
-		final var fdcProcessedRequest = FdcProcessedRequest.builder()
-				.fdcId(9L)
-				.errorText(errorText)
-				.build();
+		FdcAckFromDrc fdcProcessedRequest = FdcAckFromDrc.of(9L, errorText);
 		softly.assertThatThrownBy(() -> fdcService.handleFdcProcessedAck(fdcProcessedRequest))
 				.isInstanceOf(ErrorResponseException.class);
 		assertProcessFdcCaseSubmissionCreation(fdcProcessedRequest, HttpStatus.NOT_FOUND);
 	}
 
 	// Just verify we're submitting what is expected to the DB. Persistence testing itself is done elsewhere.
-	private void assertProcessFdcCaseSubmissionCreation(FdcProcessedRequest request, HttpStatusCode expectedStatusCode) {
+	private void assertProcessFdcCaseSubmissionCreation(FdcAckFromDrc ackFromDrc, HttpStatusCode expectedStatusCode) {
 		CaseSubmissionEntity expectedCaseSubmission = CaseSubmissionEntity.builder()
-				.fdcId(request.getFdcId())
-				.payload(request.getErrorText())
+				.fdcId(ackFromDrc.data().fdcId())
+				.payload(ackFromDrc.data().errorText())
 				.eventType(eventLogAssertService.getIdForEventType(EventType.DRC_ASYNC_RESPONSE))
 				.httpStatus(expectedStatusCode.value())
 				.recordType(RecordType.FDC.getName())
