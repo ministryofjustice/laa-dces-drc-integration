@@ -26,6 +26,7 @@ import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmission
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.RecordType;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionRepository;
+import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionProcessedRequest;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
@@ -94,34 +95,28 @@ class ContributionIntegrationTest {
     }
 
     @Test
-    void testProcessContributionUpdateWhenNotFound() {
+    void givenAInvalidContribution_whenHandleContributionProcessedAckIsInvoked_thenReturnNotFound() {
         final String errorText = "The request has failed to process";
-        final var contributionProcessedRequest = ContributionProcessedRequest.builder()
-                .concorId(9L)
-                .errorText(errorText)
-                .build();
-        softly.assertThatThrownBy(() -> contributionService.handleContributionProcessedAck(contributionProcessedRequest))
+        ConcorContributionAckFromDrc concorContributionAckFromDrc = ConcorContributionAckFromDrc.of(9l, errorText);
+        softly.assertThatThrownBy(() -> contributionService.handleContributionProcessedAck(concorContributionAckFromDrc))
                 .isInstanceOf(ErrorResponseException.class);
-        assertProcessConcorCaseSubmissionCreation(contributionProcessedRequest, HttpStatus.NOT_FOUND);
+        assertProcessConcorCaseSubmissionCreation(concorContributionAckFromDrc, HttpStatus.NOT_FOUND);
     }
 
     @Test
-    void testProcessContributionUpdateWhenFound() {
+    void givenAValidContribution_whenHandleContributionProcessedAckIsInvoked_thenReturnSuccessful() {
         final String errorText = "Error Text updated successfully.";
-        final var contributionProcessedRequest = ContributionProcessedRequest.builder()
-                .concorId(47959912L)
-                .errorText(errorText)
-                .build();
-        final Long response = contributionService.handleContributionProcessedAck(contributionProcessedRequest);
+        ConcorContributionAckFromDrc concorContributionAckFromDrc = ConcorContributionAckFromDrc.of(47959912L, errorText);
+        final Long response = contributionService.handleContributionProcessedAck(concorContributionAckFromDrc);
         softly.assertThat(response).isPositive();
-        assertProcessConcorCaseSubmissionCreation(contributionProcessedRequest, HttpStatus.OK);
+        assertProcessConcorCaseSubmissionCreation(concorContributionAckFromDrc, HttpStatus.OK);
     }
 
-    // Just verify we're submitting what is expected to the DB. Persistence testing itself is done elsewhere.
-    private void assertProcessConcorCaseSubmissionCreation(ContributionProcessedRequest request, HttpStatusCode expectedStatusCode) {
+
+    private void assertProcessConcorCaseSubmissionCreation(ConcorContributionAckFromDrc request, HttpStatusCode expectedStatusCode) {
         CaseSubmissionEntity expectedCaseSubmission = CaseSubmissionEntity.builder()
-                .concorContributionId(request.getConcorId())
-                .payload(request.getErrorText())
+                .concorContributionId(request.data().concorContributionId())
+                .payload(request.data().errorText())
                 .eventType(eventLogAssertService.getIdForEventType(EventType.DRC_ASYNC_RESPONSE))
                 .httpStatus(expectedStatusCode.value())
                 .recordType(RecordType.CONTRIBUTION.getName())
