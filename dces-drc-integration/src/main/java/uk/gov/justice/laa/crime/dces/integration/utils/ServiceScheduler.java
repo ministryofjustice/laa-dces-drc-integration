@@ -64,7 +64,7 @@ public class ServiceScheduler {
         log.info("Deleted {} historical entries", deletedCount);
     }
 
-    @Scheduled(cron = "${scheduling.cron.purge.case-submission-error}")
+    @Scheduled(cron = "${scheduling.cron.purge.case-submission-error:-}")
     @SchedulerLock(name = "purgeCaseSubmission")
     public void purgeCaseSubmissionError() {
         LockAssert.assertLocked();
