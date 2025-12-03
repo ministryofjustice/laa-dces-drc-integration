@@ -134,7 +134,8 @@ commands:
         description: CircleCI Service account token
         type: string
     steps:
-      - checkout
+      - checkout:
+          method: full
       - setup-kubectl:
           environment: << parameters.environment >>
           token: << parameters.token >>
