@@ -22,7 +22,7 @@ import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.config.FeatureProperties;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcorContribEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
-import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
+import uk.gov.justice.laa.crime.dces.integration.service.ContributionFileService;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
 import uk.gov.justice.laa.crime.dces.integration.service.TraceService;
 import org.springframework.test.context.TestPropertySource;
@@ -39,7 +39,7 @@ class TempTestControllerTest {
   private ObjectMapper mapper;
 
   @MockitoBean
-  private ContributionService contributionService;
+  private ContributionFileService contributionFileService;
 
   @MockitoBean
   private FdcService fdcService;
@@ -91,7 +91,7 @@ class TempTestControllerTest {
     final String requestBody = mapper.writeValueAsString(idList);
 
     List<ConcorContribEntry> serviceResponse = List.of(new ConcorContribEntry(1L, "xml1"), new ConcorContribEntry(2L, "xml2"));
-    when(contributionService.sendContributionsToDrc (idList)).thenReturn(serviceResponse);
+    when(contributionFileService.sendContributionsToDrc (idList)).thenReturn(serviceResponse);
 
     mockMvc.perform(MockMvcRequestBuilders.post(String.format(CONTRIBUTION_URL))
             .content(requestBody)

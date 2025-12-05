@@ -36,7 +36,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
-import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
+import uk.gov.justice.laa.crime.dces.integration.service.ContributionFileService;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
 
 /**
@@ -55,7 +55,7 @@ public class TempTestController {
     private final DrcClient drcClient;
     private static final int REQUEST_ID_LIST_SIZE_LIMIT_CONCOR = 350;
     private static final int REQUEST_ID_LIST_SIZE_LIMIT_FDC = 1000;
-    private final ContributionService concorContributionsService;
+    private final ContributionFileService concorContributionsService;
     private final FdcService fdcService;
 
     /**

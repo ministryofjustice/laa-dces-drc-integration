@@ -61,7 +61,7 @@ import static org.springframework.http.HttpStatus.OK;
 
 @ExtendWith(SoftAssertionsExtension.class)
 @WireMockTest(httpPort = 1111)
-class ContributionServiceTest extends ApplicationTestBase {
+class ContributionFileServiceTest extends ApplicationTestBase {
     private static final String GET_URL = "/debt-collection-enforcement/concor-contribution-files?status=ACTIVE&concorContributionId=0&numberOfRecords=5";
 	private static final String UPDATE_URL = "/debt-collection-enforcement/create-contribution-file";
 
@@ -83,7 +83,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 	private FeatureProperties feature;
 
 	@Autowired
-	private ContributionService contributionService;
+	private ContributionFileService contributionFileService;
 
 	@Value("${services.maat-api.getContributionBatchSize:0}")
 	private int defaultGetContributionBatchSize;
@@ -95,7 +95,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 	private static final String TEST_DRC_RESPONSE_PAYLOAD = "{\"meta\":{\"drcId\":12345,\"concorContributionId\":1234567}}";
 	private static final String SKIP_DRC_RESPONSE_PAYLOAD = "{\"meta\":{\"drcId\":12345,\"concorContributionId\":1234567,\"skippedDueToFeatureOutgoingIsolated\":true}}";
 
-	@AfterEach
+    @AfterEach
 	void afterTestAssertAll(){
 		softly.assertAll();
 		for (StubMapping stub: customStubs) {
@@ -106,14 +106,14 @@ class ContributionServiceTest extends ApplicationTestBase {
 
 	@BeforeEach
 	void setGetContributionSize(){
-		ReflectionTestUtils.setField(contributionService, "getContributionBatchSize", defaultGetContributionBatchSize);
+		ReflectionTestUtils.setField(contributionFileService, "getContributionBatchSize", defaultGetContributionBatchSize);
 	}
 
 	@SuppressWarnings("squid:S5961") // suppress the "too many asserts" error. Asserting just the
 	// right things have been logged is over the max of 25 already.
 	@Test
 	void testXMLValid() throws JAXBException {
-		ReflectionTestUtils.setField(contributionService, "getContributionBatchSize", 5);
+		ReflectionTestUtils.setField(contributionFileService, "getContributionBatchSize", 5);
 		CONTRIBUTIONS testContribution = createTestContribution();
 		when(eventService.generateBatchId()).thenReturn(TEST_BATCH_ID);
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(testContribution);
@@ -122,7 +122,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 		when(contributionsMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
 		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(TEST_DRC_RESPONSE_PAYLOAD);
 
-		boolean result = contributionService.processDailyFiles();
+		boolean result = contributionFileService.processDailyFiles();
 		//testing the number of times the methods are called to ensure the correct number of records are processed.
 		verify(contributionsMapperUtils, times(8)).mapLineXMLToObject(any());
 		verify(contributionsMapperUtils, times(2)).generateFileXML(any(), any());
@@ -169,14 +169,14 @@ class ContributionServiceTest extends ApplicationTestBase {
 	@Test
 	void testWhenContributionHasFewerRecords() throws JAXBException {
 		// set wanted number to trigger the correct stub response.
-		ReflectionTestUtils.setField(contributionService, "getContributionBatchSize", 4);
+		ReflectionTestUtils.setField(contributionFileService, "getContributionBatchSize", 4);
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());
 		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
 		when(contributionsMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
 		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(TEST_DRC_RESPONSE_PAYLOAD);
 
-		boolean result = contributionService.processDailyFiles();
+		boolean result = contributionFileService.processDailyFiles();
 		//testing the number of times the methods are called to ensure the correct number of records are processed.
 		verify(contributionsMapperUtils, times(3)).mapLineXMLToObject(any());
 		verify(contributionsMapperUtils, times(1)).generateFileXML(any(), any());
@@ -187,7 +187,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 
 	@Test
 	void testXMLValidWhenOutgoingAnonymizedFlagIsFalse() throws JAXBException {
-		ReflectionTestUtils.setField(contributionService, "getContributionBatchSize", 5);
+		ReflectionTestUtils.setField(contributionFileService, "getContributionBatchSize", 5);
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());
 		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
@@ -195,7 +195,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(TEST_DRC_RESPONSE_PAYLOAD);
 		when(feature.outgoingAnonymized()).thenReturn(false);
 
-		contributionService.processDailyFiles();
+		contributionFileService.processDailyFiles();
 
 		verify(anonymisingDataService, never()).anonymise(any());
 	}
@@ -210,7 +210,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(TEST_DRC_RESPONSE_PAYLOAD);
 		when(feature.outgoingAnonymized()).thenReturn(true);
 
-		contributionService.processDailyFiles();
+		contributionFileService.processDailyFiles();
 
 		verify(anonymisingDataService, times(2)).anonymise(any());
 	}
@@ -224,7 +224,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 		when(contributionsMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
 		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(SKIP_DRC_RESPONSE_PAYLOAD);
 
-		boolean result = contributionService.processDailyFiles();
+		boolean result = contributionFileService.processDailyFiles();
 		verify(contributionsMapperUtils, times(2)).mapLineXMLToObject(any());
 		verify(contributionsMapperUtils).generateFileXML(any(), any());
 		verify(drcClient, times(0)).sendConcorContributionReqToDrc(any()); // not called when feature.outgoing-isolated=true.
@@ -240,7 +240,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 		when(contributionsMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
 		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn("");
 
-		boolean result = contributionService.processDailyFiles();
+		boolean result = contributionFileService.processDailyFiles();
 		verify(contributionsMapperUtils, times(2)).mapLineXMLToObject(any());
 		verify(contributionsMapperUtils, times(0)).generateFileXML(any(), any());
 		verify(drcClient, times(2)).sendConcorContributionReqToDrc(any()); // not called when feature.outgoing-isolated=true.
@@ -250,7 +250,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 	@Test
 	void testDrcUpdateWebClientConflictException() throws JAXBException {
 		// setup
-		ReflectionTestUtils.setField(contributionService, "getContributionBatchSize", 5);
+		ReflectionTestUtils.setField(contributionFileService, "getContributionBatchSize", 5);
 		when(contributionsMapperUtils.mapLineXMLToObject(anyString())).thenReturn(createTestContribution());
 		when(contributionsMapperUtils.generateFileXML(any(), anyString())).thenReturn("ValidXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
@@ -264,7 +264,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 		exception.setBodyDecodeFunction(clazz -> clazz.isAssignableFrom(ProblemDetail.class) ? problemDetail : null);
 		Mockito.doThrow(exception).when(drcClient).sendConcorContributionReqToDrc(any());
 		// do
-		boolean successful = contributionService.processDailyFiles();
+		boolean successful = contributionFileService.processDailyFiles();
 		// test (asking for batch size of 5 makes WireMock return 8 records)
 		softly.assertThat(successful).isTrue();
 		verify(contributionsMapperUtils, times(8)).mapLineXMLToObject(any());
@@ -275,7 +275,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 	@Test
 	void testDrcUpdateWebClientNonDRCConflictException() throws JAXBException {
 		// setup
-		ReflectionTestUtils.setField(contributionService, "getContributionBatchSize", 5);
+		ReflectionTestUtils.setField(contributionFileService, "getContributionBatchSize", 5);
 		when(contributionsMapperUtils.mapLineXMLToObject(anyString())).thenReturn(createTestContribution());
 		when(contributionsMapperUtils.generateFileXML(any(), anyString())).thenReturn("ValidXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
@@ -289,7 +289,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 		exception.setBodyDecodeFunction(clazz -> clazz.isAssignableFrom(ProblemDetail.class) ? problemDetail : null);
 		Mockito.doThrow(exception).when(drcClient).sendConcorContributionReqToDrc(any());
 		// do
-		boolean successful = contributionService.processDailyFiles();
+		boolean successful = contributionFileService.processDailyFiles();
 		// test (asking for batch size of 5 makes WireMock return 8 records)
 		softly.assertThat(successful).isFalse(); // all being non-DRC conflicts will cause a failure, as they are non-successful.
 		verify(contributionsMapperUtils, times(8)).mapLineXMLToObject(any());
@@ -307,7 +307,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(TEST_DRC_RESPONSE_PAYLOAD);
 		when(eventService.generateBatchId()).thenReturn(TEST_BATCH_ID);
 
-		softly.assertThatThrownBy(() -> contributionService.processDailyFiles())
+		softly.assertThatThrownBy(() -> contributionFileService.processDailyFiles())
 				.isInstanceOf(WebClientResponseException.class)
 				.hasMessageContaining("500 Internal Server Error");
 		verify(contributionsMapperUtils, times(2)).mapLineXMLToObject(any());
@@ -331,7 +331,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 	@Test
 	void testLineXMLInvalid() throws JAXBException {
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenThrow(JAXBException.class);
-		contributionService.processDailyFiles();
+		contributionFileService.processDailyFiles();
 		verify(contributionsMapperUtils, times(2)).mapLineXMLToObject(any());
 		// with no successful xml, should not run the file generation.
 		verify(contributionsMapperUtils, times(0)).generateFileXML(any(), any());
@@ -342,14 +342,14 @@ class ContributionServiceTest extends ApplicationTestBase {
 		// setup
 		customStubs.add(stubFor(post(UPDATE_URL).atPriority(1)
 				.willReturn(serverError())));
-		ReflectionTestUtils.setField(contributionService, "getContributionBatchSize", 5);
+		ReflectionTestUtils.setField(contributionFileService, "getContributionBatchSize", 5);
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());
 		when(contributionsMapperUtils.generateFileXML(any(), any())).thenReturn("ValidXML");
 		when(contributionsMapperUtils.generateFileName(any())).thenReturn("TestFilename.xml");
 		when(contributionsMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("ValidAckXML");
 		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(TEST_DRC_RESPONSE_PAYLOAD);
 		// do
-		softly.assertThatThrownBy(() -> contributionService.processDailyFiles())
+		softly.assertThatThrownBy(() -> contributionFileService.processDailyFiles())
 				.isInstanceOf(WebClientResponseException.class);
 		// test
 		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
@@ -359,7 +359,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 	@Test
 	void testProcessContributionUpdateWhenSuccessful() {
 		ConcorContributionAckFromDrc ackFromDrc = ConcorContributionAckFromDrc.of(911L, null);
-		Long response = contributionService.handleContributionProcessedAck(ackFromDrc);
+		Long response = contributionFileService.handleContributionProcessedAck(ackFromDrc);
 		softly.assertThat(response).isEqualTo(1111L);
 		verify(eventService).logConcor(911L,EventType.DRC_ASYNC_RESPONSE,null,null, OK, null);
 		verify(eventService).logConcorContributionError(ackFromDrc);
@@ -369,7 +369,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 	void testProcessContributionUpdateWhenIncomingIsolated() {
 		when(feature.incomingIsolated()).thenReturn(true);
 		ConcorContributionAckFromDrc ackFromDrc = ConcorContributionAckFromDrc.of(911L, "The request has failed to process");
-		Long response = contributionService.handleContributionProcessedAck(ackFromDrc);
+		Long response = contributionFileService.handleContributionProcessedAck(ackFromDrc);
 		softly.assertThat(response).isEqualTo(0L); // so MAAT DB not touched
 		verify(eventService).logConcorContributionError(ackFromDrc);
 	}
@@ -379,7 +379,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 	void testProcessContributionUpdateWhenNotFound() {
 		String errorText = "The request has failed to process";
 		ConcorContributionAckFromDrc ackFromDrc = ConcorContributionAckFromDrc.of(404L, errorText);
-		var exception = catchThrowableOfType(() -> contributionService.handleContributionProcessedAck(ackFromDrc), ErrorResponseException.class);
+		var exception = catchThrowableOfType(() -> contributionFileService.handleContributionProcessedAck(ackFromDrc), ErrorResponseException.class);
 		softly.assertThat(exception).isNotNull();
 		softly.assertThat(NOT_FOUND.isSameCodeAs(exception.getStatusCode())).isTrue();
 		verify(eventService).logConcor(404L,EventType.DRC_ASYNC_RESPONSE,null,null, NOT_FOUND, errorText);
@@ -390,7 +390,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 	void testProcessContributionUpdateWhenNoContFile() {
 		String errorText = "The request has failed to process";
 		ConcorContributionAckFromDrc ackFromDrc = ConcorContributionAckFromDrc.of(9L, errorText);
-		var exception = catchThrowableOfType(() -> contributionService.handleContributionProcessedAck(ackFromDrc), ErrorResponseException.class);
+		var exception = catchThrowableOfType(() -> contributionFileService.handleContributionProcessedAck(ackFromDrc), ErrorResponseException.class);
 		softly.assertThat(exception).isNotNull();
 		softly.assertThat(FAILED_DEPENDENCY.isSameCodeAs(exception.getStatusCode())).isTrue();
 		verify(eventService).logConcor(9L,EventType.DRC_ASYNC_RESPONSE,null,null, BAD_REQUEST, errorText);
@@ -403,7 +403,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());
 		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(TEST_DRC_RESPONSE_PAYLOAD);
 
-		List<ConcorContribEntry> result = contributionService.sendContributionsToDrc(List.of(1L, 2L));
+		List<ConcorContribEntry> result = contributionFileService.sendContributionsToDrc(List.of(1L, 2L));
 		verify(contributionsMapperUtils, times(2)).mapLineXMLToObject(any());
 		verify(drcClient, times(2)).sendConcorContributionReqToDrc(any());
 		verify(contributionsMapperUtils, never()).generateFileXML(any(), any());  // verify that no file is generated
@@ -419,7 +419,7 @@ class ContributionServiceTest extends ApplicationTestBase {
 		when(feature.outgoingIsolated()).thenReturn(false);
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());
 		when(drcClient.sendConcorContributionReqToDrc(any())).thenReturn(TEST_DRC_RESPONSE_PAYLOAD);
-		softly.assertThatThrownBy(() -> contributionService.sendContributionsToDrc(List.of()))
+		softly.assertThatThrownBy(() -> contributionFileService.sendContributionsToDrc(List.of()))
 				.isInstanceOf(BadRequest.class)
 				.hasMessageContaining("400 Bad Request");
 		verify(contributionsMapperUtils, never()).mapLineXMLToObject(any());

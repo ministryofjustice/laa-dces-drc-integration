@@ -11,7 +11,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
-import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
+import uk.gov.justice.laa.crime.dces.integration.service.ContributionFileService;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
 import uk.gov.justice.laa.crime.dces.integration.service.MigrationService;
 
@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
 @Slf4j
 public class ServiceScheduler {
     private final FdcService fdcService;
-    private final ContributionService contributionService;
+    private final ContributionFileService contributionFileService;
     private final MigrationService migrationService;
     private final EventService eventService;
 
@@ -44,7 +44,7 @@ public class ServiceScheduler {
     public void processContributionsFiles() {
         LockAssert.assertLocked();
         log.info("Processing contributions files at {}", LocalDateTime.now());
-        contributionService.processDailyFiles();
+        contributionFileService.processDailyFiles();
     }
 
     @Scheduled(cron = "${scheduling.cron.data-migration:-}")

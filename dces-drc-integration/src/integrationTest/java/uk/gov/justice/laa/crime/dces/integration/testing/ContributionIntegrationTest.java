@@ -28,8 +28,7 @@ import uk.gov.justice.laa.crime.dces.integration.datasource.model.RecordType;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionRepository;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
-import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionProcessedRequest;
-import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
+import uk.gov.justice.laa.crime.dces.integration.service.ContributionFileService;
 import uk.gov.justice.laa.crime.dces.integration.service.EventLogAssertService;
 import uk.gov.justice.laa.crime.dces.integration.service.spy.ContributionProcessSpy;
 import uk.gov.justice.laa.crime.dces.integration.service.spy.SpyFactory;
@@ -68,7 +67,7 @@ class ContributionIntegrationTest {
     private SpyFactory spyFactory;
 
     @Autowired
-    private ContributionService contributionService;
+    private ContributionFileService contributionFileService;
 
     @Autowired
     private EventLogAssertService eventLogAssertService;
@@ -98,7 +97,7 @@ class ContributionIntegrationTest {
     void givenAInvalidContribution_whenHandleContributionProcessedAckIsInvoked_thenReturnNotFound() {
         final String errorText = "The request has failed to process";
         ConcorContributionAckFromDrc concorContributionAckFromDrc = ConcorContributionAckFromDrc.of(9l, errorText);
-        softly.assertThatThrownBy(() -> contributionService.handleContributionProcessedAck(concorContributionAckFromDrc))
+        softly.assertThatThrownBy(() -> contributionFileService.handleContributionProcessedAck(concorContributionAckFromDrc))
                 .isInstanceOf(ErrorResponseException.class);
         assertProcessConcorCaseSubmissionCreation(concorContributionAckFromDrc, HttpStatus.NOT_FOUND);
     }
@@ -107,7 +106,7 @@ class ContributionIntegrationTest {
     void givenAValidContribution_whenHandleContributionProcessedAckIsInvoked_thenReturnSuccessful() {
         final String errorText = "Error Text updated successfully.";
         ConcorContributionAckFromDrc concorContributionAckFromDrc = ConcorContributionAckFromDrc.of(47959912L, errorText);
-        final Long response = contributionService.handleContributionProcessedAck(concorContributionAckFromDrc);
+        final Long response = contributionFileService.handleContributionProcessedAck(concorContributionAckFromDrc);
         softly.assertThat(response).isPositive();
         assertProcessConcorCaseSubmissionCreation(concorContributionAckFromDrc, HttpStatus.OK);
     }
@@ -134,7 +133,7 @@ class ContributionIntegrationTest {
      * <h4>Given:</h4>
      * <p>* Update 3 concor_contribution records to the ACTIVE status for the purposes of the test.</p>
      * <h4>When:</h4>
-     * <p>* The {@link ContributionService#processDailyFiles()} method is called.</p>
+     * <p>* The {@link ContributionFileService#processDailyFiles()} method is called.</p>
      * <h4>Then:</h4>
      * <p>1. The IDs of the 3 updated records are returned.</p>
      * <p>2. The updated IDs are included in the list of IDs returned by `processDailyFiles`'s call to retrieve ACTIVE
@@ -170,7 +169,7 @@ class ContributionIntegrationTest {
 
         // Call the processDailyFiles() method under test:
         final var startDate = LocalDate.now();
-        contributionService.processDailyFiles();
+        contributionFileService.processDailyFiles();
         final var endDate = LocalDate.now();
 
         final ContributionProcessSpy watched = watching.build();
@@ -218,7 +217,7 @@ class ContributionIntegrationTest {
      * <p>* Update 1 concor_contribution record to the REPLACED status for the purposes of the test.<br>
      *    * Update 1 concor_contribution record to the SENT status for the purposes of the test.</p>
      * <h4>When:</h4>
-     * <p>* The {@link ContributionService#processDailyFiles()} method is called.</p>
+     * <p>* The {@link ContributionFileService#processDailyFiles()} method is called.</p>
      * <h4>Then:</h4>
      * <p>1. The IDs of the 2 updated records are returned.</p>
      * <p>2. The updated IDs are NOT included in the list of IDs returned by `processDailyFiles`'s call to retrieve
@@ -245,7 +244,7 @@ class ContributionIntegrationTest {
                 .traceUpdateContributions();
 
         // Call the processDailyFiles() method under test:
-        contributionService.processDailyFiles();
+        contributionFileService.processDailyFiles();
 
         final ContributionProcessSpy watched = watching.build();
 
@@ -281,7 +280,7 @@ class ContributionIntegrationTest {
      * <h4>Given:</h4>
      * <p>* Update 2 concor_contribution records to the ACTIVE status for the purposes of the test.</p>
      * <h4>When:</h4>
-     * <p>* The {@link ContributionService#processDailyFiles()} method is called.</p>
+     * <p>* The {@link ContributionFileService#processDailyFiles()} method is called.</p>
      * <p>* However, sending the records to the DRC should fail.</p>
      * <h4>Then:</h4>
      * <p>1. The IDs of the 2 updated records are returned (by call to retrieve active contributions).</p>
@@ -309,7 +308,7 @@ class ContributionIntegrationTest {
                 .traceUpdateContributions();
 
         // Call the processDailyFiles() method under test:
-        contributionService.processDailyFiles();
+        contributionFileService.processDailyFiles();
 
         final ContributionProcessSpy watched = watching.build();
 

@@ -18,7 +18,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
-import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
+import uk.gov.justice.laa.crime.dces.integration.service.ContributionFileService;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
 import uk.gov.justice.laa.crime.dces.integration.service.MigrationService;
 
@@ -48,7 +48,7 @@ public class ServiceSchedulerTest {
     @MockitoBean
     private FdcService fdcService;
     @MockitoBean
-    private ContributionService contributionService;
+    private ContributionFileService contributionFileService;
     @MockitoBean
     private MigrationService migrationService;
     @MockitoBean
@@ -70,12 +70,12 @@ public class ServiceSchedulerTest {
 
     @Test
     void testProcessContributionsDailyFilesIsCalled(CapturedOutput output) throws InterruptedException {
-        when(contributionService.processDailyFiles()).thenReturn(true); // Arrange
+        when(contributionFileService.processDailyFiles()).thenReturn(true); // Arrange
 
         Thread.sleep(1000); // Act - could be called once (or maybe twice) depending on timing
 
-        verify(contributionService, atLeastOnce()).processDailyFiles(); // Assert
-        verify(contributionService, atMost(2)).processDailyFiles();
+        verify(contributionFileService, atLeastOnce()).processDailyFiles(); // Assert
+        verify(contributionFileService, atMost(2)).processDailyFiles();
         assertThat(output.getOut()).contains("Processing contributions files");
     }
 
@@ -132,11 +132,11 @@ public class ServiceSchedulerTest {
 
     @Test
     void testProcessContributionsDailyFilesIsLocked() throws InterruptedException {
-        when(contributionService.processDailyFiles()).thenAnswer(new DelayedTrue()); // Arrange
+        when(contributionFileService.processDailyFiles()).thenAnswer(new DelayedTrue()); // Arrange
 
         Thread.sleep(1990); // Act - should be called no more than once because of delay
 
-        verify(contributionService, atMostOnce()).processDailyFiles(); // Assert
+        verify(contributionFileService, atMostOnce()).processDailyFiles(); // Assert
     }
 
     @TestConfiguration

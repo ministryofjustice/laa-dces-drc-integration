@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
-import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
+import uk.gov.justice.laa.crime.dces.integration.service.ContributionFileService;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
 
 @Slf4j
@@ -30,7 +30,7 @@ public class AckFromDrcController {
     private FdcService fdcService;
 
     @Autowired
-    private ContributionService contributionService;
+    private ContributionFileService contributionFileService;
 
     @Observed(name = "UpdateFromDrcAPI.fdc", contextualName = "Process Updates for FDC", lowCardinalityKeyValues = {"priority", "high"})
     @PostMapping(value = "/fdc")
@@ -59,6 +59,6 @@ public class AckFromDrcController {
             schema = @Schema(implementation = ProblemDetail.class)))
     public void concorContribution(@NotNull @RequestBody final ConcorContributionAckFromDrc concorContributionAckFromDrc) {
         log.info("Received concorContribution acknowledgement from DRC {}", concorContributionAckFromDrc);
-        contributionService.handleContributionProcessedAck(concorContributionAckFromDrc);
+        contributionFileService.handleContributionProcessedAck(concorContributionAckFromDrc);
     }
 }

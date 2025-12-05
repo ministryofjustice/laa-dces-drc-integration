@@ -45,8 +45,8 @@ import static uk.gov.justice.laa.crime.dces.integration.datasource.model.EventTy
 @RequiredArgsConstructor
 @Service
 @Slf4j
-public class ContributionService implements FileService {
-    private static final String SERVICE_NAME = "ContributionService";
+public class ContributionFileService implements FileService {
+    private static final String SERVICE_NAME = "ContributionFileService";
     private final ContributionsMapperUtils contributionsMapperUtils;
     private final ContributionClient contributionClient;
     private final DrcClient drcClient;

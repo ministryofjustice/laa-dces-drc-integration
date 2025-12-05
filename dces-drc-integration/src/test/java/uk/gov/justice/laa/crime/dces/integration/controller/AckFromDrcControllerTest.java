@@ -13,7 +13,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
-import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
+import uk.gov.justice.laa.crime.dces.integration.service.ContributionFileService;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
 import uk.gov.justice.laa.crime.dces.integration.service.TraceService;
 
@@ -40,7 +40,7 @@ class AckFromDrcControllerTest {
     private FdcService fdcService;
 
     @MockitoBean
-    private ContributionService contributionService;
+    private ContributionFileService contributionFileService;
 
     private static final String CONTRIBUTION_URL = "/api/dces/v1/contribution";
     private static final String CONTRIBUTION_FDC_URL = "/api/dces/v1/fdc";
@@ -52,7 +52,7 @@ class AckFromDrcControllerTest {
         Long serviceResponse = 1111L;
         ConcorContributionAckFromDrc concorContributionAckFromDrc = ConcorContributionAckFromDrc.of(99L, "error 99");
 
-        when(contributionService.handleContributionProcessedAck(concorContributionAckFromDrc)).thenReturn(serviceResponse);
+        when(contributionFileService.handleContributionProcessedAck(concorContributionAckFromDrc)).thenReturn(serviceResponse);
 
         final String requestBody = mapper.writeValueAsString(concorContributionAckFromDrc);
 
@@ -69,7 +69,7 @@ class AckFromDrcControllerTest {
 
         ConcorContributionAckFromDrc concorContributionAckFromDrc = ConcorContributionAckFromDrc.of(9L, "Failed to process");
         var serviceResponse = new WebClientResponseException(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), null, null, null);
-        when(contributionService.handleContributionProcessedAck(concorContributionAckFromDrc)).thenThrow(serviceResponse);
+        when(contributionFileService.handleContributionProcessedAck(concorContributionAckFromDrc)).thenThrow(serviceResponse);
 
         final String requestBody = mapper.writeValueAsString(concorContributionAckFromDrc);
 

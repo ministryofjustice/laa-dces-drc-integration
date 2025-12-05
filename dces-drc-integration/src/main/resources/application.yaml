@@ -144,5 +144,7 @@ resilience4j:
     instances:
       FdcService:
         base-config: default
-      ContributionService:
+      ContributionFileService:
+        base-config: default
+      ContributionAckService:
         base-config: default
