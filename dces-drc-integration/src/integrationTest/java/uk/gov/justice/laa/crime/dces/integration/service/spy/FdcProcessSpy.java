@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mockingDetails;
-import static uk.gov.justice.laa.crime.dces.integration.service.FdcService.REQUESTED_STATUS;
+import static uk.gov.justice.laa.crime.dces.integration.service.FdcFileService.REQUESTED_STATUS;
 
 /**
  * See {@link SpyFactory} for usage details.

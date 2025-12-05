@@ -23,7 +23,7 @@ import uk.gov.justice.laa.crime.dces.integration.config.FeatureProperties;
 import uk.gov.justice.laa.crime.dces.integration.maatapi.model.contributions.ConcorContribEntry;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionFileService;
-import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
+import uk.gov.justice.laa.crime.dces.integration.service.FdcFileService;
 import uk.gov.justice.laa.crime.dces.integration.service.TraceService;
 import org.springframework.test.context.TestPropertySource;
 
@@ -42,7 +42,7 @@ class TempTestControllerTest {
   private ContributionFileService contributionFileService;
 
   @MockitoBean
-  private FdcService fdcService;
+  private FdcFileService fdcFileService;
 
   @MockitoBean
   private DrcClient drcClient;
@@ -135,7 +135,7 @@ class TempTestControllerTest {
     List<Long> idList = List.of(1L, 2L);
     final String requestBody = mapper.writeValueAsString(idList);
     List<Fdc> serviceResponse = List.of(createExpectedFdc(1L, 100L, "100.0"), createExpectedFdc(2L, 200L, "200.0"));
-    when(fdcService.sendFdcsToDrc(idList)).thenReturn(serviceResponse);
+    when(fdcFileService.sendFdcsToDrc(idList)).thenReturn(serviceResponse);
 
     mockMvc.perform(MockMvcRequestBuilders.post(String.format(FDC_URL))
             .content(requestBody)

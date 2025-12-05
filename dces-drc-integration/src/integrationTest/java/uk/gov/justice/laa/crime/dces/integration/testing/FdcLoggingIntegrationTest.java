@@ -18,7 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.external.FdcContribution;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType;
-import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
+import uk.gov.justice.laa.crime.dces.integration.service.FdcFileService;
 import uk.gov.justice.laa.crime.dces.integration.service.spy.FdcLoggingProcessSpy;
 import uk.gov.justice.laa.crime.dces.integration.service.spy.FdcProcessSpy;
 import uk.gov.justice.laa.crime.dces.integration.service.spy.SpyFactory;
@@ -47,7 +47,7 @@ class FdcLoggingIntegrationTest {
     private SpyFactory spyFactory;
 
     @Autowired
-    private FdcService fdcService;
+    private FdcFileService fdcFileService;
 
     @Autowired
     private MockMvc mockMvc;
@@ -66,7 +66,7 @@ class FdcLoggingIntegrationTest {
      *    acknowledged, the acknowledgement response from the DRC updates the contribution_file correctly.</p>
      * <h4>Given:</h4>
      * <p>* Update 3 fdc_contribution records to the REQUESTED status for the purposes of the test.</p>
-     * <p>* The {@link FdcService#processDailyFiles()} method is called and a contribution_file is created.</p>
+     * <p>* The {@link FdcFileService#processDailyFiles()} method is called and a contribution_file is created.</p>
      * <h4>When:</h4>
      * <p>* Simulate the DRC calling our services to log their receipt of our fdc_contributions by calling the
      *    `/process-drc-update/fdc` endpoint once for each updated ID with a blank error text to indicate that
@@ -98,7 +98,7 @@ class FdcLoggingIntegrationTest {
                 .traceAndStubSendFdcUpdate(id -> Boolean.TRUE) // fake DRC response
                 .traceUpdateFdcs(); // capture contribution_file ID
 
-        fdcService.processDailyFiles();
+        fdcFileService.processDailyFiles();
 
         final FdcProcessSpy watched = watching.build();
 
@@ -139,7 +139,7 @@ class FdcLoggingIntegrationTest {
      *    record is created in contribution_file_errors.</p>
      * <h4>Given:</h4>
      * <p>* Update 3 fdc_contribution records to the REQUESTED status for the purposes of the test.</p>
-     * <p>* The {@link FdcService#processDailyFiles()} method is called and a contribution_file is created.</p>
+     * <p>* The {@link FdcFileService#processDailyFiles()} method is called and a contribution_file is created.</p>
      * <h4>When:</h4>
      * <p>* Simulate the DRC calling our services to log that a fdc_contribution could not be processed by calling
      *      the `/process-drc-update/fdc` endpoint once for each updated ID with a populated error text to
@@ -174,7 +174,7 @@ class FdcLoggingIntegrationTest {
                 .traceAndStubSendFdcUpdate(id -> Boolean.TRUE) // fake DRC response
                 .traceUpdateFdcs(); // capture contribution_file ID
 
-        fdcService.processDailyFiles();
+        fdcFileService.processDailyFiles();
 
         final FdcProcessSpy watched = watching.build();
 

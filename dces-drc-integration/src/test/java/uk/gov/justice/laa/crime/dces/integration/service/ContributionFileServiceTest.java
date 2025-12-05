@@ -357,47 +357,6 @@ class ContributionFileServiceTest extends ApplicationTestBase {
 	}
 
 	@Test
-	void testProcessContributionUpdateWhenSuccessful() {
-		ConcorContributionAckFromDrc ackFromDrc = ConcorContributionAckFromDrc.of(911L, null);
-		Long response = contributionFileService.handleContributionProcessedAck(ackFromDrc);
-		softly.assertThat(response).isEqualTo(1111L);
-		verify(eventService).logConcor(911L,EventType.DRC_ASYNC_RESPONSE,null,null, OK, null);
-		verify(eventService).logConcorContributionError(ackFromDrc);
-	}
-
-	@Test
-	void testProcessContributionUpdateWhenIncomingIsolated() {
-		when(feature.incomingIsolated()).thenReturn(true);
-		ConcorContributionAckFromDrc ackFromDrc = ConcorContributionAckFromDrc.of(911L, "The request has failed to process");
-		Long response = contributionFileService.handleContributionProcessedAck(ackFromDrc);
-		softly.assertThat(response).isEqualTo(0L); // so MAAT DB not touched
-		verify(eventService).logConcorContributionError(ackFromDrc);
-	}
-
-
-	@Test
-	void testProcessContributionUpdateWhenNotFound() {
-		String errorText = "The request has failed to process";
-		ConcorContributionAckFromDrc ackFromDrc = ConcorContributionAckFromDrc.of(404L, errorText);
-		var exception = catchThrowableOfType(() -> contributionFileService.handleContributionProcessedAck(ackFromDrc), ErrorResponseException.class);
-		softly.assertThat(exception).isNotNull();
-		softly.assertThat(NOT_FOUND.isSameCodeAs(exception.getStatusCode())).isTrue();
-		verify(eventService).logConcor(404L,EventType.DRC_ASYNC_RESPONSE,null,null, NOT_FOUND, errorText);
-		verify(eventService).logConcorContributionError(ackFromDrc);
-	}
-
-	@Test
-	void testProcessContributionUpdateWhenNoContFile() {
-		String errorText = "The request has failed to process";
-		ConcorContributionAckFromDrc ackFromDrc = ConcorContributionAckFromDrc.of(9L, errorText);
-		var exception = catchThrowableOfType(() -> contributionFileService.handleContributionProcessedAck(ackFromDrc), ErrorResponseException.class);
-		softly.assertThat(exception).isNotNull();
-		softly.assertThat(FAILED_DEPENDENCY.isSameCodeAs(exception.getStatusCode())).isTrue();
-		verify(eventService).logConcor(9L,EventType.DRC_ASYNC_RESPONSE,null,null, BAD_REQUEST, errorText);
-		verify(eventService).logConcorContributionError(ackFromDrc);
-	}
-
-	@Test
 	void givenIdList_whenSendContributionsToDrcIsCalled_thenXmlIsFetchedAndSent() throws JAXBException {
 		when(feature.outgoingIsolated()).thenReturn(false);
 		when(contributionsMapperUtils.mapLineXMLToObject(any())).thenReturn(createTestContribution());

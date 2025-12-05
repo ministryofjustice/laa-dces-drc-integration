@@ -11,7 +11,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionFileService;
-import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
+import uk.gov.justice.laa.crime.dces.integration.service.FdcFileService;
 import uk.gov.justice.laa.crime.dces.integration.service.MigrationService;
 
 import static org.mockito.Mockito.*;
@@ -30,7 +30,7 @@ import static org.mockito.Mockito.*;
 class DisabledServiceSchedulerTest {
 
     @MockitoBean
-    private FdcService fdcService;
+    private FdcFileService fdcFileService;
     @MockitoBean
     private MigrationService migrationService;
     @MockitoBean
@@ -44,7 +44,7 @@ class DisabledServiceSchedulerTest {
     void testProcessFdcDailyFilesIsNotCalled() throws InterruptedException {
         // Wait for the scheduled method to be called
         Thread.sleep(1000);
-        verify(fdcService, never()).processDailyFiles();
+        verify(fdcFileService, never()).processDailyFiles();
     }
 
     @Test

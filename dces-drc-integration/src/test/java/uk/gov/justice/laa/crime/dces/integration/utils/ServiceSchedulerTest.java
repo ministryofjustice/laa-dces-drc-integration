@@ -19,7 +19,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionFileService;
-import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
+import uk.gov.justice.laa.crime.dces.integration.service.FdcFileService;
 import uk.gov.justice.laa.crime.dces.integration.service.MigrationService;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,7 +46,7 @@ import static org.mockito.Mockito.when;
 public class ServiceSchedulerTest {
 
     @MockitoBean
-    private FdcService fdcService;
+    private FdcFileService fdcFileService;
     @MockitoBean
     private ContributionFileService contributionFileService;
     @MockitoBean
@@ -59,12 +59,12 @@ public class ServiceSchedulerTest {
 
     @Test
     void testProcessFdcDailyFilesIsCalled(CapturedOutput output) throws InterruptedException {
-        when(fdcService.processDailyFiles()).thenReturn(true); // Arrange
+        when(fdcFileService.processDailyFiles()).thenReturn(true); // Arrange
 
         Thread.sleep(1000); // Act - could be called once (or maybe twice) depending on timing
 
-        verify(fdcService, atLeastOnce()).processDailyFiles(); // Assert
-        verify(fdcService, atMost(2)).processDailyFiles();
+        verify(fdcFileService, atLeastOnce()).processDailyFiles(); // Assert
+        verify(fdcFileService, atMost(2)).processDailyFiles();
         assertThat(output.getOut()).contains("Processing FDC files");
     }
 
@@ -123,11 +123,11 @@ public class ServiceSchedulerTest {
 
     @Test
     void testProcessFdcDailyFilesIsLocked() throws InterruptedException {
-        when(fdcService.processDailyFiles()).thenAnswer(new DelayedTrue()); // Arrange
+        when(fdcFileService.processDailyFiles()).thenAnswer(new DelayedTrue()); // Arrange
 
         Thread.sleep(1990); // Act - should be called no more than once because of delay
 
-        verify(fdcService, atMostOnce()).processDailyFiles(); // Assert
+        verify(fdcFileService, atMostOnce()).processDailyFiles(); // Assert
     }
 
     @Test

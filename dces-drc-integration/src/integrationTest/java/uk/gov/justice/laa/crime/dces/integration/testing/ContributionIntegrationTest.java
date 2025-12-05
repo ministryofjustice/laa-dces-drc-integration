@@ -28,6 +28,7 @@ import uk.gov.justice.laa.crime.dces.integration.datasource.model.RecordType;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionRepository;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
+import uk.gov.justice.laa.crime.dces.integration.service.ContributionAckService;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionFileService;
 import uk.gov.justice.laa.crime.dces.integration.service.EventLogAssertService;
 import uk.gov.justice.laa.crime.dces.integration.service.spy.ContributionProcessSpy;
@@ -70,6 +71,9 @@ class ContributionIntegrationTest {
     private ContributionFileService contributionFileService;
 
     @Autowired
+    private ContributionAckService contributionAckService;
+
+    @Autowired
     private EventLogAssertService eventLogAssertService;
     @Captor
     ArgumentCaptor<CaseSubmissionEntity> caseSubmissionEntityArgumentCaptor;
@@ -97,7 +101,7 @@ class ContributionIntegrationTest {
     void givenAInvalidContribution_whenHandleContributionProcessedAckIsInvoked_thenReturnNotFound() {
         final String errorText = "The request has failed to process";
         ConcorContributionAckFromDrc concorContributionAckFromDrc = ConcorContributionAckFromDrc.of(9l, errorText);
-        softly.assertThatThrownBy(() -> contributionFileService.handleContributionProcessedAck(concorContributionAckFromDrc))
+        softly.assertThatThrownBy(() -> contributionAckService.handleContributionProcessedAck(concorContributionAckFromDrc))
                 .isInstanceOf(ErrorResponseException.class);
         assertProcessConcorCaseSubmissionCreation(concorContributionAckFromDrc, HttpStatus.NOT_FOUND);
     }
@@ -106,7 +110,7 @@ class ContributionIntegrationTest {
     void givenAValidContribution_whenHandleContributionProcessedAckIsInvoked_thenReturnSuccessful() {
         final String errorText = "Error Text updated successfully.";
         ConcorContributionAckFromDrc concorContributionAckFromDrc = ConcorContributionAckFromDrc.of(47959912L, errorText);
-        final Long response = contributionFileService.handleContributionProcessedAck(concorContributionAckFromDrc);
+        final Long response = contributionAckService.handleContributionProcessedAck(concorContributionAckFromDrc);
         softly.assertThat(response).isPositive();
         assertProcessConcorCaseSubmissionCreation(concorContributionAckFromDrc, HttpStatus.OK);
     }

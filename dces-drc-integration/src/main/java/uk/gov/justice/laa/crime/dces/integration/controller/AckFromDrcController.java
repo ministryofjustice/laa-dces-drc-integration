@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
-import uk.gov.justice.laa.crime.dces.integration.service.ContributionFileService;
-import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
+import uk.gov.justice.laa.crime.dces.integration.service.ContributionAckService;
+import uk.gov.justice.laa.crime.dces.integration.service.FdcAckService;
 
 @Slf4j
 @RestController
@@ -27,10 +27,10 @@ import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
 public class AckFromDrcController {
 
     @Autowired
-    private FdcService fdcService;
+    private FdcAckService fdcAckService;
 
     @Autowired
-    private ContributionFileService contributionFileService;
+    private ContributionAckService contributionAckService;
 
     @Observed(name = "UpdateFromDrcAPI.fdc", contextualName = "Process Updates for FDC", lowCardinalityKeyValues = {"priority", "high"})
     @PostMapping(value = "/fdc")
@@ -44,7 +44,7 @@ public class AckFromDrcController {
             schema = @Schema(implementation = ProblemDetail.class)))
     public void fdc(@NotNull @RequestBody final FdcAckFromDrc fdcAckFromDrc) {
         log.info("Received FDC acknowledgement from DRC {}", fdcAckFromDrc);
-        fdcService.handleFdcProcessedAck(fdcAckFromDrc);
+        fdcAckService.handleFdcProcessedAck(fdcAckFromDrc);
     }
 
     @Observed(name = "UpdateFromDrcAPI.contribution", contextualName = "Process Updates for Contribution", lowCardinalityKeyValues = {"priority", "high"})
@@ -59,6 +59,6 @@ public class AckFromDrcController {
             schema = @Schema(implementation = ProblemDetail.class)))
     public void concorContribution(@NotNull @RequestBody final ConcorContributionAckFromDrc concorContributionAckFromDrc) {
         log.info("Received concorContribution acknowledgement from DRC {}", concorContributionAckFromDrc);
-        contributionFileService.handleContributionProcessedAck(concorContributionAckFromDrc);
+        contributionAckService.handleContributionProcessedAck(concorContributionAckFromDrc);
     }
 }

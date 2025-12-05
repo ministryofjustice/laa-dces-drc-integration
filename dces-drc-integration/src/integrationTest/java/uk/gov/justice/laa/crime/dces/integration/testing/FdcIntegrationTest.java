@@ -33,7 +33,8 @@ import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcAccelerationType;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType;
 import uk.gov.justice.laa.crime.dces.integration.service.EventLogAssertService;
-import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
+import uk.gov.justice.laa.crime.dces.integration.service.FdcAckService;
+import uk.gov.justice.laa.crime.dces.integration.service.FdcFileService;
 import uk.gov.justice.laa.crime.dces.integration.service.spy.FdcProcessSpy;
 import uk.gov.justice.laa.crime.dces.integration.service.spy.SpyFactory;
 
@@ -58,7 +59,10 @@ class FdcIntegrationTest {
 	private SpyFactory spyFactory;
 
 	@Autowired
-	public FdcService fdcService;
+	public FdcFileService fdcFileService;
+
+	@Autowired
+	public FdcAckService fdcAckService;
 
 	@MockitoBean
 	public DrcClient drcClient;
@@ -110,7 +114,7 @@ class FdcIntegrationTest {
 	@Test
 	void testProcessFdcUpdateWhenFound() {
 		FdcAckFromDrc fdcProcessedRequest = FdcAckFromDrc.of(31774046L, null);
-		final Long response = fdcService.handleFdcProcessedAck(fdcProcessedRequest);
+		final Long response = fdcAckService.handleFdcProcessedAck(fdcProcessedRequest);
 		softly.assertThat(response).isPositive();
 		assertProcessFdcCaseSubmissionCreation(fdcProcessedRequest, HttpStatus.OK);
 	}
@@ -118,7 +122,7 @@ class FdcIntegrationTest {
 	@Test
 	void testProcessFdcUpdateWhenFoundWithText() {
 		FdcAckFromDrc ackFromDrc = FdcAckFromDrc.of(31774046L, "testProcessFdcUpdateWhenFoundWithText");
-		final Long response = fdcService.handleFdcProcessedAck(ackFromDrc);
+		final Long response = fdcAckService.handleFdcProcessedAck(ackFromDrc);
 		softly.assertThat(response).isPositive();
 		assertProcessFdcCaseSubmissionCreation(ackFromDrc, HttpStatus.OK);
 	}
@@ -127,7 +131,7 @@ class FdcIntegrationTest {
 	void testProcessFdcUpdateWhenNotFound() {
 		final String errorText = "Error Text updated successfully.";
 		FdcAckFromDrc fdcProcessedRequest = FdcAckFromDrc.of(9L, errorText);
-		softly.assertThatThrownBy(() -> fdcService.handleFdcProcessedAck(fdcProcessedRequest))
+		softly.assertThatThrownBy(() -> fdcAckService.handleFdcProcessedAck(fdcProcessedRequest))
 				.isInstanceOf(ErrorResponseException.class);
 		assertProcessFdcCaseSubmissionCreation(fdcProcessedRequest, HttpStatus.NOT_FOUND);
 	}
@@ -250,7 +254,7 @@ class FdcIntegrationTest {
      * <p>* Some set of updated fdc_contributions IDs that processDailyFiles should act upon (passed in to this method
      *      as the {@code updatedIds} method parameter).</p>
      * <h4>When</h4>
-     * <p>* The {@link FdcService#processDailyFiles()} method is called.</p>
+     * <p>* The {@link FdcFileService#processDailyFiles()} method is called.</p>
      * <h4>Then:</h4>
      * <p>1. The call to the callGlobalUpdate is successful i.e. MAAT API returned a successful response
      * <p>2. The IDs of the 3 updated records are returned.</p>
@@ -288,7 +292,7 @@ class FdcIntegrationTest {
 
 		// Call the processDailyFiles() method under test:
 		final var startDate = LocalDate.now();
-		fdcService.processDailyFiles();
+		fdcFileService.processDailyFiles();
 		final var endDate = LocalDate.now();
 
 		final FdcProcessSpy watched = watching.build();
@@ -343,7 +347,7 @@ class FdcIntegrationTest {
      * <h4>Given:</h4>
      * <p>* 3 fdc_contributions record IDs that have been updated to the SENT status.</p>
      * <h4>When</h4>
-     * <p>* The {@link FdcService#processDailyFiles()} method is called.</p>
+     * <p>* The {@link FdcFileService#processDailyFiles()} method is called.</p>
      * <h4>Then:</h4>
      * <p>1. The call to the callGlobalUpdate is successful i.e. MAAT API returned a successful response
      * <p>2. The IDs of the 3 updated records are returned.</p>
@@ -384,7 +388,7 @@ class FdcIntegrationTest {
      * <h4>Given:</h4>
      * <p>* 3 fdc_contributions record IDs that have been updated to the REQUESTED status.</p>
      * <h4>When</h4>
-     * <p>* The {@link FdcService#processDailyFiles()} method is called (but the DRC responds negatively in its
+     * <p>* The {@link FdcFileService#processDailyFiles()} method is called (but the DRC responds negatively in its
      *      synchronous responses).</p>
      * <h4>Then:</h4>
      * <p>1. The call to the callGlobalUpdate is successful i.e. MAAT API returned a successful response
@@ -429,7 +433,7 @@ class FdcIntegrationTest {
      * <h4>Given:</h4>
      * <p>* 3 fdc_contributions record IDs that have been updated to have SOD 3 months in the future.</p>
      * <h4>When</h4>
-     * <p>* The {@link FdcService#processDailyFiles()} method is called.</p>
+     * <p>* The {@link FdcFileService#processDailyFiles()} method is called.</p>
      * <h4>Then:</h4>
      * <p>1. The call to the callGlobalUpdate is successful i.e. MAAT API returned a successful response
      * <p>2. The IDs of the 3 updated records are returned.</p>
@@ -464,7 +468,7 @@ class FdcIntegrationTest {
      * <h4>Given:</h4>
      * <p>* 3 fdc_contributions record IDs that have been updated to have SOD 3 months in the future.</p>
      * <h4>When</h4>
-     * <p>* The {@link FdcService#processDailyFiles()} method is called.</p>
+     * <p>* The {@link FdcFileService#processDailyFiles()} method is called.</p>
      * <h4>Then:</h4>
      * <p>1. The call to the callGlobalUpdate is successful i.e. MAAT API returned a successful response
      * <p>2. The IDs of the 3 updated records are returned.</p>
@@ -501,7 +505,7 @@ class FdcIntegrationTest {
      * <p>* 3 fdc_contributions record IDs that would normally get picked up by the Delayed pickup logic,
      *      but their Rep Orders are missing the corresponding Crown Court Outcomes</p>
      * <h4>When</h4>
-     * <p>* The {@link FdcService#processDailyFiles()} method is called</p>
+     * <p>* The {@link FdcFileService#processDailyFiles()} method is called</p>
      * <h4>Then:</h4>
      * <p>1. The call to the callGlobalUpdate is successful i.e. MAAT API returned a successful response
      * <p>2. The IDs of the 3 updated records are NOT returned.</p>
@@ -538,7 +542,7 @@ class FdcIntegrationTest {
      * <p>* 3 fdc_contributions record IDs that would normally get picked up by the Fast Track pickup logic,
      *      but their Rep Orders are missing the corresponding Crown Court Outcomes</p>
      * <h4>When</h4>
-     * <p>* The {@link FdcService#processDailyFiles()} method is called</p>
+     * <p>* The {@link FdcFileService#processDailyFiles()} method is called</p>
      * <h4>Then:</h4>
      * <p>1. The call to the callGlobalUpdate is successful i.e. MAAT API returned a successful response
      * <p>2. The IDs of the 3 updated records are NOT returned.</p>
@@ -572,7 +576,7 @@ class FdcIntegrationTest {
      * <h4>Given:</h4>
      * <p>* 3 fdc_contributions records in the SENT status</p>
      * <h4>When</h4>
-     * <p>* The {@link FdcService#processDailyFiles()} method is called</p>
+     * <p>* The {@link FdcFileService#processDailyFiles()} method is called</p>
      * <h4>Then:</h4>
      * <p>1. The call to the callGlobalUpdate is successful i.e. MAAT API returned a successful response
      * <p>2. The IDs of the 3 updated records are NOT returned.</p>
@@ -608,7 +612,7 @@ class FdcIntegrationTest {
      * <p>* 3 fdc_contributions record IDs that would normally get picked up by the Fast Track pickup logic,
      *      but there are no previously sent FDCs</p>
      * <h4>When</h4>
-     * <p>* The {@link FdcService#processDailyFiles()} method is called</p>
+     * <p>* The {@link FdcFileService#processDailyFiles()} method is called</p>
      * <h4>Then:</h4>
      * <p>1. The call to the callGlobalUpdate is successful i.e. MAAT API returned a successful response
      * <p>2. The IDs of the 3 updated records are NOT returned.</p>
@@ -644,7 +648,7 @@ class FdcIntegrationTest {
      * <p>* 3 fdc_contributions record IDs that would normally get picked up by the Delayed pickup logic,
      *      but their FDC items are missing</p>
      * <h4>When</h4>
-     * <p>* The {@link FdcService#processDailyFiles()} method is called</p>
+     * <p>* The {@link FdcFileService#processDailyFiles()} method is called</p>
      * <h4>Then:</h4>
      * <p>1. The call to the callGlobalUpdate is successful i.e. MAAT API returned a successful response
      * <p>2. The IDs of the 3 updated records are NOT returned.</p>
@@ -680,7 +684,7 @@ class FdcIntegrationTest {
      * <p>* 3 fdc_contributions record IDs that would normally get picked up by the Fast Track pickup logic,
      *      but their Rep Orders are missing the corresponding Crown Court Outcomes</p>
      * <h4>When</h4>
-     * <p>* The {@link FdcService#processDailyFiles()} method is called</p>
+     * <p>* The {@link FdcFileService#processDailyFiles()} method is called</p>
      * <h4>Then:</h4>
      * <p>1. The call to the callGlobalUpdate is successful i.e. MAAT API returned a successful response
      * <p>2. The IDs of the 3 updated records are NOT returned.</p>
@@ -716,7 +720,7 @@ class FdcIntegrationTest {
      */
     private void runProcessDailyFilesAndCheckResults(final Set<Long> updatedIds, final CheckOptions checkOptions,
                                                      final FdcContributionsStatus fdcContributionsStatusExpected) {
-		Mockito.mockingDetails(fdcService);
+		Mockito.mockingDetails(fdcFileService);
         final FdcProcessSpy.FdcProcessSpyBuilder watching = spyFactory.newFdcProcessSpyBuilder()
                 .traceExecuteFdcGlobalUpdate()
                 .traceAndFilterGetFdcContributions(updatedIds)
@@ -724,7 +728,7 @@ class FdcIntegrationTest {
                 .traceUpdateFdcs();
 
         // Call the processDailyFiles() method under test:
-        fdcService.processDailyFiles();
+        fdcFileService.processDailyFiles();
         final FdcProcessSpy watched = watching.build();
 
         // Fetch some items of information from the maat-api to use during validation:

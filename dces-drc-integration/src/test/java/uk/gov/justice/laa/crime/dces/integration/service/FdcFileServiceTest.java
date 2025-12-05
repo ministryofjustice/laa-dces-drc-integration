@@ -61,7 +61,7 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @ExtendWith(SoftAssertionsExtension.class)
 @WireMockTest(httpPort = 1111)
-class FdcServiceTest extends ApplicationTestBase {
+class FdcFileServiceTest extends ApplicationTestBase {
 	private static final String GET_URL = "/debt-collection-enforcement/fdc-contribution-files?status=REQUESTED";
 	private static final String PREPARE_URL = "/debt-collection-enforcement/prepare-fdc-contributions-files";
 	private static final String UPDATE_URL = "/debt-collection-enforcement/create-fdc-file";
@@ -73,7 +73,7 @@ class FdcServiceTest extends ApplicationTestBase {
 
 	@Autowired
 	@InjectMocks
-	private FdcService fdcService;
+	private FdcFileService fdcFileService;
 
 	@MockitoBean
 	FdcMapperUtils fdcMapperUtils;
@@ -116,7 +116,7 @@ class FdcServiceTest extends ApplicationTestBase {
 		Fdc expectedFdc2 = createExpectedFdc(4000L, 40000000L, "2000-07-12", "2014-03-20", "2283.1","2283.1", "0");
 
 		// run
-		boolean successful = fdcService.processDailyFiles();
+		boolean successful = fdcFileService.processDailyFiles();
 		// test
 		verify(fdcMapperUtils).generateFileXML(any(),any());
 		verify(fdcMapperUtils).generateFileName(any());
@@ -165,7 +165,7 @@ class FdcServiceTest extends ApplicationTestBase {
 		when(fdcMapperUtils.generateAckXML(any(), any(), any(), any())).thenReturn("<xml>ValidAckXML</xml>");
 		when(drcClient.sendFdcReqToDrc(any())).thenReturn(SKIP_DRC_RESPONSE_PAYLOAD);
 		// run
-		boolean successful = fdcService.processDailyFiles();
+		boolean successful = fdcFileService.processDailyFiles();
 		// test
 		verify(fdcMapperUtils).generateFileXML(any(),any());
 		verify(fdcMapperUtils).generateFileName(any());
@@ -188,7 +188,7 @@ class FdcServiceTest extends ApplicationTestBase {
 		when(fdcMapperUtils.generateAckXML(anyString(), any(), any(), any())).thenReturn("<xml>ValidAckXML</xml>");
 		when(drcClient.sendFdcReqToDrc(any())).thenReturn("");
 		// run
-		boolean successful = fdcService.processDailyFiles();
+		boolean successful = fdcFileService.processDailyFiles();
 		// test
 		verify(fdcMapperUtils, times(0)).generateFileXML(any(), anyString());
 		verify(fdcMapperUtils, times(0)).generateFileName(any());
@@ -218,7 +218,7 @@ class FdcServiceTest extends ApplicationTestBase {
 
 
 		// run
-		boolean successful = fdcService.processDailyFiles();
+		boolean successful = fdcFileService.processDailyFiles();
 
 		// test
 		verify(fdcMapperUtils).generateFileXML(any(),any());
@@ -268,7 +268,7 @@ class FdcServiceTest extends ApplicationTestBase {
 		customStubs.add(stubFor(post(PREPARE_URL).atPriority(1)
 				.willReturn(serverError())));
 		// run
-		boolean successful = fdcService.processDailyFiles();
+		boolean successful = fdcFileService.processDailyFiles();
 
 
 		// test
@@ -293,7 +293,7 @@ class FdcServiceTest extends ApplicationTestBase {
 		customStubs.add(stubFor(post(PREPARE_URL).atPriority(1)
 				.willReturn(unauthorized())));
 		// run
-		boolean successful = fdcService.processDailyFiles();
+		boolean successful = fdcFileService.processDailyFiles();
 
 
 		// test
@@ -313,7 +313,7 @@ class FdcServiceTest extends ApplicationTestBase {
 		customStubs.add(stubFor(get(GET_URL).atPriority(1)
 				.willReturn(serverError())));
 		// do
-		softly.assertThatThrownBy(() -> fdcService.processDailyFiles())
+		softly.assertThatThrownBy(() -> fdcFileService.processDailyFiles())
 				.isInstanceOf(WebClientResponseException.class);
 		// test
 		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
@@ -332,7 +332,7 @@ class FdcServiceTest extends ApplicationTestBase {
 						}
 						""").withHeader("Content-Type", "application/json"))));
 		// do
-		boolean successful = fdcService.processDailyFiles();
+		boolean successful = fdcFileService.processDailyFiles();
 		// test
 		softly.assertThat(successful).isFalse();
 		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
@@ -347,7 +347,7 @@ class FdcServiceTest extends ApplicationTestBase {
 		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
 		Mockito.doThrow(new WebClientResponseException(401, "Test Unauthorised", null, null, null)).when(drcClient).sendFdcReqToDrc(any());
 		// do
-		boolean successful = fdcService.processDailyFiles();
+		boolean successful = fdcFileService.processDailyFiles();
 		// test
 		softly.assertThat(successful).isFalse();
 		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
@@ -362,7 +362,7 @@ class FdcServiceTest extends ApplicationTestBase {
 		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
 		Mockito.doThrow(new WebClientResponseException(500, "Test Unauthorised", null, null, null)).when(drcClient).sendFdcReqToDrc(any());
 		// do
-		boolean successful = fdcService.processDailyFiles();
+		boolean successful = fdcFileService.processDailyFiles();
 		// test
 		softly.assertThat(successful).isFalse();
 		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
@@ -377,7 +377,7 @@ class FdcServiceTest extends ApplicationTestBase {
 		when(fdcMapperUtils.mapFdcEntry(any())).thenCallRealMethod();
 		Mockito.doThrow(new WebClientResponseException(403,"Failed", null, null, null)).when(drcClient).sendFdcReqToDrc(any());
 		// do
-		boolean successful = fdcService.processDailyFiles();
+		boolean successful = fdcFileService.processDailyFiles();
 		// test
 		softly.assertThat(successful).isFalse();
 		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
@@ -403,7 +403,7 @@ class FdcServiceTest extends ApplicationTestBase {
 		exception.setBodyDecodeFunction(clazz -> clazz.isAssignableFrom(ProblemDetail.class) ? problemDetail : null);
 		Mockito.doThrow(exception).when(drcClient).sendFdcReqToDrc(any());
 		// do
-		boolean successful = fdcService.processDailyFiles();
+		boolean successful = fdcFileService.processDailyFiles();
 		// test
 		softly.assertThat(successful).isTrue();
 		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
@@ -431,7 +431,7 @@ class FdcServiceTest extends ApplicationTestBase {
 		exception.setBodyDecodeFunction(clazz -> clazz.isAssignableFrom(ProblemDetail.class) ? problemDetail : null);
 		Mockito.doThrow(exception).when(drcClient).sendFdcReqToDrc(any());
 		// do
-		boolean successful = fdcService.processDailyFiles();
+		boolean successful = fdcFileService.processDailyFiles();
 		// test
 		softly.assertThat(successful).isFalse();
 		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
@@ -456,62 +456,12 @@ class FdcServiceTest extends ApplicationTestBase {
 		when(drcClient.sendFdcReqToDrc(any())).thenReturn(TEST_DRC_RESPONSE_PAYLOAD);
 
 		// do
-		softly.assertThatThrownBy(() -> fdcService.processDailyFiles())
+		softly.assertThatThrownBy(() -> fdcFileService.processDailyFiles())
 				.isInstanceOf(WebClientResponseException.class);
 		// test
 		WireMock.verify(1, postRequestedFor(urlEqualTo(PREPARE_URL)));
 		WireMock.verify(1, getRequestedFor(urlEqualTo(GET_URL)));
 		WireMock.verify(1, postRequestedFor(urlEqualTo(UPDATE_URL)));
-	}
-
-	@Test
-	void testProcessFdcUpdateWhenSuccessful() {
-
-        FdcAckFromDrc fdcAckFromDrc = FdcAckFromDrc.of(911L, null);
-		Long response = fdcService.handleFdcProcessedAck(fdcAckFromDrc);
-		softly.assertThat(response).isEqualTo(1111L);
-		verify(eventService).logFdcError(fdcAckFromDrc);
-	}
-
-	@Test
-	void testProcessFdcUpdateWhenIncomingIsolated() {
-		when(feature.incomingIsolated()).thenReturn(true);
-		FdcAckFromDrc fdcAckFromDrc = FdcAckFromDrc.of(911L, null);
-		Long response = fdcService.handleFdcProcessedAck(fdcAckFromDrc);
-		softly.assertThat(response).isEqualTo(0L); // so MAAT DB not touched
-		verify(eventService).logFdcError(fdcAckFromDrc);
-	}
-
-	@Test
-	void testProcessFdcUpdateWhenNotFound() {
-		String errorText = "The request has failed to process";
-
-		FdcAckFromDrc fdcAckFromDrc = FdcAckFromDrc.of(404L, errorText);
-		var exception = catchThrowableOfType(() -> fdcService.handleFdcProcessedAck(fdcAckFromDrc), ErrorResponseException.class);
-		softly.assertThat(exception).isNotNull();
-		softly.assertThat(NOT_FOUND.isSameCodeAs(exception.getStatusCode())).isTrue();
-		verify(eventService).logFdcError(fdcAckFromDrc);
-	}
-
-	@Test
-	void testProcessFdcUpdateWhenNoContFile() {
-		String errorText = "The request has failed to process";
-
-		FdcAckFromDrc fdcAckFromDrc = FdcAckFromDrc.of(9L, errorText);
-		var exception = catchThrowableOfType(() -> fdcService.handleFdcProcessedAck(fdcAckFromDrc), ErrorResponseException.class);
-		softly.assertThat(exception).isNotNull();
-		softly.assertThat(FAILED_DEPENDENCY.isSameCodeAs(exception.getStatusCode())).isTrue();
-		verify(eventService).logFdcError(fdcAckFromDrc);
-	}
-
-	@Test
-	void testProcessFdcUpdateWhenServerFailure() {
-		String errorText = "The request has failed to process";
-		FdcAckFromDrc fdcAckFromDrc = FdcAckFromDrc.of(500L, errorText);
-		var exception = catchThrowableOfType(() -> fdcService.handleFdcProcessedAck(fdcAckFromDrc), ErrorResponseException.class);
-		softly.assertThat(exception).isNotNull();
-		softly.assertThat(exception.getStatusCode().is5xxServerError()).isTrue();
-		verify(eventService).logFdcError(fdcAckFromDrc);
 	}
 
 	@Test
@@ -522,7 +472,7 @@ class FdcServiceTest extends ApplicationTestBase {
 		when(fdcMapperUtils.mapFdcEntry(any())).thenReturn(testFdc);
 		when(drcClient.sendFdcReqToDrc(any())).thenReturn(TEST_DRC_RESPONSE_PAYLOAD);
 
-		List<Fdc> result = fdcService.sendFdcsToDrc(List.of(1L, 2L));
+		List<Fdc> result = fdcFileService.sendFdcsToDrc(List.of(1L, 2L));
 		verify(fdcMapperUtils, times(2)).mapFdcEntry(any());
 		verify(drcClient, times(2)).sendFdcReqToDrc(any());
 		verify(fdcMapperUtils, never()).generateFileXML(any(),any()); // verify that no file is generated
@@ -538,7 +488,7 @@ class FdcServiceTest extends ApplicationTestBase {
 		Fdc testFdc = createExpectedFdc(1000L, 10000000L, "2050-07-12", "2011-12-03", "3805.69","3805.69", "0");
 		when(fdcMapperUtils.mapFdcEntry(any())).thenReturn(testFdc);
 		when(drcClient.sendFdcReqToDrc(any())).thenReturn(TEST_DRC_RESPONSE_PAYLOAD);
-		softly.assertThatThrownBy(() -> fdcService.sendFdcsToDrc(List.of()))
+		softly.assertThatThrownBy(() -> fdcFileService.sendFdcsToDrc(List.of()))
 				.isInstanceOf(BadRequest.class)
 				.hasMessageContaining("400 Bad Request");
 		verify(fdcMapperUtils, never()).mapFdcEntry(any());
