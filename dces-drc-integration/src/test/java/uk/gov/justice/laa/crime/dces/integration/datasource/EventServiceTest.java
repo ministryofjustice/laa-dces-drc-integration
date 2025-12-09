@@ -307,9 +307,9 @@ class EventServiceTest {
 
     @Test
     void givenAValidCronExpression_whenPurgeDrcProcessingStatusEntriesIsInvoked_shouldPurgePeriodicRecords() {
-        when(drcProcessingStatusRepository.deleteByCreationDateBefore(any(LocalDateTime.class))).thenReturn(5l);
+        when(drcProcessingStatusRepository.deleteByCreationTimestampBefore(any(LocalDateTime.class))).thenReturn(5l);
         softly.assertThat(eventService.purgePeriodicDrcProcessingStatusEntries()).isEqualTo(5l);
-        verify(drcProcessingStatusRepository).deleteByCreationDateBefore(any(LocalDateTime.class));
+        verify(drcProcessingStatusRepository).deleteByCreationTimestampBefore(any(LocalDateTime.class));
         softly.assertAll();
     }
 

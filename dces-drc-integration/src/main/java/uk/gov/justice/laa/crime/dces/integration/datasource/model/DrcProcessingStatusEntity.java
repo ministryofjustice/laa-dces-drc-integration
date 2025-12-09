@@ -30,7 +30,7 @@ public class DrcProcessingStatusEntity {
     private String statusMessage;
     private String detail;
     @CreationTimestamp
-    private LocalDateTime creationDate;
+    private LocalDateTime creationTimestamp;
 
 }
 

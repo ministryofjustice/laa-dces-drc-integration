@@ -157,7 +157,7 @@ public class EventService {
 
     public Long purgePeriodicDrcProcessingStatusEntries() {
         LocalDateTime purgeBeforeDate = LocalDateTime.now().minusMonths(historyCutoffMonth);
-        return drcProcessingStatusRepository.deleteByCreationDateBefore(purgeBeforeDate);
+        return drcProcessingStatusRepository.deleteByCreationTimestampBefore(purgeBeforeDate);
     }
 
 }

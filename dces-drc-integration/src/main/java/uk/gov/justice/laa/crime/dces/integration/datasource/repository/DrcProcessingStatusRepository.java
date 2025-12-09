@@ -11,5 +11,5 @@ import java.time.LocalDateTime;
 public interface DrcProcessingStatusRepository extends JpaRepository<DrcProcessingStatusEntity, Long> {
 
     @Transactional
-    long deleteByCreationDateBefore(LocalDateTime purgeBeforeDate);
+    long deleteByCreationTimestampBefore(LocalDateTime purgeBeforeDate);
 }

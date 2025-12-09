@@ -68,13 +68,13 @@ class DatabaseServiceTest extends ApplicationTestBase {
     }
 
     @Test
-    void givenAValidCaseSubmission_whenDeleteByCreationDateBeforeIsInvoked_shouldDeleteOldMessage() {
+    void givenAValidCaseSubmission_whenDeleteByCreationTimestampBeforeIsInvoked_shouldDeleteOldMessage() {
 
         DrcProcessingStatusEntity entity = createExpectedDrcProcessingStatusEntity(RecordType.FDC, 200);
         drcProcessingStatusRepository.save(entity);
         long count = drcProcessingStatusRepository.count();
         assertEquals(1, count);
-        long deleteCount =  drcProcessingStatusRepository.deleteByCreationDateBefore(LocalDateTime.now());
+        long deleteCount =  drcProcessingStatusRepository.deleteByCreationTimestampBefore(LocalDateTime.now());
         assertEquals(1, deleteCount);
     }
 
