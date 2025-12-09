@@ -54,7 +54,6 @@ class DatabaseServiceTest extends ApplicationTestBase {
 
         assertEquals(1, count);
         assertEquals(-333L, drcProcessingStatusRepository.findAll().stream().findFirst().get().getConcorContributionId());
-        assertEquals(200, drcProcessingStatusRepository.findAll().get(0).getStatus());
     }
 
     @Test
@@ -66,7 +65,6 @@ class DatabaseServiceTest extends ApplicationTestBase {
 
         assertEquals(1, count);
         assertEquals(-333L, drcProcessingStatusRepository.findAll().stream().findFirst().get().getFdcId());
-        assertEquals(200, drcProcessingStatusRepository.findAll().get(0).getStatus());
     }
 
     @Test
@@ -108,7 +106,6 @@ class DatabaseServiceTest extends ApplicationTestBase {
         return DrcProcessingStatusEntity.builder()
                 .fdcId(RecordType.FDC.equals(recordType) ? -333L : null)
                 .concorContributionId(RecordType.CONTRIBUTION.equals(recordType) ? -333L : null)
-                .status(httpStatusCode)
                 .title("MAAT ID Missing")
                 .detail("MAAT ID is required for processing")
                 .build();

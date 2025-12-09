@@ -29,7 +29,6 @@ public class DrcProcessingStatusEntity {
     private Long fdcId;
     private String title;
     private String detail;
-    private Integer status;
     @CreationTimestamp
     private LocalDateTime creationDate;
 

@@ -52,10 +52,6 @@ public class DrcProcessingStatusMapper {
                 .map(ProblemDetail::getDetail)
                 .orElse(null);
 
-        Integer status = Optional.ofNullable(problemDetail)
-                .map(ProblemDetail::getStatus)
-                .orElse(null);
-
         detail = Optional.ofNullable(detail).orElse(errorText);
 
         return DrcProcessingStatusEntity.builder()
@@ -64,7 +60,6 @@ public class DrcProcessingStatusMapper {
                 .concorContributionId(concorContributionId)
                 .title(title)
                 .detail(detail)
-                .status(status)
                 .build();
     }
 }

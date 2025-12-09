@@ -31,7 +31,6 @@ class DrcProcessingStatusMapperTest {
         assertEquals(Long.valueOf(123L), entity.getFdcId());
         assertEquals("PD Title", entity.getTitle());
         assertEquals("PD Detail", entity.getDetail());
-        assertEquals(Integer.valueOf(422), entity.getStatus());
     }
 
     @Test
@@ -48,7 +47,6 @@ class DrcProcessingStatusMapperTest {
         assertEquals(Long.valueOf(321L), entity.getFdcId());
         assertNull(entity.getTitle());
         assertEquals("error text", entity.getDetail());
-        assertNull(entity.getStatus());
     }
 
     @Test
@@ -59,7 +57,6 @@ class DrcProcessingStatusMapperTest {
         assertNull(entity.getFdcId());
         assertNull(entity.getTitle());
         assertNull(entity.getDetail());
-        assertNull(entity.getStatus());
     }
 
     @Test
@@ -80,7 +77,6 @@ class DrcProcessingStatusMapperTest {
         assertEquals(Long.valueOf(555L), entity.getConcorContributionId());
         assertEquals("C Title", entity.getTitle());
         assertEquals("C Detail", entity.getDetail());
-        assertEquals(Integer.valueOf(500), entity.getStatus());
     }
 
     @Test
@@ -97,7 +93,6 @@ class DrcProcessingStatusMapperTest {
         assertEquals(Long.valueOf(777L), entity.getConcorContributionId());
         assertNull(entity.getTitle());
         assertEquals("concor error", entity.getDetail());
-        assertNull(entity.getStatus());
     }
 
     @Test
@@ -108,7 +103,6 @@ class DrcProcessingStatusMapperTest {
         assertNull(entity.getConcorContributionId());
         assertNull(entity.getTitle());
         assertNull(entity.getDetail());
-        assertNull(entity.getStatus());
     }
 
 }

@@ -89,7 +89,6 @@ class EventServiceTest {
         var pd = mock(org.springframework.http.ProblemDetail.class);
         when(pd.getTitle()).thenReturn("C Title");
         when(pd.getDetail()).thenReturn("C Detail");
-        when(pd.getStatus()).thenReturn(500);
         when(ack.data().report()).thenReturn(pd);
         when(ack.data().fdcId()).thenReturn(testFdcId);
         when(ack.data().maatId()).thenReturn(testMaatId);
@@ -108,7 +107,6 @@ class EventServiceTest {
         softly.assertThat(captured.getFdcId()).isEqualTo(testFdcId);
         softly.assertThat(captured.getTitle()).isEqualTo("C Title");
         softly.assertThat(captured.getDetail()).isEqualTo("C Detail");
-        softly.assertThat(captured.getStatus()).isEqualTo(Integer.valueOf(500));
         softly.assertAll();
     }
     @Test
@@ -117,7 +115,6 @@ class EventServiceTest {
         var pd = mock(org.springframework.http.ProblemDetail.class);
         when(pd.getTitle()).thenReturn("C Title");
         when(pd.getDetail()).thenReturn("C Detail");
-        when(pd.getStatus()).thenReturn(500);
         when(ack.data().report()).thenReturn(pd);
         when(ack.data().fdcId()).thenReturn(testFdcId);
         when(ack.data().maatId()).thenReturn(testMaatId);
@@ -136,7 +133,6 @@ class EventServiceTest {
         softly.assertThat(captured.getFdcId()).isEqualTo(testFdcId);
         softly.assertThat(captured.getTitle()).isEqualTo("C Title");
         softly.assertThat(captured.getDetail()).isEqualTo("C Detail");
-        softly.assertThat(captured.getStatus()).isEqualTo(Integer.valueOf(500));
         softly.assertAll();
     }
 
@@ -146,7 +142,6 @@ class EventServiceTest {
         var pd = mock(org.springframework.http.ProblemDetail.class);
         when(pd.getTitle()).thenReturn("C Title");
         when(pd.getDetail()).thenReturn("C Detail");
-        when(pd.getStatus()).thenReturn(500);
         when(ack.data().report()).thenReturn(pd);
         when(ack.data().concorContributionId()).thenReturn(testConcorId);
         when(ack.data().maatId()).thenReturn(testMaatId);
@@ -165,7 +160,6 @@ class EventServiceTest {
         softly.assertThat(captured.getConcorContributionId()).isEqualTo(testConcorId);
         softly.assertThat(captured.getTitle()).isEqualTo("C Title");
         softly.assertThat(captured.getDetail()).isEqualTo("C Detail");
-        softly.assertThat(captured.getStatus()).isEqualTo(Integer.valueOf(500));
         softly.assertAll();
     }
 
@@ -175,7 +169,6 @@ class EventServiceTest {
         var pd = mock(org.springframework.http.ProblemDetail.class);
         when(pd.getTitle()).thenReturn("C Title");
         when(pd.getDetail()).thenReturn("C Detail");
-        when(pd.getStatus()).thenReturn(500);
         when(ack.data().report()).thenReturn(pd);
         when(ack.data().concorContributionId()).thenReturn(testConcorId);
         when(ack.data().maatId()).thenReturn(testMaatId);
@@ -194,7 +187,6 @@ class EventServiceTest {
         softly.assertThat(captured.getConcorContributionId()).isEqualTo(testConcorId);
         softly.assertThat(captured.getTitle()).isEqualTo("C Title");
         softly.assertThat(captured.getDetail()).isEqualTo("C Detail");
-        softly.assertThat(captured.getStatus()).isEqualTo(Integer.valueOf(500));
         softly.assertAll();
     }
 

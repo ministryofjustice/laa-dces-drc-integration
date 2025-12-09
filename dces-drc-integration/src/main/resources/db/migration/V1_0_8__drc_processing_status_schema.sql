@@ -9,7 +9,6 @@ CREATE TABLE IF NOT EXISTS drc_processing_status
     concor_contribution_id INT,
     fdc_id INT,
     title VARCHAR( 255),
-    status INT,
     detail TEXT,
     creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
