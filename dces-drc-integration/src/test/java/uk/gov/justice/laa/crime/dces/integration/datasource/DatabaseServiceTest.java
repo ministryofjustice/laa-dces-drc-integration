@@ -7,11 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import uk.gov.justice.laa.crime.dces.integration.config.ApplicationTestBase;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseMigrationEntity;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionEntity;
-import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionErrorEntity;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.DrcProcessingStatusEntity;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.RecordType;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseMigrationRepository;
-import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionErrorRepository;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionRepository;
+import uk.gov.justice.laa.crime.dces.integration.datasource.repository.DrcProcessingStatusRepository;
 
 import java.time.LocalDateTime;
 
@@ -23,14 +23,14 @@ class DatabaseServiceTest extends ApplicationTestBase {
     @Autowired
     private CaseSubmissionRepository caseSubmissionRepository;
     @Autowired
-    private CaseSubmissionErrorRepository caseSubmissionErrorRepository;
+    private DrcProcessingStatusRepository drcProcessingStatusRepository;
     @Autowired
     private CaseMigrationRepository caseMigrationRepository;
 
     @BeforeEach
     public void setUp() {
         caseSubmissionRepository.deleteAll();
-        caseSubmissionErrorRepository.deleteAll();
+        drcProcessingStatusRepository.deleteAll();
     }
 
     @Test
@@ -46,37 +46,37 @@ class DatabaseServiceTest extends ApplicationTestBase {
     }
 
     @Test
-    void testDatabaseConnectionAndContributionDataCaseSubmissionError() {
+    void testDatabaseConnectionAndContributionDataDrcProcessingStatus() {
 
-        caseSubmissionErrorRepository.save(createExpectedCaseSubmissionErrorEntity(RecordType.CONTRIBUTION, 200));
+        drcProcessingStatusRepository.save(createExpectedDrcProcessingStatusEntity(RecordType.CONTRIBUTION, 200));
 
-        long count = caseSubmissionErrorRepository.count();
+        long count = drcProcessingStatusRepository.count();
 
         assertEquals(1, count);
-        assertEquals(-333L, caseSubmissionErrorRepository.findAll().stream().findFirst().get().getConcorContributionId());
-        assertEquals(200, caseSubmissionErrorRepository.findAll().get(0).getStatus());
+        assertEquals(-333L, drcProcessingStatusRepository.findAll().stream().findFirst().get().getConcorContributionId());
+        assertEquals(200, drcProcessingStatusRepository.findAll().get(0).getStatus());
     }
 
     @Test
-    void testDatabaseConnectionAndFdcDataCaseSubmissionError() {
+    void testDatabaseConnectionAndFdcDataDrcProcessingStatus() {
 
-        caseSubmissionErrorRepository.save(createExpectedCaseSubmissionErrorEntity(RecordType.FDC, 200));
+        drcProcessingStatusRepository.save(createExpectedDrcProcessingStatusEntity(RecordType.FDC, 200));
 
-        long count = caseSubmissionErrorRepository.count();
+        long count = drcProcessingStatusRepository.count();
 
         assertEquals(1, count);
-        assertEquals(-333L, caseSubmissionErrorRepository.findAll().stream().findFirst().get().getFdcId());
-        assertEquals(200, caseSubmissionErrorRepository.findAll().get(0).getStatus());
+        assertEquals(-333L, drcProcessingStatusRepository.findAll().stream().findFirst().get().getFdcId());
+        assertEquals(200, drcProcessingStatusRepository.findAll().get(0).getStatus());
     }
 
     @Test
     void givenAValidCaseSubmission_whenDeleteByCreationDateBeforeIsInvoked_shouldDeleteOldMessage() {
 
-        CaseSubmissionErrorEntity entity = createExpectedCaseSubmissionErrorEntity(RecordType.FDC, 200);
-        caseSubmissionErrorRepository.save(entity);
-        long count = caseSubmissionErrorRepository.count();
+        DrcProcessingStatusEntity entity = createExpectedDrcProcessingStatusEntity(RecordType.FDC, 200);
+        drcProcessingStatusRepository.save(entity);
+        long count = drcProcessingStatusRepository.count();
         assertEquals(1, count);
-        long deleteCount =  caseSubmissionErrorRepository.deleteByCreationDateBefore(LocalDateTime.now());
+        long deleteCount =  drcProcessingStatusRepository.deleteByCreationDateBefore(LocalDateTime.now());
         assertEquals(1, deleteCount);
     }
 
@@ -104,8 +104,8 @@ class DatabaseServiceTest extends ApplicationTestBase {
                 .build();
     }
 
-    private CaseSubmissionErrorEntity createExpectedCaseSubmissionErrorEntity(RecordType recordType, Integer httpStatusCode) {
-        return CaseSubmissionErrorEntity.builder()
+    private DrcProcessingStatusEntity createExpectedDrcProcessingStatusEntity(RecordType recordType, Integer httpStatusCode) {
+        return DrcProcessingStatusEntity.builder()
                 .fdcId(RecordType.FDC.equals(recordType) ? -333L : null)
                 .concorContributionId(RecordType.CONTRIBUTION.equals(recordType) ? -333L : null)
                 .status(httpStatusCode)

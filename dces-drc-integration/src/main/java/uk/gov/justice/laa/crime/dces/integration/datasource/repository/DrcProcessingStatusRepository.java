@@ -2,13 +2,13 @@ package uk.gov.justice.laa.crime.dces.integration.datasource.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionErrorEntity;
 import org.springframework.transaction.annotation.Transactional;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.DrcProcessingStatusEntity;
 
 import java.time.LocalDateTime;
 
 @Repository
-public interface CaseSubmissionErrorRepository extends JpaRepository<CaseSubmissionErrorEntity, Long> {
+public interface DrcProcessingStatusRepository extends JpaRepository<DrcProcessingStatusEntity, Long> {
 
     @Transactional
     long deleteByCreationDateBefore(LocalDateTime purgeBeforeDate);

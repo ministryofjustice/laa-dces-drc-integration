@@ -40,7 +40,7 @@ import static org.mockito.Mockito.when;
         "scheduling.cron.data-migration=* * * * * *",
         "scheduling.cron.purge.data-cleardown=* * * * * *",
         "scheduling.lock.at-least=PT0S",
-        "scheduling.cron.purge.case-submission-error=* * * * * *"
+        "scheduling.cron.purge.drc-processing-status=* * * * * *"
 })
 @ActiveProfiles(profiles = "default") // the ServiceScheduler is disabled during tests otherwise
 public class ServiceSchedulerTest {
@@ -103,14 +103,14 @@ public class ServiceSchedulerTest {
     }
 
     @Test
-    void givenAValidCronJob_shouldCalledPurgePeriodicCaseSubmissionErrorEntries(CapturedOutput output) throws InterruptedException {
-        when(eventService.purgePeriodicCaseSubmissionErrorEntries()).thenReturn(5l); // Arrange
+    void givenAValidCronJob_shouldCalledPurgePeriodicDrcProcessingStatusEntries(CapturedOutput output) throws InterruptedException {
+        when(eventService.purgePeriodicDrcProcessingStatusEntries()).thenReturn(5l); // Arrange
 
         Thread.sleep(1000); // Act - could be called once (or maybe twice) depending on timing
 
-        verify(eventService).purgePeriodicCaseSubmissionErrorEntries(); // Assert
-        assertThat(output.getOut()).contains("Starting purging case submission error");
-        assertThat(output.getOut()).contains("Deleted 5 historical case submission error entries");
+        verify(eventService).purgePeriodicDrcProcessingStatusEntries(); // Assert
+        assertThat(output.getOut()).contains("Start purging DRC processing status records");
+        assertThat(output.getOut()).contains("Deleted 5 historical DRC processing status records");
     }
 
     static class DelayedTrue implements Answer<Boolean> {

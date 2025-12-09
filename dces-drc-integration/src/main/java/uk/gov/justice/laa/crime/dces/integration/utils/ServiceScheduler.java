@@ -64,12 +64,12 @@ public class ServiceScheduler {
         log.info("Deleted {} historical entries", deletedCount);
     }
 
-    @Scheduled(cron = "${scheduling.cron.purge.case-submission-error:-}")
+    @Scheduled(cron = "${scheduling.cron.purge.drc-processing-status:-}")
     @SchedulerLock(name = "purgeCaseSubmission")
-    public void purgeCaseSubmissionError() {
+    public void purgeDrcProcessingStatus() {
         LockAssert.assertLocked();
-        log.info("Starting purging case submission error");
-        long deletedCount = eventService.purgePeriodicCaseSubmissionErrorEntries();
-        log.info("Deleted {} historical case submission error entries", deletedCount);
+        log.info("Start purging DRC processing status records");
+        long deletedCount = eventService.purgePeriodicDrcProcessingStatusEntries();
+        log.info("Deleted {} historical DRC processing status records", deletedCount);
     }
 }

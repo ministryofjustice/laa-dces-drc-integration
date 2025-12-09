@@ -6,12 +6,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionEntity;
-import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionErrorEntity;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.DrcProcessingStatusEntity;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventTypeEntity;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.RecordType;
-import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionErrorRepository;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionRepository;
+import uk.gov.justice.laa.crime.dces.integration.datasource.repository.DrcProcessingStatusRepository;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.EventTypeRepository;
 import uk.gov.justice.laa.crime.dces.integration.exception.DcesDrcServiceException;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
@@ -23,7 +23,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
-import static uk.gov.justice.laa.crime.dces.integration.utils.CaseSubmissionErrorMapper.createCaseSubmissionErrorEntity;
+import static uk.gov.justice.laa.crime.dces.integration.utils.DrcProcessingStatusMapper.createDrcProcessingStatusEntity;
 
 @Service
 @RequiredArgsConstructor
@@ -31,7 +31,7 @@ import static uk.gov.justice.laa.crime.dces.integration.utils.CaseSubmissionErro
 public class EventService {
 
     private final CaseSubmissionRepository caseSubmissionRepository;
-    private final CaseSubmissionErrorRepository caseSubmissionErrorRepository;
+    private final DrcProcessingStatusRepository drcProcessingStatusRepository;
     private final EventTypeRepository eventTypeRepository;
 
 
@@ -97,10 +97,10 @@ public class EventService {
         return logConcor(concorContributionId, eventType, batchId, null, contributionsObject, httpStatusCode, payload);
     }
 
-    public CaseSubmissionErrorEntity logFdcError(FdcAckFromDrc fdcAckFromDrc) {
-        var entity = createCaseSubmissionErrorEntity(fdcAckFromDrc);
+    public DrcProcessingStatusEntity logFdcError(FdcAckFromDrc fdcAckFromDrc) {
+        var entity = createDrcProcessingStatusEntity(fdcAckFromDrc);
         try {
-            var saved = saveCaseSubmissionErrorEntity(entity);
+            var saved = saveDrcProcessingStatusEntity(entity);
             log.info("saved fdc error entity: {}", saved);
             return saved;
         } catch (Exception e) {
@@ -109,10 +109,10 @@ public class EventService {
         }
     }
 
-    public CaseSubmissionErrorEntity logConcorContributionError(ConcorContributionAckFromDrc concorContributionAckFromDrc) {
-        var entity = createCaseSubmissionErrorEntity(concorContributionAckFromDrc);
+    public DrcProcessingStatusEntity logConcorContributionError(ConcorContributionAckFromDrc concorContributionAckFromDrc) {
+        var entity = createDrcProcessingStatusEntity(concorContributionAckFromDrc);
         try {
-            var saved = saveCaseSubmissionErrorEntity(entity);
+            var saved = saveDrcProcessingStatusEntity(entity);
             log.info("saved concor contribution error entity: {}", saved);
             return saved;
         } catch (Exception e) {
@@ -121,8 +121,8 @@ public class EventService {
         }
     }
 
-    public CaseSubmissionErrorEntity saveCaseSubmissionErrorEntity(CaseSubmissionErrorEntity entity) {
-        return caseSubmissionErrorRepository.save(entity);
+    public DrcProcessingStatusEntity saveDrcProcessingStatusEntity(DrcProcessingStatusEntity entity) {
+        return drcProcessingStatusRepository.save(entity);
     }
 
 
@@ -155,9 +155,9 @@ public class EventService {
                 .minusDays(cutoff);
     }
 
-    public Long purgePeriodicCaseSubmissionErrorEntries() {
+    public Long purgePeriodicDrcProcessingStatusEntries() {
         LocalDateTime purgeBeforeDate = LocalDateTime.now().minusMonths(historyCutoffMonth);
-        return caseSubmissionErrorRepository.deleteByCreationDateBefore(purgeBeforeDate);
+        return drcProcessingStatusRepository.deleteByCreationDateBefore(purgeBeforeDate);
     }
 
 }

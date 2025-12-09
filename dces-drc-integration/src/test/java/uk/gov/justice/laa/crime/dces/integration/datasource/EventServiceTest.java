@@ -13,12 +13,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionEntity;
-import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionErrorEntity;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.DrcProcessingStatusEntity;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventTypeEntity;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.RecordType;
-import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionErrorRepository;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionRepository;
+import uk.gov.justice.laa.crime.dces.integration.datasource.repository.DrcProcessingStatusRepository;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.EventTypeRepository;
 import uk.gov.justice.laa.crime.dces.integration.exception.DcesDrcServiceException;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
@@ -45,7 +45,7 @@ class EventServiceTest {
     @Mock
     private CaseSubmissionRepository caseSubmissionRepository;
     @Mock
-    private CaseSubmissionErrorRepository caseSubmissionErrorRepository;
+    private DrcProcessingStatusRepository drcProcessingStatusRepository;
     @Mock
     private EventTypeRepository eventTypeRepository;
 
@@ -55,7 +55,7 @@ class EventServiceTest {
     private ArgumentCaptor<CaseSubmissionEntity> caseSubmissionEntityArgumentCaptor;
 
     @Captor
-    private ArgumentCaptor<CaseSubmissionErrorEntity> caseSubmissionErrorEntityArgumentCaptor;
+    private ArgumentCaptor<DrcProcessingStatusEntity> drcProcessingStatusEntityArgumentCaptor;
 
     private final Long testTraceId = -777L;
     private final Long testBatchId = -666L;
@@ -66,20 +66,20 @@ class EventServiceTest {
 
 
     @Test
-    void whenSaveCaseSubmissionErrorEntityWithValidEntity_thenDelegatesToRepositoryAndReturnsSavedEntity() {
+    void whenSaveDrcProcessingStatusEntityWithValidEntity_thenDelegatesToRepositoryAndReturnsSavedEntity() {
 
-        var input = CaseSubmissionErrorEntity.builder()
+        var input = DrcProcessingStatusEntity.builder()
                 .maatId(testMaatId)
                 .fdcId(testFdcId)
                 .title(testPayload)
                 .build();
 
-        when(caseSubmissionErrorRepository.save(any(CaseSubmissionErrorEntity.class))).thenReturn(input);
+        when(drcProcessingStatusRepository.save(any(DrcProcessingStatusEntity.class))).thenReturn(input);
 
-        var result = eventService.saveCaseSubmissionErrorEntity(input);
+        var result = eventService.saveDrcProcessingStatusEntity(input);
 
-        verify(caseSubmissionErrorRepository).save(caseSubmissionErrorEntityArgumentCaptor.capture());
-        softly.assertThat(caseSubmissionErrorEntityArgumentCaptor.getValue()).isEqualTo(input);
+        verify(drcProcessingStatusRepository).save(drcProcessingStatusEntityArgumentCaptor.capture());
+        softly.assertThat(drcProcessingStatusEntityArgumentCaptor.getValue()).isEqualTo(input);
         softly.assertThat(result).isEqualTo(input);
         softly.assertAll();
     }
@@ -95,13 +95,13 @@ class EventServiceTest {
         when(ack.data().maatId()).thenReturn(testMaatId);
         when(ack.data().errorText()).thenReturn("ignored");
 
-        when(caseSubmissionErrorRepository.save(any(CaseSubmissionErrorEntity.class)))
+        when(drcProcessingStatusRepository.save(any(DrcProcessingStatusEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         var result = eventService.logFdcError(ack);
 
-        verify(caseSubmissionErrorRepository).save(caseSubmissionErrorEntityArgumentCaptor.capture());
-        var captured = caseSubmissionErrorEntityArgumentCaptor.getValue();
+        verify(drcProcessingStatusRepository).save(drcProcessingStatusEntityArgumentCaptor.capture());
+        var captured = drcProcessingStatusEntityArgumentCaptor.getValue();
 
         softly.assertThat(result).isEqualTo(captured);
         softly.assertThat(captured.getMaatId()).isEqualTo(testMaatId);
@@ -123,13 +123,13 @@ class EventServiceTest {
         when(ack.data().maatId()).thenReturn(testMaatId);
         when(ack.data().errorText()).thenReturn("ignored");
 
-        when(caseSubmissionErrorRepository.save(any(CaseSubmissionErrorEntity.class)))
+        when(drcProcessingStatusRepository.save(any(DrcProcessingStatusEntity.class)))
                 .thenThrow(new RuntimeException("DB down"));
 
         var result = eventService.logFdcError(ack);
 
-        verify(caseSubmissionErrorRepository).save(caseSubmissionErrorEntityArgumentCaptor.capture());
-        var captured = caseSubmissionErrorEntityArgumentCaptor.getValue();
+        verify(drcProcessingStatusRepository).save(drcProcessingStatusEntityArgumentCaptor.capture());
+        var captured = drcProcessingStatusEntityArgumentCaptor.getValue();
 
         softly.assertThat(result).isNull();
         softly.assertThat(captured.getMaatId()).isEqualTo(testMaatId);
@@ -152,13 +152,13 @@ class EventServiceTest {
         when(ack.data().maatId()).thenReturn(testMaatId);
         when(ack.data().errorText()).thenReturn("ignored");
 
-        when(caseSubmissionErrorRepository.save(any(CaseSubmissionErrorEntity.class)))
+        when(drcProcessingStatusRepository.save(any(DrcProcessingStatusEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         var result = eventService.logConcorContributionError(ack);
 
-        verify(caseSubmissionErrorRepository).save(caseSubmissionErrorEntityArgumentCaptor.capture());
-        var captured = caseSubmissionErrorEntityArgumentCaptor.getValue();
+        verify(drcProcessingStatusRepository).save(drcProcessingStatusEntityArgumentCaptor.capture());
+        var captured = drcProcessingStatusEntityArgumentCaptor.getValue();
 
         softly.assertThat(result).isEqualTo(captured);
         softly.assertThat(captured.getMaatId()).isEqualTo(testMaatId);
@@ -181,13 +181,13 @@ class EventServiceTest {
         when(ack.data().maatId()).thenReturn(testMaatId);
         when(ack.data().errorText()).thenReturn("ignored");
 
-        when(caseSubmissionErrorRepository.save(any(CaseSubmissionErrorEntity.class)))
+        when(drcProcessingStatusRepository.save(any(DrcProcessingStatusEntity.class)))
                 .thenThrow(new RuntimeException("DB down"));
 
         var result = eventService.logConcorContributionError(ack);
 
-        verify(caseSubmissionErrorRepository).save(caseSubmissionErrorEntityArgumentCaptor.capture());
-        var captured = caseSubmissionErrorEntityArgumentCaptor.getValue();
+        verify(drcProcessingStatusRepository).save(drcProcessingStatusEntityArgumentCaptor.capture());
+        var captured = drcProcessingStatusEntityArgumentCaptor.getValue();
 
         softly.assertThat(result).isNull();
         softly.assertThat(captured.getMaatId()).isEqualTo(testMaatId);
@@ -312,10 +312,10 @@ class EventServiceTest {
     }
 
     @Test
-    void givenAValidCronExpression_whenPurgeCaseSubmissionErrorEntriesIsInvoked_shouldPurgePeriodicRecords() {
-        when(caseSubmissionErrorRepository.deleteByCreationDateBefore(any(LocalDateTime.class))).thenReturn(5l);
-        softly.assertThat(eventService.purgePeriodicCaseSubmissionErrorEntries()).isEqualTo(5l);
-        verify(caseSubmissionErrorRepository).deleteByCreationDateBefore(any(LocalDateTime.class));
+    void givenAValidCronExpression_whenPurgeDrcProcessingStatusEntriesIsInvoked_shouldPurgePeriodicRecords() {
+        when(drcProcessingStatusRepository.deleteByCreationDateBefore(any(LocalDateTime.class))).thenReturn(5l);
+        softly.assertThat(eventService.purgePeriodicDrcProcessingStatusEntries()).isEqualTo(5l);
+        verify(drcProcessingStatusRepository).deleteByCreationDateBefore(any(LocalDateTime.class));
         softly.assertAll();
     }
 
