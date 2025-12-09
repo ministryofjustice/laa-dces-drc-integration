@@ -44,7 +44,7 @@ public class DrcProcessingStatusMapper {
             ProblemDetail problemDetail,
             String errorText) {
 
-        String title = Optional.ofNullable(problemDetail)
+        String statusMessage = Optional.ofNullable(problemDetail)
                 .map(ProblemDetail::getTitle)
                 .orElse(null);
 
@@ -58,7 +58,7 @@ public class DrcProcessingStatusMapper {
                 .maatId(maatId)
                 .fdcId(fdcId)
                 .concorContributionId(concorContributionId)
-                .title(title)
+                .statusMessage(statusMessage)
                 .detail(detail)
                 .build();
     }

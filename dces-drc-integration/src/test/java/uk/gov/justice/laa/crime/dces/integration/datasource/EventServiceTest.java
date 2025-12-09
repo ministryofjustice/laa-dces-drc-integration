@@ -39,6 +39,8 @@ import static org.mockito.Mockito.when;
 @ExtendWith(SoftAssertionsExtension.class)
 class EventServiceTest {
 
+    public static final String SUCCESS_MESSAGE = "Success";
+
     @InjectSoftAssertions
     private SoftAssertions softly;
 
@@ -71,7 +73,7 @@ class EventServiceTest {
         var input = DrcProcessingStatusEntity.builder()
                 .maatId(testMaatId)
                 .fdcId(testFdcId)
-                .title(testPayload)
+                .statusMessage(testPayload)
                 .build();
 
         when(drcProcessingStatusRepository.save(any(DrcProcessingStatusEntity.class))).thenReturn(input);
@@ -87,7 +89,7 @@ class EventServiceTest {
     void whenLogFdcErrorIsCalled_thenEntitySavedAndReturned() {
         var ack = mock(FdcAckFromDrc.class, org.mockito.Mockito.RETURNS_DEEP_STUBS);
         var pd = mock(org.springframework.http.ProblemDetail.class);
-        when(pd.getTitle()).thenReturn("C Title");
+        when(pd.getTitle()).thenReturn(SUCCESS_MESSAGE);
         when(pd.getDetail()).thenReturn("C Detail");
         when(ack.data().report()).thenReturn(pd);
         when(ack.data().fdcId()).thenReturn(testFdcId);
@@ -105,7 +107,7 @@ class EventServiceTest {
         softly.assertThat(result).isEqualTo(captured);
         softly.assertThat(captured.getMaatId()).isEqualTo(testMaatId);
         softly.assertThat(captured.getFdcId()).isEqualTo(testFdcId);
-        softly.assertThat(captured.getTitle()).isEqualTo("C Title");
+        softly.assertThat(captured.getStatusMessage()).isEqualTo(SUCCESS_MESSAGE);
         softly.assertThat(captured.getDetail()).isEqualTo("C Detail");
         softly.assertAll();
     }
@@ -113,7 +115,7 @@ class EventServiceTest {
     void whenLogFdcErrorRepositoryThrows_thenReturnsNull() {
         var ack = mock(FdcAckFromDrc.class, org.mockito.Mockito.RETURNS_DEEP_STUBS);
         var pd = mock(org.springframework.http.ProblemDetail.class);
-        when(pd.getTitle()).thenReturn("C Title");
+        when(pd.getTitle()).thenReturn(SUCCESS_MESSAGE);
         when(pd.getDetail()).thenReturn("C Detail");
         when(ack.data().report()).thenReturn(pd);
         when(ack.data().fdcId()).thenReturn(testFdcId);
@@ -131,7 +133,7 @@ class EventServiceTest {
         softly.assertThat(result).isNull();
         softly.assertThat(captured.getMaatId()).isEqualTo(testMaatId);
         softly.assertThat(captured.getFdcId()).isEqualTo(testFdcId);
-        softly.assertThat(captured.getTitle()).isEqualTo("C Title");
+        softly.assertThat(captured.getStatusMessage()).isEqualTo(SUCCESS_MESSAGE);
         softly.assertThat(captured.getDetail()).isEqualTo("C Detail");
         softly.assertAll();
     }
@@ -140,7 +142,7 @@ class EventServiceTest {
     void whenLogConcorContributionErrorIsCalled_thenEntitySavedAndReturned() {
         var ack = mock(ConcorContributionAckFromDrc.class, org.mockito.Mockito.RETURNS_DEEP_STUBS);
         var pd = mock(org.springframework.http.ProblemDetail.class);
-        when(pd.getTitle()).thenReturn("C Title");
+        when(pd.getTitle()).thenReturn(SUCCESS_MESSAGE);
         when(pd.getDetail()).thenReturn("C Detail");
         when(ack.data().report()).thenReturn(pd);
         when(ack.data().concorContributionId()).thenReturn(testConcorId);
@@ -158,7 +160,7 @@ class EventServiceTest {
         softly.assertThat(result).isEqualTo(captured);
         softly.assertThat(captured.getMaatId()).isEqualTo(testMaatId);
         softly.assertThat(captured.getConcorContributionId()).isEqualTo(testConcorId);
-        softly.assertThat(captured.getTitle()).isEqualTo("C Title");
+        softly.assertThat(captured.getStatusMessage()).isEqualTo(SUCCESS_MESSAGE);
         softly.assertThat(captured.getDetail()).isEqualTo("C Detail");
         softly.assertAll();
     }
@@ -167,7 +169,7 @@ class EventServiceTest {
     void whenLogConcorContributionErrorRepositoryThrows_thenReturnsNull() {
         var ack = mock(ConcorContributionAckFromDrc.class, org.mockito.Mockito.RETURNS_DEEP_STUBS);
         var pd = mock(org.springframework.http.ProblemDetail.class);
-        when(pd.getTitle()).thenReturn("C Title");
+        when(pd.getTitle()).thenReturn(SUCCESS_MESSAGE);
         when(pd.getDetail()).thenReturn("C Detail");
         when(ack.data().report()).thenReturn(pd);
         when(ack.data().concorContributionId()).thenReturn(testConcorId);
@@ -185,7 +187,7 @@ class EventServiceTest {
         softly.assertThat(result).isNull();
         softly.assertThat(captured.getMaatId()).isEqualTo(testMaatId);
         softly.assertThat(captured.getConcorContributionId()).isEqualTo(testConcorId);
-        softly.assertThat(captured.getTitle()).isEqualTo("C Title");
+        softly.assertThat(captured.getStatusMessage()).isEqualTo(SUCCESS_MESSAGE);
         softly.assertThat(captured.getDetail()).isEqualTo("C Detail");
         softly.assertAll();
     }

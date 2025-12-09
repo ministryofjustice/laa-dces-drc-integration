@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS drc_processing_status
     maat_id INT,
     concor_contribution_id INT,
     fdc_id INT,
-    title VARCHAR( 255),
+    status_message VARCHAR(255),
     detail TEXT,
     creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

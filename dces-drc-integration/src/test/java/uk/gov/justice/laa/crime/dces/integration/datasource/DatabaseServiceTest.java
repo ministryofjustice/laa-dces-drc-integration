@@ -106,7 +106,7 @@ class DatabaseServiceTest extends ApplicationTestBase {
         return DrcProcessingStatusEntity.builder()
                 .fdcId(RecordType.FDC.equals(recordType) ? -333L : null)
                 .concorContributionId(RecordType.CONTRIBUTION.equals(recordType) ? -333L : null)
-                .title("MAAT ID Missing")
+                .statusMessage("MAAT ID Missing")
                 .detail("MAAT ID is required for processing")
                 .build();
     }
