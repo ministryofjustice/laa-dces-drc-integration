@@ -48,7 +48,7 @@ class DatabaseServiceTest extends ApplicationTestBase {
     @Test
     void testDatabaseConnectionAndContributionDataDrcProcessingStatus() {
 
-        drcProcessingStatusRepository.save(createExpectedDrcProcessingStatusEntity(RecordType.CONTRIBUTION, 200));
+        drcProcessingStatusRepository.save(createExpectedDrcProcessingStatusEntity(RecordType.CONTRIBUTION));
 
         long count = drcProcessingStatusRepository.count();
 
@@ -59,7 +59,7 @@ class DatabaseServiceTest extends ApplicationTestBase {
     @Test
     void testDatabaseConnectionAndFdcDataDrcProcessingStatus() {
 
-        drcProcessingStatusRepository.save(createExpectedDrcProcessingStatusEntity(RecordType.FDC, 200));
+        drcProcessingStatusRepository.save(createExpectedDrcProcessingStatusEntity(RecordType.FDC));
 
         long count = drcProcessingStatusRepository.count();
 
@@ -70,7 +70,7 @@ class DatabaseServiceTest extends ApplicationTestBase {
     @Test
     void givenAValidCaseSubmission_whenDeleteByCreationTimestampBeforeIsInvoked_shouldDeleteOldMessage() {
 
-        DrcProcessingStatusEntity entity = createExpectedDrcProcessingStatusEntity(RecordType.FDC, 200);
+        DrcProcessingStatusEntity entity = createExpectedDrcProcessingStatusEntity(RecordType.FDC);
         drcProcessingStatusRepository.save(entity);
         long count = drcProcessingStatusRepository.count();
         assertEquals(1, count);
@@ -102,7 +102,7 @@ class DatabaseServiceTest extends ApplicationTestBase {
                 .build();
     }
 
-    private DrcProcessingStatusEntity createExpectedDrcProcessingStatusEntity(RecordType recordType, Integer httpStatusCode) {
+    private DrcProcessingStatusEntity createExpectedDrcProcessingStatusEntity(RecordType recordType) {
         return DrcProcessingStatusEntity.builder()
                 .fdcId(RecordType.FDC.equals(recordType) ? -333L : null)
                 .concorContributionId(RecordType.CONTRIBUTION.equals(recordType) ? -333L : null)
