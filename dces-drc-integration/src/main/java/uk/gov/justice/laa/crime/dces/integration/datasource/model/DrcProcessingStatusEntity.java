@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * The result of how a Contribution or FDC was processed by the Debt Recovery Company (DRC).
@@ -30,7 +30,7 @@ public class DrcProcessingStatusEntity {
     private String statusMessage;
     private String detail;
     @CreationTimestamp
-    private LocalDateTime creationTimestamp;
+    private Instant creationTimestamp;
 
 }
 

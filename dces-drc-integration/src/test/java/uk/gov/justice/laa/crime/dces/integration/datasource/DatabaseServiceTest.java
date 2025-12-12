@@ -13,7 +13,7 @@ import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseMigra
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionRepository;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.DrcProcessingStatusRepository;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -74,7 +74,7 @@ class DatabaseServiceTest extends ApplicationTestBase {
         drcProcessingStatusRepository.save(entity);
         long count = drcProcessingStatusRepository.count();
         assertEquals(1, count);
-        long deleteCount =  drcProcessingStatusRepository.deleteByCreationTimestampBefore(LocalDateTime.now());
+        long deleteCount =  drcProcessingStatusRepository.deleteByCreationTimestampBefore(Instant.now());
         assertEquals(1, deleteCount);
     }
 

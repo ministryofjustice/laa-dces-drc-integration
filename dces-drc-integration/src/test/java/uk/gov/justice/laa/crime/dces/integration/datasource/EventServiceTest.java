@@ -3,6 +3,7 @@ package uk.gov.justice.laa.crime.dces.integration.datasource;
 import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -26,6 +27,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -51,13 +53,14 @@ class EventServiceTest {
     @Mock
     private EventTypeRepository eventTypeRepository;
 
-    @InjectMocks
     private EventService eventService;
-    @Captor
-    private ArgumentCaptor<CaseSubmissionEntity> caseSubmissionEntityArgumentCaptor;
 
     @Captor
+    private ArgumentCaptor<CaseSubmissionEntity> caseSubmissionEntityArgumentCaptor;
+    @Captor
     private ArgumentCaptor<DrcProcessingStatusEntity> drcProcessingStatusEntityArgumentCaptor;
+    @Captor
+    private ArgumentCaptor<Instant> instantArgumentCaptor;
 
     private final Long testTraceId = -777L;
     private final Long testBatchId = -666L;
@@ -66,6 +69,10 @@ class EventServiceTest {
     private final Long testConcorId = -333L;
     private final String testPayload = "TestPayload"+ LocalDateTime.now();
 
+    @BeforeEach
+    void setUp() {
+        this.eventService = new EventService(caseSubmissionRepository, drcProcessingStatusRepository, eventTypeRepository);
+    }
 
     @Test
     void whenSaveDrcProcessingStatusEntityWithValidEntity_thenDelegatesToRepositoryAndReturnsSavedEntity() {
@@ -307,9 +314,12 @@ class EventServiceTest {
 
     @Test
     void givenAValidCronExpression_whenPurgeDrcProcessingStatusEntriesIsInvoked_shouldPurgePeriodicRecords() {
-        when(drcProcessingStatusRepository.deleteByCreationTimestampBefore(any(LocalDateTime.class))).thenReturn(5l);
+        Instant startOfTest = Instant.now();
+        eventService.setHistoryCutoffMonth(1);
+        when(drcProcessingStatusRepository.deleteByCreationTimestampBefore(any(Instant.class))).thenReturn(5l);
         softly.assertThat(eventService.purgePeriodicDrcProcessingStatusEntries()).isEqualTo(5l);
-        verify(drcProcessingStatusRepository).deleteByCreationTimestampBefore(any(LocalDateTime.class));
+        verify(drcProcessingStatusRepository).deleteByCreationTimestampBefore(instantArgumentCaptor.capture());
+        softly.assertThat(instantArgumentCaptor.getValue()).isBefore(startOfTest);
         softly.assertAll();
     }
 

@@ -10,5 +10,5 @@ CREATE TABLE IF NOT EXISTS drc_processing_status
     fdc_id INT,
     status_message VARCHAR(255),
     detail TEXT,
-    creation_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    creation_timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
