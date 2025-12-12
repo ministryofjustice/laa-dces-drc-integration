@@ -20,6 +20,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.catchThrowableOfType;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.*;
+import static uk.gov.justice.laa.crime.dces.integration.test.TestDataFixtures.*;
 
 @ExtendWith(SoftAssertionsExtension.class)
 @WireMockTest(httpPort = 1111)
@@ -44,17 +45,17 @@ class ContributionAckServiceTest extends ApplicationTestBase {
 
 	@Test
 	void testProcessContributionUpdateWhenSuccessful() {
-		ConcorContributionAckFromDrc ackFromDrc = ConcorContributionAckFromDrc.of(911L, null);
+		ConcorContributionAckFromDrc ackFromDrc = buildContribAck(CONTRIB_ID_FOUND_IN_MAAT);
 		Long response = contributionAckService.handleContributionProcessedAck(ackFromDrc);
 		softly.assertThat(response).isEqualTo(1111L);
-		verify(eventService).logConcor(911L,EventType.DRC_ASYNC_RESPONSE,null,null, OK, null);
+		verify(eventService).logConcor(911L,EventType.DRC_ASYNC_RESPONSE,null,null, OK, STATUS_MSG_SUCCESS);
 		verify(eventService).logConcorContributionError(ackFromDrc);
 	}
 
 	@Test
 	void testProcessContributionUpdateWhenIncomingIsolated() {
 		when(feature.incomingIsolated()).thenReturn(true);
-		ConcorContributionAckFromDrc ackFromDrc = ConcorContributionAckFromDrc.of(911L, "The request has failed to process");
+		ConcorContributionAckFromDrc ackFromDrc = buildContribAck(CONTRIB_ID_FOUND_IN_MAAT);
 		Long response = contributionAckService.handleContributionProcessedAck(ackFromDrc);
 		softly.assertThat(response).isEqualTo(0L); // so MAAT DB not touched
 		verify(eventService).logConcorContributionError(ackFromDrc);
@@ -63,18 +64,18 @@ class ContributionAckServiceTest extends ApplicationTestBase {
 	@Test
 	void testProcessContributionUpdateWhenNotFound() {
 		String errorText = "The request has failed to process";
-		ConcorContributionAckFromDrc ackFromDrc = ConcorContributionAckFromDrc.of(404L, errorText);
+		ConcorContributionAckFromDrc ackFromDrc = buildContribAck(CONTRIB_ID_NOT_FOUND_IN_MAAT, errorText);
 		var exception = catchThrowableOfType(ErrorResponseException.class, () -> contributionAckService.handleContributionProcessedAck(ackFromDrc));
 		softly.assertThat(exception).isNotNull();
 		softly.assertThat(NOT_FOUND.isSameCodeAs(exception.getStatusCode())).isTrue();
-		verify(eventService).logConcor(404L,EventType.DRC_ASYNC_RESPONSE,null,null, NOT_FOUND, errorText);
+		verify(eventService).logConcor(CONTRIB_ID_NOT_FOUND_IN_MAAT, EventType.DRC_ASYNC_RESPONSE,null,null, NOT_FOUND, errorText);
 		verify(eventService).logConcorContributionError(ackFromDrc);
 	}
 
 	@Test
 	void testProcessContributionUpdateWhenNoContFile() {
 		String errorText = "The request has failed to process";
-		ConcorContributionAckFromDrc ackFromDrc = ConcorContributionAckFromDrc.of(9L, errorText);
+		ConcorContributionAckFromDrc ackFromDrc = buildContribAck(CONTRIB_ID_FILE_NOT_FOUND_IN_MAAT, errorText);
 		var exception = catchThrowableOfType(ErrorResponseException.class, () -> contributionAckService.handleContributionProcessedAck(ackFromDrc));
 		softly.assertThat(exception).isNotNull();
 		softly.assertThat(FAILED_DEPENDENCY.isSameCodeAs(exception.getStatusCode())).isTrue();

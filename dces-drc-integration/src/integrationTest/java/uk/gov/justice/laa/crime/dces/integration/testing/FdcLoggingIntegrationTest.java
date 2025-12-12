@@ -15,7 +15,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
 import org.springframework.test.web.servlet.MockMvc;
-import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.external.FdcContribution;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcFileService;
@@ -31,6 +30,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static uk.gov.justice.laa.crime.dces.integration.utils.IntTestDataFixtures.buildFdcAck;
 
 @EnabledIf(expression = "#{environment['sentry.environment'] == 'development'}", loadContext = true)
 @SpringBootTest
@@ -225,7 +225,7 @@ class FdcLoggingIntegrationTest {
      * Testing utility method.
      */
     private void acknowledgeFdc(final long fdcContributionId, final String errorText) throws Exception {
-        final var request = FdcAckFromDrc.of(fdcContributionId, errorText);
+        final var request = buildFdcAck(fdcContributionId, errorText);
         String json = mapper.writeValueAsString(request);
         mockMvc.perform(post("/api/dces/v1/fdc")
                         .with(csrf())

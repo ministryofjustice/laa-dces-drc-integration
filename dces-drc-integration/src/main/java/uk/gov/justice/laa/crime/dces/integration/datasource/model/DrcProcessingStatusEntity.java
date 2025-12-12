@@ -28,7 +28,7 @@ public class DrcProcessingStatusEntity {
     private Long concorContributionId;
     private Long fdcId;
     private String statusMessage;
-    private String detail;
+    private Instant drcProcessingTimestamp;
     @CreationTimestamp
     private Instant creationTimestamp;
 

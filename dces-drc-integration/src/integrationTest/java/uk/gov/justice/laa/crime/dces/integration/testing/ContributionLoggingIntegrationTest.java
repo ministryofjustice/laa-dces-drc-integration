@@ -15,7 +15,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
 import org.springframework.test.web.servlet.MockMvc;
-import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionResponseDTO;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionFileService;
@@ -31,6 +30,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static uk.gov.justice.laa.crime.dces.integration.utils.IntTestDataFixtures.buildContribAck;
 
 @EnabledIf(expression = "#{environment['sentry.environment'] == 'development'}", loadContext = true)
 @SpringBootTest
@@ -223,7 +223,7 @@ class ContributionLoggingIntegrationTest {
      * Testing utility method.
      */
     private void acknowledgeContribution(final long concorContributionId, final String errorText) throws Exception {
-        final var request = ConcorContributionAckFromDrc.of(concorContributionId, errorText);
+        final var request = buildContribAck(concorContributionId, errorText);
         String json = mapper.writeValueAsString(request);
         mockMvc.perform(post("/api/dces/v1/contribution")
                         .with(csrf())
