@@ -45,7 +45,8 @@ public class FdcAckService {
         Timer.Sample timerSample = Timer.start(meterRegistry);
         FdcProcessedRequest fdcProcessedRequest = FdcProcessedRequest.builder()
                 .fdcId(fdcAckFromDrc.data().fdcId())
-                .errorText(fdcAckFromDrc.data().errorText())
+                // TODO Only set the errorText if title != Success
+                .errorText(fdcAckFromDrc.data().report().title())
                 .build();
         try {
             long result = executeFdcProcessedAckCall(fdcProcessedRequest);

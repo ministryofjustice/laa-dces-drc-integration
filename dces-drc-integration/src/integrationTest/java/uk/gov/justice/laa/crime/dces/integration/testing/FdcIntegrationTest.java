@@ -137,7 +137,7 @@ class FdcIntegrationTest {
 	private void assertProcessFdcCaseSubmissionCreation(FdcAckFromDrc ackFromDrc, HttpStatusCode expectedStatusCode) {
 		CaseSubmissionEntity expectedCaseSubmission = CaseSubmissionEntity.builder()
 				.fdcId(ackFromDrc.data().fdcId())
-				.payload(ackFromDrc.data().errorText())
+				.payload(ackFromDrc.data().report().title())
 				.eventType(eventLogAssertService.getIdForEventType(EventType.DRC_ASYNC_RESPONSE))
 				.httpStatus(expectedStatusCode.value())
 				.recordType(RecordType.FDC.getName())

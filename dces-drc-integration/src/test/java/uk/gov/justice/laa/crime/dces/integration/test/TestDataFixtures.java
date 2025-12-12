@@ -1,8 +1,8 @@
 package uk.gov.justice.laa.crime.dces.integration.test;
 
-import org.springframework.http.ProblemDetail;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
+import uk.gov.justice.laa.crime.dces.integration.model.ProcessingReport;
 
 import java.time.Instant;
 
@@ -32,7 +32,7 @@ public class TestDataFixtures {
                 .data(ConcorContributionAckFromDrc.ConcorContributionAckData.builder()
                         .concorContributionId(concorId)
                         .maatId(MAAT_ID)
-                        .report(problemDetailFor(reportTitle, TIMESTAMP_STR))
+                        .report(new ProcessingReport(reportTitle, TIMESTAMP_STR))
                         .build())
                 .build();
     }
@@ -46,16 +46,9 @@ public class TestDataFixtures {
                 .data(FdcAckFromDrc.FdcAckData.builder()
                         .fdcId(fdcId)
                         .maatId(MAAT_ID)
-                        .report(problemDetailFor(reportTitle, TIMESTAMP_STR))
+                        .report(new ProcessingReport(reportTitle, TIMESTAMP_STR))
                         .build())
                 .build();
-    }
-
-    private static ProblemDetail problemDetailFor(String title, String detail) {
-        ProblemDetail pd = ProblemDetail.forStatus(200); // status is not used but needed to construct ProblemDetail
-        pd.setTitle(title);
-        pd.setDetail(detail);
-        return pd;
     }
 
 }

@@ -17,8 +17,6 @@ import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmi
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.DrcProcessingStatusRepository;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.EventTypeRepository;
 import uk.gov.justice.laa.crime.dces.integration.exception.DcesDrcServiceException;
-import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
-import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 
@@ -85,13 +83,7 @@ class EventServiceTest {
     }
     @Test
     void whenLogFdcErrorIsCalled_thenEntitySavedAndReturned() {
-        var ack = mock(FdcAckFromDrc.class, org.mockito.Mockito.RETURNS_DEEP_STUBS);
-        var pd = mock(org.springframework.http.ProblemDetail.class);
-        when(pd.getTitle()).thenReturn(STATUS_MSG_SUCCESS);
-        when(pd.getDetail()).thenReturn(TIMESTAMP_STR);
-        when(ack.data().report()).thenReturn(pd);
-        when(ack.data().fdcId()).thenReturn(testFdcId);
-        when(ack.data().maatId()).thenReturn(testMaatId);
+        var ack = buildFdcAck(testFdcId);
 
         when(drcProcessingStatusRepository.save(any(DrcProcessingStatusEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -102,21 +94,16 @@ class EventServiceTest {
         var captured = drcProcessingStatusEntityArgumentCaptor.getValue();
 
         softly.assertThat(result).isEqualTo(captured);
-        softly.assertThat(captured.getMaatId()).isEqualTo(testMaatId);
+        softly.assertThat(captured.getMaatId()).isEqualTo(MAAT_ID);
         softly.assertThat(captured.getFdcId()).isEqualTo(testFdcId);
         softly.assertThat(captured.getStatusMessage()).isEqualTo(STATUS_MSG_SUCCESS);
         softly.assertThat(captured.getDrcProcessingTimestamp()).isEqualTo(TIMESTAMP_OBJ);
         softly.assertAll();
     }
+
     @Test
     void whenLogFdcErrorRepositoryThrows_thenReturnsNull() {
-        var ack = mock(FdcAckFromDrc.class, org.mockito.Mockito.RETURNS_DEEP_STUBS);
-        var pd = mock(org.springframework.http.ProblemDetail.class);
-        when(pd.getTitle()).thenReturn(STATUS_MSG_SUCCESS);
-        when(pd.getDetail()).thenReturn(TIMESTAMP_STR);
-        when(ack.data().report()).thenReturn(pd);
-        when(ack.data().fdcId()).thenReturn(testFdcId);
-        when(ack.data().maatId()).thenReturn(testMaatId);
+        var ack = buildFdcAck(testFdcId);
 
         when(drcProcessingStatusRepository.save(any(DrcProcessingStatusEntity.class)))
                 .thenThrow(new RuntimeException("DB down"));
@@ -127,7 +114,7 @@ class EventServiceTest {
         var captured = drcProcessingStatusEntityArgumentCaptor.getValue();
 
         softly.assertThat(result).isNull();
-        softly.assertThat(captured.getMaatId()).isEqualTo(testMaatId);
+        softly.assertThat(captured.getMaatId()).isEqualTo(MAAT_ID);
         softly.assertThat(captured.getFdcId()).isEqualTo(testFdcId);
         softly.assertThat(captured.getStatusMessage()).isEqualTo(STATUS_MSG_SUCCESS);
         softly.assertThat(captured.getDrcProcessingTimestamp()).isEqualTo(TIMESTAMP_OBJ);
@@ -136,13 +123,7 @@ class EventServiceTest {
 
     @Test
     void whenLogConcorContributionErrorIsCalled_thenEntitySavedAndReturned() {
-        var ack = mock(ConcorContributionAckFromDrc.class, org.mockito.Mockito.RETURNS_DEEP_STUBS);
-        var pd = mock(org.springframework.http.ProblemDetail.class);
-        when(pd.getTitle()).thenReturn(STATUS_MSG_SUCCESS);
-        when(pd.getDetail()).thenReturn(TIMESTAMP_STR);
-        when(ack.data().report()).thenReturn(pd);
-        when(ack.data().concorContributionId()).thenReturn(testConcorId);
-        when(ack.data().maatId()).thenReturn(testMaatId);
+        var ack = buildContribAck(testConcorId);
 
         when(drcProcessingStatusRepository.save(any(DrcProcessingStatusEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -153,7 +134,7 @@ class EventServiceTest {
         var captured = drcProcessingStatusEntityArgumentCaptor.getValue();
 
         softly.assertThat(result).isEqualTo(captured);
-        softly.assertThat(captured.getMaatId()).isEqualTo(testMaatId);
+        softly.assertThat(captured.getMaatId()).isEqualTo(MAAT_ID);
         softly.assertThat(captured.getConcorContributionId()).isEqualTo(testConcorId);
         softly.assertThat(captured.getStatusMessage()).isEqualTo(STATUS_MSG_SUCCESS);
         softly.assertThat(captured.getDrcProcessingTimestamp()).isEqualTo(TIMESTAMP_OBJ);
@@ -162,13 +143,7 @@ class EventServiceTest {
 
     @Test
     void whenLogConcorContributionErrorRepositoryThrows_thenReturnsNull() {
-        var ack = mock(ConcorContributionAckFromDrc.class, org.mockito.Mockito.RETURNS_DEEP_STUBS);
-        var pd = mock(org.springframework.http.ProblemDetail.class);
-        when(pd.getTitle()).thenReturn(STATUS_MSG_SUCCESS);
-        when(pd.getDetail()).thenReturn(TIMESTAMP_STR);
-        when(ack.data().report()).thenReturn(pd);
-        when(ack.data().concorContributionId()).thenReturn(testConcorId);
-        when(ack.data().maatId()).thenReturn(testMaatId);
+        var ack = buildContribAck(testConcorId);
 
         when(drcProcessingStatusRepository.save(any(DrcProcessingStatusEntity.class)))
                 .thenThrow(new RuntimeException("DB down"));
@@ -179,7 +154,7 @@ class EventServiceTest {
         var captured = drcProcessingStatusEntityArgumentCaptor.getValue();
 
         softly.assertThat(result).isNull();
-        softly.assertThat(captured.getMaatId()).isEqualTo(testMaatId);
+        softly.assertThat(captured.getMaatId()).isEqualTo(MAAT_ID);
         softly.assertThat(captured.getConcorContributionId()).isEqualTo(testConcorId);
         softly.assertThat(captured.getStatusMessage()).isEqualTo(STATUS_MSG_SUCCESS);
         softly.assertThat(captured.getDrcProcessingTimestamp()).isEqualTo(TIMESTAMP_OBJ);

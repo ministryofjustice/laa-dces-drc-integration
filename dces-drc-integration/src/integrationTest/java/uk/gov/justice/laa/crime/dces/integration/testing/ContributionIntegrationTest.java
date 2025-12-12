@@ -116,7 +116,7 @@ class ContributionIntegrationTest {
     private void assertProcessConcorCaseSubmissionCreation(ConcorContributionAckFromDrc request, HttpStatusCode expectedStatusCode) {
         CaseSubmissionEntity expectedCaseSubmission = CaseSubmissionEntity.builder()
                 .concorContributionId(request.data().concorContributionId())
-                .payload(request.data().errorText())
+                .payload(request.data().report().title())
                 .eventType(eventLogAssertService.getIdForEventType(EventType.DRC_ASYNC_RESPONSE))
                 .httpStatus(expectedStatusCode.value())
                 .recordType(RecordType.CONTRIBUTION.getName())

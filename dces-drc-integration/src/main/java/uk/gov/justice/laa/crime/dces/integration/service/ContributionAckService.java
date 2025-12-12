@@ -45,7 +45,8 @@ public class ContributionAckService {
         Timer.Sample timerSample = Timer.start(meterRegistry);
         ContributionProcessedRequest contributionProcessedRequest = ContributionProcessedRequest.builder()
                 .concorId(concorContributionAckFromDrc.data().concorContributionId())
-                .errorText(concorContributionAckFromDrc.data().errorText())
+                // TODO Only set the errorText if title != Success
+                .errorText(concorContributionAckFromDrc.data().report().title())
                 .build();
         try {
             return executeContributionProcessedAckCall(contributionProcessedRequest);
