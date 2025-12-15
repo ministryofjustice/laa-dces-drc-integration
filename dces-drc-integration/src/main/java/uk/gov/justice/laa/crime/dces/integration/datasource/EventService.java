@@ -99,10 +99,10 @@ public class EventService {
         var entity = createDrcProcessingStatusEntity(fdcAckFromDrc);
         try {
             var saved = saveDrcProcessingStatusEntity(entity);
-            log.info("saved fdc error entity: {}", saved);
+            log.info("saved fdc DRC processing entity: {}", saved);
             return saved;
         } catch (Exception e) {
-            log.error("failed to save fdc error entity: {}", entity, e);
+            log.error("failed to save fdc DRC processing entity: {}", entity, e);
             return null;
         }
     }
@@ -111,10 +111,10 @@ public class EventService {
         var entity = createDrcProcessingStatusEntity(concorContributionAckFromDrc);
         try {
             var saved = saveDrcProcessingStatusEntity(entity);
-            log.info("saved concor contribution error entity: {}", saved);
+            log.info("saved concor contribution DRC processing entity: {}", saved);
             return saved;
         } catch (Exception e) {
-            log.error("failed to save concor contribution error entity: {}", entity, e);
+            log.error("failed to save concor contribution DRC processing entity: {}", entity, e);
             return null;
         }
     }
