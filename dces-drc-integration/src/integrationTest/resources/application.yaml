@@ -103,7 +103,7 @@ scheduling:
     data-migration: ${DCES_CRON_DATA_MIGRATION:-}
     purge:
       data-cleardown: ${DCES_CRON_DATA_CLEARDOWN:-}
-      case-submission-error: ${DCES_CRON_CASE_SUBMISSION_ERROR:-}
+      drc-processing-status: ${DCES_CRON_DRC_PROCESSING_STATUS:-}
       keepHistoryLongTerm: ${SPRING_DATASOURCE_KEEPHISTORYLONGTERM:12}
       keepHistoryShortTerm: ${SPRING_DATASOURCE_KEEPHISTORYSHORTTERM:30}
   lock:

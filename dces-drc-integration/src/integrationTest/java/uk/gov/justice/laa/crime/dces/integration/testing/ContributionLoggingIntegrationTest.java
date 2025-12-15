@@ -18,7 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionResponseDTO;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
-import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
+import uk.gov.justice.laa.crime.dces.integration.service.ContributionFileService;
 import uk.gov.justice.laa.crime.dces.integration.service.spy.ContributionLoggingProcessSpy;
 import uk.gov.justice.laa.crime.dces.integration.service.spy.ContributionProcessSpy;
 import uk.gov.justice.laa.crime.dces.integration.service.spy.SpyFactory;
@@ -47,7 +47,7 @@ class ContributionLoggingIntegrationTest {
     private SpyFactory spyFactory;
 
     @Autowired
-    private ContributionService contributionService;
+    private ContributionFileService contributionFileService;
 
     @Autowired
     private MockMvc mockMvc;
@@ -66,7 +66,7 @@ class ContributionLoggingIntegrationTest {
      * acknowledged, the acknowledgement response from the DRC updates the contribution_file correctly.</p>
      * <h4>Given:</h4>
      * <p>* Update 3 concor_contribution records to the ACTIVE status for the purposes of the test.</p>
-     * <p>* The {@link ContributionService#processDailyFiles()} method is called and a contribution_file is created.</p>
+     * <p>* The {@link ContributionFileService#processDailyFiles()} method is called and a contribution_file is created.</p>
      * <h4>When:</h4>
      * <p>* Simulate the DRC calling our services to log their receipt of our concor_contributions by calling the
      *    `/process-drc-update/contribution` endpoint once for each updated ID with a blank error text to indicate that
@@ -97,7 +97,7 @@ class ContributionLoggingIntegrationTest {
                 .traceAndStubSendContributionUpdate(id -> Boolean.TRUE) // fake DRC response
                 .traceUpdateContributions(); // capture contribution_file ID
 
-        contributionService.processDailyFiles();
+        contributionFileService.processDailyFiles();
 
         final ContributionProcessSpy watched = watching.build();
 
@@ -138,7 +138,7 @@ class ContributionLoggingIntegrationTest {
      * is created in contribution_file_errors.</p>
      * <h4>Given:</h4>
      * <p>* Update 3 concor_contribution records to the ACTIVE status for the purposes of the test.</p>
-     * <p>* The {@link ContributionService#processDailyFiles()} method is called and a contribution_file is created.</p>
+     * <p>* The {@link ContributionFileService#processDailyFiles()} method is called and a contribution_file is created.</p>
      * <h4>When:</h4>
      * <p>* Simulate the DRC calling our services to log that a concor_contribution could not be processed by calling
      *    the `/process-drc-update/contribution` endpoint once for each updated ID with a populated error text to
@@ -172,7 +172,7 @@ class ContributionLoggingIntegrationTest {
                 .traceAndStubSendContributionUpdate(id -> Boolean.TRUE) // fake DRC response
                 .traceUpdateContributions(); // capture contribution_file ID
 
-        contributionService.processDailyFiles();
+        contributionFileService.processDailyFiles();
 
         final ContributionProcessSpy watched = watching.build();
 

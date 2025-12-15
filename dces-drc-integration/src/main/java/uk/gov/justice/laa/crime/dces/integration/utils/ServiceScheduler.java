@@ -11,8 +11,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
-import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
-import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
+import uk.gov.justice.laa.crime.dces.integration.service.ContributionFileService;
+import uk.gov.justice.laa.crime.dces.integration.service.FdcFileService;
 import uk.gov.justice.laa.crime.dces.integration.service.MigrationService;
 
 import java.time.LocalDateTime;
@@ -24,8 +24,8 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 @Slf4j
 public class ServiceScheduler {
-    private final FdcService fdcService;
-    private final ContributionService contributionService;
+    private final FdcFileService fdcFileService;
+    private final ContributionFileService contributionFileService;
     private final MigrationService migrationService;
     private final EventService eventService;
 
@@ -35,7 +35,7 @@ public class ServiceScheduler {
     public void processFdcFiles() {
         LockAssert.assertLocked();
         log.info("Processing FDC files at {}", LocalDateTime.now());
-        fdcService.processDailyFiles();
+        fdcFileService.processDailyFiles();
     }
 
     @Observed(name = "ServiceScheduler.contribution", contextualName = "Cron job to process Contribution files", lowCardinalityKeyValues = {"priority", "medium"})
@@ -44,7 +44,7 @@ public class ServiceScheduler {
     public void processContributionsFiles() {
         LockAssert.assertLocked();
         log.info("Processing contributions files at {}", LocalDateTime.now());
-        contributionService.processDailyFiles();
+        contributionFileService.processDailyFiles();
     }
 
     @Scheduled(cron = "${scheduling.cron.data-migration:-}")
@@ -64,12 +64,12 @@ public class ServiceScheduler {
         log.info("Deleted {} historical entries", deletedCount);
     }
 
-    @Scheduled(cron = "${scheduling.cron.purge.case-submission-error:-}")
+    @Scheduled(cron = "${scheduling.cron.purge.drc-processing-status:-}")
     @SchedulerLock(name = "purgeCaseSubmission")
-    public void purgeCaseSubmissionError() {
+    public void purgeDrcProcessingStatus() {
         LockAssert.assertLocked();
-        log.info("Starting purging case submission error");
-        long deletedCount = eventService.purgePeriodicCaseSubmissionErrorEntries();
-        log.info("Deleted {} historical case submission error entries", deletedCount);
+        log.info("Start purging DRC processing status records");
+        long deletedCount = eventService.purgePeriodicDrcProcessingStatusEntries();
+        log.info("Deleted {} historical DRC processing status records", deletedCount);
     }
 }

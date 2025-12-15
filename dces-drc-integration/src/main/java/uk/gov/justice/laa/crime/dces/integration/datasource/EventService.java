@@ -1,17 +1,14 @@
 package uk.gov.justice.laa.crime.dces.integration.datasource;
 
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
-import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionEntity;
-import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionErrorEntity;
-import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
-import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventTypeEntity;
-import uk.gov.justice.laa.crime.dces.integration.datasource.model.RecordType;
-import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionErrorRepository;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.*;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionRepository;
+import uk.gov.justice.laa.crime.dces.integration.datasource.repository.DrcProcessingStatusRepository;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.EventTypeRepository;
 import uk.gov.justice.laa.crime.dces.integration.exception.DcesDrcServiceException;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
@@ -19,11 +16,13 @@ import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Objects;
 
-import static uk.gov.justice.laa.crime.dces.integration.utils.CaseSubmissionErrorMapper.createCaseSubmissionErrorEntity;
+import static uk.gov.justice.laa.crime.dces.integration.utils.DrcProcessingStatusMapper.createDrcProcessingStatusEntity;
 
 @Service
 @RequiredArgsConstructor
@@ -31,18 +30,17 @@ import static uk.gov.justice.laa.crime.dces.integration.utils.CaseSubmissionErro
 public class EventService {
 
     private final CaseSubmissionRepository caseSubmissionRepository;
-    private final CaseSubmissionErrorRepository caseSubmissionErrorRepository;
+    private final DrcProcessingStatusRepository drcProcessingStatusRepository;
     private final EventTypeRepository eventTypeRepository;
 
-
-
     @Value("${scheduling.cron.purge.keepHistoryLongTerm:12}")
+    @Setter  // To ease testing
     private int historyCutoffMonth;
 
     @Value("${scheduling.cron.purge.keepHistoryShortTerm:30}")
     private int historyCutoffDays;
 
-    public List<CaseSubmissionEntity> getAllCaseSubmissions(){
+    public List<CaseSubmissionEntity> getAllCaseSubmissions() {
         return caseSubmissionRepository.findAll();
     }
 
@@ -97,32 +95,32 @@ public class EventService {
         return logConcor(concorContributionId, eventType, batchId, null, contributionsObject, httpStatusCode, payload);
     }
 
-    public CaseSubmissionErrorEntity logFdcError(FdcAckFromDrc fdcAckFromDrc) {
-        var entity = createCaseSubmissionErrorEntity(fdcAckFromDrc);
+    public DrcProcessingStatusEntity logFdcError(FdcAckFromDrc fdcAckFromDrc) {
+        var entity = createDrcProcessingStatusEntity(fdcAckFromDrc);
         try {
-            var saved = saveCaseSubmissionErrorEntity(entity);
-            log.info("saved fdc error entity: {}", saved);
+            var saved = saveDrcProcessingStatusEntity(entity);
+            log.info("saved fdc DRC processing entity: {}", saved);
             return saved;
         } catch (Exception e) {
-            log.error("failed to save fdc error entity: {}", entity, e);
+            log.error("failed to save fdc DRC processing entity: {}", entity, e);
             return null;
         }
     }
 
-    public CaseSubmissionErrorEntity logConcorContributionError(ConcorContributionAckFromDrc concorContributionAckFromDrc) {
-        var entity = createCaseSubmissionErrorEntity(concorContributionAckFromDrc);
+    public DrcProcessingStatusEntity logConcorContributionError(ConcorContributionAckFromDrc concorContributionAckFromDrc) {
+        var entity = createDrcProcessingStatusEntity(concorContributionAckFromDrc);
         try {
-            var saved = saveCaseSubmissionErrorEntity(entity);
-            log.info("saved concor contribution error entity: {}", saved);
+            var saved = saveDrcProcessingStatusEntity(entity);
+            log.info("saved concor contribution DRC processing entity: {}", saved);
             return saved;
         } catch (Exception e) {
-            log.error("failed to save concor contribution error entity: {}", entity, e);
+            log.error("failed to save concor contribution DRC processing entity: {}", entity, e);
             return null;
         }
     }
 
-    public CaseSubmissionErrorEntity saveCaseSubmissionErrorEntity(CaseSubmissionErrorEntity entity) {
-        return caseSubmissionErrorRepository.save(entity);
+    public DrcProcessingStatusEntity saveDrcProcessingStatusEntity(DrcProcessingStatusEntity entity) {
+        return drcProcessingStatusRepository.save(entity);
     }
 
 
@@ -155,9 +153,9 @@ public class EventService {
                 .minusDays(cutoff);
     }
 
-    public Long purgePeriodicCaseSubmissionErrorEntries() {
-        LocalDateTime purgeBeforeDate = LocalDateTime.now().minusMonths(historyCutoffMonth);
-        return caseSubmissionErrorRepository.deleteByCreationDateBefore(purgeBeforeDate);
+    public Long purgePeriodicDrcProcessingStatusEntries() {
+        Instant purgeBeforeTimestamp = Instant.now().atZone(ZoneOffset.UTC).minusMonths(historyCutoffMonth).toInstant();
+        return drcProcessingStatusRepository.deleteByCreationTimestampBefore(purgeBeforeTimestamp);
     }
 
 }

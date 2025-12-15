@@ -18,8 +18,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
-import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
-import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
+import uk.gov.justice.laa.crime.dces.integration.service.ContributionFileService;
+import uk.gov.justice.laa.crime.dces.integration.service.FdcFileService;
 import uk.gov.justice.laa.crime.dces.integration.service.MigrationService;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,15 +40,15 @@ import static org.mockito.Mockito.when;
         "scheduling.cron.data-migration=* * * * * *",
         "scheduling.cron.purge.data-cleardown=* * * * * *",
         "scheduling.lock.at-least=PT0S",
-        "scheduling.cron.purge.case-submission-error=* * * * * *"
+        "scheduling.cron.purge.drc-processing-status=* * * * * *"
 })
 @ActiveProfiles(profiles = "default") // the ServiceScheduler is disabled during tests otherwise
 public class ServiceSchedulerTest {
 
     @MockitoBean
-    private FdcService fdcService;
+    private FdcFileService fdcFileService;
     @MockitoBean
-    private ContributionService contributionService;
+    private ContributionFileService contributionFileService;
     @MockitoBean
     private MigrationService migrationService;
     @MockitoBean
@@ -59,23 +59,23 @@ public class ServiceSchedulerTest {
 
     @Test
     void testProcessFdcDailyFilesIsCalled(CapturedOutput output) throws InterruptedException {
-        when(fdcService.processDailyFiles()).thenReturn(true); // Arrange
+        when(fdcFileService.processDailyFiles()).thenReturn(true); // Arrange
 
         Thread.sleep(1000); // Act - could be called once (or maybe twice) depending on timing
 
-        verify(fdcService, atLeastOnce()).processDailyFiles(); // Assert
-        verify(fdcService, atMost(2)).processDailyFiles();
+        verify(fdcFileService, atLeastOnce()).processDailyFiles(); // Assert
+        verify(fdcFileService, atMost(2)).processDailyFiles();
         assertThat(output.getOut()).contains("Processing FDC files");
     }
 
     @Test
     void testProcessContributionsDailyFilesIsCalled(CapturedOutput output) throws InterruptedException {
-        when(contributionService.processDailyFiles()).thenReturn(true); // Arrange
+        when(contributionFileService.processDailyFiles()).thenReturn(true); // Arrange
 
         Thread.sleep(1000); // Act - could be called once (or maybe twice) depending on timing
 
-        verify(contributionService, atLeastOnce()).processDailyFiles(); // Assert
-        verify(contributionService, atMost(2)).processDailyFiles();
+        verify(contributionFileService, atLeastOnce()).processDailyFiles(); // Assert
+        verify(contributionFileService, atMost(2)).processDailyFiles();
         assertThat(output.getOut()).contains("Processing contributions files");
     }
 
@@ -103,14 +103,14 @@ public class ServiceSchedulerTest {
     }
 
     @Test
-    void givenAValidCronJob_shouldCalledPurgePeriodicCaseSubmissionErrorEntries(CapturedOutput output) throws InterruptedException {
-        when(eventService.purgePeriodicCaseSubmissionErrorEntries()).thenReturn(5l); // Arrange
+    void givenAValidCronJob_shouldCalledPurgePeriodicDrcProcessingStatusEntries(CapturedOutput output) throws InterruptedException {
+        when(eventService.purgePeriodicDrcProcessingStatusEntries()).thenReturn(5l); // Arrange
 
         Thread.sleep(1000); // Act - could be called once (or maybe twice) depending on timing
 
-        verify(eventService).purgePeriodicCaseSubmissionErrorEntries(); // Assert
-        assertThat(output.getOut()).contains("Starting purging case submission error");
-        assertThat(output.getOut()).contains("Deleted 5 historical case submission error entries");
+        verify(eventService).purgePeriodicDrcProcessingStatusEntries(); // Assert
+        assertThat(output.getOut()).contains("Start purging DRC processing status records");
+        assertThat(output.getOut()).contains("Deleted 5 historical DRC processing status records");
     }
 
     static class DelayedTrue implements Answer<Boolean> {
@@ -123,20 +123,20 @@ public class ServiceSchedulerTest {
 
     @Test
     void testProcessFdcDailyFilesIsLocked() throws InterruptedException {
-        when(fdcService.processDailyFiles()).thenAnswer(new DelayedTrue()); // Arrange
+        when(fdcFileService.processDailyFiles()).thenAnswer(new DelayedTrue()); // Arrange
 
         Thread.sleep(1990); // Act - should be called no more than once because of delay
 
-        verify(fdcService, atMostOnce()).processDailyFiles(); // Assert
+        verify(fdcFileService, atMostOnce()).processDailyFiles(); // Assert
     }
 
     @Test
     void testProcessContributionsDailyFilesIsLocked() throws InterruptedException {
-        when(contributionService.processDailyFiles()).thenAnswer(new DelayedTrue()); // Arrange
+        when(contributionFileService.processDailyFiles()).thenAnswer(new DelayedTrue()); // Arrange
 
         Thread.sleep(1990); // Act - should be called no more than once because of delay
 
-        verify(contributionService, atMostOnce()).processDailyFiles(); // Assert
+        verify(contributionFileService, atMostOnce()).processDailyFiles(); // Assert
     }
 
     @TestConfiguration

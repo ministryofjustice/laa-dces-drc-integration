@@ -11,7 +11,7 @@ import static org.mockito.Answers.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class CaseSubmissionErrorMapperTest {
+class DrcProcessingStatusMapperTest {
 
     @Test
     void fdcAck_populatesFieldsFromProblemDetail() {
@@ -25,13 +25,12 @@ class CaseSubmissionErrorMapperTest {
         when(ack.data().maatId()).thenReturn(999L);
         when(ack.data().errorText()).thenReturn("ignored");
 
-        var entity = CaseSubmissionErrorMapper.createCaseSubmissionErrorEntity(ack);
+        var entity = DrcProcessingStatusMapper.createDrcProcessingStatusEntity(ack);
 
         assertEquals(Long.valueOf(999L), entity.getMaatId());
         assertEquals(Long.valueOf(123L), entity.getFdcId());
-        assertEquals("PD Title", entity.getTitle());
+        assertEquals("PD Title", entity.getStatusMessage());
         assertEquals("PD Detail", entity.getDetail());
-        assertEquals(Integer.valueOf(422), entity.getStatus());
     }
 
     @Test
@@ -42,24 +41,22 @@ class CaseSubmissionErrorMapperTest {
         when(ack.data().fdcId()).thenReturn(321L);
         when(ack.data().maatId()).thenReturn(111L);
 
-        var entity = CaseSubmissionErrorMapper.createCaseSubmissionErrorEntity(ack);
+        var entity = DrcProcessingStatusMapper.createDrcProcessingStatusEntity(ack);
 
         assertEquals(Long.valueOf(111L), entity.getMaatId());
         assertEquals(Long.valueOf(321L), entity.getFdcId());
-        assertNull(entity.getTitle());
+        assertNull(entity.getStatusMessage());
         assertEquals("error text", entity.getDetail());
-        assertNull(entity.getStatus());
     }
 
     @Test
     void fdcAck_nullAckReturnsEntityWithAllNullFields() {
-        var entity = CaseSubmissionErrorMapper.createCaseSubmissionErrorEntity((FdcAckFromDrc) null);
+        var entity = DrcProcessingStatusMapper.createDrcProcessingStatusEntity((FdcAckFromDrc) null);
 
         assertNull(entity.getMaatId());
         assertNull(entity.getFdcId());
-        assertNull(entity.getTitle());
+        assertNull(entity.getStatusMessage());
         assertNull(entity.getDetail());
-        assertNull(entity.getStatus());
     }
 
     @Test
@@ -74,13 +71,12 @@ class CaseSubmissionErrorMapperTest {
         when(ack.data().maatId()).thenReturn(222L);
         when(ack.data().errorText()).thenReturn("ignored");
 
-        var entity = CaseSubmissionErrorMapper.createCaseSubmissionErrorEntity(ack);
+        var entity = DrcProcessingStatusMapper.createDrcProcessingStatusEntity(ack);
 
         assertEquals(Long.valueOf(222L), entity.getMaatId());
         assertEquals(Long.valueOf(555L), entity.getConcorContributionId());
-        assertEquals("C Title", entity.getTitle());
+        assertEquals("C Title", entity.getStatusMessage());
         assertEquals("C Detail", entity.getDetail());
-        assertEquals(Integer.valueOf(500), entity.getStatus());
     }
 
     @Test
@@ -91,24 +87,22 @@ class CaseSubmissionErrorMapperTest {
         when(ack.data().concorContributionId()).thenReturn(777L);
         when(ack.data().maatId()).thenReturn(333L);
 
-        var entity = CaseSubmissionErrorMapper.createCaseSubmissionErrorEntity(ack);
+        var entity = DrcProcessingStatusMapper.createDrcProcessingStatusEntity(ack);
 
         assertEquals(Long.valueOf(333L), entity.getMaatId());
         assertEquals(Long.valueOf(777L), entity.getConcorContributionId());
-        assertNull(entity.getTitle());
+        assertNull(entity.getStatusMessage());
         assertEquals("concor error", entity.getDetail());
-        assertNull(entity.getStatus());
     }
 
     @Test
     void concorAck_nullAckReturnsEntityWithAllNullFields() {
-        var entity = CaseSubmissionErrorMapper.createCaseSubmissionErrorEntity((ConcorContributionAckFromDrc) null);
+        var entity = DrcProcessingStatusMapper.createDrcProcessingStatusEntity((ConcorContributionAckFromDrc) null);
 
         assertNull(entity.getMaatId());
         assertNull(entity.getConcorContributionId());
-        assertNull(entity.getTitle());
+        assertNull(entity.getStatusMessage());
         assertNull(entity.getDetail());
-        assertNull(entity.getStatus());
     }
 
 }

@@ -48,9 +48,10 @@ import static uk.gov.justice.laa.crime.dces.integration.datasource.model.EventTy
 @RequiredArgsConstructor
 @Service
 @Slf4j
-public class FdcService implements FileService {
+public class FdcFileService implements FileService {
+
     public static final String REQUESTED_STATUS = "REQUESTED";
-    private static final String SERVICE_NAME = "FdcService";
+    private static final String SERVICE_NAME = "FdcFileService";
     private final FdcMapperUtils fdcMapperUtils;
     private final FdcClient fdcClient;
     private final DrcClient drcClient;
@@ -59,40 +60,6 @@ public class FdcService implements FileService {
     private final EventService eventService;
     private final MeterRegistry meterRegistry;
     private Long batchId;
-
-    /**
-     * Method which logs that a specific fdc has been processed by the Debt Recovery Company.
-     * <ul>
-     * <li>Will log a success by incrementing the successful count of the associated contribution file.</li>
-     * <li>If error text is present, will instead log it to the MAAT DB as an error for the associated contribution file.</li>
-     * <li>Logs details received in the DCES Event Database.</li>
-     * </ul>
-     *
-     * @param fdcAckFromDrc Contains the details of the FDC which has been processed by the DRC.
-     * @return FileID of the file associated with the fdcId
-     */
-    public long handleFdcProcessedAck(FdcAckFromDrc fdcAckFromDrc) {
-        Timer.Sample timerSample = Timer.start(meterRegistry);
-        FdcProcessedRequest fdcProcessedRequest = FdcProcessedRequest.builder()
-                .fdcId(fdcAckFromDrc.data().fdcId())
-                .errorText(fdcAckFromDrc.data().errorText())
-                .build();
-        try {
-            long result = executeFdcProcessedAckCall(fdcProcessedRequest);
-            logFdcAsyncEvent(fdcProcessedRequest, OK);
-            return result;
-        } catch (WebClientResponseException e) {
-            logFdcAsyncEvent(fdcProcessedRequest, e.getStatusCode());
-            log.error("Failed to process FDC acknowledgement from DRC for fdcId {}: {}",
-                    fdcAckFromDrc.data().fdcId(), e.getMessage());
-            throw FileServiceUtils.translateMAATCDAPIException(e);
-        } finally {
-            eventService.logFdcError(fdcAckFromDrc);
-            timerSample.stop(getTimer(SERVICE_NAME,
-                    "method", "handleFdcProcessedAck",
-                    "description", "Time taken to process the acknowledgement for the FDC updates."));
-        }
-    }
 
     /**
      * Method which will process any Final Defence Cost entries in the correct state for sending to the
@@ -245,16 +212,6 @@ public class FdcService implements FileService {
     }
 
     // External Call Executions Methods
-    @Retry(name = SERVICE_NAME)
-    public long executeFdcProcessedAckCall(FdcProcessedRequest fdcProcessedRequest) {
-        long result = 0L;
-        if (!feature.incomingIsolated()) {
-            result = fdcClient.sendLogFdcProcessed(fdcProcessedRequest);
-        } else {
-            log.info("Feature:IncomingIsolated: processFdcUpdate: Skipping MAAT API sendLogFdcProcessed() call");
-        }
-        return result;
-    }
 
     @Retry(name = SERVICE_NAME)
     public FdcGlobalUpdateResponse executeFdcGlobalUpdateCall(){
@@ -330,13 +287,6 @@ public class FdcService implements FileService {
     }
 
     // Logging Methods
-
-    private void logFdcAsyncEvent(FdcProcessedRequest fdcProcessedRequest, HttpStatusCode httpStatusCode) {
-        Fdc idHolder = new Fdc();
-        idHolder.setId(fdcProcessedRequest.getFdcId());
-        eventService.logFdc(DRC_ASYNC_RESPONSE, null, idHolder, httpStatusCode, fdcProcessedRequest.getErrorText());
-    }
-
 
     private void logGlobalUpdatePayload(HttpStatusCode httpStatus, String message) {
         boolean isFailureState = !HttpStatus.ACCEPTED.is2xxSuccessful();

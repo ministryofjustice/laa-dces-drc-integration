@@ -3,22 +3,22 @@ package uk.gov.justice.laa.crime.dces.integration.datasource;
 import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionEntity;
-import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionErrorEntity;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.DrcProcessingStatusEntity;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventType;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.EventTypeEntity;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.RecordType;
-import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionErrorRepository;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.CaseSubmissionRepository;
+import uk.gov.justice.laa.crime.dces.integration.datasource.repository.DrcProcessingStatusRepository;
 import uk.gov.justice.laa.crime.dces.integration.datasource.repository.EventTypeRepository;
 import uk.gov.justice.laa.crime.dces.integration.exception.DcesDrcServiceException;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
@@ -26,6 +26,7 @@ import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.contributions.CONTRIBUTIONS;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -39,23 +40,26 @@ import static org.mockito.Mockito.when;
 @ExtendWith(SoftAssertionsExtension.class)
 class EventServiceTest {
 
+    public static final String SUCCESS_MESSAGE = "Success";
+
     @InjectSoftAssertions
     private SoftAssertions softly;
 
     @Mock
     private CaseSubmissionRepository caseSubmissionRepository;
     @Mock
-    private CaseSubmissionErrorRepository caseSubmissionErrorRepository;
+    private DrcProcessingStatusRepository drcProcessingStatusRepository;
     @Mock
     private EventTypeRepository eventTypeRepository;
 
-    @InjectMocks
     private EventService eventService;
-    @Captor
-    private ArgumentCaptor<CaseSubmissionEntity> caseSubmissionEntityArgumentCaptor;
 
     @Captor
-    private ArgumentCaptor<CaseSubmissionErrorEntity> caseSubmissionErrorEntityArgumentCaptor;
+    private ArgumentCaptor<CaseSubmissionEntity> caseSubmissionEntityArgumentCaptor;
+    @Captor
+    private ArgumentCaptor<DrcProcessingStatusEntity> drcProcessingStatusEntityArgumentCaptor;
+    @Captor
+    private ArgumentCaptor<Instant> instantArgumentCaptor;
 
     private final Long testTraceId = -777L;
     private final Long testBatchId = -666L;
@@ -64,22 +68,26 @@ class EventServiceTest {
     private final Long testConcorId = -333L;
     private final String testPayload = "TestPayload"+ LocalDateTime.now();
 
+    @BeforeEach
+    void setUp() {
+        this.eventService = new EventService(caseSubmissionRepository, drcProcessingStatusRepository, eventTypeRepository);
+    }
 
     @Test
-    void whenSaveCaseSubmissionErrorEntityWithValidEntity_thenDelegatesToRepositoryAndReturnsSavedEntity() {
+    void whenSaveDrcProcessingStatusEntityWithValidEntity_thenDelegatesToRepositoryAndReturnsSavedEntity() {
 
-        var input = CaseSubmissionErrorEntity.builder()
+        var input = DrcProcessingStatusEntity.builder()
                 .maatId(testMaatId)
                 .fdcId(testFdcId)
-                .title(testPayload)
+                .statusMessage(testPayload)
                 .build();
 
-        when(caseSubmissionErrorRepository.save(any(CaseSubmissionErrorEntity.class))).thenReturn(input);
+        when(drcProcessingStatusRepository.save(any(DrcProcessingStatusEntity.class))).thenReturn(input);
 
-        var result = eventService.saveCaseSubmissionErrorEntity(input);
+        var result = eventService.saveDrcProcessingStatusEntity(input);
 
-        verify(caseSubmissionErrorRepository).save(caseSubmissionErrorEntityArgumentCaptor.capture());
-        softly.assertThat(caseSubmissionErrorEntityArgumentCaptor.getValue()).isEqualTo(input);
+        verify(drcProcessingStatusRepository).save(drcProcessingStatusEntityArgumentCaptor.capture());
+        softly.assertThat(drcProcessingStatusEntityArgumentCaptor.getValue()).isEqualTo(input);
         softly.assertThat(result).isEqualTo(input);
         softly.assertAll();
     }
@@ -87,56 +95,52 @@ class EventServiceTest {
     void whenLogFdcErrorIsCalled_thenEntitySavedAndReturned() {
         var ack = mock(FdcAckFromDrc.class, org.mockito.Mockito.RETURNS_DEEP_STUBS);
         var pd = mock(org.springframework.http.ProblemDetail.class);
-        when(pd.getTitle()).thenReturn("C Title");
+        when(pd.getTitle()).thenReturn(SUCCESS_MESSAGE);
         when(pd.getDetail()).thenReturn("C Detail");
-        when(pd.getStatus()).thenReturn(500);
         when(ack.data().report()).thenReturn(pd);
         when(ack.data().fdcId()).thenReturn(testFdcId);
         when(ack.data().maatId()).thenReturn(testMaatId);
         when(ack.data().errorText()).thenReturn("ignored");
 
-        when(caseSubmissionErrorRepository.save(any(CaseSubmissionErrorEntity.class)))
+        when(drcProcessingStatusRepository.save(any(DrcProcessingStatusEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         var result = eventService.logFdcError(ack);
 
-        verify(caseSubmissionErrorRepository).save(caseSubmissionErrorEntityArgumentCaptor.capture());
-        var captured = caseSubmissionErrorEntityArgumentCaptor.getValue();
+        verify(drcProcessingStatusRepository).save(drcProcessingStatusEntityArgumentCaptor.capture());
+        var captured = drcProcessingStatusEntityArgumentCaptor.getValue();
 
         softly.assertThat(result).isEqualTo(captured);
         softly.assertThat(captured.getMaatId()).isEqualTo(testMaatId);
         softly.assertThat(captured.getFdcId()).isEqualTo(testFdcId);
-        softly.assertThat(captured.getTitle()).isEqualTo("C Title");
+        softly.assertThat(captured.getStatusMessage()).isEqualTo(SUCCESS_MESSAGE);
         softly.assertThat(captured.getDetail()).isEqualTo("C Detail");
-        softly.assertThat(captured.getStatus()).isEqualTo(Integer.valueOf(500));
         softly.assertAll();
     }
     @Test
     void whenLogFdcErrorRepositoryThrows_thenReturnsNull() {
         var ack = mock(FdcAckFromDrc.class, org.mockito.Mockito.RETURNS_DEEP_STUBS);
         var pd = mock(org.springframework.http.ProblemDetail.class);
-        when(pd.getTitle()).thenReturn("C Title");
+        when(pd.getTitle()).thenReturn(SUCCESS_MESSAGE);
         when(pd.getDetail()).thenReturn("C Detail");
-        when(pd.getStatus()).thenReturn(500);
         when(ack.data().report()).thenReturn(pd);
         when(ack.data().fdcId()).thenReturn(testFdcId);
         when(ack.data().maatId()).thenReturn(testMaatId);
         when(ack.data().errorText()).thenReturn("ignored");
 
-        when(caseSubmissionErrorRepository.save(any(CaseSubmissionErrorEntity.class)))
+        when(drcProcessingStatusRepository.save(any(DrcProcessingStatusEntity.class)))
                 .thenThrow(new RuntimeException("DB down"));
 
         var result = eventService.logFdcError(ack);
 
-        verify(caseSubmissionErrorRepository).save(caseSubmissionErrorEntityArgumentCaptor.capture());
-        var captured = caseSubmissionErrorEntityArgumentCaptor.getValue();
+        verify(drcProcessingStatusRepository).save(drcProcessingStatusEntityArgumentCaptor.capture());
+        var captured = drcProcessingStatusEntityArgumentCaptor.getValue();
 
         softly.assertThat(result).isNull();
         softly.assertThat(captured.getMaatId()).isEqualTo(testMaatId);
         softly.assertThat(captured.getFdcId()).isEqualTo(testFdcId);
-        softly.assertThat(captured.getTitle()).isEqualTo("C Title");
+        softly.assertThat(captured.getStatusMessage()).isEqualTo(SUCCESS_MESSAGE);
         softly.assertThat(captured.getDetail()).isEqualTo("C Detail");
-        softly.assertThat(captured.getStatus()).isEqualTo(Integer.valueOf(500));
         softly.assertAll();
     }
 
@@ -144,28 +148,26 @@ class EventServiceTest {
     void whenLogConcorContributionErrorIsCalled_thenEntitySavedAndReturned() {
         var ack = mock(ConcorContributionAckFromDrc.class, org.mockito.Mockito.RETURNS_DEEP_STUBS);
         var pd = mock(org.springframework.http.ProblemDetail.class);
-        when(pd.getTitle()).thenReturn("C Title");
+        when(pd.getTitle()).thenReturn(SUCCESS_MESSAGE);
         when(pd.getDetail()).thenReturn("C Detail");
-        when(pd.getStatus()).thenReturn(500);
         when(ack.data().report()).thenReturn(pd);
         when(ack.data().concorContributionId()).thenReturn(testConcorId);
         when(ack.data().maatId()).thenReturn(testMaatId);
         when(ack.data().errorText()).thenReturn("ignored");
 
-        when(caseSubmissionErrorRepository.save(any(CaseSubmissionErrorEntity.class)))
+        when(drcProcessingStatusRepository.save(any(DrcProcessingStatusEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         var result = eventService.logConcorContributionError(ack);
 
-        verify(caseSubmissionErrorRepository).save(caseSubmissionErrorEntityArgumentCaptor.capture());
-        var captured = caseSubmissionErrorEntityArgumentCaptor.getValue();
+        verify(drcProcessingStatusRepository).save(drcProcessingStatusEntityArgumentCaptor.capture());
+        var captured = drcProcessingStatusEntityArgumentCaptor.getValue();
 
         softly.assertThat(result).isEqualTo(captured);
         softly.assertThat(captured.getMaatId()).isEqualTo(testMaatId);
         softly.assertThat(captured.getConcorContributionId()).isEqualTo(testConcorId);
-        softly.assertThat(captured.getTitle()).isEqualTo("C Title");
+        softly.assertThat(captured.getStatusMessage()).isEqualTo(SUCCESS_MESSAGE);
         softly.assertThat(captured.getDetail()).isEqualTo("C Detail");
-        softly.assertThat(captured.getStatus()).isEqualTo(Integer.valueOf(500));
         softly.assertAll();
     }
 
@@ -173,28 +175,26 @@ class EventServiceTest {
     void whenLogConcorContributionErrorRepositoryThrows_thenReturnsNull() {
         var ack = mock(ConcorContributionAckFromDrc.class, org.mockito.Mockito.RETURNS_DEEP_STUBS);
         var pd = mock(org.springframework.http.ProblemDetail.class);
-        when(pd.getTitle()).thenReturn("C Title");
+        when(pd.getTitle()).thenReturn(SUCCESS_MESSAGE);
         when(pd.getDetail()).thenReturn("C Detail");
-        when(pd.getStatus()).thenReturn(500);
         when(ack.data().report()).thenReturn(pd);
         when(ack.data().concorContributionId()).thenReturn(testConcorId);
         when(ack.data().maatId()).thenReturn(testMaatId);
         when(ack.data().errorText()).thenReturn("ignored");
 
-        when(caseSubmissionErrorRepository.save(any(CaseSubmissionErrorEntity.class)))
+        when(drcProcessingStatusRepository.save(any(DrcProcessingStatusEntity.class)))
                 .thenThrow(new RuntimeException("DB down"));
 
         var result = eventService.logConcorContributionError(ack);
 
-        verify(caseSubmissionErrorRepository).save(caseSubmissionErrorEntityArgumentCaptor.capture());
-        var captured = caseSubmissionErrorEntityArgumentCaptor.getValue();
+        verify(drcProcessingStatusRepository).save(drcProcessingStatusEntityArgumentCaptor.capture());
+        var captured = drcProcessingStatusEntityArgumentCaptor.getValue();
 
         softly.assertThat(result).isNull();
         softly.assertThat(captured.getMaatId()).isEqualTo(testMaatId);
         softly.assertThat(captured.getConcorContributionId()).isEqualTo(testConcorId);
-        softly.assertThat(captured.getTitle()).isEqualTo("C Title");
+        softly.assertThat(captured.getStatusMessage()).isEqualTo(SUCCESS_MESSAGE);
         softly.assertThat(captured.getDetail()).isEqualTo("C Detail");
-        softly.assertThat(captured.getStatus()).isEqualTo(Integer.valueOf(500));
         softly.assertAll();
     }
 
@@ -312,10 +312,13 @@ class EventServiceTest {
     }
 
     @Test
-    void givenAValidCronExpression_whenPurgeCaseSubmissionErrorEntriesIsInvoked_shouldPurgePeriodicRecords() {
-        when(caseSubmissionErrorRepository.deleteByCreationDateBefore(any(LocalDateTime.class))).thenReturn(5l);
-        softly.assertThat(eventService.purgePeriodicCaseSubmissionErrorEntries()).isEqualTo(5l);
-        verify(caseSubmissionErrorRepository).deleteByCreationDateBefore(any(LocalDateTime.class));
+    void givenAValidCronExpression_whenPurgeDrcProcessingStatusEntriesIsInvoked_shouldPurgePeriodicRecords() {
+        Instant startOfTest = Instant.now();
+        eventService.setHistoryCutoffMonth(1);
+        when(drcProcessingStatusRepository.deleteByCreationTimestampBefore(any(Instant.class))).thenReturn(5l);
+        softly.assertThat(eventService.purgePeriodicDrcProcessingStatusEntries()).isEqualTo(5l);
+        verify(drcProcessingStatusRepository).deleteByCreationTimestampBefore(instantArgumentCaptor.capture());
+        softly.assertThat(instantArgumentCaptor.getValue()).isBefore(startOfTest);
         softly.assertAll();
     }
 

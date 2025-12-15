@@ -36,8 +36,8 @@ import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
-import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
-import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
+import uk.gov.justice.laa.crime.dces.integration.service.ContributionFileService;
+import uk.gov.justice.laa.crime.dces.integration.service.FdcFileService;
 
 /**
  * This is a simple temporary controller to handle some test endpoints.
@@ -55,8 +55,8 @@ public class TempTestController {
     private final DrcClient drcClient;
     private static final int REQUEST_ID_LIST_SIZE_LIMIT_CONCOR = 350;
     private static final int REQUEST_ID_LIST_SIZE_LIMIT_FDC = 1000;
-    private final ContributionService concorContributionsService;
-    private final FdcService fdcService;
+    private final ContributionFileService concorContributionsService;
+    private final FdcFileService fdcFileService;
 
     /**
      * Check we have connectivity with almost no side effects (just a log line).
@@ -185,7 +185,7 @@ public class TempTestController {
         } else if (idList.size() > REQUEST_ID_LIST_SIZE_LIMIT_FDC) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Too many IDs provided, max is " + REQUEST_ID_LIST_SIZE_LIMIT_FDC);
         } else {
-            return ResponseEntity.ok(fdcService.sendFdcsToDrc(idList));
+            return ResponseEntity.ok(fdcFileService.sendFdcsToDrc(idList));
         }
     }
 

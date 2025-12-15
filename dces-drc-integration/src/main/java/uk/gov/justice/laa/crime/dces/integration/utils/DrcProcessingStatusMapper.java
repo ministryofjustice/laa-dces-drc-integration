@@ -2,18 +2,18 @@ package uk.gov.justice.laa.crime.dces.integration.utils;
 
 import lombok.experimental.UtilityClass;
 import org.springframework.http.ProblemDetail;
-import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionErrorEntity;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.DrcProcessingStatusEntity;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
 
 import java.util.Optional;
 
 @UtilityClass
-public class CaseSubmissionErrorMapper {
+public class DrcProcessingStatusMapper {
 
-    public static CaseSubmissionErrorEntity createCaseSubmissionErrorEntity(FdcAckFromDrc fdcAckFromDrc) {
+    public static DrcProcessingStatusEntity createDrcProcessingStatusEntity(FdcAckFromDrc fdcAckFromDrc) {
         if (fdcAckFromDrc == null || fdcAckFromDrc.data() == null) {
-            return CaseSubmissionErrorEntity.builder().build();
+            return DrcProcessingStatusEntity.builder().build();
         }
 
         ProblemDetail problemDetail = fdcAckFromDrc.data().report();
@@ -21,12 +21,12 @@ public class CaseSubmissionErrorMapper {
         Long fdcId = fdcAckFromDrc.data().fdcId();
         String errorText = fdcAckFromDrc.data().errorText();
 
-        return buildCaseSubmissionErrorEntity(maatId, fdcId, null, problemDetail, errorText);
+        return buildDrcProcessingStatusEntity(maatId, fdcId, null, problemDetail, errorText);
     }
 
-    public static CaseSubmissionErrorEntity createCaseSubmissionErrorEntity(ConcorContributionAckFromDrc contributionAckFromDrc) {
+    public static DrcProcessingStatusEntity createDrcProcessingStatusEntity(ConcorContributionAckFromDrc contributionAckFromDrc) {
         if (contributionAckFromDrc == null || contributionAckFromDrc.data() == null) {
-            return CaseSubmissionErrorEntity.builder().build();
+            return DrcProcessingStatusEntity.builder().build();
         }
 
         ProblemDetail problemDetail = contributionAckFromDrc.data().report();
@@ -34,17 +34,17 @@ public class CaseSubmissionErrorMapper {
         Long concorContributionId = contributionAckFromDrc.data().concorContributionId();
         String errorText = contributionAckFromDrc.data().errorText();
 
-        return buildCaseSubmissionErrorEntity(maatId, null, concorContributionId, problemDetail, errorText);
+        return buildDrcProcessingStatusEntity(maatId, null, concorContributionId, problemDetail, errorText);
     }
 
-    private static CaseSubmissionErrorEntity buildCaseSubmissionErrorEntity(
+    private static DrcProcessingStatusEntity buildDrcProcessingStatusEntity(
             Long maatId,
             Long fdcId,
             Long concorContributionId,
             ProblemDetail problemDetail,
             String errorText) {
 
-        String title = Optional.ofNullable(problemDetail)
+        String statusMessage = Optional.ofNullable(problemDetail)
                 .map(ProblemDetail::getTitle)
                 .orElse(null);
 
@@ -52,19 +52,14 @@ public class CaseSubmissionErrorMapper {
                 .map(ProblemDetail::getDetail)
                 .orElse(null);
 
-        Integer status = Optional.ofNullable(problemDetail)
-                .map(ProblemDetail::getStatus)
-                .orElse(null);
-
         detail = Optional.ofNullable(detail).orElse(errorText);
 
-        return CaseSubmissionErrorEntity.builder()
+        return DrcProcessingStatusEntity.builder()
                 .maatId(maatId)
                 .fdcId(fdcId)
                 .concorContributionId(concorContributionId)
-                .title(title)
+                .statusMessage(statusMessage)
                 .detail(detail)
-                .status(status)
                 .build();
     }
 }

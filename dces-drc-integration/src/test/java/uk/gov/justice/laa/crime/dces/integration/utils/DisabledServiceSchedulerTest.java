@@ -10,11 +10,12 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
-import uk.gov.justice.laa.crime.dces.integration.service.ContributionService;
-import uk.gov.justice.laa.crime.dces.integration.service.FdcService;
+import uk.gov.justice.laa.crime.dces.integration.service.ContributionFileService;
+import uk.gov.justice.laa.crime.dces.integration.service.FdcFileService;
 import uk.gov.justice.laa.crime.dces.integration.service.MigrationService;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 @ExtendWith(SpringExtension.class)
@@ -24,17 +25,17 @@ import static org.mockito.Mockito.*;
         "scheduling.contributionsDailyFiles.cron=-",
         "scheduling.cron.data-migration=-",
         "scheduling.cron.purge.data-cleardown=-",
-        "scheduling.cron.purge.case-submission-error=-"
+        "scheduling.cron.purge.drc-processing-status=-"
 })
 @ActiveProfiles(profiles = "default")
 class DisabledServiceSchedulerTest {
 
     @MockitoBean
-    private FdcService fdcService;
+    private FdcFileService fdcFileService;
     @MockitoBean
     private MigrationService migrationService;
     @MockitoBean
-    private ContributionService contributionService;
+    private ContributionFileService contributionFileService;
     @MockitoBean
     private EventService eventService;
     @InjectMocks
@@ -44,14 +45,14 @@ class DisabledServiceSchedulerTest {
     void testProcessFdcDailyFilesIsNotCalled() throws InterruptedException {
         // Wait for the scheduled method to be called
         Thread.sleep(1000);
-        verify(fdcService, never()).processDailyFiles();
+        verify(fdcFileService, never()).processDailyFiles();
     }
 
     @Test
     void testProcessContributionsDailyFilesIsNotCalled() throws InterruptedException {
         // Wait for the scheduled method to be called
         Thread.sleep(1000);
-        verify(contributionService, never()).processDailyFiles();
+        verify(contributionFileService, never()).processDailyFiles();
     }
 
     @Test
@@ -69,9 +70,9 @@ class DisabledServiceSchedulerTest {
     }
 
     @Test
-    void givenAInvalidCronJob_shouldNotInvoked_PurgePeriodicCaseSubmissionErrorEntries() throws InterruptedException {
+    void givenAInvalidCronJob_shouldNotInvoked_PurgePeriodicDrcProcessingStatusEntries() throws InterruptedException {
         // Wait for the scheduled method to be called
         Thread.sleep(1000);
-        verify(eventService, never()).purgePeriodicCaseSubmissionErrorEntries();
+        verify(eventService, never()).purgePeriodicDrcProcessingStatusEntries();
     }
 }
