@@ -5,7 +5,6 @@ import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,8 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
 import org.springframework.test.web.servlet.MockMvc;
+import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
+import uk.gov.justice.laa.crime.dces.integration.client.FdcClient;
 import uk.gov.justice.laa.crime.dces.integration.model.external.FdcContribution;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType;
 import uk.gov.justice.laa.crime.dces.integration.service.FdcFileService;
@@ -42,6 +45,12 @@ class FdcLoggingIntegrationTest {
 
     @InjectSoftAssertions
     private SoftAssertions softly;
+
+    @MockitoSpyBean
+    private FdcClient fdcClientSpy;
+
+    @MockitoBean
+    public DrcClient drcClientSpy;
 
     @Autowired
     private SpyFactory spyFactory;
@@ -86,7 +95,6 @@ class FdcLoggingIntegrationTest {
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-362">DCES-362</a> for test specification.
      */
-    @Disabled("Disabled as the controller has been temporarily removed.")
     @Test
     void givenSomeRequestedFdcContributionsAndProcessDailyFilesRan_whenDrcRespondsToAcknowledge_thenContributionsAndFileAreUpdated() {
         // Update at least 3 fdc_contribution rows to REQUESTED:
@@ -162,7 +170,6 @@ class FdcLoggingIntegrationTest {
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-363">DCES-363</a> for test specification.
      */
-    @Disabled("Disabled as the controller has been temporarily removed.")
     @Test
     void givenSomeRequestedFdcContributionsAndProcessDailyFilesRan_whenDrcRespondsWithError_thenContributionFileIsNotUpdatedButErrorIsCreated() {
         // Update at least 3 fdc_contribution rows to REQUESTED:

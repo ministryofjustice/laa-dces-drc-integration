@@ -2,16 +2,12 @@ package uk.gov.justice.laa.crime.dces.integration.service.spy;
 
 import lombok.AllArgsConstructor;
 import org.mockito.Mockito;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.stereotype.Component;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.client.FdcClient;
-import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionResponseDTO;
-import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
-import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionFileResponse;
-import uk.gov.justice.laa.crime.dces.integration.model.external.FdcContribution;
-import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionFileErrorResponse;
+import uk.gov.justice.laa.crime.dces.integration.model.external.*;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcAccelerationType;
 import uk.gov.justice.laa.crime.dces.integration.model.local.FdcTestType;
 import uk.gov.justice.laa.crime.dces.integration.service.TestDataService;
@@ -54,7 +50,7 @@ public class SpyFactory {
     }
 
     public FdcLoggingProcessSpy.FdcLoggingProcessSpyBuilder newFdcLoggingProcessSpyBuilder() {
-        return new FdcLoggingProcessSpy.FdcLoggingProcessSpyBuilder(Mockito.spy(fdcClientSpy));
+        return new FdcLoggingProcessSpy.FdcLoggingProcessSpyBuilder(fdcClientSpy);
     }
 
     public List<Long> updateConcorContributionStatus(final ConcorContributionStatus status, final int recordCount) {

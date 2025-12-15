@@ -5,7 +5,6 @@ import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,8 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
 import org.springframework.test.web.servlet.MockMvc;
+import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
+import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionResponseDTO;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionFileService;
@@ -42,6 +45,12 @@ class ContributionLoggingIntegrationTest {
 
     @InjectSoftAssertions
     private SoftAssertions softly;
+
+    @MockitoSpyBean
+    private ContributionClient contributionClientSpy;
+
+    @MockitoBean
+    public DrcClient drcClientSpy;
 
     @Autowired
     private SpyFactory spyFactory;
@@ -86,7 +95,6 @@ class ContributionLoggingIntegrationTest {
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-354">DCES-354</a> for test specification.
      */
-    @Disabled("Disabled as the controller has been temporarily removed.")
     @Test
     void givenSomeActiveConcorContributionsAndProcessDailyFilesRan_whenDrcRespondsToAcknowledge_thenContributionsAndFileAreUpdated() {
         // Update at least 3 concor_contribution rows to ACTIVE:
@@ -161,7 +169,6 @@ class ContributionLoggingIntegrationTest {
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-355">DCES-355</a> for test specification.
      */
-    @Disabled("Disabled as the controller has been temporarily removed.")
     @Test
     void givenSomeActiveConcorContributionsAndProcessDailyFilesRan_whenDrcRespondsWithError_thenContributionFileIsNotUpdatedButErrorIsCreated() {
         // Update at least 3 concor_contribution rows to ACTIVE:
