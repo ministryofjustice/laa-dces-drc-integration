@@ -12,6 +12,7 @@ import uk.gov.justice.laa.crime.dces.integration.client.FdcClient;
 import uk.gov.justice.laa.crime.dces.integration.config.FeatureProperties;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
+import uk.gov.justice.laa.crime.dces.integration.model.ProcessingReport;
 import uk.gov.justice.laa.crime.dces.integration.model.external.FdcProcessedRequest;
 import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.utils.FileServiceUtils;
@@ -43,10 +44,10 @@ public class FdcAckService {
      */
     public long handleFdcProcessedAck(FdcAckFromDrc fdcAckFromDrc) {
         Timer.Sample timerSample = Timer.start(meterRegistry);
+        ProcessingReport report = fdcAckFromDrc.data().report();
         FdcProcessedRequest fdcProcessedRequest = FdcProcessedRequest.builder()
                 .fdcId(fdcAckFromDrc.data().fdcId())
-                // TODO Only set the errorText if title != Success
-                .errorText(fdcAckFromDrc.data().report().title())
+                .errorText(report.isSuccessReport() ? null : report.title())
                 .build();
         try {
             long result = executeFdcProcessedAckCall(fdcProcessedRequest);

@@ -12,6 +12,7 @@ import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.config.FeatureProperties;
 import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
+import uk.gov.justice.laa.crime.dces.integration.model.ProcessingReport;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionProcessedRequest;
 import uk.gov.justice.laa.crime.dces.integration.utils.FileServiceUtils;
 
@@ -43,10 +44,10 @@ public class ContributionAckService {
     public Long handleContributionProcessedAck(ConcorContributionAckFromDrc concorContributionAckFromDrc) {
 
         Timer.Sample timerSample = Timer.start(meterRegistry);
+        ProcessingReport report = concorContributionAckFromDrc.data().report();
         ContributionProcessedRequest contributionProcessedRequest = ContributionProcessedRequest.builder()
                 .concorId(concorContributionAckFromDrc.data().concorContributionId())
-                // TODO Only set the errorText if title != Success
-                .errorText(concorContributionAckFromDrc.data().report().title())
+                .errorText(report.isSuccessReport() ? null : report.title())
                 .build();
         try {
             return executeContributionProcessedAckCall(contributionProcessedRequest);

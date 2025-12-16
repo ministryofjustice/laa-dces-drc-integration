@@ -1,6 +1,7 @@
 package uk.gov.justice.laa.crime.dces.integration.testing;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
@@ -18,15 +19,20 @@ import org.springframework.test.context.junit.jupiter.EnabledIf;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
 import uk.gov.justice.laa.crime.dces.integration.client.DrcClient;
+import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionEntity;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.DrcProcessingStatusEntity;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionResponseDTO;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ConcorContributionStatus;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionFileService;
 import uk.gov.justice.laa.crime.dces.integration.service.spy.ContributionLoggingProcessSpy;
 import uk.gov.justice.laa.crime.dces.integration.service.spy.ContributionProcessSpy;
 import uk.gov.justice.laa.crime.dces.integration.service.spy.SpyFactory;
+import uk.gov.justice.laa.crime.dces.integration.utils.IntTestDataFixtures;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.List;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oauth2Login;
@@ -35,22 +41,29 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static uk.gov.justice.laa.crime.dces.integration.utils.IntTestDataFixtures.buildContribAck;
 
+@Slf4j
 @EnabledIf(expression = "#{environment['sentry.environment'] == 'development'}", loadContext = true)
 @SpringBootTest
 @AutoConfigureMockMvc
 @ExtendWith(SoftAssertionsExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ContributionLoggingIntegrationTest {
+    private static final String SUCCESS_TEXT = "Success";
     private static final String ERROR_TEXT = "There was an error with this contribution. Please contact CCMT team.";
+    private static final int EVENT_TYPE_DRC_ASYNC_RESPONSE = 4;
 
     @InjectSoftAssertions
     private SoftAssertions softly;
 
+    // The following 3 beans are not used directly by this class, but declaring them here ensures
+    // Mockito wraps the Spring implementation when constructing its Mock/Spy.  If not declared,
+    // Spring constructs the implementation first and Mockito can't intercept it.
     @MockitoSpyBean
     private ContributionClient contributionClientSpy;
-
     @MockitoBean
     public DrcClient drcClientSpy;
+    @MockitoSpyBean
+    public EventService eventServiceSpy;
 
     @Autowired
     private SpyFactory spyFactory;
@@ -78,7 +91,7 @@ class ContributionLoggingIntegrationTest {
      * <p>* The {@link ContributionFileService#processDailyFiles()} method is called and a contribution_file is created.</p>
      * <h4>When:</h4>
      * <p>* Simulate the DRC calling our services to log their receipt of our concor_contributions by calling the
-     *    `/process-drc-update/contribution` endpoint once for each updated ID with a blank error text to indicate that
+     *    `/api/dces/v1/contribution` endpoint once for each updated ID with a blank error text to indicate that
      *    there were no errors processing that record.</p>
      * <h4>Then:</h4>
      * <p>1. The IDs of the 3 updated records are returned.</p>
@@ -92,6 +105,8 @@ class ContributionLoggingIntegrationTest {
      * <p>5. After all three concor_contributions have been acknowledged by the DRC, the contribution file errors
      *    for the contribution file and each concor_contribution are checked:<br>
      *    - Each should not find any records</p>
+     * <p>6. Each acknowledgement from the DRC should generate an entry in the CASE_SUBMISSION table.</p>
+     * <p>7. Each acknowledgement from the DRC should generate an entry in the DRC_PROCESSING_REPORT table.</p>
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-354">DCES-354</a> for test specification.
      */
@@ -110,12 +125,14 @@ class ContributionLoggingIntegrationTest {
         final ContributionProcessSpy watched = watching.build();
 
         final ContributionLoggingProcessSpy.ContributionLoggingProcessSpyBuilder logging = spyFactory.newContributionLoggingProcessSpyBuilder()
-                .traceSendLogContributionProcessed();
+                .traceSendLogContributionProcessed()
+                .traceSavedCaseSubmissionEntities()
+                .traceDrcProcessingStatusEntities();
 
         // Call the fake DRC processing-successful responses under test:
-        final var startDate = LocalDate.now();
+        final var startTimestamp = LocalDateTime.now();
         updatedIds.forEach(this::successfulContribution);
-        final var endDate = LocalDate.now();
+        final var endTimestamp = LocalDateTime.now();
 
         final ContributionLoggingProcessSpy logged = logging.build();
 
@@ -132,11 +149,17 @@ class ContributionLoggingIntegrationTest {
         softly.assertThat(logged.getConcorContributionIds()).containsOnlyOnceElementsOf(updatedIds);
 
         softly.assertThat(contributionFile.getRecordsReceived()).isEqualTo(3); // 4.
-        softly.assertThat(contributionFile.getDateReceived()).isBetween(startDate, endDate);
-        softly.assertThat(contributionFile.getDateModified()).isBetween(startDate, endDate);
+        softly.assertThat(contributionFile.getDateReceived()).isBetween(startTimestamp.toLocalDate(), endTimestamp.toLocalDate());
+        softly.assertThat(contributionFile.getDateModified()).isBetween(startTimestamp.toLocalDate(), endTimestamp.toLocalDate());
         softly.assertThat(contributionFile.getUserModified()).isEqualTo("DCES");
 
         softly.assertThat(contributionFileErrors).isEmpty(); // 5.
+
+        // 6. Each contribution should have a CaseSubmissionEntity record
+        assertCaseSubmissionEntities(logged.getSavedCaseSubmissionEntities(), updatedIds, startTimestamp, endTimestamp, null);
+
+        // 7. Each contribution should have a DrcProcessingStatusEntity record
+        assertDrcProcessingEntities(logged.getDrcProcessingStatusEntities(), updatedIds, SUCCESS_TEXT, startTimestamp, endTimestamp);
     }
 
     /**
@@ -149,7 +172,7 @@ class ContributionLoggingIntegrationTest {
      * <p>* The {@link ContributionFileService#processDailyFiles()} method is called and a contribution_file is created.</p>
      * <h4>When:</h4>
      * <p>* Simulate the DRC calling our services to log that a concor_contribution could not be processed by calling
-     *    the `/process-drc-update/contribution` endpoint once for each updated ID with a populated error text to
+     *    the <code>/api/dces/v1/contribution</code> endpoint once for each updated ID with a populated error text to
      *    indicate that there was an error processing that record.</p>
      * <h4>Then:</h4>
      * <p>1. The IDs of the 3 updated records are returned.</p>
@@ -166,6 +189,8 @@ class ContributionLoggingIntegrationTest {
      *    - Each should return a contribution_file_error with the expected IDs.<br>
      *    - Each should have the correct rep_id<br>
      *    - Each should have the expected error text</p>
+     * <p>6. Each acknowledgement from the DRC should generate an entry in the CASE_SUBMISSION table.</p>
+     * <p>7. Each acknowledgement from the DRC should generate an entry in the DRC_PROCESSING_REPORT table.</p>
      *
      * @see <a href="https://dsdmoj.atlassian.net/browse/DCES-355">DCES-355</a> for test specification.
      */
@@ -184,12 +209,14 @@ class ContributionLoggingIntegrationTest {
         final ContributionProcessSpy watched = watching.build();
 
         final ContributionLoggingProcessSpy.ContributionLoggingProcessSpyBuilder logging = spyFactory.newContributionLoggingProcessSpyBuilder()
-                .traceSendLogContributionProcessed();
+                .traceSendLogContributionProcessed()
+                .traceSavedCaseSubmissionEntities()
+                .traceDrcProcessingStatusEntities();
 
         // Call the fake DRC processing-failed responses under test:
-        final var startDate = LocalDate.now();
+        final var startTimestamp = LocalDateTime.now();
         updatedIds.forEach(this::failedContribution);
-        final var endDate = LocalDate.now();
+        final var endTimestamp = LocalDateTime.now();
 
         final ContributionLoggingProcessSpy logged = logging.build();
 
@@ -208,7 +235,7 @@ class ContributionLoggingIntegrationTest {
 
         softly.assertThat(contributionFile.getRecordsReceived()).isIn(0, null); // 4. (either zero or NULL)
         softly.assertThat(contributionFile.getDateReceived()).isNull();
-        softly.assertThat(contributionFile.getDateModified()).isBeforeOrEqualTo(startDate);
+        softly.assertThat(contributionFile.getDateModified()).isBetween(startTimestamp.toLocalDate(), endTimestamp.toLocalDate());
         softly.assertThat(contributionFile.getUserModified()).isEqualTo("DCES");
 
         softly.assertThat(contributionFileErrors).hasSize(3); // 5.
@@ -219,18 +246,24 @@ class ContributionLoggingIntegrationTest {
             softly.assertThat(contributionFileError.getErrorText()).isEqualTo(ERROR_TEXT);
             softly.assertThat(contributionFileError.getConcorContributionId()).isIn(updatedIds);
             softly.assertThat(contributionFileError.getFdcContributionId()).isNull();
-            softly.assertThat(contributionFileError.getDateCreated()).isBetween(startDate.atStartOfDay(), endDate.atTime(LocalTime.MAX));
+            softly.assertThat(contributionFileError.getDateCreated()).isBetween(startTimestamp, endTimestamp);
         });
+
+        // 6. Each contribution should have a CaseSubmissionEntity record
+        assertCaseSubmissionEntities(logged.getSavedCaseSubmissionEntities(), updatedIds, startTimestamp, endTimestamp, ERROR_TEXT);
+
+        // 7. Each contribution should have a DrcProcessingStatusEntity record
+        assertDrcProcessingEntities(logged.getDrcProcessingStatusEntities(), updatedIds, ERROR_TEXT, startTimestamp, endTimestamp);
     }
 
     /**
      * Act like a DRC acknowledging a successful or failed contribution update. This test uses MockMVC to handle CSRF
-     * dnd OAuth 2.0 login, then calls our own '/process-drc-update/contribution' endpoint like the DRC would.
+     * dnd OAuth 2.0 login, then calls our own <code>/api/dces/v1/contribution</code> endpoint like the DRC would.
      * <p>
      * Testing utility method.
      */
-    private void acknowledgeContribution(final long concorContributionId, final String errorText) throws Exception {
-        final var request = buildContribAck(concorContributionId, errorText);
+    private void acknowledgeContribution(final long concorContributionId, final String reportTitle) throws Exception {
+        final var request = buildContribAck(concorContributionId, reportTitle);
         String json = mapper.writeValueAsString(request);
         mockMvc.perform(post("/api/dces/v1/contribution")
                         .with(csrf())
@@ -243,7 +276,7 @@ class ContributionLoggingIntegrationTest {
 
     private void successfulContribution(final long concorContributionId) {
         try {
-            acknowledgeContribution(concorContributionId, null);
+            acknowledgeContribution(concorContributionId, SUCCESS_TEXT);
         } catch (Exception e) {
             softly.fail("successfulContribution(" + concorContributionId + ") failed with an exception:", e);
         }
@@ -256,4 +289,43 @@ class ContributionLoggingIntegrationTest {
             softly.fail("failedContribution(" + concorContributionId + ") failed with an exception:", e);
         }
     }
+
+    private void assertCaseSubmissionEntities(List<CaseSubmissionEntity> savedCaseSubmissionEntities, List<Long> updatedIds, LocalDateTime startTimestamp, LocalDateTime endTimestamp, String payload) {
+        // One entity for each updated ID
+        softly.assertThat(savedCaseSubmissionEntities.size()).isEqualTo(updatedIds.size());
+        for (int i = 0; i < savedCaseSubmissionEntities.size(); i++) {
+            assertCaseSubmissionEntity(savedCaseSubmissionEntities.get(i), updatedIds.get(i), startTimestamp, endTimestamp, payload);
+        }
+    }
+
+    private void assertCaseSubmissionEntity(CaseSubmissionEntity caseSubmission, Long contribId, LocalDateTime startTimestamp, LocalDateTime endTimestamp, String payload) {
+        softly.assertThat(caseSubmission.getBatchId()).isNull();
+        softly.assertThat(caseSubmission.getTraceId()).isNull();
+        softly.assertThat(caseSubmission.getMaatId()).isNull();
+        softly.assertThat(caseSubmission.getConcorContributionId()).isEqualTo(contribId);
+        softly.assertThat(caseSubmission.getFdcId()).isNull();
+        softly.assertThat(caseSubmission.getRecordType()).isEqualTo("Contribution");
+        softly.assertThat(caseSubmission.getProcessedDate()).isBetween(startTimestamp, endTimestamp);
+        softly.assertThat(caseSubmission.getEventType()).isEqualTo(EVENT_TYPE_DRC_ASYNC_RESPONSE);
+        softly.assertThat(caseSubmission.getHttpStatus()).isEqualTo(200);
+        softly.assertThat(caseSubmission.getPayload()).isEqualTo(payload);
+    }
+
+    private void assertDrcProcessingEntities(List<DrcProcessingStatusEntity> drcProcessingStatusEntities, List<Long> updatedIds, String statusMessage, LocalDateTime startTimestamp, LocalDateTime endTimestamp) {
+        // One entity for each updated ID
+        softly.assertThat(drcProcessingStatusEntities.size()).isEqualTo(updatedIds.size());
+        for (int i = 0; i < drcProcessingStatusEntities.size(); i++) {
+            assertDrcProcessingStatusEntity(drcProcessingStatusEntities.get(i), updatedIds.get(i), statusMessage, startTimestamp, endTimestamp);
+        }
+    }
+
+    private void assertDrcProcessingStatusEntity(DrcProcessingStatusEntity entity, Long contribId, String statusMessage, LocalDateTime startTimestamp, LocalDateTime endTimestamp) {
+        softly.assertThat(entity.getMaatId()).isEqualTo(IntTestDataFixtures.MAAT_ID);
+        softly.assertThat(entity.getConcorContributionId()).isEqualTo(contribId);
+        softly.assertThat(entity.getFdcId()).isNull();
+        softly.assertThat(entity.getStatusMessage()).isEqualTo(statusMessage);
+        softly.assertThat(entity.getDrcProcessingTimestamp()).isEqualTo(IntTestDataFixtures.TIMESTAMP_STR);
+        softly.assertThat(entity.getCreationTimestamp()).isBetween(startTimestamp.toInstant(ZoneOffset.UTC), endTimestamp.toInstant(ZoneOffset.UTC));
+    }
+
 }

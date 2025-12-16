@@ -19,8 +19,14 @@ import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFrom
 import static org.assertj.core.api.AssertionsForClassTypes.catchThrowableOfType;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.http.HttpStatus.*;
-import static uk.gov.justice.laa.crime.dces.integration.test.TestDataFixtures.*;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.FAILED_DEPENDENCY;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.OK;
+import static uk.gov.justice.laa.crime.dces.integration.test.TestDataFixtures.CONTRIB_ID_FILE_NOT_FOUND_IN_MAAT;
+import static uk.gov.justice.laa.crime.dces.integration.test.TestDataFixtures.CONTRIB_ID_FOUND_IN_MAAT;
+import static uk.gov.justice.laa.crime.dces.integration.test.TestDataFixtures.CONTRIB_ID_NOT_FOUND_IN_MAAT;
+import static uk.gov.justice.laa.crime.dces.integration.test.TestDataFixtures.buildContribAck;
 
 @ExtendWith(SoftAssertionsExtension.class)
 @WireMockTest(httpPort = 1111)
@@ -48,7 +54,7 @@ class ContributionAckServiceTest extends ApplicationTestBase {
 		ConcorContributionAckFromDrc ackFromDrc = buildContribAck(CONTRIB_ID_FOUND_IN_MAAT);
 		Long response = contributionAckService.handleContributionProcessedAck(ackFromDrc);
 		softly.assertThat(response).isEqualTo(1111L);
-		verify(eventService).logConcor(911L,EventType.DRC_ASYNC_RESPONSE,null,null, OK, STATUS_MSG_SUCCESS);
+		verify(eventService).logConcor(911L,EventType.DRC_ASYNC_RESPONSE,null,null, OK, null);
 		verify(eventService).logConcorContributionError(ackFromDrc);
 	}
 
