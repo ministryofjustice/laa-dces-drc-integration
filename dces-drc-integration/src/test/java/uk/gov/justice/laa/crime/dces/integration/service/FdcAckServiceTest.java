@@ -23,6 +23,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.FAILED_DEPENDENCY;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static uk.gov.justice.laa.crime.dces.integration.test.TestDataFixtures.*;
 
 @ExtendWith(SoftAssertionsExtension.class)
 @WireMockTest(httpPort = 1111)
@@ -54,7 +55,7 @@ class FdcAckServiceTest extends ApplicationTestBase {
 
 	@Test
 	void testProcessFdcUpdateWhenSuccessful() {
-        FdcAckFromDrc fdcAckFromDrc = FdcAckFromDrc.of(911L, null);
+        FdcAckFromDrc fdcAckFromDrc = buildFdcAck(FDC_ID_FOUND_IN_MAAT);
 		Long response = fdcAckService.handleFdcProcessedAck(fdcAckFromDrc);
 		softly.assertThat(response).isEqualTo(1111L);
 		verify(eventService).logFdcError(fdcAckFromDrc);
@@ -63,7 +64,7 @@ class FdcAckServiceTest extends ApplicationTestBase {
 	@Test
 	void testProcessFdcUpdateWhenIncomingIsolated() {
 		when(feature.incomingIsolated()).thenReturn(true);
-		FdcAckFromDrc fdcAckFromDrc = FdcAckFromDrc.of(911L, null);
+		FdcAckFromDrc fdcAckFromDrc = buildFdcAck(FDC_ID_FOUND_IN_MAAT);
 		Long response = fdcAckService.handleFdcProcessedAck(fdcAckFromDrc);
 		softly.assertThat(response).isEqualTo(0L); // so MAAT DB not touched
 		verify(eventService).logFdcError(fdcAckFromDrc);
@@ -72,7 +73,7 @@ class FdcAckServiceTest extends ApplicationTestBase {
 	@Test
 	void testProcessFdcUpdateWhenNotFound() {
 		String errorText = "The request has failed to process";
-		FdcAckFromDrc fdcAckFromDrc = FdcAckFromDrc.of(404L, errorText);
+		FdcAckFromDrc fdcAckFromDrc = buildFdcAck(FDC_ID_NOT_FOUND_IN_MAAT, errorText);
 		var exception = catchThrowableOfType(ErrorResponseException.class, () -> fdcAckService.handleFdcProcessedAck(fdcAckFromDrc));
 		softly.assertThat(exception).isNotNull();
 		softly.assertThat(NOT_FOUND.isSameCodeAs(exception.getStatusCode())).isTrue();
@@ -82,7 +83,7 @@ class FdcAckServiceTest extends ApplicationTestBase {
 	@Test
 	void testProcessFdcUpdateWhenNoContFile() {
 		String errorText = "The request has failed to process";
-		FdcAckFromDrc fdcAckFromDrc = FdcAckFromDrc.of(9L, errorText);
+		FdcAckFromDrc fdcAckFromDrc = buildFdcAck(FDC_ID_FILE_NOT_FOUND_IN_MAAT, errorText);
 		var exception = catchThrowableOfType(ErrorResponseException.class, () -> fdcAckService.handleFdcProcessedAck(fdcAckFromDrc));
 		softly.assertThat(exception).isNotNull();
 		softly.assertThat(FAILED_DEPENDENCY.isSameCodeAs(exception.getStatusCode())).isTrue();
@@ -92,7 +93,7 @@ class FdcAckServiceTest extends ApplicationTestBase {
 	@Test
 	void testProcessFdcUpdateWhenServerFailure() {
 		String errorText = "The request has failed to process";
-		FdcAckFromDrc fdcAckFromDrc = FdcAckFromDrc.of(500L, errorText);
+		FdcAckFromDrc fdcAckFromDrc = buildFdcAck(500L, errorText);
 		var exception = catchThrowableOfType(ErrorResponseException.class, () -> fdcAckService.handleFdcProcessedAck(fdcAckFromDrc));
 		softly.assertThat(exception).isNotNull();
 		softly.assertThat(exception.getStatusCode().is5xxServerError()).isTrue();

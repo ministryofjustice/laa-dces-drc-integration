@@ -6,8 +6,12 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
+import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionEntity;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.DrcProcessingStatusEntity;
 import uk.gov.justice.laa.crime.dces.integration.model.external.ContributionProcessedRequest;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -28,19 +32,26 @@ public class ContributionLoggingProcessSpy {
     @Singular
     private final List<Long> contributionFileIds;           // Returned from maat-api by ContributionClient.sendLogContributionProcessed(...)
 
+    private List<CaseSubmissionEntity> savedCaseSubmissionEntities ;
+    private List<DrcProcessingStatusEntity> drcProcessingStatusEntities;
+
     private static ContributionLoggingProcessSpyBuilder builder() {
         throw new UnsupportedOperationException("Call SpyFactory.newContributionLoggingProcessSpyBuilder instead");
     }
 
     public static class ContributionLoggingProcessSpyBuilder {
         private final ContributionClient contributionClientSpy;
+        private final EventService eventServiceSpy;
+        private List<CaseSubmissionEntity> savedCaseSubmissionEntities =  new ArrayList<>();
+        private List<DrcProcessingStatusEntity> drcProcessingStatusEntities =  new ArrayList<>();
 
         private ContributionLoggingProcessSpyBuilder() {
             throw new UnsupportedOperationException("Call SpyFactory.newContributionLoggingProcessSpyBuilder instead");
         }
 
-        ContributionLoggingProcessSpyBuilder(final ContributionClient contributionClientSpy) {
+        ContributionLoggingProcessSpyBuilder(final ContributionClient contributionClientSpy, EventService eventServiceSpy) {
             this.contributionClientSpy = contributionClientSpy;
+            this.eventServiceSpy = eventServiceSpy;
         }
 
         public ContributionLoggingProcessSpyBuilder traceSendLogContributionProcessed() {
@@ -54,6 +65,24 @@ public class ContributionLoggingProcessSpy {
                 contributionFileId(result);
                 return result;
             }).when(contributionClientSpy).sendLogContributionProcessed(any());
+            return this;
+        }
+
+        public ContributionLoggingProcessSpyBuilder traceSavedCaseSubmissionEntities() {
+            doAnswer(invocation -> {
+                final var argument = (CaseSubmissionEntity) invocation.getArgument(0);
+                savedCaseSubmissionEntities.add(argument);
+                return invocation.callRealMethod();
+            }).when(eventServiceSpy).saveEntity(any());
+            return this;
+        }
+
+        public ContributionLoggingProcessSpyBuilder traceDrcProcessingStatusEntities() {
+            doAnswer(invocation -> {
+                final var argument = (DrcProcessingStatusEntity) invocation.getArgument(0);
+                drcProcessingStatusEntities.add(argument);
+                return invocation.callRealMethod();
+            }).when(eventServiceSpy).saveDrcProcessingStatusEntity(any());
             return this;
         }
     }

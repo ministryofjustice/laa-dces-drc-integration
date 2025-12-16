@@ -3,20 +3,16 @@ package uk.gov.justice.laa.crime.dces.integration.testing;
 import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
 import org.springframework.web.ErrorResponseException;
 import uk.gov.justice.laa.crime.dces.integration.client.ContributionClient;
@@ -43,6 +39,7 @@ import java.util.stream.Stream;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.justice.laa.crime.dces.integration.utils.IntTestDataFixtures.buildContribAck;
 
 @EnabledIf(expression = "#{environment['sentry.environment'] == 'development'}", loadContext = true)
 @SpringBootTest
@@ -100,7 +97,7 @@ class ContributionIntegrationTest {
     @Test
     void givenAInvalidContribution_whenHandleContributionProcessedAckIsInvoked_thenReturnNotFound() {
         final String errorText = "The request has failed to process";
-        ConcorContributionAckFromDrc concorContributionAckFromDrc = ConcorContributionAckFromDrc.of(9l, errorText);
+        ConcorContributionAckFromDrc concorContributionAckFromDrc = buildContribAck(9l, errorText);
         softly.assertThatThrownBy(() -> contributionAckService.handleContributionProcessedAck(concorContributionAckFromDrc))
                 .isInstanceOf(ErrorResponseException.class);
         assertProcessConcorCaseSubmissionCreation(concorContributionAckFromDrc, HttpStatus.NOT_FOUND);
@@ -109,7 +106,7 @@ class ContributionIntegrationTest {
     @Test
     void givenAValidContribution_whenHandleContributionProcessedAckIsInvoked_thenReturnSuccessful() {
         final String errorText = "Error Text updated successfully.";
-        ConcorContributionAckFromDrc concorContributionAckFromDrc = ConcorContributionAckFromDrc.of(47959912L, errorText);
+        ConcorContributionAckFromDrc concorContributionAckFromDrc = buildContribAck(47959912L, errorText);
         final Long response = contributionAckService.handleContributionProcessedAck(concorContributionAckFromDrc);
         softly.assertThat(response).isPositive();
         assertProcessConcorCaseSubmissionCreation(concorContributionAckFromDrc, HttpStatus.OK);
@@ -119,7 +116,7 @@ class ContributionIntegrationTest {
     private void assertProcessConcorCaseSubmissionCreation(ConcorContributionAckFromDrc request, HttpStatusCode expectedStatusCode) {
         CaseSubmissionEntity expectedCaseSubmission = CaseSubmissionEntity.builder()
                 .concorContributionId(request.data().concorContributionId())
-                .payload(request.data().errorText())
+                .payload(request.data().report().title())
                 .eventType(eventLogAssertService.getIdForEventType(EventType.DRC_ASYNC_RESPONSE))
                 .httpStatus(expectedStatusCode.value())
                 .recordType(RecordType.CONTRIBUTION.getName())

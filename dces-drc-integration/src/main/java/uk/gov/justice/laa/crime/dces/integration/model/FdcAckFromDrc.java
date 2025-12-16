@@ -1,18 +1,14 @@
 package uk.gov.justice.laa.crime.dces.integration.model;
 
-import org.springframework.http.ProblemDetail;
+import lombok.Builder;
 
 import java.util.Map;
 
+@Builder
 public record FdcAckFromDrc(FdcAckData data, Map<String, String> meta) {
-    public record FdcAckData(Long fdcId, Long maatId, ProblemDetail report) {
-        public String errorText() {
-            return ProblemDetails.toErrorText(report);
-        }
+
+    @Builder
+    public record FdcAckData(Long fdcId, Long maatId, ProcessingReport report) {
     }
 
-    public static FdcAckFromDrc of(final Long fdcId, final String errorText) {
-        return new FdcAckFromDrc(new FdcAckData(fdcId, null,
-                ProblemDetails.fromErrorText(errorText)), Map.of());
-    }
 }

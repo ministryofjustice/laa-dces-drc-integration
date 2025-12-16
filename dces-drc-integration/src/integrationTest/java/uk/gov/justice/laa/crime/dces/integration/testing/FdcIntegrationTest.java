@@ -4,11 +4,7 @@ import lombok.Builder;
 import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -46,6 +42,7 @@ import java.util.Set;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.justice.laa.crime.dces.integration.utils.IntTestDataFixtures.buildFdcAck;
 
 @EnabledIf(expression = "#{environment['sentry.environment'] == 'development'}", loadContext = true)
 @SpringBootTest()
@@ -113,7 +110,7 @@ class FdcIntegrationTest {
 
 	@Test
 	void testProcessFdcUpdateWhenFound() {
-		FdcAckFromDrc fdcProcessedRequest = FdcAckFromDrc.of(31774046L, null);
+		FdcAckFromDrc fdcProcessedRequest = buildFdcAck(31774046L, null);
 		final Long response = fdcAckService.handleFdcProcessedAck(fdcProcessedRequest);
 		softly.assertThat(response).isPositive();
 		assertProcessFdcCaseSubmissionCreation(fdcProcessedRequest, HttpStatus.OK);
@@ -121,7 +118,7 @@ class FdcIntegrationTest {
 
 	@Test
 	void testProcessFdcUpdateWhenFoundWithText() {
-		FdcAckFromDrc ackFromDrc = FdcAckFromDrc.of(31774046L, "testProcessFdcUpdateWhenFoundWithText");
+		FdcAckFromDrc ackFromDrc = buildFdcAck(31774046L, "testProcessFdcUpdateWhenFoundWithText");
 		final Long response = fdcAckService.handleFdcProcessedAck(ackFromDrc);
 		softly.assertThat(response).isPositive();
 		assertProcessFdcCaseSubmissionCreation(ackFromDrc, HttpStatus.OK);
@@ -130,7 +127,7 @@ class FdcIntegrationTest {
 	@Test
 	void testProcessFdcUpdateWhenNotFound() {
 		final String errorText = "Error Text updated successfully.";
-		FdcAckFromDrc fdcProcessedRequest = FdcAckFromDrc.of(9L, errorText);
+		FdcAckFromDrc fdcProcessedRequest = buildFdcAck(9L, errorText);
 		softly.assertThatThrownBy(() -> fdcAckService.handleFdcProcessedAck(fdcProcessedRequest))
 				.isInstanceOf(ErrorResponseException.class);
 		assertProcessFdcCaseSubmissionCreation(fdcProcessedRequest, HttpStatus.NOT_FOUND);
@@ -140,7 +137,7 @@ class FdcIntegrationTest {
 	private void assertProcessFdcCaseSubmissionCreation(FdcAckFromDrc ackFromDrc, HttpStatusCode expectedStatusCode) {
 		CaseSubmissionEntity expectedCaseSubmission = CaseSubmissionEntity.builder()
 				.fdcId(ackFromDrc.data().fdcId())
-				.payload(ackFromDrc.data().errorText())
+				.payload(ackFromDrc.data().report().title())
 				.eventType(eventLogAssertService.getIdForEventType(EventType.DRC_ASYNC_RESPONSE))
 				.httpStatus(expectedStatusCode.value())
 				.recordType(RecordType.FDC.getName())
