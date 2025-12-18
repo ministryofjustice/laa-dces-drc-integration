@@ -1,6 +1,9 @@
 dces-drc-integration/.gradle
 dces-drc-integration/src/main/java/uk/gov/justice/laa/crime/dces/integration/model/generated/
 
+# Certificate and key files used in test scripts
+/scripts/tls-certs-keys/
+
 # dotenv environment variable files
 dces-drc-integration/.env
 dces-drc-integration/.env.*
@@ -45,3 +48,4 @@ out/
 .vscode/
 *.java-version
 /app.env
+
