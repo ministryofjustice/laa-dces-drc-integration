@@ -36,7 +36,7 @@ AWS Secret Access Key [<enter the value of secret_access_key>]
 This script will download the required certificates and keys for use by the other scripts.
 
 ```shell
-% ./download-certs.sh     
+% ./download-certs.sh
 Usage: ./download-certs.sh <env>
   <env> must be one of: dev, test, uat, prod
 ```
@@ -57,8 +57,8 @@ It will prompt for the client ID and secret which have to be accessed via the AW
 ```shell
 % ./get-auth-token.sh uat
 Enter Cognito credentials for uat:
-Client ID: 
-Client Secret: 
+Client ID:
+Client Secret:
 
 Run this command in the shell to store the token
 
@@ -86,7 +86,7 @@ This script will hit the `/api/dces/test` endpoint which simply returns a succes
 script for testing the inbound (to DCES) connectivity.
 
 ```shell
-% ./curl-test-endpoint.sh  
+% ./curl-test-endpoint.sh
 Usage: ./curl-test-endpoint.sh <env>
   <env> must be one of: dev, test, uat, prod
 
@@ -102,10 +102,10 @@ It is useful for testing outbound connectivity to the DRC. As fake details are s
 for use in production.
 
 ```shell
-% ./curl-test-fdc-endpoint.sh 
+% ./curl-test-fdc-endpoint.sh
 Usage: ./curl-test-fdc-endpoint.sh <env>
   <env> must be one of: dev, test, uat
-  
+
 % ./curl-test-fdc-endpoint.sh uat
 {"type":"https://laa-debt-collection.service.justice.gov.uk/problem-types#duplicate-id","title":"Conflict","status":409,"detail":"The FdcId [106] already exists in the database.","instance":"/api/fdc","traceId":"69442a635d46d4998b6c90abf91b83b7"}
 HTTP Status: 409
@@ -118,7 +118,7 @@ It is likely that a 409 response is returned as above because the record already
 This script removes any certificate and key files downloaded and any intermediate files created by the scripts.
 
 ```shell
-% ./cleanup.sh 
+% ./cleanup.sh
 /bin/rm -rf /Users/andrew.roberts/IdeaProjects/laa-dces-drc-integration/scripts/tls-certs-keys
 /bin/rm -f /Users/andrew.roberts/IdeaProjects/laa-dces-drc-integration/scripts/.*.headers
 ```
