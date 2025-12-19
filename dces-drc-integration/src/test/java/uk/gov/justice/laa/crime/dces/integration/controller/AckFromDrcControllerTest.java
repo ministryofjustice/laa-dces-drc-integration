@@ -13,12 +13,14 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
-import uk.gov.justice.laa.crime.dces.integration.service.*;
+import uk.gov.justice.laa.crime.dces.integration.service.ContributionAckService;
+import uk.gov.justice.laa.crime.dces.integration.service.FdcAckService;
+import uk.gov.justice.laa.crime.dces.integration.service.TraceService;
 
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static uk.gov.justice.laa.crime.dces.integration.test.TestDataFixtures.buildContribAck;
+import static uk.gov.justice.laa.crime.dces.integration.test.TestDataFixtures.buildFdcAck;
 
 
 @WebMvcTest(AckFromDrcController.class)
@@ -48,7 +50,7 @@ class AckFromDrcControllerTest {
     void testContributionWhenDownstreamResponseIsValid() throws Exception {
 
         Long serviceResponse = 1111L;
-        ConcorContributionAckFromDrc concorContributionAckFromDrc = ConcorContributionAckFromDrc.of(99L, "error 99");
+        ConcorContributionAckFromDrc concorContributionAckFromDrc = buildContribAck(99L);
 
         when(contributionAckService.handleContributionProcessedAck(concorContributionAckFromDrc)).thenReturn(serviceResponse);
 
@@ -64,8 +66,8 @@ class AckFromDrcControllerTest {
     @Test
     void testContributionWhenDownstreamResponseIsNotValid() throws Exception {
 
+        ConcorContributionAckFromDrc concorContributionAckFromDrc = buildContribAck(99L);
 
-        ConcorContributionAckFromDrc concorContributionAckFromDrc = ConcorContributionAckFromDrc.of(9L, "Failed to process");
         var serviceResponse = new WebClientResponseException(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), null, null, null);
         when(contributionAckService.handleContributionProcessedAck(concorContributionAckFromDrc)).thenThrow(serviceResponse);
 
@@ -81,7 +83,8 @@ class AckFromDrcControllerTest {
     @Test
     void testFdcWhenDownstreamResponseIsValid() throws Exception {
 
-        FdcAckFromDrc fdcAckFromDrc = FdcAckFromDrc.of(99L, null);
+        FdcAckFromDrc fdcAckFromDrc = buildFdcAck(99L);
+
         long serviceResponse = 1111L;
         when(fdcAckService.handleFdcProcessedAck(fdcAckFromDrc)).thenReturn(serviceResponse);
 
@@ -97,7 +100,7 @@ class AckFromDrcControllerTest {
     @Test
     void testFdcWhenDownstreamResponseIsNotValid() throws Exception {
 
-        FdcAckFromDrc fdcAckFromDrc = FdcAckFromDrc.of(9L, "Failed to process");
+        FdcAckFromDrc fdcAckFromDrc = buildFdcAck(99L);
         var serviceResponse = new WebClientResponseException(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), null,null,null);
         when(fdcAckService.handleFdcProcessedAck(fdcAckFromDrc)).thenThrow(serviceResponse);
 

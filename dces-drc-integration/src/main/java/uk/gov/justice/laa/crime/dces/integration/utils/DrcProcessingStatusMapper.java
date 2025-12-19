@@ -1,11 +1,12 @@
 package uk.gov.justice.laa.crime.dces.integration.utils;
 
 import lombok.experimental.UtilityClass;
-import org.springframework.http.ProblemDetail;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.DrcProcessingStatusEntity;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
+import uk.gov.justice.laa.crime.dces.integration.model.ProcessingReport;
 
+import java.time.Instant;
 import java.util.Optional;
 
 @UtilityClass
@@ -16,12 +17,11 @@ public class DrcProcessingStatusMapper {
             return DrcProcessingStatusEntity.builder().build();
         }
 
-        ProblemDetail problemDetail = fdcAckFromDrc.data().report();
+        ProcessingReport processingReport = fdcAckFromDrc.data().report();
         Long maatId = fdcAckFromDrc.data().maatId();
         Long fdcId = fdcAckFromDrc.data().fdcId();
-        String errorText = fdcAckFromDrc.data().errorText();
 
-        return buildDrcProcessingStatusEntity(maatId, fdcId, null, problemDetail, errorText);
+        return buildDrcProcessingStatusEntity(maatId, fdcId, null, processingReport);
     }
 
     public static DrcProcessingStatusEntity createDrcProcessingStatusEntity(ConcorContributionAckFromDrc contributionAckFromDrc) {
@@ -29,37 +29,34 @@ public class DrcProcessingStatusMapper {
             return DrcProcessingStatusEntity.builder().build();
         }
 
-        ProblemDetail problemDetail = contributionAckFromDrc.data().report();
+        ProcessingReport processingReport = contributionAckFromDrc.data().report();
         Long maatId = contributionAckFromDrc.data().maatId();
         Long concorContributionId = contributionAckFromDrc.data().concorContributionId();
-        String errorText = contributionAckFromDrc.data().errorText();
 
-        return buildDrcProcessingStatusEntity(maatId, null, concorContributionId, problemDetail, errorText);
+        return buildDrcProcessingStatusEntity(maatId, null, concorContributionId, processingReport);
     }
 
     private static DrcProcessingStatusEntity buildDrcProcessingStatusEntity(
             Long maatId,
             Long fdcId,
             Long concorContributionId,
-            ProblemDetail problemDetail,
-            String errorText) {
+            ProcessingReport processingReport) {
 
-        String statusMessage = Optional.ofNullable(problemDetail)
-                .map(ProblemDetail::getTitle)
+        String statusMessage = Optional.ofNullable(processingReport)
+                .map(ProcessingReport::title)
                 .orElse(null);
 
-        String detail = Optional.ofNullable(problemDetail)
-                .map(ProblemDetail::getDetail)
+        Instant drcProcessingTimestamp = Optional.ofNullable(processingReport)
+                .map(ProcessingReport::detail)
+                .map(Instant::parse)
                 .orElse(null);
-
-        detail = Optional.ofNullable(detail).orElse(errorText);
 
         return DrcProcessingStatusEntity.builder()
                 .maatId(maatId)
                 .fdcId(fdcId)
                 .concorContributionId(concorContributionId)
                 .statusMessage(statusMessage)
-                .detail(detail)
+                .drcProcessingTimestamp(drcProcessingTimestamp)
                 .build();
     }
 }

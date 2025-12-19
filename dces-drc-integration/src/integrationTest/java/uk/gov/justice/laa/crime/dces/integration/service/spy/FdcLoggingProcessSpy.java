@@ -6,8 +6,12 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
 import uk.gov.justice.laa.crime.dces.integration.client.FdcClient;
+import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.CaseSubmissionEntity;
+import uk.gov.justice.laa.crime.dces.integration.datasource.model.DrcProcessingStatusEntity;
 import uk.gov.justice.laa.crime.dces.integration.model.external.FdcProcessedRequest;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -28,19 +32,26 @@ public class FdcLoggingProcessSpy {
     @Singular
     private final List<Long> contributionFileIds;           // Returned from maat-api by FdcClient.sendLogFdcProcessed(...)
 
+    private final List<CaseSubmissionEntity> savedCaseSubmissionEntities;
+    private final List<DrcProcessingStatusEntity> drcProcessingStatusEntities;
+
     private static FdcLoggingProcessSpyBuilder builder() {
         throw new UnsupportedOperationException("Call SpyFactory.newFdcLoggingProcessSpyBuilder instead");
     }
 
     public static class FdcLoggingProcessSpyBuilder {
         private final FdcClient fdcClientSpy;
+        private final EventService eventServiceSpy;
+        private List<CaseSubmissionEntity> savedCaseSubmissionEntities = new ArrayList<>();
+        private List<DrcProcessingStatusEntity> drcProcessingStatusEntities = new ArrayList<>();
 
         private FdcLoggingProcessSpyBuilder() {
             throw new UnsupportedOperationException("Call SpyFactory.newFdcLoggingProcessSpyBuilder instead");
         }
 
-        FdcLoggingProcessSpyBuilder(final FdcClient fdcClientSpy) {
+        FdcLoggingProcessSpyBuilder(final FdcClient fdcClientSpy, EventService eventServiceSpy) {
             this.fdcClientSpy = fdcClientSpy;
+            this.eventServiceSpy = eventServiceSpy;
         }
 
         public FdcLoggingProcessSpyBuilder traceSendLogFdcProcessed() {
@@ -53,6 +64,24 @@ public class FdcLoggingProcessSpy {
                 contributionFileId(result);
                 return result;
             }).when(fdcClientSpy).sendLogFdcProcessed(any());
+            return this;
+        }
+
+        public FdcLoggingProcessSpy.FdcLoggingProcessSpyBuilder traceSavedCaseSubmissionEntities() {
+            doAnswer(invocation -> {
+                final var argument = (CaseSubmissionEntity) invocation.getArgument(0);
+                savedCaseSubmissionEntities.add(argument);
+                return invocation.callRealMethod();
+            }).when(eventServiceSpy).saveEntity(any());
+            return this;
+        }
+
+        public FdcLoggingProcessSpy.FdcLoggingProcessSpyBuilder traceDrcProcessingStatusEntities() {
+            doAnswer(invocation -> {
+                final var argument = (DrcProcessingStatusEntity) invocation.getArgument(0);
+                drcProcessingStatusEntities.add(argument);
+                return invocation.callRealMethod();
+            }).when(eventServiceSpy).saveDrcProcessingStatusEntity(any());
             return this;
         }
     }

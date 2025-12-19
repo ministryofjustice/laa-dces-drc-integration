@@ -1,18 +1,14 @@
 package uk.gov.justice.laa.crime.dces.integration.model;
 
-import org.springframework.http.ProblemDetail;
+import lombok.Builder;
 
 import java.util.Map;
 
+@Builder
 public record ConcorContributionAckFromDrc(ConcorContributionAckData data, Map<String, String> meta) {
-    public record ConcorContributionAckData(long concorContributionId, Long maatId, ProblemDetail report) {
-        public String errorText() {
-            return ProblemDetails.toErrorText(report);
-        }
+
+    @Builder
+    public record ConcorContributionAckData(long concorContributionId, Long maatId, ProcessingReport report) {
     }
 
-    public static ConcorContributionAckFromDrc of(final long concorContributionId, final String errorText) {
-        return new ConcorContributionAckFromDrc(new ConcorContributionAckData(concorContributionId, null,
-                ProblemDetails.fromErrorText(errorText)), Map.of());
-    }
 }
