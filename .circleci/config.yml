@@ -191,9 +191,27 @@ jobs:
       - run:
           name: Install Dependencies and Build
           command: ./gradlew clean build
+      - store_test_results:
+          path: build/test-results/test
+          when: always
+      - store_artifacts:
+          path: build/test-results/test
+          when: always
+      - run:
+          name: Generate code coverage report
+          command: ./gradlew jacocoTestReport
+      - store_artifacts:
+          path: build/reports/jacoco/test/html
+          when: always
       - run:
           name: Run Sonar
           command: ./gradlew sonar
+      - run:
+          name: Assemble JAR
+          command: ./gradlew assemble
+      - store_artifacts:
+          path: build/libs
+          when: always
       - save_cache:
           paths:
             - ~/.gradle/wrapper
@@ -218,48 +236,6 @@ jobs:
           at: .
       - snyk/scan:
           <<: *snyk_options
-
-  test_and_assemble:
-    environment:
-      _JAVA_OPTIONS: ""
-      GRADLE_OPTS: "-Dorg.gradle.daemon=true -Dorg.gradle.workers.max=2"
-    docker:
-      - image: cimg/openjdk:21.0.6
-    working_directory: ~/laa-dces-drc-integration/dces-drc-integration
-    steps:
-      - checkout:
-          path: ~/laa-dces-drc-integration
-      - attach_workspace:
-          at: .
-      - restore_cache:
-          key: v1-gradle-wrapper-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
-      - restore_cache:
-          key: v1-gradle-cache-{{ checksum "build.gradle" }}
-      - setup_remote_docker:
-          docker_layer_caching: true
-      - run:
-          name: Set Docker Host
-          command: export DOCKER_HOST=tcp://localhost:2375
-      - run:
-          name: Set Testcontainers Host Override
-          command: export TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal
-      - run:
-          name: Run tests
-          command: ./gradlew test
-      - run:
-          name: Generate code coverage report
-          command: ./gradlew jacocoTestReport
-      - store_test_results:
-          path: build/test-results/test
-      - store_artifacts:
-          path: build/test-results/test
-      - store_artifacts:
-          path: build/reports/jacoco/test/html
-      - run:
-          name: Assemble JAR
-          command: ./gradlew assemble
-      - store_artifacts:
-          path: build/libs
 
   build_and_scan_image:
     docker:
@@ -366,13 +342,9 @@ workflows:
           requires:
             - build
 
-      - test_and_assemble:
-          requires:
-            - scan_app
-
       - build_and_scan_image:
           requires:
-            - test_and_assemble
+            - scan_app
 
       - build_and_push_image:
           requires:
@@ -431,13 +403,9 @@ workflows:
           requires:
             - build
 
-      - test_and_assemble:
-          requires:
-            - scan_app
-
       - build_and_scan_image:
           requires:
-            - test_and_assemble
+            - scan_app
 
       - build_and_push_image:
           requires:
