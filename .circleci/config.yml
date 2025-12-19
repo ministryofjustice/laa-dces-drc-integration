@@ -206,6 +206,12 @@ jobs:
       - run:
           name: Run Sonar
           command: ./gradlew sonar
+      - run:
+          name: Assemble JAR
+          command: ./gradlew assemble
+      - store_artifacts:
+          path: build/libs
+          when: always
       - save_cache:
           paths:
             - ~/.gradle/wrapper
@@ -230,28 +236,6 @@ jobs:
           at: .
       - snyk/scan:
           <<: *snyk_options
-
-  test_and_assemble:
-    environment:
-      _JAVA_OPTIONS: ""
-      GRADLE_OPTS: "-Dorg.gradle.daemon=true -Dorg.gradle.workers.max=2"
-    docker:
-      - image: cimg/openjdk:21.0.6
-    working_directory: ~/laa-dces-drc-integration/dces-drc-integration
-    steps:
-      - checkout:
-          path: ~/laa-dces-drc-integration
-      - attach_workspace:
-          at: .
-      - restore_cache:
-          key: v1-gradle-wrapper-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
-      - restore_cache:
-          key: v1-gradle-cache-{{ checksum "build.gradle" }}
-      - run:
-          name: Assemble JAR
-          command: ./gradlew assemble
-      - store_artifacts:
-          path: build/libs
 
   build_and_scan_image:
     docker:
@@ -358,13 +342,9 @@ workflows:
           requires:
             - build
 
-      - test_and_assemble:
-          requires:
-            - scan_app
-
       - build_and_scan_image:
           requires:
-            - test_and_assemble
+            - scan_app
 
       - build_and_push_image:
           requires:
@@ -423,13 +403,9 @@ workflows:
           requires:
             - build
 
-      - test_and_assemble:
-          requires:
-            - scan_app
-
       - build_and_scan_image:
           requires:
-            - test_and_assemble
+            - scan_app
 
       - build_and_push_image:
           requires:
