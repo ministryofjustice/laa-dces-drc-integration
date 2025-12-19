@@ -108,7 +108,7 @@ public class ServiceSchedulerTest {
 
         Thread.sleep(1000); // Act - could be called once (or maybe twice) depending on timing
 
-        verify(eventService).purgePeriodicDrcProcessingStatusEntries(); // Assert
+        verify(eventService, atLeastOnce()).purgePeriodicDrcProcessingStatusEntries(); // Assert
         assertThat(output.getOut()).contains("Start purging DRC processing status records");
         assertThat(output.getOut()).contains("Deleted 5 historical DRC processing status records");
     }
