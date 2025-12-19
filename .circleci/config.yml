@@ -175,6 +175,7 @@ jobs:
     steps:
       - checkout:
           path: ~/laa-dces-drc-integration
+          method: full
       - restore_cache:
           key: v1-gradle-wrapper-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
       - restore_cache:
