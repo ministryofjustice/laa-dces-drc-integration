@@ -1,6 +1,5 @@
 package uk.gov.justice.laa.crime.dces.integration.controller;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -8,9 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static uk.gov.justice.laa.crime.dces.integration.test.TestDataFixtures.buildContribAck;
 import static uk.gov.justice.laa.crime.dces.integration.test.TestDataFixtures.buildFdcAck;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.TextNode;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
@@ -282,18 +279,13 @@ class AckFromDrcControllerTest {
                 FdcAckFromDrc invalidAck = new FdcAckFromDrc(null, Map.of());
                 String request = mapper.writeValueAsString(invalidAck);
 
-                MvcResult result = mockMvc.perform(
+                mockMvc.perform(
                         MockMvcRequestBuilders.post(CONTRIBUTION_FDC_URL)
                             .content(request)
                             .contentType(MediaType.APPLICATION_JSON_VALUE))
                     .andExpect(status().isBadRequest())
-                    .andReturn();
+                    .andExpect(jsonPath("$.errors.data").value("data cannot be null."));
 
-                String json = result.getResponse().getContentAsString();
-                JsonNode root = new ObjectMapper().readTree(json);
-
-                assertThat(root.at("/detail"))
-                    .contains(TextNode.valueOf("data cannot be null."));
             }
 
             @Test
@@ -304,20 +296,15 @@ class AckFromDrcControllerTest {
                 FdcAckFromDrc invalidAck = new FdcAckFromDrc(ackData, Map.of());
                 String request = mapper.writeValueAsString(invalidAck);
 
-                MvcResult result = mockMvc.perform(
+                mockMvc.perform(
                         MockMvcRequestBuilders.post(CONTRIBUTION_FDC_URL)
                             .content(request)
                             .contentType(MediaType.APPLICATION_JSON_VALUE))
                     .andExpect(status().isBadRequest())
-                    .andReturn();
-
-                String json = result.getResponse().getContentAsString();
-                JsonNode root = new ObjectMapper().readTree(json);
-
-                assertThat(root.at("/detail"))
-                    .contains(TextNode.valueOf(
+                    .andExpect(jsonPath("$.errors.data.report.detail").value(
                         "detail must be ISO 8601 format explicitly in UTC, using either Z or +00:00."))
-                    .contains(TextNode.valueOf("fdcId must be positive."));
+                    .andExpect(jsonPath("$.errors.data.fdcId").value(
+                        "fdcId must be positive."));
             }
         }
 
@@ -482,14 +469,8 @@ class AckFromDrcControllerTest {
                             .content(request)
                             .contentType(MediaType.APPLICATION_JSON_VALUE))
                     .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.errors.data").value("data cannot be null."))
                     .andReturn();
-
-                String json = result.getResponse().getContentAsString();
-                JsonNode root = new ObjectMapper().readTree(json);
-
-                assertThat(root.at("/detail"))
-                    .contains(TextNode.valueOf(
-                        "data cannot be null."));
             }
 
             @Test
@@ -501,19 +482,14 @@ class AckFromDrcControllerTest {
                     Map.of());
                 String request = mapper.writeValueAsString(invalidAck);
 
-                MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post(CONTRIBUTION_URL)
+                mockMvc.perform(MockMvcRequestBuilders.post(CONTRIBUTION_URL)
                         .content(request)
                         .contentType(MediaType.APPLICATION_JSON_VALUE))
                     .andExpect(status().isBadRequest())
-                    .andReturn();
-
-                String json = result.getResponse().getContentAsString();
-                JsonNode root = new ObjectMapper().readTree(json);
-
-                assertThat(root.at("/detail"))
-                    .contains(TextNode.valueOf(
+                    .andExpect(jsonPath("$.errors.data.report.detail").value(
                         "detail must be ISO 8601 format explicitly in UTC, using either Z or +00:00."))
-                    .contains(TextNode.valueOf("concorContributionId must be positive."));
+                    .andExpect(jsonPath("$.errors.data.concorContributionId").value(
+                        "concorContributionId must be positive."));
             }
         }
     }

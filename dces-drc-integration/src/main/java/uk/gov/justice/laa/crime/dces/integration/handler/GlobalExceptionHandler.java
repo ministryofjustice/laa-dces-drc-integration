@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -23,6 +22,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import uk.gov.justice.laa.crime.dces.integration.controller.error.ErrorProblemDetail;
 import uk.gov.justice.laa.crime.dces.integration.exception.DcesDrcValidationException;
 import uk.gov.justice.laa.crime.dces.integration.service.TraceService;
 
@@ -57,17 +57,23 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HandlerMethodValidationException.class)
     @ResponseStatus(BAD_REQUEST)
-    public ProblemDetail handleValidationException(final HandlerMethodValidationException ex) {
+    public ErrorProblemDetail handleValidationException(HandlerMethodValidationException ex) {
         log.info("HandlerMethodValidationException occurred.", ex);
 
-        List<String> errors = ex.getAllValidationResults().stream()
-            .flatMap(r -> r.getResolvableErrors().stream())
-            .map(MessageSourceResolvable::getDefaultMessage)
-            .toList();
+        ErrorProblemDetail problem = ErrorProblemDetail.forStatus(BAD_REQUEST);
 
-        ProblemDetail pd = ProblemDetail.forStatus(BAD_REQUEST);
-        pd.setProperty("detail", errors);
-        return pd;
+        ex.getAllValidationResults().stream()
+            .flatMap(v -> v.getResolvableErrors().stream())
+            .filter(err -> err instanceof FieldError)
+            .map(err -> (FieldError) err)
+            .forEach(fieldError ->
+                problem.addNestedError(
+                    fieldError.getField(),
+                    fieldError.getDefaultMessage()
+                )
+            );
+
+        return problem;
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
