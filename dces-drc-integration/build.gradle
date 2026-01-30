@@ -16,7 +16,7 @@ def versions = [
 		logbackEncoderVersion  : '8.1',
 		serenityVersion        : "4.2.34",
 		shedlockVersion        : "6.9.0",
-		okhttpVersion          : '5.1.0'
+		okhttpVersion          : '5.2.1'
 ]
 
 group = 'uk.gov.justice.laa.crime'
