@@ -1,7 +1,13 @@
 package uk.gov.justice.laa.crime.dces.integration.handler;
 
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSourceResolvable;
@@ -19,13 +25,6 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.crime.dces.integration.exception.DcesDrcValidationException;
 import uk.gov.justice.laa.crime.dces.integration.service.TraceService;
-
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
 @Slf4j
 @RestControllerAdvice
@@ -60,10 +59,15 @@ public class GlobalExceptionHandler {
     @ResponseStatus(BAD_REQUEST)
     public ProblemDetail handleValidationException(final HandlerMethodValidationException ex) {
         log.info("HandlerMethodValidationException occurred.", ex);
-        return addTraceId(validationProblemDetail(ex, ex.getAllValidationResults().stream()
-                .collect(Collectors.groupingBy(pvr -> pvr.getMethodParameter().getParameterName(),
-                        Collectors.flatMapping(pvr -> pvr.getResolvableErrors().stream()
-                                .map(MessageSourceResolvable::getDefaultMessage), Collectors.toList())))));
+
+        List<String> errors = ex.getAllValidationResults().stream()
+            .flatMap(r -> r.getResolvableErrors().stream())
+            .map(MessageSourceResolvable::getDefaultMessage)
+            .toList();
+
+        ProblemDetail pd = ProblemDetail.forStatus(BAD_REQUEST);
+        pd.setProperty("detail", errors);
+        return pd;
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
