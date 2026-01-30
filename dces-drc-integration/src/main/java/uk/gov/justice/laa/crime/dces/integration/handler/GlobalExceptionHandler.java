@@ -1,10 +1,15 @@
 package uk.gov.justice.laa.crime.dces.integration.handler;
 
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -17,15 +22,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import uk.gov.justice.laa.crime.dces.integration.controller.error.ErrorProblemDetail;
 import uk.gov.justice.laa.crime.dces.integration.exception.DcesDrcValidationException;
 import uk.gov.justice.laa.crime.dces.integration.service.TraceService;
-
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
 @Slf4j
 @RestControllerAdvice
@@ -58,12 +57,23 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HandlerMethodValidationException.class)
     @ResponseStatus(BAD_REQUEST)
-    public ProblemDetail handleValidationException(final HandlerMethodValidationException ex) {
+    public ErrorProblemDetail handleValidationException(HandlerMethodValidationException ex) {
         log.info("HandlerMethodValidationException occurred.", ex);
-        return addTraceId(validationProblemDetail(ex, ex.getAllValidationResults().stream()
-                .collect(Collectors.groupingBy(pvr -> pvr.getMethodParameter().getParameterName(),
-                        Collectors.flatMapping(pvr -> pvr.getResolvableErrors().stream()
-                                .map(MessageSourceResolvable::getDefaultMessage), Collectors.toList())))));
+
+        ErrorProblemDetail problem = ErrorProblemDetail.forStatus(BAD_REQUEST);
+
+        ex.getAllValidationResults().stream()
+            .flatMap(v -> v.getResolvableErrors().stream())
+            .filter(err -> err instanceof FieldError)
+            .map(err -> (FieldError) err)
+            .forEach(fieldError ->
+                problem.addNestedError(
+                    fieldError.getField(),
+                    fieldError.getDefaultMessage()
+                )
+            );
+
+        return problem;
     }
 
     @ExceptionHandler(ConstraintViolationException.class)

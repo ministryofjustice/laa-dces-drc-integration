@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import uk.gov.justice.laa.crime.dces.integration.controller.error.ErrorProblemDetail;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionAckService;
@@ -38,11 +40,15 @@ public class AckFromDrcController {
     @ApiResponse(responseCode = "200",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = String.class)))
+    @ApiResponse(responseCode = "400",
+        description = "Bad Request.",
+        content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
+            schema = @Schema(implementation = ErrorProblemDetail.class)))
     @ApiResponse(responseCode = "404",
         description = "Not Found.",
         content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
             schema = @Schema(implementation = ProblemDetail.class)))
-    public void fdc(@NotNull @RequestBody final FdcAckFromDrc fdcAckFromDrc) {
+    public void fdc(@Valid @NotNull @RequestBody final FdcAckFromDrc fdcAckFromDrc) {
         log.info("Received FDC acknowledgement from DRC {}", fdcAckFromDrc);
         fdcAckService.handleFdcProcessedAck(fdcAckFromDrc);
     }
@@ -53,11 +59,16 @@ public class AckFromDrcController {
     @ApiResponse(responseCode = "200",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = String.class)))
+    @ApiResponse(responseCode = "400",
+        description = "Bad Request.",
+        content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
+            schema = @Schema(implementation = ErrorProblemDetail.class)))
     @ApiResponse(responseCode = "404",
         description = "Not Found.",
         content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
             schema = @Schema(implementation = ProblemDetail.class)))
-    public void concorContribution(@NotNull @RequestBody final ConcorContributionAckFromDrc concorContributionAckFromDrc) {
+    public void concorContribution(
+        @Valid @NotNull @RequestBody final ConcorContributionAckFromDrc concorContributionAckFromDrc) {
         log.info("Received concorContribution acknowledgement from DRC {}", concorContributionAckFromDrc);
         contributionAckService.handleContributionProcessedAck(concorContributionAckFromDrc);
     }
