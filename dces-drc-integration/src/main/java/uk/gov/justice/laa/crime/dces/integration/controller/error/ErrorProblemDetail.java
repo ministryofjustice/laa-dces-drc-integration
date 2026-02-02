@@ -3,9 +3,11 @@ package uk.gov.justice.laa.crime.dces.integration.controller.error;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import lombok.EqualsAndHashCode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 
+@EqualsAndHashCode(callSuper = true)
 @Schema(
     name = "ErrorProblemDetail",
     description = "Extended RFC 7807 problem detail with nested validation errors."

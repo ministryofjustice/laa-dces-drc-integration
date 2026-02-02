@@ -23,7 +23,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -464,7 +463,7 @@ class AckFromDrcControllerTest {
                     Map.of());
                 String request = mapper.writeValueAsString(invalidAck);
 
-                MvcResult result = mockMvc.perform(
+                mockMvc.perform(
                         MockMvcRequestBuilders.post(CONTRIBUTION_URL)
                             .content(request)
                             .contentType(MediaType.APPLICATION_JSON_VALUE))
