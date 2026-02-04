@@ -1,15 +1,20 @@
 package uk.gov.justice.laa.crime.dces.integration.controller;
 
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static uk.gov.justice.laa.crime.dces.integration.controller.error.ValidationProblemDetail.VALIDATION_ERROR_TYPE;
 import static uk.gov.justice.laa.crime.dces.integration.test.TestDataFixtures.buildContribAck;
 import static uk.gov.justice.laa.crime.dces.integration.test.TestDataFixtures.buildFdcAck;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -58,6 +63,10 @@ class AckFromDrcControllerTest {
     private static final String CONTRIBUTION_URL = "/api/dces/v1/contribution";
     private static final String CONTRIBUTION_FDC_URL = "/api/dces/v1/fdc";
 
+    @BeforeEach
+    void setup() {
+        when(traceService.getTraceId()).thenReturn(UUID.randomUUID().toString());
+    }
 
     @Test
     void testContributionWhenDownstreamResponseIsValid() throws Exception {
@@ -143,7 +152,7 @@ class AckFromDrcControllerTest {
                 mockMvc.perform(MockMvcRequestBuilders.post(CONTRIBUTION_FDC_URL)
                         .content(request)
                         .contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpect(status().isBadRequest());
+                    .andExpectAll(validationErrorResponseExpectations());
             }
 
             @ParameterizedTest
@@ -158,7 +167,7 @@ class AckFromDrcControllerTest {
                 mockMvc.perform(MockMvcRequestBuilders.post(CONTRIBUTION_FDC_URL)
                         .content(request)
                         .contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpect(status().isBadRequest());
+                    .andExpectAll(validationErrorResponseExpectations());
             }
 
             static Stream<Arguments> provideFdcAckDataWithNulls() {
@@ -182,7 +191,7 @@ class AckFromDrcControllerTest {
                 mockMvc.perform(MockMvcRequestBuilders.post(CONTRIBUTION_FDC_URL)
                         .content(request)
                         .contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpect(status().isBadRequest());
+                    .andExpectAll(validationErrorResponseExpectations());
             }
 
             static Stream<Arguments> provideFdcAckDataWithNegativeIds() {
@@ -207,7 +216,7 @@ class AckFromDrcControllerTest {
 
                 mockMvc.perform(MockMvcRequestBuilders.post(CONTRIBUTION_FDC_URL)
                         .content(request).contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpect(status().isBadRequest());
+                    .andExpectAll(validationErrorResponseExpectations());
             }
 
             public static Stream<Arguments> provideProcessingReportWithMissingFields() {
@@ -230,7 +239,7 @@ class AckFromDrcControllerTest {
 
                 mockMvc.perform(MockMvcRequestBuilders.post(CONTRIBUTION_FDC_URL)
                         .content(fdcRequest).contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpect(status().isBadRequest());
+                    .andExpectAll(validationErrorResponseExpectations());
             }
 
             public static Stream<Arguments> provideProcessingReportsWithInvalidTitle() {
@@ -282,8 +291,8 @@ class AckFromDrcControllerTest {
                         MockMvcRequestBuilders.post(CONTRIBUTION_FDC_URL)
                             .content(request)
                             .contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.errors.data").value("data cannot be null."));
+                    .andExpectAll(validationErrorResponseExpectations())
+                    .andExpect(jsonPath("$.errors[0].message").value("data cannot be null."));
 
             }
 
@@ -295,15 +304,18 @@ class AckFromDrcControllerTest {
                 FdcAckFromDrc invalidAck = new FdcAckFromDrc(ackData, Map.of());
                 String request = mapper.writeValueAsString(invalidAck);
 
-                mockMvc.perform(
-                        MockMvcRequestBuilders.post(CONTRIBUTION_FDC_URL)
-                            .content(request)
-                            .contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.errors.data.report.detail").value(
-                        "detail must be ISO 8601 format explicitly in UTC, using either Z or +00:00."))
-                    .andExpect(jsonPath("$.errors.data.fdcId").value(
-                        "fdcId must be positive."));
+                mockMvc.perform(MockMvcRequestBuilders.post(CONTRIBUTION_FDC_URL)
+                        .content(request)
+                        .contentType(MediaType.APPLICATION_JSON_VALUE))
+                    .andExpectAll(validationErrorResponseExpectations())
+                    .andExpect(jsonPath("$.errors", hasSize(2)))
+                    .andExpect(jsonPath("$.errors[*].field",
+                        containsInAnyOrder("data.fdcId", "data.report.detail")))
+                    .andExpect(jsonPath("$.errors[*].message",
+                        containsInAnyOrder(
+                            "FDC ID must be positive.",
+                            "Detail must be ISO 8601 format explicitly in UTC, using either Z or +00:00."
+                        )));
             }
         }
 
@@ -322,7 +334,7 @@ class AckFromDrcControllerTest {
                 mockMvc.perform(MockMvcRequestBuilders.post(CONTRIBUTION_URL)
                         .content(request)
                         .contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpect(status().isBadRequest());
+                    .andExpectAll(validationErrorResponseExpectations());
             }
 
             @ParameterizedTest
@@ -338,7 +350,7 @@ class AckFromDrcControllerTest {
                 mockMvc.perform(MockMvcRequestBuilders.post(CONTRIBUTION_URL)
                         .content(request)
                         .contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpect(status().isBadRequest());
+                    .andExpectAll(validationErrorResponseExpectations());
             }
 
             static Stream<Arguments> provideContributionAckDataWithNulls() {
@@ -364,7 +376,7 @@ class AckFromDrcControllerTest {
                 mockMvc.perform(MockMvcRequestBuilders.post(CONTRIBUTION_URL)
                         .content(request)
                         .contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpect(status().isBadRequest());
+                    .andExpectAll(validationErrorResponseExpectations());
             }
 
             static Stream<Arguments> provideContributionAckDataWithNegativeIds() {
@@ -392,7 +404,7 @@ class AckFromDrcControllerTest {
 
                 mockMvc.perform(MockMvcRequestBuilders.post(CONTRIBUTION_URL)
                         .content(request).contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpect(status().isBadRequest());
+                    .andExpectAll(validationErrorResponseExpectations());
             }
 
             public static Stream<Arguments> provideProcessingReportWithMissingFields() {
@@ -414,7 +426,7 @@ class AckFromDrcControllerTest {
 
                 mockMvc.perform(MockMvcRequestBuilders.post(CONTRIBUTION_URL)
                         .content(concorRequest).contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpect(status().isBadRequest());
+                    .andExpectAll(validationErrorResponseExpectations());
             }
 
             public static Stream<Arguments> provideProcessingReportsWithInvalidTitle() {
@@ -467,9 +479,9 @@ class AckFromDrcControllerTest {
                         MockMvcRequestBuilders.post(CONTRIBUTION_URL)
                             .content(request)
                             .contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.errors.data").value("data cannot be null."))
-                    .andReturn();
+                    .andExpectAll(validationErrorResponseExpectations())
+                    .andExpect(jsonPath("$.errors[0].field").value("data"))
+                    .andExpect(jsonPath("$.errors[0].message").value("data cannot be null."));
             }
 
             @Test
@@ -484,12 +496,26 @@ class AckFromDrcControllerTest {
                 mockMvc.perform(MockMvcRequestBuilders.post(CONTRIBUTION_URL)
                         .content(request)
                         .contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.errors.data.report.detail").value(
-                        "detail must be ISO 8601 format explicitly in UTC, using either Z or +00:00."))
-                    .andExpect(jsonPath("$.errors.data.concorContributionId").value(
-                        "concorContributionId must be positive."));
+                    .andExpectAll(validationErrorResponseExpectations())
+                    .andExpect(jsonPath("$.errors", hasSize(2)))
+                    .andExpect(jsonPath("$.errors[*].field",
+                        containsInAnyOrder("data.concorContributionId", "data.report.detail")))
+                    .andExpect(jsonPath("$.errors[*].message",
+                        containsInAnyOrder(
+                            "Concor Contribution ID must be positive.",
+                            "Detail must be ISO 8601 format explicitly in UTC, using either Z or +00:00."
+                        )));
+
             }
         }
+    }
+
+    public static ResultMatcher[] validationErrorResponseExpectations() {
+        return new ResultMatcher[]{
+            status().isBadRequest(),
+            jsonPath("$.type").value(VALIDATION_ERROR_TYPE.toString()),
+            jsonPath("$.title").value("Bad Request"),
+            jsonPath("$.traceId").exists()
+        };
     }
 }

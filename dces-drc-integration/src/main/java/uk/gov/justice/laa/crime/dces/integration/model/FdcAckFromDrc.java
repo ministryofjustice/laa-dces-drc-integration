@@ -15,14 +15,14 @@ public record FdcAckFromDrc(
 
     @Builder
     public record FdcAckData(
-        @NotNull(message = "fdcId cannot be null.")
-        @Positive(message = "fdcId must be positive.")
+        @NotNull(message = "FDC ID cannot be null.")
+        @Positive(message = "FDC ID must be positive.")
         Long fdcId,
-        @NotNull(message = "maatId cannot be null.")
-        @Positive(message = "maatId must be positive.")
+        @NotNull(message = "MAAT ID cannot be null.")
+        @Positive(message = "MAAT ID must be positive.")
         Long maatId,
         @Valid
-        @NotNull(message = "report cannot be null.")
+        @NotNull(message = "Report cannot be null.")
         ProcessingReport report) {
     }
 

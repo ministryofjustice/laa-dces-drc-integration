@@ -6,12 +6,12 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record ProcessingReport(
-    @NotNull(message = "title must not be null.")
-    @Size(min = 1, max = 200, message = "title cannot be less than 1 character.")
-    @Size(max = 200, message = "title cannot be more than 200 characters.")
+    @NotNull(message = "Title must not be null.")
+    @Size(min = 1, message = "Title cannot be less than 1 character.")
+    @Size(max = 200, message = "Title cannot be more than 200 characters.")
     String title,
-    @NotNull(message = "detail must not be null.")
-    @Pattern(regexp = UTC_ONLY_ISO_8601, message = "detail must be ISO 8601 format explicitly in UTC, using either Z or +00:00.")
+    @NotNull(message = "Detail must not be null.")
+    @Pattern(regexp = UTC_ONLY_ISO_8601, message = "Detail must be ISO 8601 format explicitly in UTC, using either Z or +00:00.")
     String detail) {
 
     public static final String SUCCESS_TITLE = "Success";

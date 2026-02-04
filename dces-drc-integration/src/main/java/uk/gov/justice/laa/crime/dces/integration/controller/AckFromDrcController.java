@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import uk.gov.justice.laa.crime.dces.integration.controller.error.ErrorProblemDetail;
+import uk.gov.justice.laa.crime.dces.integration.controller.error.ValidationProblemDetail;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.service.ContributionAckService;
@@ -43,7 +43,7 @@ public class AckFromDrcController {
     @ApiResponse(responseCode = "400",
         description = "Bad Request.",
         content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-            schema = @Schema(implementation = ErrorProblemDetail.class)))
+            schema = @Schema(implementation = ValidationProblemDetail.class)))
     @ApiResponse(responseCode = "404",
         description = "Not Found.",
         content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
@@ -62,7 +62,7 @@ public class AckFromDrcController {
     @ApiResponse(responseCode = "400",
         description = "Bad Request.",
         content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-            schema = @Schema(implementation = ErrorProblemDetail.class)))
+            schema = @Schema(implementation = ValidationProblemDetail.class)))
     @ApiResponse(responseCode = "404",
         description = "Not Found.",
         content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,

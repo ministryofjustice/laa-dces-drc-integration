@@ -15,14 +15,14 @@ public record ConcorContributionAckFromDrc(
 
     @Builder
     public record ConcorContributionAckData(
-        @NotNull(message = "concorContributionId cannot be null.")
-        @Positive(message = "concorContributionId must be positive.")
+        @NotNull(message = "Concor Contribution ID cannot be null.")
+        @Positive(message = "Concor Contribution ID must be positive.")
         Long concorContributionId,
-        @NotNull(message = "maatId cannot be null.")
-        @Positive(message = "maatId must be positive.")
+        @NotNull(message = "MAAT ID cannot be null.")
+        @Positive(message = "MAAT ID must be positive.")
         Long maatId,
         @Valid
-        @NotNull(message = "reportId cannot be null.")
+        @NotNull(message = "Report cannot be null.")
         ProcessingReport report) {
     }
 

@@ -22,7 +22,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import uk.gov.justice.laa.crime.dces.integration.controller.error.ErrorProblemDetail;
+import uk.gov.justice.laa.crime.dces.integration.controller.error.ValidationProblemDetail;
+import uk.gov.justice.laa.crime.dces.integration.controller.error.ValidationProblemDetail.ErrorMessage;
 import uk.gov.justice.laa.crime.dces.integration.exception.DcesDrcValidationException;
 import uk.gov.justice.laa.crime.dces.integration.service.TraceService;
 
@@ -57,23 +58,17 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HandlerMethodValidationException.class)
     @ResponseStatus(BAD_REQUEST)
-    public ErrorProblemDetail handleValidationException(HandlerMethodValidationException ex) {
+    public ValidationProblemDetail handleValidationException(HandlerMethodValidationException ex) {
         log.info("HandlerMethodValidationException occurred.", ex);
 
-        ErrorProblemDetail problem = ErrorProblemDetail.forStatus(BAD_REQUEST);
-
-        ex.getAllValidationResults().stream()
+        List<ErrorMessage> errors = ex.getAllValidationResults().stream()
             .flatMap(v -> v.getResolvableErrors().stream())
             .filter(err -> err instanceof FieldError)
             .map(err -> (FieldError) err)
-            .forEach(fieldError ->
-                problem.addNestedError(
-                    fieldError.getField(),
-                    fieldError.getDefaultMessage()
-                )
-            );
+            .map(err -> new ErrorMessage(err.getField(), err.getDefaultMessage()))
+            .toList();
 
-        return problem;
+        return new ValidationProblemDetail(errors, traceService.getTraceId());
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
