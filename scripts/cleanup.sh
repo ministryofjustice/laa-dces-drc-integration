@@ -10,7 +10,7 @@ if [[ ! "$SCRIPT_DIR" =~ laa-dces-drc-integration/scripts$ ]]; then
 fi
 
 # Remove the TLS certificates and key files
-echo /bin/rm -rf "$SCRIPT_DIR"/tls-certs-keys
+/bin/rm -rf "$SCRIPT_DIR"/tls-certs-keys
 
 # Remove any header files that may (but shouldn't) get left behind
-echo /bin/rm -f "$SCRIPT_DIR/.*.headers"
+/bin/rm -f "$SCRIPT_DIR/.*.headers"
