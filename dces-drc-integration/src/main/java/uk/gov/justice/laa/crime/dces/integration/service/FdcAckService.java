@@ -57,7 +57,7 @@ public class FdcAckService {
             logFdcAsyncEvent(fdcProcessedRequest, e.getStatusCode());
             log.error("Failed to process FDC acknowledgement from DRC for fdcId {}: {}",
                     fdcAckFromDrc.data().fdcId(), e.getMessage());
-            throw FileServiceUtils.translateMAATCDAPIException(e);
+            throw FileServiceUtils.translateMAATCDAPIExceptionForFdc(e, fdcAckFromDrc.data().fdcId());
         } finally {
             eventService.logFdcError(fdcAckFromDrc);
             timerSample.stop(getTimer(SERVICE_NAME,

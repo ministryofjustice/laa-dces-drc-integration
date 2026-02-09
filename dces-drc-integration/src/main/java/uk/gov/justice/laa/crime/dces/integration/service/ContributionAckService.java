@@ -53,7 +53,8 @@ public class ContributionAckService {
             return executeContributionProcessedAckCall(contributionProcessedRequest);
         } catch (WebClientResponseException e) {
             logContributionAsyncEvent(contributionProcessedRequest, e.getStatusCode());
-            throw FileServiceUtils.translateMAATCDAPIException(e);
+            throw FileServiceUtils.translateMAATCDAPIExceptionForContribution(e,
+                concorContributionAckFromDrc.data().concorContributionId());
         } finally {
             eventService.logConcorContributionError(concorContributionAckFromDrc);
             timerSample.stop(getTimer(SERVICE_NAME,

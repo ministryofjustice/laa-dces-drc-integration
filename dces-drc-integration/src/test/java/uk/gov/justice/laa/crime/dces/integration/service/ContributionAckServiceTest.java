@@ -72,8 +72,9 @@ class ContributionAckServiceTest extends ApplicationTestBase {
 		String errorText = "The request has failed to process";
 		ConcorContributionAckFromDrc ackFromDrc = buildContribAck(CONTRIB_ID_NOT_FOUND_IN_MAAT, errorText);
 		var exception = catchThrowableOfType(ErrorResponseException.class, () -> contributionAckService.handleContributionProcessedAck(ackFromDrc));
-		softly.assertThat(exception).isNotNull();
-		softly.assertThat(NOT_FOUND.isSameCodeAs(exception.getStatusCode())).isTrue();
+    softly.assertThat(exception.getStatusCode()).isEqualTo(NOT_FOUND);
+    softly.assertThat(exception.getBody().getTitle()).isEqualTo("Contribution ID not found");
+    softly.assertThat(exception.getBody().getDetail()).isEqualTo("Contribution ID 404 not found");
 		verify(eventService).logConcor(CONTRIB_ID_NOT_FOUND_IN_MAAT, EventType.DRC_ASYNC_RESPONSE,null,null, NOT_FOUND, errorText);
 		verify(eventService).logConcorContributionError(ackFromDrc);
 	}
@@ -83,8 +84,9 @@ class ContributionAckServiceTest extends ApplicationTestBase {
 		String errorText = "The request has failed to process";
 		ConcorContributionAckFromDrc ackFromDrc = buildContribAck(CONTRIB_ID_FILE_NOT_FOUND_IN_MAAT, errorText);
 		var exception = catchThrowableOfType(ErrorResponseException.class, () -> contributionAckService.handleContributionProcessedAck(ackFromDrc));
-		softly.assertThat(exception).isNotNull();
-		softly.assertThat(FAILED_DEPENDENCY.isSameCodeAs(exception.getStatusCode())).isTrue();
+    softly.assertThat(exception.getStatusCode()).isEqualTo(FAILED_DEPENDENCY);
+    softly.assertThat(exception.getBody().getTitle()).isEqualTo("Corresponding Contribution File not found");
+    softly.assertThat(exception.getBody().getDetail()).isEqualTo("Contribution ID 9 is not associated with a Contribution File");
 		verify(eventService).logConcor(9L,EventType.DRC_ASYNC_RESPONSE,null,null, BAD_REQUEST, errorText);
 		verify(eventService).logConcorContributionError(ackFromDrc);
 	}

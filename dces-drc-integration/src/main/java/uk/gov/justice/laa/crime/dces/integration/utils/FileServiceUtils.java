@@ -35,6 +35,22 @@ public class FileServiceUtils {
     }
 
     /**
+     * Create an ErrorResponseException for a WebClientResponseException to Contribution calls.
+     * @see #translateMAATCDAPIException(WebClientResponseException, String, String)
+     */
+    public ErrorResponseException translateMAATCDAPIExceptionForContribution(final WebClientResponseException e, long contributionId) {
+        return translateMAATCDAPIException(e, "Contribution", String.valueOf(contributionId));
+    }
+
+    /**
+     * Create an ErrorResponseException for a WebClientResponseException to FDC calls.
+     * @see #translateMAATCDAPIException(WebClientResponseException, String, String)
+     */
+    public ErrorResponseException translateMAATCDAPIExceptionForFdc(final WebClientResponseException e, long fdcId) {
+      return translateMAATCDAPIException(e, "FDC", String.valueOf(fdcId));
+    }
+
+    /**
      * Create an ErrorResponseException (basically a wrapper around a ProblemDetail) for a WebClientResponseException
      * from the MAAT CD API, which doesn't currently use ProblemDetail, but has its own ErrorDTO class.
      * <p>
@@ -53,24 +69,28 @@ public class FileServiceUtils {
      * `getResponseBodyAs(Class)` is likely to always return `null`).
      *
      * @param e The WebClientResponseException to check from MAAT CD API.
+     * @param idType the type of ID, Contribution or FDC
+     * @param id the ID related to the API call
      * @return ErrorResponseException that encapsulates a ProblemDetail (instead of an ErrorDTO) and can be thrown by a
      *         servlet-based controller.
      */
-    public ErrorResponseException translateMAATCDAPIException(final WebClientResponseException e) {
+    private ErrorResponseException translateMAATCDAPIException(final WebClientResponseException e, String idType, String id) {
         if (NOT_FOUND.isSameCodeAs(e.getStatusCode())) {
             final ErrorDTO errorDTO = e.getResponseBodyAs(ErrorDTO.class);
             if (errorDTO != null) {
-                final var problemDetail = ProblemDetail.forStatusAndDetail(NOT_FOUND, errorDTO.message());
+                String detailMessage = String.format("%s ID %s not found", idType, id);
+                final var problemDetail = ProblemDetail.forStatusAndDetail(NOT_FOUND, detailMessage);
                 problemDetail.setType(UNKNOWN_ID);
-                problemDetail.setTitle("Contribution ID not found");
+                problemDetail.setTitle(idType + " ID not found");
                 return new ErrorResponseException(NOT_FOUND, problemDetail, e);
             }
         } else if (BAD_REQUEST.isSameCodeAs(e.getStatusCode())) {
             final ErrorDTO errorDTO = e.getResponseBodyAs(ErrorDTO.class);
             if (errorDTO != null && "Object Not Found".equals(errorDTO.code())) {
-                final var problemDetail = ProblemDetail.forStatusAndDetail(FAILED_DEPENDENCY, errorDTO.message());
+                String detailMessage = String.format("%s ID %s is not associated with a Contribution File", idType, id);
+                final var problemDetail = ProblemDetail.forStatusAndDetail(FAILED_DEPENDENCY, detailMessage);
                 problemDetail.setType(NO_CONTRIBUTION_FILE);
-                problemDetail.setTitle("Corresponding contribution_file not found");
+                problemDetail.setTitle("Corresponding Contribution File not found");
                 return new ErrorResponseException(FAILED_DEPENDENCY, problemDetail, e);
             }
         }

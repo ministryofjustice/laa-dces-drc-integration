@@ -75,8 +75,9 @@ class FdcAckServiceTest extends ApplicationTestBase {
 		String errorText = "The request has failed to process";
 		FdcAckFromDrc fdcAckFromDrc = buildFdcAck(FDC_ID_NOT_FOUND_IN_MAAT, errorText);
 		var exception = catchThrowableOfType(ErrorResponseException.class, () -> fdcAckService.handleFdcProcessedAck(fdcAckFromDrc));
-		softly.assertThat(exception).isNotNull();
-		softly.assertThat(NOT_FOUND.isSameCodeAs(exception.getStatusCode())).isTrue();
+		softly.assertThat(exception.getStatusCode()).isEqualTo(NOT_FOUND);
+    softly.assertThat(exception.getBody().getTitle()).isEqualTo("FDC ID not found");
+    softly.assertThat(exception.getBody().getDetail()).isEqualTo("FDC ID 404 not found");
 		verify(eventService).logFdcError(fdcAckFromDrc);
 	}
 
@@ -85,8 +86,9 @@ class FdcAckServiceTest extends ApplicationTestBase {
 		String errorText = "The request has failed to process";
 		FdcAckFromDrc fdcAckFromDrc = buildFdcAck(FDC_ID_FILE_NOT_FOUND_IN_MAAT, errorText);
 		var exception = catchThrowableOfType(ErrorResponseException.class, () -> fdcAckService.handleFdcProcessedAck(fdcAckFromDrc));
-		softly.assertThat(exception).isNotNull();
-		softly.assertThat(FAILED_DEPENDENCY.isSameCodeAs(exception.getStatusCode())).isTrue();
+    softly.assertThat(exception.getStatusCode()).isEqualTo(FAILED_DEPENDENCY);
+    softly.assertThat(exception.getBody().getTitle()).isEqualTo("Corresponding Contribution File not found");
+    softly.assertThat(exception.getBody().getDetail()).isEqualTo("FDC ID 9 is not associated with a Contribution File");
 		verify(eventService).logFdcError(fdcAckFromDrc);
 	}
 
