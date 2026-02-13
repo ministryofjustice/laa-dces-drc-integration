@@ -11,6 +11,7 @@ import static uk.gov.justice.laa.crime.dces.integration.test.TestDataFixtures.bu
 import static uk.gov.justice.laa.crime.dces.integration.test.TestDataFixtures.buildFdcAck;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -139,6 +140,9 @@ class AckFromDrcControllerTest {
     @DisplayName("Validates incoming requests")
     class ValidationTests {
 
+        private static final String VALID_TITLE = "Success";
+        private static final String VALID_DETAIL = Instant.now().toString();
+
         @Nested
         @DisplayName("Validates FDC contribution requests")
         class ValidateFDCTests {
@@ -208,7 +212,7 @@ class AckFromDrcControllerTest {
             @DisplayName("processingReport must have all mandatory fields present.")
             @MethodSource("provideProcessingReportWithMissingFields")
             void processingReportWithMissingFieldsProcessingRequestReturnsBadRequestStatus(
-                ProcessingReport processingReport)
+                ProcessingReport processingReport, String fieldInError, String errorMessage)
                 throws Exception {
                 FdcAckFromDrc ackWithInvalidProcessingReport = new FdcAckFromDrc(
                     new FdcAckData(123L, 1234L, processingReport), Map.of());
@@ -216,21 +220,22 @@ class AckFromDrcControllerTest {
 
                 mockMvc.perform(MockMvcRequestBuilders.post(CONTRIBUTION_FDC_URL)
                         .content(request).contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpectAll(validationErrorResponseExpectations());
+                        .andExpectAll(validationErrorResponseExpectations())
+                        .andExpectAll(validationFieldErrorExpectations(fieldInError, errorMessage));
             }
 
             public static Stream<Arguments> provideProcessingReportWithMissingFields() {
                 return Stream.of(
-                    Arguments.of(new ProcessingReport(null, "detail")),
-                    Arguments.of(new ProcessingReport("title", null))
+                    Arguments.of(new ProcessingReport(null, VALID_DETAIL), "data.report.title", "Title must not be blank."),
+                    Arguments.of(new ProcessingReport(VALID_TITLE, null), "data.report.detail", "Detail must not be null.")
                 );
             }
 
             @ParameterizedTest
-            @DisplayName("Titles must be between 1 and 200 characters.")
+            @DisplayName("Titles must be not blank and not greater than 200 characters.")
             @MethodSource("provideProcessingReportsWithInvalidTitle")
             void processingReportWithInvalidTitleProcessingRequestReturnsBadRequestStatus(
-                ProcessingReport processingReport)
+                ProcessingReport processingReport, String fieldInError, String errorMessage)
                 throws Exception {
 
                 FdcAckFromDrc fdcAck = new FdcAckFromDrc(
@@ -239,15 +244,18 @@ class AckFromDrcControllerTest {
 
                 mockMvc.perform(MockMvcRequestBuilders.post(CONTRIBUTION_FDC_URL)
                         .content(fdcRequest).contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpectAll(validationErrorResponseExpectations());
+                        .andExpectAll(validationErrorResponseExpectations())
+                        .andExpectAll(validationFieldErrorExpectations(fieldInError, errorMessage));
             }
 
             public static Stream<Arguments> provideProcessingReportsWithInvalidTitle() {
                 return Stream.of(
                     Arguments.of(new ProcessingReport(
                         "ThisTitleIsFarTooLongOnlyUpToTwoHundredCharactersAreAllowed".repeat(4),
-                        "detail")),
-                    Arguments.of(new ProcessingReport("", "detail"))
+                        VALID_DETAIL), "data.report.title", "Title cannot be more than 200 characters."),
+                    Arguments.of(new ProcessingReport("", VALID_DETAIL), "data.report.title", "Title must not be blank."),
+                    Arguments.of(new ProcessingReport(" ", VALID_DETAIL), "data.report.title", "Title must not be blank."),
+                    Arguments.of(new ProcessingReport("\n", VALID_DETAIL), "data.report.title", "Title must not be blank.")
                 );
             }
 
@@ -396,7 +404,7 @@ class AckFromDrcControllerTest {
             @DisplayName("processingReport must have all mandatory fields present.")
             @MethodSource("provideProcessingReportWithMissingFields")
             void processingReportWithMissingFieldsProcessingContributionReturnsBadRequestStatus(
-                ProcessingReport processingReport)
+                ProcessingReport processingReport, String fieldInError, String errorMessage)
                 throws Exception {
                 ConcorContributionAckFromDrc ackWithInvalidProcessingReport = new ConcorContributionAckFromDrc(
                     new ConcorContributionAckData(123L, 1234L, processingReport), Map.of());
@@ -404,37 +412,42 @@ class AckFromDrcControllerTest {
 
                 mockMvc.perform(MockMvcRequestBuilders.post(CONTRIBUTION_URL)
                         .content(request).contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpectAll(validationErrorResponseExpectations());
+                    .andExpectAll(validationErrorResponseExpectations())
+                    .andExpectAll(validationFieldErrorExpectations(fieldInError, errorMessage));
             }
 
             public static Stream<Arguments> provideProcessingReportWithMissingFields() {
                 return Stream.of(
-                    Arguments.of(new ProcessingReport(null, "detail")),
-                    Arguments.of(new ProcessingReport("title", null))
+                    Arguments.of(new ProcessingReport(null, VALID_DETAIL), "data.report.title", "Title must not be blank."),
+                    Arguments.of(new ProcessingReport(VALID_TITLE, null), "data.report.detail", "Detail must not be null.")
                 );
             }
 
             @ParameterizedTest
-            @DisplayName("Titles must be between 1 and 200 characters.")
+            @DisplayName("Titles must not be blank and not greater than 200 characters.")
             @MethodSource("provideProcessingReportsWithInvalidTitle")
             void processingReportWithInvalidTitleProcessingRequestReturnsBadRequestStatus(
-                ProcessingReport processingReport)
+                ProcessingReport processingReport, String fieldInError, String errorMessage)
                 throws Exception {
                 ConcorContributionAckFromDrc concorAck = new ConcorContributionAckFromDrc(
                     new ConcorContributionAckData(123L, 1234L, processingReport), Map.of());
                 String concorRequest = mapper.writeValueAsString(concorAck);
 
                 mockMvc.perform(MockMvcRequestBuilders.post(CONTRIBUTION_URL)
-                        .content(concorRequest).contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpectAll(validationErrorResponseExpectations());
+                    .content(concorRequest).contentType(MediaType.APPLICATION_JSON_VALUE))
+                    .andExpectAll(validationErrorResponseExpectations())
+                    .andExpectAll(validationFieldErrorExpectations(fieldInError, errorMessage));
             }
 
             public static Stream<Arguments> provideProcessingReportsWithInvalidTitle() {
                 return Stream.of(
                     Arguments.of(new ProcessingReport(
                         "ThisTitleIsFarTooLongOnlyUpToTwoHundredCharactersAreAllowed".repeat(4),
-                        "detail")),
-                    Arguments.of(new ProcessingReport("", "detail"))
+                        VALID_DETAIL), "data.report.title", "Title cannot be more than 200 characters."),
+                    Arguments.of(new ProcessingReport("", VALID_DETAIL), "data.report.title", "Title must not be blank."),
+                    Arguments.of(new ProcessingReport(" ", VALID_DETAIL), "data.report.title", "Title must not be blank."),
+                    Arguments.of(new ProcessingReport("\n", VALID_DETAIL), "data.report.title", "Title must not be blank."),
+                    Arguments.of(new ProcessingReport(" \n\t ", VALID_DETAIL), "data.report.title", "Title must not be blank.")
                 );
             }
 
@@ -516,6 +529,13 @@ class AckFromDrcControllerTest {
             jsonPath("$.type").value(VALIDATION_ERROR_TYPE.toString()),
             jsonPath("$.title").value("Bad Request"),
             jsonPath("$.traceId").exists()
+        };
+    }
+
+    public static ResultMatcher[] validationFieldErrorExpectations(String fieldName, String message) {
+        return new ResultMatcher[]{
+            jsonPath("$.errors[*].field").value(fieldName),
+            jsonPath("$.errors[*].message").value(message)
         };
     }
 }

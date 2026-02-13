@@ -31,6 +31,7 @@ public class DrcProcessingStatusEntity {
     private Instant drcProcessingTimestamp;
     @CreationTimestamp
     private Instant creationTimestamp;
+    private int ackResponseStatus;
 
 }
 

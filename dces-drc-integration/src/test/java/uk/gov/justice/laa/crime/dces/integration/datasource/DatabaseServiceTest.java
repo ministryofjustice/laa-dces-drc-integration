@@ -104,9 +104,10 @@ class DatabaseServiceTest extends ApplicationTestBase {
 
     private DrcProcessingStatusEntity createExpectedDrcProcessingStatusEntity(RecordType recordType) {
         return DrcProcessingStatusEntity.builder()
+                .maatId(123L)
                 .fdcId(RecordType.FDC.equals(recordType) ? -333L : null)
                 .concorContributionId(RecordType.CONTRIBUTION.equals(recordType) ? -333L : null)
-                .statusMessage("MAAT ID Missing")
+                .statusMessage("Missing First Name.")
                 .drcProcessingTimestamp(Instant.now())
                 .build();
     }

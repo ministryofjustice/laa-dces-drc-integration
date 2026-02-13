@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.crime.dces.integration.utils;
 
+import java.time.Instant;
 import uk.gov.justice.laa.crime.dces.integration.model.ConcorContributionAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.ProcessingReport;
@@ -7,8 +8,6 @@ import uk.gov.justice.laa.crime.dces.integration.model.ProcessingReport;
 public class IntTestDataFixtures {
 
     public static final String STATUS_MSG_SUCCESS = "Success";
-
-    public static final String TIMESTAMP_STR = "2025-11-06T14:54:45Z";
 
     public static final long MAAT_ID = 222L;
 
@@ -21,7 +20,7 @@ public class IntTestDataFixtures {
                 .data(ConcorContributionAckFromDrc.ConcorContributionAckData.builder()
                         .concorContributionId(concorId)
                         .maatId(MAAT_ID)
-                        .report(new ProcessingReport(reportTitle, TIMESTAMP_STR))
+                        .report(new ProcessingReport(reportTitle, Instant.now().toString()))
                         .build())
                 .build();
     }
@@ -35,7 +34,7 @@ public class IntTestDataFixtures {
                 .data(FdcAckFromDrc.FdcAckData.builder()
                         .fdcId(fdcId)
                         .maatId(MAAT_ID)
-                        .report(new ProcessingReport(reportTitle, TIMESTAMP_STR))
+                        .report(new ProcessingReport(reportTitle, Instant.now().toString()))
                         .build())
                 .build();
     }

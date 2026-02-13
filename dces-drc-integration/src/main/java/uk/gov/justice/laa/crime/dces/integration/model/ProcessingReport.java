@@ -1,13 +1,13 @@
 package uk.gov.justice.laa.crime.dces.integration.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record ProcessingReport(
-    @NotNull(message = "Title must not be null.")
-    @Size(min = 1, message = "Title cannot be less than 1 character.")
+    @NotBlank(message = "Title must not be blank.")
     @Size(max = 200, message = "Title cannot be more than 200 characters.")
     String title,
     @NotNull(message = "Detail must not be null.")
