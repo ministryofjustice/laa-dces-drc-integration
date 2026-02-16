@@ -57,7 +57,13 @@ trap "/bin/rm -f $HEADERS_FILE" EXIT
   printf 'Authorization: Bearer %s\n' "$DCES_AUTH_TOKEN"
 } >"$HEADERS_FILE"
 
-curl https://api.${ENV}.laa-debt-collection.service.justice.gov.uk/${URI} \
+if [ "$ENV" = "prod" ]; then
+  DOMAIN="api.laa-debt-collection.service.justice.gov.uk"
+else
+  DOMAIN="api.${ENV}.laa-debt-collection.service.justice.gov.uk"
+fi
+
+curl "https://${DOMAIN}/${URI}" \
     --cert $CERTS_DIR/dcestesting-int-${ENV}.crt \
     --key $CERTS_DIR/dcestesting-int-${ENV}.key \
     -H "@$HEADERS_FILE" \
