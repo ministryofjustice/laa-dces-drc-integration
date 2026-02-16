@@ -12,4 +12,10 @@ public interface DrcProcessingStatusRepository extends JpaRepository<DrcProcessi
 
     @Transactional
     long deleteByCreationTimestampBefore(Instant purgeBeforeDate);
+
+    boolean existsByFdcIdAndDrcProcessingTimestampAndAckResponseStatus(
+        long fdcId, Instant drcProcessingTimestamp, int ackResponseStatus);
+
+    boolean existsByConcorContributionIdAndDrcProcessingTimestampAndAckResponseStatus(
+        long concorContributionId, Instant drcProcessingTimestamp, int ackResponseStatus);
 }

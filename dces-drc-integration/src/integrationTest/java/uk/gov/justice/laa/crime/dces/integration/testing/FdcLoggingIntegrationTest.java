@@ -1,6 +1,9 @@
 package uk.gov.justice.laa.crime.dces.integration.testing;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
 import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
@@ -30,7 +33,6 @@ import uk.gov.justice.laa.crime.dces.integration.service.spy.SpyFactory;
 import uk.gov.justice.laa.crime.dces.integration.utils.IntTestDataFixtures;
 
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Set;
 
@@ -130,9 +132,11 @@ class FdcLoggingIntegrationTest {
                 .traceDrcProcessingStatusEntities();
 
         // Call the fake DRC processing-successful responses under test:
-        final var startTimestamp = LocalDateTime.now();
+        final var startTimestamp = Instant.now();
+        final var localStartTimestamp = startTimestamp.atZone(ZoneId.systemDefault()).toLocalDateTime();
         updatedIds.forEach(this::successfulFdc);
-        final var endTimestamp = LocalDateTime.now();
+        final var endTimestamp = Instant.now();
+        final var localEndTimestamp = endTimestamp.atZone(ZoneId.systemDefault()).toLocalDateTime();
 
         final FdcLoggingProcessSpy logged = logging.build();
 
@@ -149,14 +153,14 @@ class FdcLoggingIntegrationTest {
         softly.assertThat(logged.getFdcContributionIds()).containsOnlyOnceElementsOf(updatedIds);
 
         softly.assertThat(contributionFile.getRecordsReceived()).isEqualTo(3); // 4.
-        softly.assertThat(contributionFile.getDateReceived()).isBetween(startTimestamp.toLocalDate(), endTimestamp.toLocalDate());
-        softly.assertThat(contributionFile.getDateModified()).isBetween(startTimestamp.toLocalDate(), endTimestamp.toLocalDate());
+        softly.assertThat(contributionFile.getDateReceived()).isEqualTo(LocalDate.now());
+        softly.assertThat(contributionFile.getDateModified()).isEqualTo(LocalDate.now());
         softly.assertThat(contributionFile.getUserModified()).isEqualTo("DCES");
 
         softly.assertThat(contributionFileErrors).isEmpty(); // 5.
 
         // 6. Each contribution should have a CaseSubmissionEntity record
-        assertCaseSubmissionEntities(logged.getSavedCaseSubmissionEntities(), updatedIds, startTimestamp, endTimestamp, null);
+        assertCaseSubmissionEntities(logged.getSavedCaseSubmissionEntities(), updatedIds, localStartTimestamp, localEndTimestamp, null);
 
         // 7. Each contribution should have a DrcProcessingStatusEntity record
         assertDrcProcessingEntities(logged.getDrcProcessingStatusEntities(), updatedIds, SUCCESS_TEXT, startTimestamp, endTimestamp);
@@ -215,9 +219,11 @@ class FdcLoggingIntegrationTest {
                 .traceDrcProcessingStatusEntities();
 
         // Call the fake DRC processing-failed responses under test:
-        final var startTimestamp = LocalDateTime.now();
+        final var startTimestamp = Instant.now();
+        final var localStartTimestamp = startTimestamp.atZone(ZoneId.systemDefault()).toLocalDateTime();
         updatedIds.forEach(this::failedFdc);
-        final var endTimestamp = LocalDateTime.now();
+        final var endTimestamp = Instant.now();
+        final var localEndTimestamp = endTimestamp.atZone(ZoneId.systemDefault()).toLocalDateTime();
 
         final FdcLoggingProcessSpy logged = logging.build();
 
@@ -236,7 +242,7 @@ class FdcLoggingIntegrationTest {
 
         softly.assertThat(contributionFile.getRecordsReceived()).isIn(0, null); // 4. (either zero or NULL)
         softly.assertThat(contributionFile.getDateReceived()).isNull();
-        softly.assertThat(contributionFile.getDateModified()).isBetween(startTimestamp.toLocalDate(), endTimestamp.toLocalDate());
+        softly.assertThat(contributionFile.getDateModified()).isEqualTo(LocalDate.now());
         softly.assertThat(contributionFile.getUserModified()).isEqualTo("DCES");
 
         softly.assertThat(contributionFileErrors).hasSize(3); // 5.
@@ -247,11 +253,11 @@ class FdcLoggingIntegrationTest {
             softly.assertThat(contributionFileError.getErrorText()).isEqualTo(ERROR_TEXT);
             softly.assertThat(contributionFileError.getConcorContributionId()).isNull();
             softly.assertThat(contributionFileError.getFdcContributionId()).isIn(updatedIds);
-            softly.assertThat(contributionFileError.getDateCreated()).isBetween(startTimestamp, endTimestamp);
+            softly.assertThat(contributionFileError.getDateCreated()).isBetween(localStartTimestamp, localEndTimestamp);
         });
 
         // 6. Each contribution should have a CaseSubmissionEntity record
-        assertCaseSubmissionEntities(logged.getSavedCaseSubmissionEntities(), updatedIds, startTimestamp, endTimestamp, ERROR_TEXT);
+        assertCaseSubmissionEntities(logged.getSavedCaseSubmissionEntities(), updatedIds, localStartTimestamp, localEndTimestamp, ERROR_TEXT);
 
         // 7. Each contribution should have a DrcProcessingStatusEntity record
         assertDrcProcessingEntities(logged.getDrcProcessingStatusEntities(), updatedIds, ERROR_TEXT, startTimestamp, endTimestamp);
@@ -310,19 +316,19 @@ class FdcLoggingIntegrationTest {
         softly.assertThat(caseSubmission.getPayload()).isEqualTo(payload);
     }
 
-    private void assertDrcProcessingEntities(List<DrcProcessingStatusEntity> entities, Set<Long> updatedIds, String statusMessage, LocalDateTime startTimestamp, LocalDateTime endTimestamp) {
+    private void assertDrcProcessingEntities(List<DrcProcessingStatusEntity> entities, Set<Long> updatedIds, String statusMessage, Instant startTimestamp, Instant endTimestamp) {
         // One entity for each updated ID
         softly.assertThat(entities.size()).isEqualTo(updatedIds.size());
         entities.forEach(e -> assertDrcProcessingStatusEntity(e, updatedIds, statusMessage, startTimestamp, endTimestamp));
     }
 
-    private void assertDrcProcessingStatusEntity(DrcProcessingStatusEntity entity, Set<Long> updatedIds, String statusMessage, LocalDateTime startTimestamp, LocalDateTime endTimestamp) {
+    private void assertDrcProcessingStatusEntity(DrcProcessingStatusEntity entity, Set<Long> updatedIds, String statusMessage, Instant startTimestamp, Instant endTimestamp) {
         softly.assertThat(entity.getMaatId()).isEqualTo(IntTestDataFixtures.MAAT_ID);
         softly.assertThat(entity.getConcorContributionId()).isNull();
         softly.assertThat(updatedIds).contains(entity.getFdcId());
         softly.assertThat(entity.getStatusMessage()).isEqualTo(statusMessage);
-        softly.assertThat(entity.getDrcProcessingTimestamp()).isEqualTo(IntTestDataFixtures.TIMESTAMP_STR);
-        softly.assertThat(entity.getCreationTimestamp()).isBetween(startTimestamp.toInstant(ZoneOffset.UTC), endTimestamp.toInstant(ZoneOffset.UTC));
+        softly.assertThat(entity.getDrcProcessingTimestamp()).isBetween(startTimestamp, endTimestamp);
+        softly.assertThat(entity.getCreationTimestamp()).isBetween(startTimestamp, endTimestamp);
     }
 
 }

@@ -1,0 +1,2 @@
+drop table case_submission_error;
+drop sequence case_submission_error_gen_seq;

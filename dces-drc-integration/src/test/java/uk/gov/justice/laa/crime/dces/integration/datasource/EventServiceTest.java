@@ -82,13 +82,13 @@ class EventServiceTest {
         softly.assertAll();
     }
     @Test
-    void whenLogFdcErrorIsCalled_thenEntitySavedAndReturned() {
+    void whenLogFdcAckResultIsCalled_thenEntitySavedAndReturned() {
         var ack = buildFdcAck(testFdcId);
 
         when(drcProcessingStatusRepository.save(any(DrcProcessingStatusEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        var result = eventService.logFdcError(ack);
+        var result = eventService.logFdcAckResult(ack, HttpStatus.OK);
 
         verify(drcProcessingStatusRepository).save(drcProcessingStatusEntityArgumentCaptor.capture());
         var captured = drcProcessingStatusEntityArgumentCaptor.getValue();
@@ -98,17 +98,18 @@ class EventServiceTest {
         softly.assertThat(captured.getFdcId()).isEqualTo(testFdcId);
         softly.assertThat(captured.getStatusMessage()).isEqualTo(STATUS_MSG_SUCCESS);
         softly.assertThat(captured.getDrcProcessingTimestamp()).isEqualTo(TIMESTAMP_OBJ);
+        softly.assertThat(captured.getAckResponseStatus()).isEqualTo(200);
         softly.assertAll();
     }
 
     @Test
-    void whenLogFdcErrorRepositoryThrows_thenReturnsNull() {
+    void whenLogFdcAckResultRepositoryThrows_thenReturnsNull() {
         var ack = buildFdcAck(testFdcId);
 
         when(drcProcessingStatusRepository.save(any(DrcProcessingStatusEntity.class)))
                 .thenThrow(new RuntimeException("DB down"));
 
-        var result = eventService.logFdcError(ack);
+        var result = eventService.logFdcAckResult(ack, HttpStatus.OK);
 
         verify(drcProcessingStatusRepository).save(drcProcessingStatusEntityArgumentCaptor.capture());
         var captured = drcProcessingStatusEntityArgumentCaptor.getValue();
@@ -118,17 +119,18 @@ class EventServiceTest {
         softly.assertThat(captured.getFdcId()).isEqualTo(testFdcId);
         softly.assertThat(captured.getStatusMessage()).isEqualTo(STATUS_MSG_SUCCESS);
         softly.assertThat(captured.getDrcProcessingTimestamp()).isEqualTo(TIMESTAMP_OBJ);
+        softly.assertThat(captured.getAckResponseStatus()).isEqualTo(200);
         softly.assertAll();
     }
 
     @Test
-    void whenLogConcorContributionErrorIsCalled_thenEntitySavedAndReturned() {
+    void whenLogConcorContributionAckResultIsCalled_thenEntitySavedAndReturned() {
         var ack = buildContribAck(testConcorId);
 
         when(drcProcessingStatusRepository.save(any(DrcProcessingStatusEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        var result = eventService.logConcorContributionError(ack);
+        var result = eventService.logConcorContributionAckResult(ack, HttpStatus.OK);
 
         verify(drcProcessingStatusRepository).save(drcProcessingStatusEntityArgumentCaptor.capture());
         var captured = drcProcessingStatusEntityArgumentCaptor.getValue();
@@ -138,17 +140,18 @@ class EventServiceTest {
         softly.assertThat(captured.getConcorContributionId()).isEqualTo(testConcorId);
         softly.assertThat(captured.getStatusMessage()).isEqualTo(STATUS_MSG_SUCCESS);
         softly.assertThat(captured.getDrcProcessingTimestamp()).isEqualTo(TIMESTAMP_OBJ);
+        softly.assertThat(captured.getAckResponseStatus()).isEqualTo(200);
         softly.assertAll();
     }
 
     @Test
-    void whenLogConcorContributionErrorRepositoryThrows_thenReturnsNull() {
+    void whenLogConcorContributionAckResultRepositoryThrows_thenReturnsNull() {
         var ack = buildContribAck(testConcorId);
 
         when(drcProcessingStatusRepository.save(any(DrcProcessingStatusEntity.class)))
                 .thenThrow(new RuntimeException("DB down"));
 
-        var result = eventService.logConcorContributionError(ack);
+        var result = eventService.logConcorContributionAckResult(ack,  HttpStatus.OK);
 
         verify(drcProcessingStatusRepository).save(drcProcessingStatusEntityArgumentCaptor.capture());
         var captured = drcProcessingStatusEntityArgumentCaptor.getValue();
@@ -158,6 +161,7 @@ class EventServiceTest {
         softly.assertThat(captured.getConcorContributionId()).isEqualTo(testConcorId);
         softly.assertThat(captured.getStatusMessage()).isEqualTo(STATUS_MSG_SUCCESS);
         softly.assertThat(captured.getDrcProcessingTimestamp()).isEqualTo(TIMESTAMP_OBJ);
+        softly.assertThat(captured.getAckResponseStatus()).isEqualTo(200);
         softly.assertAll();
     }
 

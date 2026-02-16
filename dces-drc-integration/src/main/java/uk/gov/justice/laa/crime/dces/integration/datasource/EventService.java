@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.crime.dces.integration.datasource.model.*;
@@ -95,8 +96,8 @@ public class EventService {
         return logConcor(concorContributionId, eventType, batchId, null, contributionsObject, httpStatusCode, payload);
     }
 
-    public DrcProcessingStatusEntity logFdcError(FdcAckFromDrc fdcAckFromDrc) {
-        var entity = createDrcProcessingStatusEntity(fdcAckFromDrc);
+    public DrcProcessingStatusEntity logFdcAckResult(FdcAckFromDrc fdcAckFromDrc, HttpStatusCode ackHttpStatus) {
+        var entity = createDrcProcessingStatusEntity(fdcAckFromDrc, ackHttpStatus);
         try {
             var saved = saveDrcProcessingStatusEntity(entity);
             log.info("saved fdc DRC processing entity: {}", saved);
@@ -107,8 +108,8 @@ public class EventService {
         }
     }
 
-    public DrcProcessingStatusEntity logConcorContributionError(ConcorContributionAckFromDrc concorContributionAckFromDrc) {
-        var entity = createDrcProcessingStatusEntity(concorContributionAckFromDrc);
+    public DrcProcessingStatusEntity logConcorContributionAckResult(ConcorContributionAckFromDrc concorContributionAckFromDrc, HttpStatusCode ackHttpStatus) {
+        var entity = createDrcProcessingStatusEntity(concorContributionAckFromDrc, ackHttpStatus);
         try {
             var saved = saveDrcProcessingStatusEntity(entity);
             log.info("saved concor contribution DRC processing entity: {}", saved);
@@ -158,4 +159,14 @@ public class EventService {
         return drcProcessingStatusRepository.deleteByCreationTimestampBefore(purgeBeforeTimestamp);
     }
 
+    public boolean concorContributionAlreadyProcessed(long concorContributionId,
+        Instant drcProcessingTimestamp) {
+        return drcProcessingStatusRepository.existsByConcorContributionIdAndDrcProcessingTimestampAndAckResponseStatus(
+            concorContributionId, drcProcessingTimestamp, HttpStatus.OK.value());
+    }
+
+    public boolean fdcAlreadyProcessed(long fdcId, Instant drcProcessingTimestamp) {
+        return drcProcessingStatusRepository.existsByFdcIdAndDrcProcessingTimestampAndAckResponseStatus(
+            fdcId, drcProcessingTimestamp, HttpStatus.OK.value());
+    }
 }
