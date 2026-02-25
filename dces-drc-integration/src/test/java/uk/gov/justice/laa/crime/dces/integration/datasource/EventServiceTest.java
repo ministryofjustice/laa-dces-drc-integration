@@ -174,7 +174,7 @@ class EventServiceTest {
 
         when(caseSubmissionRepository.save(caseSubmissionEntityArgumentCaptor.capture())).thenReturn(new CaseSubmissionEntity());
         when(eventTypeRepository.getEventTypeEntityByDescriptionEquals(expectedEventType.getName())).thenReturn(new EventTypeEntity(1,expectedEventType.getName()));
-        var expectedCaseSubmissionEntity = createExpectedCaseSubmissionEntity(RecordType.FDC, 1, testTraceId, expectedHttpStatusCode);
+        var expectedCaseSubmissionEntity = createExpectedCaseSubmissionEntity(RecordType.FDC, 1, testBatchId, testTraceId, expectedHttpStatusCode);
 
         eventService.logFdc(expectedEventType,testBatchId,testTraceId,fdcObject,expectedHttpStatusCode,testPayload);
 
@@ -190,7 +190,7 @@ class EventServiceTest {
 
         when(caseSubmissionRepository.save(caseSubmissionEntityArgumentCaptor.capture())).thenReturn(new CaseSubmissionEntity());
         when(eventTypeRepository.getEventTypeEntityByDescriptionEquals(expectedEventType.getName())).thenReturn(new EventTypeEntity(1,expectedEventType.getName()));
-        var expectedCaseSubmissionEntity = createExpectedCaseSubmissionEntity(RecordType.FDC, 1, null, expectedHttpStatusCode);
+        var expectedCaseSubmissionEntity = createExpectedCaseSubmissionEntity(RecordType.FDC, 1, testBatchId, null, expectedHttpStatusCode);
 
         eventService.logFdc(expectedEventType,testBatchId,fdcObject,expectedHttpStatusCode,testPayload);
 
@@ -216,6 +216,22 @@ class EventServiceTest {
     }
 
     @Test
+    void whenLogFdcIsCalledWithMaatId_thenLogEntryIsAsExpected() {
+        HttpStatusCode expectedHttpStatusCode = HttpStatus.OK;
+        EventType expectedEventType = EventType.DRC_ASYNC_RESPONSE;
+        Fdc fdcObject = createTestFdcObject();
+
+        when(caseSubmissionRepository.save(caseSubmissionEntityArgumentCaptor.capture())).thenReturn(new CaseSubmissionEntity());
+        when(eventTypeRepository.getEventTypeEntityByDescriptionEquals(expectedEventType.getName())).thenReturn(new EventTypeEntity(4,expectedEventType.getName()));
+        var expectedCaseSubmissionEntity = createExpectedCaseSubmissionEntity(RecordType.FDC, 4, null, null, expectedHttpStatusCode);
+
+        eventService.logFdc(fdcObject.getId(), expectedEventType, testMaatId, expectedHttpStatusCode, testPayload);
+
+        softly.assertThat(caseSubmissionEntityArgumentCaptor.getValue()).isEqualTo(expectedCaseSubmissionEntity);
+        softly.assertAll();
+    }
+
+    @Test
     void whenLogContributionIsCalledWithAllDetails_thenLogEntryIsAsExpected() {
         HttpStatusCode expectedHttpStatusCode = HttpStatus.OK;
         EventType expectedEventType = EventType.SENT_TO_DRC;
@@ -223,9 +239,24 @@ class EventServiceTest {
 
         when(caseSubmissionRepository.save(caseSubmissionEntityArgumentCaptor.capture())).thenReturn(new CaseSubmissionEntity());
         when(eventTypeRepository.getEventTypeEntityByDescriptionEquals(expectedEventType.getName())).thenReturn(new EventTypeEntity(1,expectedEventType.getName()));
-        var expectedCaseSubmissionEntity = createExpectedCaseSubmissionEntity(RecordType.CONTRIBUTION, 1, testTraceId, expectedHttpStatusCode);
+        var expectedCaseSubmissionEntity = createExpectedCaseSubmissionEntity(RecordType.CONTRIBUTION, 1, testBatchId, testTraceId, expectedHttpStatusCode);
 
         eventService.logConcor(testConcorId, expectedEventType,testBatchId,testTraceId,contributionObject,expectedHttpStatusCode,testPayload);
+
+        softly.assertThat(caseSubmissionEntityArgumentCaptor.getValue()).isEqualTo(expectedCaseSubmissionEntity);
+        softly.assertAll();
+    }
+
+    @Test
+    void whenLogContributionIsCalledWithMaatId_thenLogEntryIsAsExpected() {
+        HttpStatusCode expectedHttpStatusCode = HttpStatus.OK;
+        EventType expectedEventType = EventType.DRC_ASYNC_RESPONSE;
+
+        when(caseSubmissionRepository.save(caseSubmissionEntityArgumentCaptor.capture())).thenReturn(new CaseSubmissionEntity());
+        when(eventTypeRepository.getEventTypeEntityByDescriptionEquals(expectedEventType.getName())).thenReturn(new EventTypeEntity(4,expectedEventType.getName()));
+        var expectedCaseSubmissionEntity = createExpectedCaseSubmissionEntity(RecordType.CONTRIBUTION, 4, null, null, expectedHttpStatusCode);
+
+        eventService.logConcor(testConcorId, expectedEventType, testMaatId, expectedHttpStatusCode, testPayload);
 
         softly.assertThat(caseSubmissionEntityArgumentCaptor.getValue()).isEqualTo(expectedCaseSubmissionEntity);
         softly.assertAll();
@@ -239,7 +270,7 @@ class EventServiceTest {
 
         when(caseSubmissionRepository.save(caseSubmissionEntityArgumentCaptor.capture())).thenReturn(new CaseSubmissionEntity());
         when(eventTypeRepository.getEventTypeEntityByDescriptionEquals(expectedEventType.getName())).thenReturn(new EventTypeEntity(1,expectedEventType.getName()));
-        var expectedCaseSubmissionEntity = createExpectedCaseSubmissionEntity(RecordType.CONTRIBUTION, 1, null, expectedHttpStatusCode);
+        var expectedCaseSubmissionEntity = createExpectedCaseSubmissionEntity(RecordType.CONTRIBUTION, 1, testBatchId, null, expectedHttpStatusCode);
 
         eventService.logConcor(testConcorId, expectedEventType,testBatchId,contributionObject,expectedHttpStatusCode,testPayload);
 
@@ -289,11 +320,11 @@ class EventServiceTest {
         softly.assertAll();
     }
 
-    private CaseSubmissionEntity createExpectedCaseSubmissionEntity(RecordType recordType, Integer eventTypeId, Long traceId,HttpStatusCode httpStatusCode){
+    private CaseSubmissionEntity createExpectedCaseSubmissionEntity(RecordType recordType, Integer eventTypeId, Long batchId, Long traceId, HttpStatusCode httpStatusCode){
         return CaseSubmissionEntity.builder()
                 .id(null) // this will not be assigned till post-save.
                 .traceId(traceId)
-                .batchId(testBatchId)
+                .batchId(batchId)
                 .maatId(testMaatId)
                 .fdcId(RecordType.FDC.equals(recordType) ? testFdcId: null)
                 .concorContributionId(RecordType.CONTRIBUTION.equals(recordType) ? testConcorId : null)

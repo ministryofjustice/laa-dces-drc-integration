@@ -57,14 +57,15 @@ public class ContributionAckService {
                 .concorId(concorContributionAckFromDrc.data().concorContributionId())
                 .errorText(report.isSuccessReport() ? null : report.title())
                 .build();
+        Long maatId = concorContributionAckFromDrc.data().maatId();
         try {
-            long fileId = executeContributionProcessedAckCall(contributionProcessedRequest);
+            long fileId = executeContributionProcessedAckCall(contributionProcessedRequest, maatId);
             eventService.logConcorContributionAckResult(concorContributionAckFromDrc, HttpStatus.OK);
             return fileId;
         } catch (WebClientResponseException e) {
             log.error("Failed to process Concor Contribution acknowledgement from DRC for concorContributionId {}: {}",
                 concorContributionAckFromDrc.data().concorContributionId(), e.getMessage(), e);
-            logContributionAsyncEvent(contributionProcessedRequest, e.getStatusCode());
+            logContributionAsyncEvent(contributionProcessedRequest, maatId, e.getStatusCode());
             ErrorResponseException errorResponseException = AckServiceUtils.translateMAATCDAPIExceptionForContribution(e,
               concorContributionAckFromDrc.data().concorContributionId());
             eventService.logConcorContributionAckResult(concorContributionAckFromDrc, errorResponseException.getStatusCode());
@@ -85,21 +86,21 @@ public class ContributionAckService {
     // External Call Executions Methods
 
     @Retry(name = SERVICE_NAME)
-    public long executeContributionProcessedAckCall(ContributionProcessedRequest contributionProcessedRequest) {
+    public long executeContributionProcessedAckCall(ContributionProcessedRequest contributionProcessedRequest, long maatId) {
         long result = 0L;
         if (!feature.incomingIsolated()) {
             result = contributionClient.sendLogContributionProcessed(contributionProcessedRequest);
         } else {
             log.info("Feature:IncomingIsolated: processContributionUpdate: Skipping MAAT API sendLogContributionProcessed() call");
         }
-        logContributionAsyncEvent(contributionProcessedRequest, OK);
+        logContributionAsyncEvent(contributionProcessedRequest, maatId, OK);
         return result;
     }
 
     // Logging Methods
 
-    private void logContributionAsyncEvent(ContributionProcessedRequest contributionProcessedRequest, HttpStatusCode httpStatusCode){
-        eventService.logConcor(contributionProcessedRequest.getConcorId(), DRC_ASYNC_RESPONSE, null, null, httpStatusCode, contributionProcessedRequest.getErrorText());
+    private void logContributionAsyncEvent(ContributionProcessedRequest contributionProcessedRequest, long maatId, HttpStatusCode httpStatusCode){
+        eventService.logConcor(contributionProcessedRequest.getConcorId(), DRC_ASYNC_RESPONSE, maatId, httpStatusCode, contributionProcessedRequest.getErrorText());
     }
 
     private Timer getTimer(String name, String... tagsMap) {

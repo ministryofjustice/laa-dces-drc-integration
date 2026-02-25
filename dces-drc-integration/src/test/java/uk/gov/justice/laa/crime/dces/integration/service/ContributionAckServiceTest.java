@@ -29,6 +29,7 @@ import static org.springframework.http.HttpStatus.OK;
 import static uk.gov.justice.laa.crime.dces.integration.test.TestDataFixtures.CONTRIB_ID_FILE_NOT_FOUND_IN_MAAT;
 import static uk.gov.justice.laa.crime.dces.integration.test.TestDataFixtures.CONTRIB_ID_FOUND_IN_MAAT;
 import static uk.gov.justice.laa.crime.dces.integration.test.TestDataFixtures.CONTRIB_ID_NOT_FOUND_IN_MAAT;
+import static uk.gov.justice.laa.crime.dces.integration.test.TestDataFixtures.MAAT_ID;
 import static uk.gov.justice.laa.crime.dces.integration.test.TestDataFixtures.buildContribAck;
 
 @ExtendWith(SoftAssertionsExtension.class)
@@ -57,7 +58,7 @@ class ContributionAckServiceTest extends ApplicationTestBase {
 		ConcorContributionAckFromDrc ackFromDrc = buildContribAck(CONTRIB_ID_FOUND_IN_MAAT);
 		Long response = contributionAckService.handleContributionProcessedAck(ackFromDrc);
 		softly.assertThat(response).isEqualTo(1111L);
-		verify(eventService).logConcor(911L,EventType.DRC_ASYNC_RESPONSE,null,null, OK, null);
+		verify(eventService).logConcor(911L, EventType.DRC_ASYNC_RESPONSE, MAAT_ID, OK, null);
 		verify(eventService).logConcorContributionAckResult(ackFromDrc, OK);
 	}
 
@@ -67,6 +68,7 @@ class ContributionAckServiceTest extends ApplicationTestBase {
 		ConcorContributionAckFromDrc ackFromDrc = buildContribAck(CONTRIB_ID_FOUND_IN_MAAT);
 		Long response = contributionAckService.handleContributionProcessedAck(ackFromDrc);
 		softly.assertThat(response).isEqualTo(0L); // so MAAT DB not touched
+		verify(eventService).logConcor(911L, EventType.DRC_ASYNC_RESPONSE, MAAT_ID, OK, null);
 		verify(eventService).logConcorContributionAckResult(ackFromDrc, OK);
 	}
 
@@ -78,7 +80,7 @@ class ContributionAckServiceTest extends ApplicationTestBase {
     softly.assertThat(exception.getStatusCode()).isEqualTo(NOT_FOUND);
     softly.assertThat(exception.getBody().getTitle()).isEqualTo("Contribution ID not found");
     softly.assertThat(exception.getBody().getDetail()).isEqualTo("Contribution ID 404 not found");
-		verify(eventService).logConcor(CONTRIB_ID_NOT_FOUND_IN_MAAT, EventType.DRC_ASYNC_RESPONSE,null,null, NOT_FOUND, errorText);
+		verify(eventService).logConcor(CONTRIB_ID_NOT_FOUND_IN_MAAT, EventType.DRC_ASYNC_RESPONSE, MAAT_ID, NOT_FOUND, errorText);
 		verify(eventService).logConcorContributionAckResult(ackFromDrc, NOT_FOUND);
 	}
 
@@ -90,7 +92,7 @@ class ContributionAckServiceTest extends ApplicationTestBase {
     softly.assertThat(exception.getStatusCode()).isEqualTo(FAILED_DEPENDENCY);
     softly.assertThat(exception.getBody().getTitle()).isEqualTo("Corresponding Contribution File not found");
     softly.assertThat(exception.getBody().getDetail()).isEqualTo("Contribution ID 9 is not associated with a Contribution File");
-		verify(eventService).logConcor(9L,EventType.DRC_ASYNC_RESPONSE,null,null, BAD_REQUEST, errorText);
+		verify(eventService).logConcor(9L, EventType.DRC_ASYNC_RESPONSE, MAAT_ID, BAD_REQUEST, errorText);
 		verify(eventService).logConcorContributionAckResult(ackFromDrc, FAILED_DEPENDENCY);
 	}
 

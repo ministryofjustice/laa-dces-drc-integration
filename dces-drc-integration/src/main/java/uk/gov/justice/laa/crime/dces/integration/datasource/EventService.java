@@ -81,6 +81,14 @@ public class EventService {
         return logFdc(eventType, batchId, null, fdcObject, httpStatusCode, payload);
     }
 
+    public void logFdc(Long fdcId, EventType eventType, Long maatId, HttpStatusCode httpStatusCode,
+        String errorText) {
+        var entity = createCaseSubmissionEntity(eventType, null, null, maatId, httpStatusCode, errorText);
+        entity.setRecordType(RecordType.FDC);
+        entity.setFdcId(fdcId);
+        saveEntity(entity);
+    }
+
     public boolean logConcor(Long concorContributionId, EventType eventType, Long batchId, Long traceId, CONTRIBUTIONS contributionsObject, HttpStatusCode httpStatusCode, String payload) {
         // default fdcObject if null is passed. No ids is a valid scenario.
         contributionsObject = Objects.requireNonNullElse(contributionsObject, new CONTRIBUTIONS());
@@ -94,6 +102,14 @@ public class EventService {
 
     public boolean logConcor(Long concorContributionId, EventType eventType, Long batchId, CONTRIBUTIONS contributionsObject, HttpStatusCode httpStatusCode, String payload) {
         return logConcor(concorContributionId, eventType, batchId, null, contributionsObject, httpStatusCode, payload);
+    }
+
+    public void logConcor(Long concorId, EventType eventType, long maatId,
+        HttpStatusCode httpStatusCode, String errorText) {
+        var entity = createCaseSubmissionEntity(eventType, null, null, maatId, httpStatusCode, errorText);
+        entity.setRecordType(RecordType.CONTRIBUTION);
+        entity.setConcorContributionId(concorId);
+        saveEntity(entity);
     }
 
     public DrcProcessingStatusEntity logFdcAckResult(FdcAckFromDrc fdcAckFromDrc, HttpStatusCode ackHttpStatus) {

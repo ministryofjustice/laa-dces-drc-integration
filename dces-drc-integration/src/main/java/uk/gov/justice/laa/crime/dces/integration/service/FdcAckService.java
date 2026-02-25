@@ -16,7 +16,6 @@ import uk.gov.justice.laa.crime.dces.integration.datasource.EventService;
 import uk.gov.justice.laa.crime.dces.integration.model.FdcAckFromDrc;
 import uk.gov.justice.laa.crime.dces.integration.model.ProcessingReport;
 import uk.gov.justice.laa.crime.dces.integration.model.external.FdcProcessedRequest;
-import uk.gov.justice.laa.crime.dces.integration.model.generated.fdc.FdcFile.FdcList.Fdc;
 import uk.gov.justice.laa.crime.dces.integration.utils.AckServiceUtils;
 
 import static org.springframework.http.HttpStatus.OK;
@@ -57,14 +56,15 @@ public class FdcAckService {
                 .fdcId(fdcAckFromDrc.data().fdcId())
                 .errorText(report.isSuccessReport() ? null : report.title())
                 .build();
+        Long maatId = fdcAckFromDrc.data().maatId();
         try {
-            long result = executeFdcProcessedAckCall(fdcProcessedRequest);
+            long result = executeFdcProcessedAckCall(fdcProcessedRequest, maatId);
             eventService.logFdcAckResult(fdcAckFromDrc, OK);
             return result;
         } catch (WebClientResponseException e) {
             log.error("Failed to process FDC acknowledgement from DRC for fdcId {}: {}",
               fdcAckFromDrc.data().fdcId(), e.getMessage(), e);
-            logFdcAsyncEvent(fdcProcessedRequest, e.getStatusCode());
+            logFdcAsyncEvent(fdcProcessedRequest, maatId, e.getStatusCode());
             ErrorResponseException errorResponseException = AckServiceUtils.translateMAATCDAPIExceptionForFdc(e,
                 fdcAckFromDrc.data().fdcId());
             eventService.logFdcAckResult(fdcAckFromDrc, errorResponseException.getStatusCode());
@@ -85,23 +85,21 @@ public class FdcAckService {
     // External Call Executions Methods
 
     @Retry(name = SERVICE_NAME)
-    public long executeFdcProcessedAckCall(FdcProcessedRequest fdcProcessedRequest) {
+    public long executeFdcProcessedAckCall(FdcProcessedRequest fdcProcessedRequest, Long maatId) {
         long result = 0L;
         if (!feature.incomingIsolated()) {
             result = fdcClient.sendLogFdcProcessed(fdcProcessedRequest);
         } else {
             log.info("Feature:IncomingIsolated: processFdcUpdate: Skipping MAAT API sendLogFdcProcessed() call");
         }
-        logFdcAsyncEvent(fdcProcessedRequest, OK);
+        logFdcAsyncEvent(fdcProcessedRequest, maatId, OK);
         return result;
     }
 
     // Logging Methods
 
-    private void logFdcAsyncEvent(FdcProcessedRequest fdcProcessedRequest, HttpStatusCode httpStatusCode) {
-        Fdc idHolder = new Fdc();
-        idHolder.setId(fdcProcessedRequest.getFdcId());
-        eventService.logFdc(DRC_ASYNC_RESPONSE, null, idHolder, httpStatusCode, fdcProcessedRequest.getErrorText());
+    private void logFdcAsyncEvent(FdcProcessedRequest fdcProcessedRequest, Long maatId, HttpStatusCode httpStatusCode) {
+        eventService.logFdc(fdcProcessedRequest.getFdcId(), DRC_ASYNC_RESPONSE, maatId, httpStatusCode, fdcProcessedRequest.getErrorText());
     }
 
     private Timer getTimer(String name, String... tagsMap) {
