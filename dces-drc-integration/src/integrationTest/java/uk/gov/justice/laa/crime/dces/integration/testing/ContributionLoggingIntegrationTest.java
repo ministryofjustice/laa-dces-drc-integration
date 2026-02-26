@@ -41,6 +41,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static uk.gov.justice.laa.crime.dces.integration.utils.IntTestDataFixtures.MAAT_ID;
 import static uk.gov.justice.laa.crime.dces.integration.utils.IntTestDataFixtures.buildContribAck;
 
 @Slf4j
@@ -307,7 +308,7 @@ class ContributionLoggingIntegrationTest {
     private void assertCaseSubmissionEntity(CaseSubmissionEntity caseSubmission, Long contribId, LocalDateTime startTimestamp, LocalDateTime endTimestamp, String payload) {
         softly.assertThat(caseSubmission.getBatchId()).isNull();
         softly.assertThat(caseSubmission.getTraceId()).isNull();
-        softly.assertThat(caseSubmission.getMaatId()).isNull();
+        softly.assertThat(caseSubmission.getMaatId()).isEqualTo(MAAT_ID);
         softly.assertThat(caseSubmission.getConcorContributionId()).isEqualTo(contribId);
         softly.assertThat(caseSubmission.getFdcId()).isNull();
         softly.assertThat(caseSubmission.getRecordType()).isEqualTo("Contribution");
