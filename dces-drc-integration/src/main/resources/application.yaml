@@ -36,8 +36,8 @@ logging:
   level:
     level: debug
     uk.gov.justice.laa.crime.dces.integration: debug
-    org.springframework.web: debug
-    org.springframework.security: debug
+    org.springframework.web.servlet.DispatcherServlet: debug
+    org.springframework.security: info
     org.springframework.http: debug
     org.springframework.security.oauth2: debug
     org.springframework.security.oauth2.client: debug
