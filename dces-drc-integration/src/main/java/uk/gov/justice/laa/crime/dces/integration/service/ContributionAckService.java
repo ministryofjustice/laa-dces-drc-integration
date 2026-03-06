@@ -34,6 +34,8 @@ public class ContributionAckService {
     private final EventService eventService;
     private final MeterRegistry meterRegistry;
 
+    private boolean errorToggle = false;
+
     /**
      * Method which logs that a specific contribution has been processed by the Debt Recovery Company.
      * <ul>
@@ -47,6 +49,21 @@ public class ContributionAckService {
     public Long handleContributionProcessedAck(ConcorContributionAckFromDrc concorContributionAckFromDrc) {
 
         Timer.Sample timerSample = Timer.start(meterRegistry);
+
+        if (concorContributionAckFromDrc.data().concorContributionId() == 999999) {
+          try {
+            log.info("Contribution ID is 999999, toggling error mode");
+            if (errorToggle) {
+                log.info("errorToggle is true, throwing exception");
+                throw new RuntimeException("Something bad happened!");
+            } else {
+                log.info("errorToggle is false, response 200");
+                return 0L;
+            }
+          } finally {
+              errorToggle = !errorToggle;
+          }
+        }
 
         if (isDuplicateRequest(concorContributionAckFromDrc)) {
             throw AckServiceUtils.buildDuplicateContributionRequestException();
