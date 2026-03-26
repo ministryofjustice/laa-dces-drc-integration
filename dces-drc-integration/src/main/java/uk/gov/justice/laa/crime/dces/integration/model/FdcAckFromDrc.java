@@ -18,9 +18,14 @@ public record FdcAckFromDrc(
         @NotNull(message = "FDC ID cannot be null.")
         @Positive(message = "FDC ID must be positive.")
         Long fdcId,
+
+        /*
+          No check for positive numbers on maatId because if the MAAT ID is invalid, e.g. < 1
+          the invalid value will be returned in this field.
+         */
         @NotNull(message = "MAAT ID cannot be null.")
-        @Positive(message = "MAAT ID must be positive.")
         Long maatId,
+
         @Valid
         @NotNull(message = "Report cannot be null.")
         ProcessingReport report) {
