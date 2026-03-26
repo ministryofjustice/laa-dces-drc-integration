@@ -75,6 +75,7 @@ public class DrcApiWebClientConfiguration {
                 .filter(new WebClientMetricsFilter(meterRegistry, DRC_API_WEBCLIENT_REQUESTS))
                 .filter(WebClientLoggingFilter.logRequest())
                 .filter(WebClientLoggingFilter.logResponse())
+                .filter(WebClientLoggingFilter.logResponseBody())
                 .clientConnector(new ReactorClientHttpConnector(createHttpClient(provider, sslBundles)));
 
         if (services.getDrcClientApi().isOAuthEnabled()) {
