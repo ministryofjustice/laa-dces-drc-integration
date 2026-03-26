@@ -18,9 +18,14 @@ public record ConcorContributionAckFromDrc(
         @NotNull(message = "Concor Contribution ID cannot be null.")
         @Positive(message = "Concor Contribution ID must be positive.")
         Long concorContributionId,
+
+        /*
+          No check for positive numbers on maatId because if the MAAT ID is invalid, e.g. < 1
+          the invalid value will be returned in this field.
+         */
         @NotNull(message = "MAAT ID cannot be null.")
-        @Positive(message = "MAAT ID must be positive.")
         Long maatId,
+
         @Valid
         @NotNull(message = "Report cannot be null.")
         ProcessingReport report) {

@@ -163,7 +163,7 @@ class AckFromDrcControllerTest {
             @DisplayName("Data must have all mandatory fields present.")
             @MethodSource("provideFdcAckDataWithNulls")
             void fdcAckDataWithMissingFieldsProcessingRequestReturnsBadRequestStatus(
-                FdcAckData fdcAckData)
+                FdcAckData fdcAckData, String expectedFieldInError, String expectedMessage)
                 throws Exception {
                 FdcAckFromDrc ackWithNullFields = new FdcAckFromDrc(fdcAckData, Map.of());
                 String request = mapper.writeValueAsString(ackWithNullFields);
@@ -171,40 +171,47 @@ class AckFromDrcControllerTest {
                 mockMvc.perform(MockMvcRequestBuilders.post(CONTRIBUTION_FDC_URL)
                         .content(request)
                         .contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpectAll(validationErrorResponseExpectations());
+                    .andExpectAll(validationErrorResponseExpectations())
+                    .andExpectAll(validationFieldErrorExpectations(expectedFieldInError, expectedMessage));
             }
 
             static Stream<Arguments> provideFdcAckDataWithNulls() {
                 return Stream.of(
-                    Arguments.of(new FdcAckData(null, 1L, new ProcessingReport("title", "detail"))),
                     Arguments.of(
-                        new FdcAckData(123L, null, new ProcessingReport("title", "detail"))),
-                    Arguments.of(new FdcAckData(123L, 1L, null))
+                        new FdcAckData(null, 1L, new ProcessingReport(VALID_TITLE, VALID_DETAIL)),
+                        "data.fdcId","FDC ID cannot be null."),
+                    Arguments.of(
+                        new FdcAckData(123L, null, new ProcessingReport(VALID_TITLE, VALID_DETAIL)),
+                        "data.maatId","MAAT ID cannot be null."),
+                    Arguments.of(
+                        new FdcAckData(123L, 1L, null),
+                        "data.report","Report cannot be null.")
                 );
             }
 
             @ParameterizedTest
-            @DisplayName("FDC and MAAT IDs must be positive integers.")
+            @DisplayName("FDC IDs must be positive integers.")
             @MethodSource("provideFdcAckDataWithNegativeIds")
             void fdcAckDataWithNegativeIdsProcessingRequestReturnsBadRequestStatus(
-                FdcAckData fdcAckData)
+                FdcAckData fdcAckData, String expectedFieldInError, String expectedMessage)
                 throws Exception {
                 FdcAckFromDrc ackWithNegativeId = new FdcAckFromDrc(fdcAckData, Map.of());
                 String request = mapper.writeValueAsString(ackWithNegativeId);
 
                 mockMvc.perform(MockMvcRequestBuilders.post(CONTRIBUTION_FDC_URL)
-                        .content(request)
-                        .contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpectAll(validationErrorResponseExpectations());
+                    .content(request)
+                    .contentType(MediaType.APPLICATION_JSON_VALUE))
+                    .andExpectAll(validationErrorResponseExpectations())
+                    .andExpectAll(validationFieldErrorExpectations(expectedFieldInError, expectedMessage));
             }
 
             static Stream<Arguments> provideFdcAckDataWithNegativeIds() {
                 return Stream.of(
-                    Arguments.of(new FdcAckData(-1L, 1L, new ProcessingReport("title", "detail"))),
                     Arguments.of(
-                        new FdcAckData(123L, -1L, new ProcessingReport("title", "detail"))),
-                    Arguments.of(new FdcAckData(0L, 1L, new ProcessingReport("title", "detail"))),
-                    Arguments.of(new FdcAckData(123L, 0L, new ProcessingReport("title", "detail")))
+                        new FdcAckData(-1L, -1L, new ProcessingReport(VALID_TITLE, VALID_DETAIL)),
+                        "data.fdcId", "FDC ID must be positive."),
+                    Arguments.of(new FdcAckData(0L, 0L, new ProcessingReport(VALID_TITLE, VALID_DETAIL)),
+                        "data.fdcId", "FDC ID must be positive.")
                 );
             }
 
@@ -349,54 +356,56 @@ class AckFromDrcControllerTest {
             @DisplayName("Data must have all mandatory fields present.")
             @MethodSource("provideContributionAckDataWithNulls")
             void contributionAckDataWithMissingFieldsProcessingRequestReturnsBadRequestStatus(
-                ConcorContributionAckData contributionAckData)
+                ConcorContributionAckData contributionAckData, String expectedFieldInError, String expectedMessage)
                 throws Exception {
                 ConcorContributionAckFromDrc ackWithNullFields = new ConcorContributionAckFromDrc(
                     contributionAckData, Map.of());
                 String request = mapper.writeValueAsString(ackWithNullFields);
 
                 mockMvc.perform(MockMvcRequestBuilders.post(CONTRIBUTION_URL)
-                        .content(request)
-                        .contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpectAll(validationErrorResponseExpectations());
+                    .content(request)
+                    .contentType(MediaType.APPLICATION_JSON_VALUE))
+                    .andExpectAll(validationErrorResponseExpectations())
+                    .andExpectAll(validationFieldErrorExpectations(expectedFieldInError, expectedMessage));
             }
 
             static Stream<Arguments> provideContributionAckDataWithNulls() {
                 return Stream.of(
-                    Arguments.of(new ConcorContributionAckData(null, 1L,
-                        new ProcessingReport("title", "detail"))),
-                    Arguments.of(new ConcorContributionAckData(123L, null,
-                        new ProcessingReport("title", "detail"))),
-                    Arguments.of(new ConcorContributionAckData(123L, 1L, null))
+                    Arguments.of(
+                        new ConcorContributionAckData(null, 1L, new ProcessingReport(VALID_TITLE, VALID_DETAIL)),
+                        "data.concorContributionId", "Concor Contribution ID cannot be null."),
+                    Arguments.of(new ConcorContributionAckData(123L, null, new ProcessingReport(VALID_TITLE, VALID_DETAIL)),
+                        "data.maatId", "MAAT ID cannot be null."),
+                    Arguments.of(new ConcorContributionAckData(123L, 1L, null),
+                        "data.report", "Report cannot be null.")
                 );
             }
 
             @ParameterizedTest
-            @DisplayName("Contribution and MAAT IDs must be positive integers.")
+            @DisplayName("Contribution IDs must be positive integers.")
             @MethodSource("provideContributionAckDataWithNegativeIds")
             void contributionAckDataWithNegativeIdsProcessingRequestReturnsBadRequestStatus(
-                ConcorContributionAckData contributionAckData)
+                ConcorContributionAckData contributionAckData, String expectedFieldInError, String expectedMessage)
                 throws Exception {
                 ConcorContributionAckFromDrc ackWithNegativeId = new ConcorContributionAckFromDrc(
                     contributionAckData, Map.of());
                 String request = mapper.writeValueAsString(ackWithNegativeId);
 
                 mockMvc.perform(MockMvcRequestBuilders.post(CONTRIBUTION_URL)
-                        .content(request)
-                        .contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpectAll(validationErrorResponseExpectations());
+                    .content(request)
+                    .contentType(MediaType.APPLICATION_JSON_VALUE))
+                    .andExpectAll(validationErrorResponseExpectations())
+                    .andExpectAll(validationFieldErrorExpectations(expectedFieldInError, expectedMessage));
             }
 
             static Stream<Arguments> provideContributionAckDataWithNegativeIds() {
                 return Stream.of(
-                    Arguments.of(new ConcorContributionAckData(-1L, 1L,
-                        new ProcessingReport("title", "detail"))),
-                    Arguments.of(new ConcorContributionAckData(123L, -1L,
-                        new ProcessingReport("title", "detail"))),
-                    Arguments.of(new ConcorContributionAckData(0L, 1L,
-                        new ProcessingReport("title", "detail"))),
-                    Arguments.of(new ConcorContributionAckData(123L, 0L,
-                        new ProcessingReport("title", "detail")))
+                    Arguments.of(
+                        new ConcorContributionAckData(-1L, -1L, new ProcessingReport(VALID_TITLE, VALID_DETAIL)),
+                        "data.concorContributionId", "Concor Contribution ID must be positive."),
+                    Arguments.of(
+                        new ConcorContributionAckData(0L, 0L, new ProcessingReport(VALID_TITLE, VALID_DETAIL)),
+                        "data.concorContributionId", "Concor Contribution ID must be positive.")
                 );
             }
 
