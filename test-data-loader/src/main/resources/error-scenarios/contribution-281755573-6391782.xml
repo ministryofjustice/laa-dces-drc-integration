@@ -84,7 +84,7 @@
     <effectiveDate>2026-03-23</effectiveDate>
     <monthlyContribution>100</monthlyContribution>
     <upfrontContribution>0</upfrontContribution>
-    <incomeContributionCap>INVALID</incomeContributionCap>
+    <incomeContributionCap>1</incomeContributionCap>
     <assessmentReason>
       <code>PAI</code>
       <description>Previous Assessment was Incorrect</description>
