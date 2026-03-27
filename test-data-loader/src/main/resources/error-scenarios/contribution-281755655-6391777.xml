@@ -1,0 +1,134 @@
+<?xml version="1.0"?>
+<CONTRIBUTIONS id="281755577" flag="new">
+  <maat_id>6391777</maat_id>
+  <applicant id="281754298">
+    <firstName>Emma</firstName>
+    <lastName>Brown</lastName>
+    <dob>1999-11-22</dob>
+    <noFixedAbode>no</noFixedAbode>
+    <specialInvestigation>no</specialInvestigation>
+    <homeAddress>
+      <detail>
+        <line1>102 petty france</line1>
+        <line2/>
+        <line3/>
+        <city/>
+        <country/>
+        <postcode>SE1 5ED</postcode>
+      </detail>
+    </homeAddress>
+    <postalAddress>
+      <detail>
+        <line1>102 petty france</line1>
+        <line2/>
+        <line3/>
+        <city/>
+        <country/>
+        <postcode>SE1 5ED</postcode>
+      </detail>
+    </postalAddress>
+    <employmentStatus>
+      <code>EMPLOY</code>
+      <description>Employed</description>
+    </employmentStatus>
+    <partner>
+      <hasPartner>yes</hasPartner>
+      <contraryInterest>no</contraryInterest>
+      <ciDetails>
+        <code>NOCON</code>
+        <description>No Contrary Interest</description>
+      </ciDetails>
+    </partner>
+    <partnerDetails>
+      <firstName>John</firstName>
+      <lastName>Brown</lastName>
+      <dob>2007-06-17</dob>
+      <employmentStatus>
+        <code>EMPLOY</code>
+        <description>Employed</description>
+      </employmentStatus>
+    </partnerDetails>
+    <disabilitySummary>
+      <declaration>NOT_STATED</declaration>
+    </disabilitySummary>
+  </applicant>
+  <application>
+    <offenceType>
+      <code>OTHER</code>
+      <description>H-Miscellaneous other offences</description>
+    </offenceType>
+    <caseType>
+      <code>INDICTABLE</code>
+      <description>Indictable</description>
+    </caseType>
+    <repStatus>
+      <status>CURR</status>
+      <description>Current</description>
+    </repStatus>
+    <magsCourt>
+      <court>242</court>
+      <description>Nottingham</description>
+    </magsCourt>
+    <repStatusDate>2026-03-23</repStatusDate>
+    <arrestSummonsNumber>2011999999999999ASND</arrestSummonsNumber>
+    <inCourtCustody>no</inCourtCustody>
+    <imprisoned>no</imprisoned>
+    <committalDate>2025-04-06</committalDate>
+    <solicitor>
+      <accountCode>1Q462V</accountCode>
+      <name>TREMLETTS SOLICITORS ***</name>
+    </solicitor>
+  </application>
+  <assessment>
+    <effectiveDate>INVALID</effectiveDate>
+    <monthlyContribution>2310</monthlyContribution>
+    <upfrontContribution>7427</upfrontContribution>
+    <incomeContributionCap>7427</incomeContributionCap>
+    <assessmentReason>
+      <code>FMA</code>
+      <description>First Means Assessment</description>
+    </assessmentReason>
+    <assessmentDate>2026-03-23</assessmentDate>
+    <incomeEvidenceList>
+      <incomeEvidence>
+        <evidence>NINO</evidence>
+        <mandatory>yes</mandatory>
+      </incomeEvidence>
+      <incomeEvidence>
+        <evidence>NINO</evidence>
+        <mandatory>yes</mandatory>
+      </incomeEvidence>
+      <incomeEvidence>
+        <evidence>SIGNATURE</evidence>
+        <mandatory>yes</mandatory>
+      </incomeEvidence>
+      <incomeEvidence>
+        <evidence>WAGE SLIP</evidence>
+        <mandatory>yes</mandatory>
+      </incomeEvidence>
+      <incomeEvidence>
+        <evidence>WAGE SLIP</evidence>
+        <mandatory>yes</mandatory>
+      </incomeEvidence>
+    </incomeEvidenceList>
+    <sufficientDeclaredEquity>no</sufficientDeclaredEquity>
+    <sufficientVerifiedEquity>no</sufficientVerifiedEquity>
+    <sufficientCapitalandEquity>no</sufficientCapitalandEquity>
+  </assessment>
+  <passported/>
+  <equity/>
+  <capitalSummary>
+    <noCapitalDeclared>no</noCapitalDeclared>
+  </capitalSummary>
+  <ccOutcomes/>
+  <correspondence>
+    <letter>
+      <Ref>T3</Ref>
+      <id>281755584</id>
+      <type>CONTRIBUTION_ORDER</type>
+      <created>2026-03-23</created>
+      <printed/>
+    </letter>
+  </correspondence>
+  <breathingSpaceInfo/>
+</CONTRIBUTIONS>

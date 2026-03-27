@@ -1,0 +1,160 @@
+<?xml version="1.0"?>
+<CONTRIBUTIONS id="281757795" flag="new">
+  <maat_id>6391817</maat_id>
+  <applicant id="281757720">
+    <firstName>James</firstName>
+    <lastName>Smith</lastName>
+    <dob>1982-03-04</dob>
+    <preferredPaymentDay>0</preferredPaymentDay>
+    <noFixedAbode>no</noFixedAbode>
+    <specialInvestigation>no</specialInvestigation>
+    <homeAddress>
+      <detail>
+        <line1>102 petty france</line1>
+        <line2/>
+        <line3/>
+        <city/>
+        <country/>
+        <postcode>SE1 5ED</postcode>
+      </detail>
+    </homeAddress>
+    <postalAddress>
+      <detail>
+        <line1>102 petty france</line1>
+        <line2/>
+        <line3/>
+        <city/>
+        <country/>
+        <postcode>SE1 5ED</postcode>
+      </detail>
+    </postalAddress>
+    <employmentStatus>
+      <code>EMPLOYED-CASH</code>
+      <description>Employed Cash in Hand</description>
+    </employmentStatus>
+    <disabilitySummary>
+      <declaration>NOT_STATED</declaration>
+    </disabilitySummary>
+  </applicant>
+  <application>
+    <offenceType>
+      <code>OTHER</code>
+      <description>H-Miscellaneous other offences</description>
+    </offenceType>
+    <caseType>
+      <code>EITHER WAY</code>
+      <description>Either-Way</description>
+    </caseType>
+    <repStatus>
+      <status>CURR</status>
+      <description>Current</description>
+    </repStatus>
+    <magsCourt>
+      <court>242</court>
+      <description>Nottingham</description>
+    </magsCourt>
+    <repStatusDate>2026-03-23</repStatusDate>
+    <arrestSummonsNumber>2011999999999999ASND</arrestSummonsNumber>
+    <inCourtCustody>no</inCourtCustody>
+    <imprisoned>yes</imprisoned>
+    <repOrderWithdrawalDate>2026-02-23</repOrderWithdrawalDate>
+    <committalDate>2025-04-06</committalDate>
+    <sentenceDate>2026-03-23</sentenceDate>
+    <solicitor>
+      <accountCode>1Q462V</accountCode>
+      <name>TREMLETTS SOLICITORS ***</name>
+    </solicitor>
+  </application>
+  <assessment>
+    <effectiveDate>2026-03-23</effectiveDate>
+    <monthlyContribution>0</monthlyContribution>
+    <upfrontContribution>0</upfrontContribution>
+    <incomeContributionCap>7427</incomeContributionCap>
+    <assessmentReason>
+      <code>FMA</code>
+      <description>First Means Assessment</description>
+    </assessmentReason>
+    <assessmentDate>2026-03-23</assessmentDate>
+    <incomeEvidenceList>
+      <incomeEvidence>
+        <evidence>BANK STATEMENT</evidence>
+        <mandatory>no</mandatory>
+        <dateReceived>2026-03-23</dateReceived>
+      </incomeEvidence>
+      <incomeEvidence>
+        <evidence>EMP LETTER</evidence>
+        <mandatory>no</mandatory>
+      </incomeEvidence>
+      <incomeEvidence>
+        <evidence>NINO</evidence>
+        <mandatory>yes</mandatory>
+        <dateReceived>2026-03-23</dateReceived>
+      </incomeEvidence>
+    </incomeEvidenceList>
+    <sufficientDeclaredEquity>no</sufficientDeclaredEquity>
+    <sufficientVerifiedEquity>no</sufficientVerifiedEquity>
+    <sufficientCapitalandEquity>no</sufficientCapitalandEquity>
+  </assessment>
+  <passported/>
+  <equity>
+    <undeclaredProperty>no</undeclaredProperty>
+    <equityVerified>no</equityVerified>
+    <propertyDescriptor>
+      <residentialStatus>
+        <code>PARENTS</code>
+        <description>Owned by Parents</description>
+      </residentialStatus>
+      <address>
+        <detail>
+          <line1>102 petty france</line1>
+          <line2/>
+          <line3/>
+          <city/>
+          <country/>
+          <postcode>SE1 5ED</postcode>
+        </detail>
+      </address>
+      <percentageApplicantOwned>0</percentageApplicantOwned>
+      <percentagePartnerOwned>0</percentagePartnerOwned>
+      <tenantInPlace>no</tenantInPlace>
+    </propertyDescriptor>
+  </equity>
+  <capitalSummary>
+    <allEvidenceDate>2026-03-23</allEvidenceDate>
+    <totalCapitalAssets>10000</totalCapitalAssets>
+    <noCapitalDeclared>no</noCapitalDeclared>
+    <motorVehicleOwnership>
+      <Owner>no</Owner>
+    </motorVehicleOwnership>
+    <assetList>
+      <asset>
+        <type>
+          <code>SAVINGS</code>
+          <description>Savings</description>
+        </type>
+        <amount>10000</amount>
+        <verified>no</verified>
+        <evidenceReceivedDate>2026-03-23</evidenceReceivedDate>
+      </asset>
+    </assetList>
+  </capitalSummary>
+  <ccOutcomes>
+  </ccOutcomes>
+  <correspondence>
+    <letter>
+      <Ref>T2</Ref>
+      <id>281757869</id>
+      <type>CONTRIBUTION_NOTICE</type>
+      <created>2026-03-23</created>
+      <printed/>
+    </letter>
+    <letter>
+      <Ref>W1</Ref>
+      <id>281758413</id>
+      <type>CONTRIBUTION_NOTICE</type>
+      <created>2026-03-23</created>
+      <printed/>
+    </letter>
+  </correspondence>
+  <breathingSpaceInfo/>
+</CONTRIBUTIONS>
