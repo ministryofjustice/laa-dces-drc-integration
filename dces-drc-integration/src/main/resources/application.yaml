@@ -32,15 +32,23 @@ sentry:
   in-app-includes: uk.gov.justice.laa.crime.dces.integration
 
 logging:
-  config: "classpath:logback-json.xml"
   level:
-    level: debug
+    root: info
     uk.gov.justice.laa.crime.dces.integration: debug
     org.springframework.web.servlet.DispatcherServlet: debug
     org.springframework.security: info
     org.springframework.http: debug
     org.springframework.security.oauth2: debug
     org.springframework.security.oauth2.client: debug
+  structured:
+    format:
+      console: ecs
+    ecs:
+      service:
+        name: ${spring.application.name:default}
+        version: ${spring.application.version:default}
+        environment: ${spring.profiles.active:default}
+        node_name: ${HOSTNAME:unknown}
 
 services:
   maat-api:
@@ -70,6 +78,10 @@ scheduling:
     at-most: 15m
 
 spring:
+  application:
+    name: laa-dces-drc-integration
+    version: 1.0.0
+
   security:
     oauth2:
       client:

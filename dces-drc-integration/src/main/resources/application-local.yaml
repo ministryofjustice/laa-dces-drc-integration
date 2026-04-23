@@ -1,0 +1,14 @@
+logging:
+  level:
+    root: info
+    uk.gov.justice.laa.crime.dces.integration: debug
+    org.springframework.web.servlet.DispatcherServlet: debug
+    org.springframework.security: info
+    org.springframework.http: debug
+    org.springframework.security.oauth2: debug
+    org.springframework.security.oauth2.client: debug
+  structured:
+    format:
+      console: # disables structured logging locally
+  pattern:
+    console: "%clr(%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr{faint} %clr([%15.15t]){faint} %clr([%X{traceId:-},%X{spanId:-}]){yellow} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n"

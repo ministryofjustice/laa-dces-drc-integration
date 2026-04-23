@@ -79,7 +79,7 @@ dependencies {
 	runtimeOnly "org.postgresql:postgresql"
 	runtimeOnly "org.flywaydb:flyway-database-postgresql"
 
-	implementation "net.logstash.logback:logstash-logback-encoder:$versions.logbackEncoderVersion"
+	//implementation "net.logstash.logback:logstash-logback-encoder:$versions.logbackEncoderVersion"
 	implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:$versions.springdocVersion"
 	implementation "io.github.resilience4j:resilience4j-spring-boot3:$versions.resilience4jVersion"
 
@@ -91,6 +91,9 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+	implementation 'org.springframework.boot:spring-boot-micrometer-tracing-brave:4.0.5'
+	//implementation 'io.micrometer:micrometer-tracing-bridge-brave'
 
 	implementation "io.micrometer:micrometer-core"
 	implementation "io.micrometer:micrometer-tracing-bridge-brave"
