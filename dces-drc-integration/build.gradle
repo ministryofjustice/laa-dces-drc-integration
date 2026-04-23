@@ -92,12 +92,12 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
-	implementation 'org.springframework.boot:spring-boot-micrometer-tracing-brave'
-	implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+//	implementation 'org.springframework.boot:spring-boot-micrometer-tracing-brave'
+//	implementation 'io.micrometer:micrometer-tracing-bridge-brave'
 
-//	implementation "io.micrometer:micrometer-core"
-//	implementation "io.micrometer:micrometer-tracing-bridge-brave"
-//	implementation "io.micrometer:micrometer-registry-prometheus"
+	implementation "io.micrometer:micrometer-core"
+	implementation "io.micrometer:micrometer-tracing-bridge-brave"
+	implementation "io.micrometer:micrometer-registry-prometheus"
 	implementation "net.javacrumbs.shedlock:shedlock-spring:$versions.shedlockVersion"
 	implementation "net.javacrumbs.shedlock:shedlock-provider-jdbc-template:$versions.shedlockVersion"
 	implementation 'net.datafaker:datafaker:2.5.1'
